@@ -1,83 +1,32 @@
-﻿TLSv1.2
-
-　TLSとは?
-　　通信を暗号化するプロトコル
-　　httpsでも使われる(httpをTLSで暗号化)
-　　SSLと同義(SSL3.0はTLS1.0と同じ)
-　　TLS1.1以前(SSL1～3,TLS1～1.1)は脆弱性が発見された
-　　セッション層のプロトコルなので、それ以下の通信は暗号化されない
-　　暗号化されるのはハンドシェイク成功後の通信
-　　httpヘッダに「TLS1.2」とか書かれるはず。
-
-　v1.1とv1.2の違いとは?
-　　https://qiita.com/n-i-e/items/0cbe004ad8a2e800b90d
-　　主に使用できる暗号が増えた感じ?
-　　ハッシュ関数にSHA-2が使えるようになった
-
-　JDKのTLSサポート状況は?
-　　https://blogs.oracle.com/java-platform-group/diagnosing-tls,-ssl,-and-https
-　　JDK8は1.2がデフォルト
-　　JDK6以下は1.2未サポート
-　　JDK7は1.2サポートだがデフォルトではない
-
-　Java7でhttps/TLSv1.2で送る方法には何がある?
-　　ここに列挙
-
-　Apache2.2のライブラリ(HttpClient3.1)で https/TLSv1.2で送ることは可能?
-　　https://shanon-tech.blogspot.com/2017/12/tls10tls11javashanonadventcalendar20171.html
-　　https://stackoverflow.com/questions/32587141/how-to-force-commons-httpclient-3-1-to-use-tls-1-2-only-for-https
-
-　既存の自己診断のhttpsはTLSv1.1なのか?
-
-　既存のhttps処理の解析と理解
-
-　Java7 tls1.2 client でググった結果のキーワードまとめる
-　　--------------------------------------------
-　　tomcat/bin/に以下のsetenv.shを配置
-　　                    export JAVA_OPTS="-Dhttps.protocols=TLSv1.2 -Djdk.tls.client.protocols=TLSv1.2"
-　　--------------------------------------------
-　　
-　　httpd.conf及びssl.confの設定の変更
-　　/etc/httpd/conf/httpd.conf と /etc/httpd/conf.d/ssl.conf に以下の記載を追加
-　　    SSLProtocol All -SSLv2 -SSLv3 -TLSv1
-　　--------------------------------------------
-　　context = SSLContext.getInstance("TLSv1.2");
-　　context.init(null,null,null);
-　　SSLContext.setDefault(context); 
-　　SSLSocketFactory factory = (SSLSocketFactory)context.getSocketFactory();
-　　SSLSocket socket = (SSLSocket)factory.createSocket();
-　　protocols = socket.getEnabledProtocols();
-　　--------------------------------------------
-　　try {
-　　        SSLContext ctx = SSLContext.getInstance("TLSv1.2");
-　　        ctx.init(null, null, null);
-　　        SSLContext.setDefault(ctx);
-　　} catch (Exception e) {
-　　        System.out.println(e.getMessage());
-　　}
-　　--------------------------------------------
-　　System.setProperty("https.protocols", "SSLv3,TLSv1,TLSv1.1,TLSv1.2");
-　　--------------------------------------------
-
-　　既存の自己診断のURLをgoogleに書き換えて接続すると1.1だからエラーになるのか?
-　　上記の設定をすると1.2になるのか?
-　　既存の自己診断をデバッガで追えるか?
-
-　テスト
-　　HS21ではテスト不可?
-　　FFSのサーバーにChromeやOpenSSLからアクセスしたらどうなる?
-　　httpsのWebAPI(GET, POST)のテストはどうやる? (一般的なサイトで良さそうなのある?)
-
-　証明書
-　　ルート証明書(ブラウザインストール時に入る)
-　　中間証明書
-　　オレオレ証明書(OpenSSLで作れるはず)
-
-　ツール
-　　Fidler
-　　Wireshark
+﻿OpenSSLコマンドの主な機能
+  SSLサーバーにクライアントとして接続
+  SSLサーバーとしてクライアント接続を受け付ける
+  証明書
+    ルート証明書
+      クライアントで使用
+      サーバー証明書の検証で使用(CAが発行)
+    サーバー証明書
+      クライアントで使用
+    クライアント証明書
+      サーバーで使用
+    自己署名証明書(オレオレ証明書)
+      プライベート認証局で署名した証明書
+  cacerts
+    Javaが使うルート証明書??
+  ssl.conf
+  CATALINA
+    サーブレットコンテナ
 
 
+https://yamitzky.hatenablog.com/entry/2016/05/13/204107
+→通信テストに使えるサイト
 
+http://x68000.q-e-d.net/~68user/unix/pickup?openssl
+→OpenSSLコマンド解説
 
+https://bacchi.me/linux/openssl-tips/
+→OpenSSLコマンドのs_serverの使いかた
+
+http://proengineer.internous.co.jp/content/columnfeature/6317
+→SSL/TLS   証明書について
 
