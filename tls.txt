@@ -1,32 +1,8 @@
-﻿OpenSSLコマンドの主な機能
-  SSLサーバーにクライアントとして接続
-  SSLサーバーとしてクライアント接続を受け付ける
-  証明書
-    ルート証明書
-      クライアントで使用
-      サーバー証明書の検証で使用(CAが発行)
-    サーバー証明書
-      クライアントで使用
-    クライアント証明書
-      サーバーで使用
-    自己署名証明書(オレオレ証明書)
-      プライベート認証局で署名した証明書
-  cacerts
-    Javaが使うルート証明書??
-  ssl.conf
-  CATALINA
-    サーブレットコンテナ
+﻿
+
+・TLS1.2のサーバーとの通信テスト(GET,POST)を行うため、ダミーサーバ構築方法を展開して欲しい。
+・SSLSocketFactoryで以下の例外が発生しており、通信確認まで行えていない。
+  知見があれば教示をお願いしたい。
 
 
-https://yamitzky.hatenablog.com/entry/2016/05/13/204107
-→通信テストに使えるサイト
-
-http://x68000.q-e-d.net/~68user/unix/pickup?openssl
-→OpenSSLコマンド解説
-
-https://bacchi.me/linux/openssl-tips/
-→OpenSSLコマンドのs_serverの使いかた
-
-http://proengineer.internous.co.jp/content/columnfeature/6317
-→SSL/TLS   証明書について
 
