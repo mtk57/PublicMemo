@@ -9,6 +9,10 @@
 
 https://geechs-magazine.com/tag/lifehack/20160822_2
 https://qiita.com/hana_shin/items/6d9de0847a06d8ee95cc
+https://qiita.com/toshihirock/items/acbf9800f7e784118e46
+https://ozuma.hatenablog.jp/entry/20140413/1397397632
+https://milestone-of-se.nesuke.com/knowhow/decrypt-tls-at-executing-packetcapture/
+https://milestone-of-se.nesuke.com/nw-basic/tls/https-structure/
 
 
 実験
