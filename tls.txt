@@ -55,3 +55,9 @@ https://qiita.com/sotoiwa/items/4e9b0c855c620a53e6fa
 
 実験
  www.example.com にアクセスしてみる
+
+やること
+ ・XAMPP、RawCap、WireSharkを入手。
+ ・XAMPPでサーバー立てて、C#アプリからhttpsでアクセスしてみる
+
+
