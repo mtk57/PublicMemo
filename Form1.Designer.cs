@@ -78,9 +78,9 @@
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(12, 82);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(25, 12);
+            this.label2.Size = new System.Drawing.Size(45, 12);
             this.label2.TabIndex = 3;
-            this.label2.Text = "TLS";
+            this.label2.Text = "TLS ver";
             // 
             // buttonGET
             // 
@@ -150,7 +150,7 @@
             this.groupBox2.Size = new System.Drawing.Size(184, 83);
             this.groupBox2.TabIndex = 11;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Vakue";
+            this.groupBox2.Text = "Value";
             // 
             // FormMain
             // 
