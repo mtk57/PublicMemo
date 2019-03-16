@@ -23,7 +23,7 @@ TLS1.2に対応したサーバを立てる知見がないため、既存の外�
 
 
 
-
+-------------------------------------------------------------------------------------------------
 https://geechs-magazine.com/tag/lifehack/20160822_2
 ⇒5分でわかるSSL通信　SHA-1、SHA-2の違いとは？
 
@@ -45,19 +45,26 @@ https://milestone-of-se.nesuke.com/nw-basic/tls/https-structure/
 https://blogs.technet.microsoft.com/jpieblog/2018/10/11/net-framework-tls11-12-2/#section5
 ⇒.NET Framework 3.5 で TLS 1.1 および 1.2 を既定値にするための方法
 
+https://blogs.technet.microsoft.com/jpieblog/2015/04/07/net-framework-tls1-1-1-2/
+⇒.NET3.5 C# ではKBも適用する必要があるみたい。(★保守tmはこれやった?)
+  https://support.microsoft.com/en-us/help/3154518/support-for-tls-system-default-versions-included-in-the-net-framework
+  https://nishy-software.com/ja/dev-sw/wpf-app-net-https-tls/
+
 https://qiita.com/sutara79/items/21a068494bc3a08a4803
 ⇒XAMPP for WindowsでSSLを有効にする
   ⇒何もしなくても 4433でTLS1.2だった。
 
 https://qiita.com/sotoiwa/items/4e9b0c855c620a53e6fa
 ⇒Windows 7でlocalhost宛のパケットをキャプチャする
+⇒RawCapは不要。Wiresharkでも、Npcap LoopBack Adapterを使えばOK
+
+https://www.atmarkit.co.jp/fdotnet/dotnettips/867sslavoidverify/sslavoidverify.html
+⇒SSL通信で信頼されない証明書を回避するには？［C#、VB、2.0、3.0、3.5］
 
 
-実験
- www.example.com にアクセスしてみる
 
-やること
- ・XAMPP、RawCap、WireSharkを入手。
- ・XAMPPでサーバー立てて、C#アプリからhttpsでアクセスしてみる
-
+■やること
+・XAMPP、RawCap、WireSharkを入手。
+・XAMPPでサーバー立てて、C#アプリからhttpsでアクセスしてみる
+・
 
