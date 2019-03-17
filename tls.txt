@@ -46,7 +46,7 @@ https://blogs.technet.microsoft.com/jpieblog/2018/10/11/net-framework-tls11-12-2
 ⇒.NET Framework 3.5 で TLS 1.1 および 1.2 を既定値にするための方法
 
 https://blogs.technet.microsoft.com/jpieblog/2015/04/07/net-framework-tls1-1-1-2/
-⇒.NET3.5 C# ではKBも適用する必要があるみたい。(★保守tmはこれやった?)
+⇒.NET3.5 C# ではKBも適用する必要があるみたい。
   https://support.microsoft.com/en-us/help/3154518/support-for-tls-system-default-versions-included-in-the-net-framework
   https://nishy-software.com/ja/dev-sw/wpf-app-net-https-tls/
 
@@ -79,50 +79,77 @@ https://go-journey.club/archives/7519
 https://stackoverflow.com/questions/39157422/how-to-enable-tls-1-2-in-java-7
 ⇒How to enable TLS 1.2 in Java 7  (JBoss 6.4だけど...)
 
+https://qiita.com/yoshi389111/items/7af43d8d21efdc32c06c
+⇒[Java] システムプロパティのメモ
+
+http://yasuhiroa24.hateblo.jp/entry/2017/01/11/162101
+⇒【Tomcat8】CATALINA_OPTSとJAVA_OPTSの違い
+
+https://pig-log.com/server-client-certificate/
+⇒サーバ証明書・クライアント証明書作成
+
 
 
 -------------------------------------------------------------------------------------------------
-
+■直近の問題点
+・OC SSLSocketFactoryで例外。(まだ通信前なので環境っぽいが)
+・OCM HttpClient.executeで例外。(なんとなくこれも環境っぽいが)
 
 ■やること
-・XAMPP(WANT)、WireShark(MUST)を入手。
-・XAMPPでサーバー立てて、C#アプリからhttpsでアクセスしてみる
-  自宅ではC#アプリから opensslのサーバにアクセスできたので、opensslサーバには問題ないはず。
-・もしかして OCのソースでhttpsのポート番号を443で指定していない? (opensslサーバは4433を使う)
-　⇒見当違いかも。確かコンストラクタで例外になっていたので。
-・OCM/OPが失敗するのは、cacertにOpenSSLのオレオレ証明書(サーバ証明書)がないから?
+・XAMPP(WANT)、WireShark(MUST)を入手。★
 
+・XAMPPでサーバー立てて、C#アプリからhttpsでアクセスしてみる
+  ⇒自宅ではC#アプリから opensslのサーバにアクセスできたので、opensslサーバには問題ないはず。
+  ⇒XAMPPが手に入るか分からないので、OpenSSLサーバにC#アプリからhttpsでアクセスしてみる★
+
+・もしかして OCのソースでhttpsのポート番号を443で指定していない? (opensslサーバは4433を使う)★
+　⇒見当違いかも。確かSSLSocketFactoryのコンストラクタで例外になっていたので。
+
+・OCM/OPが失敗するのは、cacertにOpenSSLのオレオレ証明書(サーバ証明書)がないから?★
+　⇒KeyToolで追加してみる?
+
+・OC, OCMで、以下を実施し、取れるかやってみる。★
+  System.getProperty("https.protocols");
+  System.getProperty("jdk.tls.client.protocols");
+・おそらくnullのはずなので、以下を設定してから、やってみる。
+  tomcat\bin\startup.bat
+    java -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2  を追加
+・おそらくnullのはずなので、以下を設定してから、やってみる。
+  tomcat\bin\catalina.bat
+    java -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2  を追加
+・おそらくnullのはずなので、以下を試してみる
+  System.setProperty("https.protocols", "TLSv1.2");
+  System.setProperty("jdk.tls.client.protocols", "TLSv1.2");
+  System.getProperty("https.protocols");
+  System.getProperty("jdk.tls.client.protocols");
+  ⇒セットされていれば、おそらくTLS1.2になるはず。（あとはダミーサーバーとWiresharkで確認）
 
 ■調べること
 ・JDKのcacertにオレオレ証明書を追加する方法
 　⇒追加しないと、OCMやOPのソースの通信が失敗するかも。
+
 ・Java7 (JDK1.7) で、TLS1.2の有効化まとめ
 
 　<設定ファイル>
     -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2
-    ⇒★具体的なファイルパスは? 
+        ⇒Tomcat の起動コマンド(tomcat\bin\startup.bat)に追加する?
+          ⇒java -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2
+        ⇒それとも、tomcat\bin\catalina.batに追加する? (最後の方にそれっぽいのがあるかも。)
 
-
-　<Java source>
+　<Java>
     案①
-    try {
-            SSLContext ctx = SSLContext.getInstance("TLSv1.2");
-            ctx.init(null, null, null);
-            SSLContext.setDefault(ctx);
-    } catch (Exception e) {
-            System.out.println(e.getMessage());
-    }
-    ⇒★解析する
+    SSLContext ctx = SSLContext.getInstance("TLSv1.2");      // javax.net.ssl.SSLContext
+    ctx.init(null, null, null);                              // km - 認証キーのソース、または null
+                                                             // tm - ピア認証の信頼を判断するソース、または null
+                                                             // random - このジェネレータの乱数発生の元、または null
+    SSLContext.setDefault(ctx);                              // デフォルトの SSL コンテキストを設定します。これは、後続の getDefault() の呼び出しで返されます。デフォルトコンテキストはすぐに使用可能となり、初期化する必要はありません。
 
    案②
-   System.setProperty（ "https.protocols"、 "SSLv3、TLSv1、TLSv1.1、TLSv1.2"）;。
-    ⇒★解析する
+   System.setProperty("https.protocols", "TLSv1.2");
+   System.setProperty("jdk.tls.client.protocols", "TLSv1.2");
 
 
-
-
-
-■保守tmに聞くこと
+■保守tmに聞くこと★
 ・.NET3.5のままで、TLS1.2のプロパティを使えるようにするKBがあるっぽいが、知っているか？
 ・.NET4.5に上げる理由は？
 ・.NET4.5に上げるチェックリストは具体的にどうやって見ていった？全部チェックするのにどれくらいかかった？
