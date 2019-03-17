@@ -13,14 +13,14 @@ TLS1.2に対応したサーバを立てる知見がないため、既存の外�
 ノウハウを情報共有してほしい。
 -------------------------------------------------------------------------------------------------
 
-・TLS1.2のサーバーとの通信テスト(GET,POST)を行うため、ダミーサーバ構築方法を展開して欲しい。
-  やはり XAMPP for Windowsかな。
+
 ・SSLSocketFactoryで以下の例外が発生しており、通信確認まで行えていない。
-  知見があれば教示をお願いしたい。（これは聞かなくてよいかも）
-・本番サーバーとの接続において、クライアント側に必要な作業があれば教えてほしい。(プロトコルをTLS1.2に変更する以外に)
-  (例.クライアント証明書の更新等)※まだ聞かなくてよいかも。
+  知見があれば教示をお願いしたい。
+  ⇒これは聞かなくてよいかも。
 
-
+・本番サーバーはクライアント認証を行うのか？
+　⇒行う場合、クライアント証明書のインストール等はどうするのか？
+　⇒本番サーバーとの接続テストはSTで行うのか？（SSTではダミーサーバーでよいのか？）
 
 
 -------------------------------------------------------------------------------------------------
@@ -61,10 +61,72 @@ https://qiita.com/sotoiwa/items/4e9b0c855c620a53e6fa
 https://www.atmarkit.co.jp/fdotnet/dotnettips/867sslavoidverify/sslavoidverify.html
 ⇒SSL通信で信頼されない証明書を回避するには？［C#、VB、2.0、3.0、3.5］
 
+http://waysaku.hatenablog.com/entry/20120506/1336315146
+⇒OCのソースとほぼ同じ!! www
+
+https://go-journey.club/archives/4038
+⇒【SSL】【Java】keytool を使って「自己証明書（オレオレ証明書）」 を作成する手順
+
+https://pc.shigizemi.com/?p=939
+⇒Tomcatサーバー証明書のインポート
+
+https://qiita.com/rsooo/items/9119456285db1fe14b6d
+⇒Keytoolを使用したSHA2 SSL証明書作成メモ
+
+https://go-journey.club/archives/7519
+⇒すごくいい!!
+
+https://stackoverflow.com/questions/39157422/how-to-enable-tls-1-2-in-java-7
+⇒How to enable TLS 1.2 in Java 7  (JBoss 6.4だけど...)
+
+
+
+-------------------------------------------------------------------------------------------------
 
 
 ■やること
-・XAMPP、RawCap、WireSharkを入手。
+・XAMPP(WANT)、WireShark(MUST)を入手。
 ・XAMPPでサーバー立てて、C#アプリからhttpsでアクセスしてみる
-・
+  自宅ではC#アプリから opensslのサーバにアクセスできたので、opensslサーバには問題ないはず。
+・もしかして OCのソースでhttpsのポート番号を443で指定していない? (opensslサーバは4433を使う)
+　⇒見当違いかも。確かコンストラクタで例外になっていたので。
+・OCM/OPが失敗するのは、cacertにOpenSSLのオレオレ証明書(サーバ証明書)がないから?
+
+
+■調べること
+・JDKのcacertにオレオレ証明書を追加する方法
+　⇒追加しないと、OCMやOPのソースの通信が失敗するかも。
+・Java7 (JDK1.7) で、TLS1.2の有効化まとめ
+
+　<設定ファイル>
+    -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2
+    ⇒★具体的なファイルパスは? 
+
+
+　<Java source>
+    案①
+    try {
+            SSLContext ctx = SSLContext.getInstance("TLSv1.2");
+            ctx.init(null, null, null);
+            SSLContext.setDefault(ctx);
+    } catch (Exception e) {
+            System.out.println(e.getMessage());
+    }
+    ⇒★解析する
+
+   案②
+   System.setProperty（ "https.protocols"、 "SSLv3、TLSv1、TLSv1.1、TLSv1.2"）;。
+    ⇒★解析する
+
+
+
+
+
+■保守tmに聞くこと
+・.NET3.5のままで、TLS1.2のプロパティを使えるようにするKBがあるっぽいが、知っているか？
+・.NET4.5に上げる理由は？
+・.NET4.5に上げるチェックリストは具体的にどうやって見ていった？全部チェックするのにどれくらいかかった？
+・TLS1.2に変更後に、本番サーバーとの接続テストはした？
+　⇒していない場合、どうやってTLS1.2になっていることを確認した？（WireShart?）
+　⇒ダミーサーバは何を使った？
 
