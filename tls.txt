@@ -1,16 +1,4 @@
-﻿-------------------------------------------------------------------------------------------------
-■背景
-現在、外部URLにアクセスしている箇所は以下となっている。
-・Java (Tomcat/Servlet)
-・C#   (StandAlone Application)
-TLSはセッション層のプロトコルであるため、TLS1.2を有効化するにはプロトコルを指定する設定ファイル等
-の外部定義の変更のみで実現可能と推測している。
-そこで有効化を確認するために、TLS1.2に対応したサーバを立てて通信し、Wireshark等のツールでプロトコルを
-確認したいと考えている。
-
-■課題
-TLS1.2に対応したサーバを立てる知見がないため、既存の外部URLアクセス処理を過去に開発した際の
-ノウハウを情報共有してほしい。
+﻿
 -------------------------------------------------------------------------------------------------
 
 
@@ -24,136 +12,30 @@ TLS1.2に対応したサーバを立てる知見がないため、既存の外�
 
 
 -------------------------------------------------------------------------------------------------
-https://geechs-magazine.com/tag/lifehack/20160822_2
-⇒5分でわかるSSL通信　SHA-1、SHA-2の違いとは？
-
-https://qiita.com/hana_shin/items/6d9de0847a06d8ee95cc
-⇒opensslコマンドの使い方
-
-https://qiita.com/toshihirock/items/acbf9800f7e784118e46
-⇒HTTPSのパケットをwiresharkで見てみる
-
-https://ozuma.hatenablog.jp/entry/20140413/1397397632
-⇒WiresharkでSSL通信の中身を覗いてみる
-
-https://milestone-of-se.nesuke.com/knowhow/decrypt-tls-at-executing-packetcapture/
-⇒https(SSL/TLS)をwiresharkで復号化する方法,ブラウザで見る方法
-
-https://milestone-of-se.nesuke.com/nw-basic/tls/https-structure/
-⇒https(ssl/tls)の仕組みとシーケンス,パケット構造 〜暗号化の範囲, Encrypted Alert, ヘッダやレイヤについて～
-
-https://blogs.technet.microsoft.com/jpieblog/2018/10/11/net-framework-tls11-12-2/#section5
-⇒.NET Framework 3.5 で TLS 1.1 および 1.2 を既定値にするための方法
-
-https://blogs.technet.microsoft.com/jpieblog/2015/04/07/net-framework-tls1-1-1-2/
-⇒.NET3.5 C# ではKBも適用する必要があるみたい。
-  https://support.microsoft.com/en-us/help/3154518/support-for-tls-system-default-versions-included-in-the-net-framework
-  https://nishy-software.com/ja/dev-sw/wpf-app-net-https-tls/
-
-https://qiita.com/sutara79/items/21a068494bc3a08a4803
-⇒XAMPP for WindowsでSSLを有効にする
-  ⇒何もしなくても 4433でTLS1.2だった。
-
-https://qiita.com/sotoiwa/items/4e9b0c855c620a53e6fa
-⇒Windows 7でlocalhost宛のパケットをキャプチャする
-⇒RawCapは不要。Wiresharkでも、Npcap LoopBack Adapterを使えばOK
-
-https://www.atmarkit.co.jp/fdotnet/dotnettips/867sslavoidverify/sslavoidverify.html
-⇒SSL通信で信頼されない証明書を回避するには？［C#、VB、2.0、3.0、3.5］
-
-http://waysaku.hatenablog.com/entry/20120506/1336315146
-⇒OCのソースとほぼ同じ!! www
-
-https://go-journey.club/archives/4038
-⇒【SSL】【Java】keytool を使って「自己証明書（オレオレ証明書）」 を作成する手順
-
-https://pc.shigizemi.com/?p=939
-⇒Tomcatサーバー証明書のインポート
-
-https://qiita.com/rsooo/items/9119456285db1fe14b6d
-⇒Keytoolを使用したSHA2 SSL証明書作成メモ
-
-https://go-journey.club/archives/7519
-⇒すごくいい!!
-
-https://stackoverflow.com/questions/39157422/how-to-enable-tls-1-2-in-java-7
-⇒How to enable TLS 1.2 in Java 7  (JBoss 6.4だけど...)
-
-https://qiita.com/yoshi389111/items/7af43d8d21efdc32c06c
-⇒[Java] システムプロパティのメモ
-
-http://yasuhiroa24.hateblo.jp/entry/2017/01/11/162101
-⇒【Tomcat8】CATALINA_OPTSとJAVA_OPTSの違い
-
-https://pig-log.com/server-client-certificate/
-⇒サーバ証明書・クライアント証明書作成
 
 
 
 -------------------------------------------------------------------------------------------------
 ■直近の問題点
 ・OC SSLSocketFactoryで例外。(まだ通信前なので環境っぽいが)
+  ⇒FIPS mode only SunJSSE TrustManagers may be used   FIPSモードのみのSunJSSE TrustManagerが使用可能
+  ⇒TrustStrategy
+  ⇒JSSE = Java Secure Socket Extension
+  ⇒なんとなく、cacertsが絡んでいるっぽい。(https://docs.oracle.com/javase/jp/7/technotes/guides/security/jsse/JSSERefGuide.html#HTTPSSample)
+  ⇒http://blog.livedoor.jp/k_urushima/tag/JSSE
+  ⇒https://www2.cs.duke.edu/csed/java/jdk1.7/technotes/guides/security/jsse/FIPS.html
+  ⇒https://www.databaseadm.com/article/12258684/java.security.KeyManagementException%3A+FIPS+mode%3A+only+SunJSSE+TrustManagers
+  ⇒FIPSモードの場合、暗号化プロバイダはSunPKCS11-NSS
+  ⇒https://docs.oracle.com/cd/E57014_01/wls/SECMG/fips.htm#BABHHFFB
+  ⇒https://living-sun.com/ja/java/449160-is-there-a-way-to-load-a-different-cacerts-than-the-one-specified-in-the-java_home-jre-lib-security-folder-java-security-ssl-jsse.html
+  ⇒https://stackoverflow.com/questions/24847742/only-sunjsse-trustmanagers-may-be-used-when-debugging-in-eclipse
+
+
+
 ・OCM HttpClient.executeで例外。(なんとなくこれも環境っぽいが)
-
-■やること
-・XAMPP(WANT)、WireShark(MUST)を入手。★
-
-・XAMPPでサーバー立てて、C#アプリからhttpsでアクセスしてみる
-  ⇒自宅ではC#アプリから opensslのサーバにアクセスできたので、opensslサーバには問題ないはず。
-  ⇒XAMPPが手に入るか分からないので、OpenSSLサーバにC#アプリからhttpsでアクセスしてみる★
-
-・もしかして OCのソースでhttpsのポート番号を443で指定していない? (opensslサーバは4433を使う)★
-　⇒見当違いかも。確かSSLSocketFactoryのコンストラクタで例外になっていたので。
-
-・OCM/OPが失敗するのは、cacertにOpenSSLのオレオレ証明書(サーバ証明書)がないから?★
-　⇒KeyToolで追加してみる?
-
-・OC, OCMで、以下を実施し、取れるかやってみる。★
-  System.getProperty("https.protocols");
-  System.getProperty("jdk.tls.client.protocols");
-・おそらくnullのはずなので、以下を設定してから、やってみる。
-  tomcat\bin\startup.bat
-    java -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2  を追加
-・おそらくnullのはずなので、以下を設定してから、やってみる。
-  tomcat\bin\catalina.bat
-    java -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2  を追加
-・おそらくnullのはずなので、以下を試してみる
-  System.setProperty("https.protocols", "TLSv1.2");
-  System.setProperty("jdk.tls.client.protocols", "TLSv1.2");
-  System.getProperty("https.protocols");
-  System.getProperty("jdk.tls.client.protocols");
-  ⇒セットされていれば、おそらくTLS1.2になるはず。（あとはダミーサーバーとWiresharkで確認）
-
-■調べること
-・JDKのcacertにオレオレ証明書を追加する方法
-　⇒追加しないと、OCMやOPのソースの通信が失敗するかも。
-
-・Java7 (JDK1.7) で、TLS1.2の有効化まとめ
-
-　<設定ファイル>
-    -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2
-        ⇒Tomcat の起動コマンド(tomcat\bin\startup.bat)に追加する?
-          ⇒java -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2
-        ⇒それとも、tomcat\bin\catalina.batに追加する? (最後の方にそれっぽいのがあるかも。)
-
-　<Java>
-    案①
-    SSLContext ctx = SSLContext.getInstance("TLSv1.2");      // javax.net.ssl.SSLContext
-    ctx.init(null, null, null);                              // km - 認証キーのソース、または null
-                                                             // tm - ピア認証の信頼を判断するソース、または null
-                                                             // random - このジェネレータの乱数発生の元、または null
-    SSLContext.setDefault(ctx);                              // デフォルトの SSL コンテキストを設定します。これは、後続の getDefault() の呼び出しで返されます。デフォルトコンテキストはすぐに使用可能となり、初期化する必要はありません。
-
-   案②
-   System.setProperty("https.protocols", "TLSv1.2");
-   System.setProperty("jdk.tls.client.protocols", "TLSv1.2");
+  ⇒
 
 
-■保守tmに聞くこと★
-・.NET3.5のままで、TLS1.2のプロパティを使えるようにするKBがあるっぽいが、知っているか？
-・.NET4.5に上げる理由は？
-・.NET4.5に上げるチェックリストは具体的にどうやって見ていった？全部チェックするのにどれくらいかかった？
-・TLS1.2に変更後に、本番サーバーとの接続テストはした？
-　⇒していない場合、どうやってTLS1.2になっていることを確認した？（WireShart?）
-　⇒ダミーサーバは何を使った？
-
+・RawcapでTCPしかキャプチャできない
+  ⇒もしかしてFirewall?
+・家のWiresharkは Ver3.0.0
