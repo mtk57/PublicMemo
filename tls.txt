@@ -39,3 +39,77 @@
 ・RawcapでTCPしかキャプチャできない
   ⇒もしかしてFirewall?
 ・家のWiresharkは Ver3.0.0
+
+
+org.apache.http.conn.ssl.SSLSocketFactory
+
+
+■ダメ元で試してみること (3/25)
+1.OpenSSL.exeを入れ替えてみる
+2.JSSEに変えてみる　（import javax.net.ssl とかって出来る?）
+
+
+■Apache HttpClientがTLSv1.2をサポートしたバージョンの裏取り⇒不要
+  ⇒もう、HttpClientは諦める?
+　　⇒ SunJSSEとはHttpクライアントのクラスは無いので、HttpClientを使うしかない。
+　⇒ていうか、HttpClient自体はTLS云々は関係ないと思う。（ソースGREPしても出てこないのが証拠）
+
+
+
+■Java7でTLSv1.2は使えるのは間違いなさそう
+  https://www.oracle.com/technetwork/java/javase/7u131-relnotes-3338543.html
+  ただし、JRE 1.7.0_131-b12
+  javax.net.ssl  ⇒JSSEのパッケージ
+
+
+■2008年8月にRFC 5246としてTLS 1.2が制定された。
+
+
+■JSSEについて  Java Secure Socket Extension
+　⇒SSLクライアントおよびサーバが使用するSSLプロトコルを扱うための標準API
+　⇒パッケージ
+　[1] javax.net.ssl
+　　　　=> JSSE APIのコアクラスとインターフェイスセットが含まれる
+　[2] javax.security.cert
+　　　　=> 基本的な証明書の管理機能をサポート
+　https://docs.oracle.com/javase/jp/7/technotes/guides/security/jsse/JSSERefGuide.html
+　https://docs.oracle.com/javase/jp/7/technotes/guides/security/jsse/JSSERefGuide.html#SunJSSE
+　https://docs.oracle.com/javase/jp/7/technotes/guides/security/SunProviders.html#SunJSSEProvider
+　https://docs.oracle.com/javase/jp/7/technotes/guides/security/jsse/JSSERefGuide.html#SSLContext
+　https://www.ibm.com/developerworks/jp/java/library/j-customssl/
+
+　JDK 1.4以降のリリースには、SunJSSEというJSSE暗号化サービス・プロバイダ(略称はプロバイダ)が標準で付属しています。
+　　⇒SunJSSEでは、SSLContextというEngineクラスで TLSv1.2をサポートしているみたい。
+　　　⇒でもクライアントのデフォルトはTLS1。https://docs.oracle.com/javase/jp/7/technotes/guides/security/SunProviders.html#SunJSSEProvider
+
+
+■結論（途中）
+・SunJSEE + Apache HttpClient で、TLS通信を実現する。
+・HttpClientは、TLS云々は設定できないので、キモはSunJSSEだと思う。
+・さらにキモなのは、SunJSSEのSSLContextクラスだと思う。
+
+
+
+■基本　　https://qiita.com/nowokay/items/c1de127354cd1b0ddc5e
+Java = エコシステム
+Java SE = 仕様
+OpenJDK = Java SEの実装
+Oracle JDK = オラクルがビルドしたOpenJDK + インストーラ
+
+
+■Sunは、2010年1月27日にオラクルにより吸収合併
+
+
+■SunJSSE で、TLSv1.2を有効にする? ★
+https://superuser.com/questions/747377/enable-tls-1-1-and-1-2-for-clients-on-java-7
+
+
+http://kkv.hatenablog.com/entry/2014/10/30/000117
+http://kkv.hatenablog.com/entry/2014/10/31/095307
+http://kkv.hatenablog.com/entry/2014/11/01/170003
+
+
+https://stackoverflow.com/questions/28391798/how-to-set-tls-version-on-apache-httpclient
+http://archive.apache.org/dist/httpcomponents/httpclient/source/
+
+
