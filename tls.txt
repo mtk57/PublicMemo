@@ -53,14 +53,14 @@ org.apache.http.conn.ssl.SSLSocketFactory
 1.OpenSSL.exeを入れ替えてみる
 2.JSSEに変えてみる　（import javax.net.ssl とかって出来る?）
 
-
-■Apache HttpClientがTLSv1.2をサポートしたバージョンの裏取り⇒不要
+--------
+■Apache HttpComponentsのHttpClientがTLSv1.2をサポートしたバージョンの裏取り⇒不要
   ⇒もう、HttpClientは諦める?
 　　⇒ SunJSSEとはHttpクライアントのクラスは無いので、HttpClientを使うしかない。
 　⇒ていうか、HttpClient自体はTLS云々は関係ないと思う。（ソースGREPしても出てこないのが証拠）
+　⇒http://hc.apache.org/
 
-
-
+--------
 ■Java7でTLSv1.2は使えるのは間違いなさそう
   https://www.oracle.com/technetwork/java/javase/7u131-relnotes-3338543.html
   ただし、JRE 1.7.0_131-b12
@@ -68,15 +68,18 @@ org.apache.http.conn.ssl.SSLSocketFactory
   javax.net.ssl  ⇒JSSEのパッケージ
 
 　https://blogs.oracle.com/java-platform-group/diagnosing-tls,-ssl,-and-https
+　　⇒ここは超重要かも？★
+
 　http://shanon-tech.blogspot.com/2017/12/tls10tls11javashanonadventcalendar20171.html
-　⇒ここに重要なヒントが！
+　⇒ここに重要なヒントが？⇒そうでもなかった。
 　　Javaのバージョンが7で、apacheのHTTPクライアントライブラリを使っているものはstack overflowの記事を参考にしたりして、カスタムのSocketFactoryを追加して対応しました。
 　　　https://stackoverflow.com/questions/32587141/how-to-force-commons-httpclient-3-1-to-use-tls-1-2-only-for-https
-　　　⇒★
+　　　⇒org.apache.commons.httpclient.protocol なので、ちょっとライブラリが古いかも。（Apache HttpComponentsの前身なので。http://hc.apache.org/httpclient-3.x/）
 
+--------
 ■2008年8月にRFC 5246としてTLS 1.2が制定された。
 
-
+--------
 ■JSSEについて  Java Secure Socket Extension
 　⇒SSLクライアントおよびサーバが使用するSSLプロトコルを扱うための標準API
 　⇒パッケージ
@@ -94,28 +97,85 @@ org.apache.http.conn.ssl.SSLSocketFactory
 　　⇒SunJSSEでは、SSLContextというEngineクラスで TLSv1.2をサポートしているみたい。
 　　　⇒でもクライアントのデフォルトはTLS1。https://docs.oracle.com/javase/jp/7/technotes/guides/security/SunProviders.html#SunJSSEProvider
 
-
-■結論（途中）
+--------
+■結論（途中）★
 ・SunJSEE + Apache HttpClient で、TLS通信を実現する。
 ・HttpClientは、TLS云々は設定できないので、キモはSunJSSEだと思う。
 ・さらにキモなのは、SunJSSEのSSLContextクラスだと思う。
 
 
-
+--------
 ■基本　　https://qiita.com/nowokay/items/c1de127354cd1b0ddc5e
 Java = エコシステム
 Java SE = 仕様
 OpenJDK = Java SEの実装
 Oracle JDK = オラクルがビルドしたOpenJDK + インストーラ
 
-
+--------
 ■Sunは、2010年1月27日にオラクルにより吸収合併
 
 
+--------
 ■SunJSSE で、TLSv1.2を有効にする? ★
 https://superuser.com/questions/747377/enable-tls-1-1-and-1-2-for-clients-on-java-7
 
+　https://stackoverflow.com/questions/39157422/how-to-enable-tls-1-2-in-java-7
+　　⇒★
+　https://bugs.launchpad.net/ubuntu/+source/openjdk-7/+bug/1314113
+　　⇒★
 
+        // javac ProtocolTest.java && java ProtocolTest
+
+        import javax.net.ssl.SSLSocket;
+        import javax.net.ssl.SSLContext;
+        import javax.net.SocketFactory;
+        import javax.net.ssl.SSLSocketFactory;
+
+        public class ProtocolTest {
+            
+            public static void main(String[] args) throws Exception {
+
+                SSLContext context = SSLContext.getInstance("TLS");
+                context.init(null,null,null);
+
+                SSLSocketFactory factory = (SSLSocketFactory)context.getSocketFactory();
+                SSLSocket socket = (SSLSocket)factory.createSocket();
+
+                String[] protocols = socket.getSupportedProtocols();
+
+                System.out.println("Supported Protocols: " + protocols.length);
+                for(int i = 0; i < protocols.length; i++)
+                {
+                     System.out.println("  " + protocols[i]);
+                }
+
+                protocols = socket.getEnabledProtocols();
+
+                System.out.println("Enabled Protocols: " + protocols.length);
+                for(int i = 0; i < protocols.length; i++)
+                {
+                     System.out.println("  " + protocols[i]);
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+===========================================================================================
 http://kkv.hatenablog.com/entry/2014/10/30/000117
 http://kkv.hatenablog.com/entry/2014/10/31/095307
 http://kkv.hatenablog.com/entry/2014/11/01/170003
