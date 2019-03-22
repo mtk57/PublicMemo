@@ -44,6 +44,11 @@
 org.apache.http.conn.ssl.SSLSocketFactory
 
 
+
+=======================================================================================
+3/22 ～   ★は課題、調査すること
+
+
 ■ダメ元で試してみること (3/25)
 1.OpenSSL.exeを入れ替えてみる
 2.JSSEに変えてみる　（import javax.net.ssl とかって出来る?）
@@ -59,8 +64,15 @@ org.apache.http.conn.ssl.SSLSocketFactory
 ■Java7でTLSv1.2は使えるのは間違いなさそう
   https://www.oracle.com/technetwork/java/javase/7u131-relnotes-3338543.html
   ただし、JRE 1.7.0_131-b12
+   ⇒★対応しているか確認 (3/25)
   javax.net.ssl  ⇒JSSEのパッケージ
 
+　https://blogs.oracle.com/java-platform-group/diagnosing-tls,-ssl,-and-https
+　http://shanon-tech.blogspot.com/2017/12/tls10tls11javashanonadventcalendar20171.html
+　⇒ここに重要なヒントが！
+　　Javaのバージョンが7で、apacheのHTTPクライアントライブラリを使っているものはstack overflowの記事を参考にしたりして、カスタムのSocketFactoryを追加して対応しました。
+　　　https://stackoverflow.com/questions/32587141/how-to-force-commons-httpclient-3-1-to-use-tls-1-2-only-for-https
+　　　⇒★
 
 ■2008年8月にRFC 5246としてTLS 1.2が制定された。
 
