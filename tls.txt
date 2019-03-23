@@ -46,83 +46,260 @@ org.apache.http.conn.ssl.SSLSocketFactory
 
 
 =======================================================================================
-3/22 ～   ★は課題、調査すること
+3/22 ～   ★は課題、調査すること  ▲重要ポイント
 
 
 ■ダメ元で試してみること (3/25)
-1.OpenSSL.exeを入れ替えてみる
-2.JSSEに変えてみる　（import javax.net.ssl とかって出来る?）
+1.OpenSSL.exeを入れ替えてみる  (絶対関係ないと思うが)
+2.SunJSSEに変えてみる　（import javax.net.ssl とかって出来る?）
+3.Java7で動くコンソールアプリ
 
 --------
-■Apache HttpComponentsのHttpClientがTLSv1.2をサポートしたバージョンの裏取り⇒不要
-  ⇒もう、HttpClientは諦める?
-　　⇒ SunJSSEとはHttpクライアントのクラスは無いので、HttpClientを使うしかない。
-　⇒ていうか、HttpClient自体はTLS云々は関係ないと思う。（ソースGREPしても出てこないのが証拠）
-　⇒http://hc.apache.org/
+■基本
+　https://qiita.com/nowokay/items/c1de127354cd1b0ddc5e
+
+　●Java SE    (Standard Edition)
+　　仕様
+
+　●OpenJDK    (Java Development Kit)
+　　Java SEの実装
+　　Sunは2007年5月8日にJDKのソースコードをOpenJDKに寄付
+
+　●Oracle JDK
+　　OracleがビルドしたOpenJDK + インストーラ
+
+　●TLS 1.2
+　　2008年8月にRFC 5246として制定
+
+　●Sun Micro Systems
+　　2010年1月27日にOracleにより吸収合併
+
+　●Apache Common HttpClient  (Apache HttpComponentsの前身。開発中止)
+　　http://hc.apache.org/httpclient-3.x/
+　　HttpClient3系
+
+　●Apache HttpComponents
+　　http://hc.apache.org/
+　　HttpClient4～5系
+
+　　⇒HttpClientがTLSv1.2をサポートしたバージョンの裏取り⇒不要
+  　　⇒もう、HttpClientは諦める?
+　　　　⇒ていうか、HttpClient自体はTLS云々は関係ないと思う。（ソースGREPしても出てこないのが証拠）
+　　　　　⇒ソースを見ると、HttpClient4.1.3のSSLSocketFactoryで、javax.net.ssl.SSLContextをimportしている (つまり暗号化にはJSSEを使っている) ▲
+
+　●JCA   Java Cryptography Architecture
+　　Java暗号化アーキテクチャ
+
+　●JBoss
+　　EJB（Enterprise JavaBeans）のオープンソース実装であるJavaによるオープンソースソフトウェア開発コミュニティのこと。
+　　JBossはEJB（J2EE対応アプリケーション）を動作させるためのサーバソフトウェアとして利用されています。
+　　本来JSPやサーブレットは動作しませんが、これらを動作させるためにWebコンテナとしてTomcatを採用しています。
+
+　●Tomcat
+　　Apache Tomcat Project内で開発されているオープンソースのソフトウェア。
+　　JavaサーブレットやJSPを処理するアプリケーションサーバ（APサーバ）／サーブレットコンテナの一つ。
+　　単独でWebサーバとして動作することも可能。
+　　実際にはプラグインとしての利用が主流となっています。
+　　Tomcatで提供される機能は基本的にServlet, JSP, JDBC接続プールのみ。
+
+　　⇒要は、JBossもTomcatもJavaをWebで動かすためのアプリ。
+
 
 --------
-■Java7でTLSv1.2は使えるのは間違いなさそう
-  https://www.oracle.com/technetwork/java/javase/7u131-relnotes-3338543.html
-  ただし、JRE 1.7.0_131-b12
-   ⇒★対応しているか確認 (3/25)
-  javax.net.ssl  ⇒JSSEのパッケージ
+■Java7
+　https://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase7-521261.html
 
-　https://blogs.oracle.com/java-platform-group/diagnosing-tls,-ssl,-and-https
-　　⇒ここは超重要かも？★
+　●TLSv1.2は使えるのは間違いなさそう
+　　https://www.oracle.com/technetwork/java/javase/7u131-relnotes-3338543.html
+　　　⇒ただし、JRE 1.7.0_131-b12  (JDK 7u131)
+　　　　⇒★対応しているか即確認 (3/25)
 
 　http://shanon-tech.blogspot.com/2017/12/tls10tls11javashanonadventcalendar20171.html
-　⇒ここに重要なヒントが？⇒そうでもなかった。
-　　Javaのバージョンが7で、apacheのHTTPクライアントライブラリを使っているものはstack overflowの記事を参考にしたりして、カスタムのSocketFactoryを追加して対応しました。
+　　⇒ここに重要なヒントが？
+
+　　　　Javaのバージョンが7で、apacheのHTTPクライアントライブラリを使っているものは
+　　　　stack overflowの記事を参考にしたりして、カスタムのSocketFactoryを追加して対応しました。
+
 　　　https://stackoverflow.com/questions/32587141/how-to-force-commons-httpclient-3-1-to-use-tls-1-2-only-for-https
-　　　⇒org.apache.commons.httpclient.protocol なので、ちょっとライブラリが古いかも。（Apache HttpComponentsの前身なので。http://hc.apache.org/httpclient-3.x/）
+　　　　⇒最後の投稿がすごく参考になる！▲
+
+　https://www.oracle.com/technetwork/java/javase/documentation/cve-2014-3566-2342133.html   (Oracle JDKおよびJREでSSL v3.0を無効にする手順)
+　　⇒Java 7 Update 75 で、SSLv3.0を無効化 ▲
+　　⇒https://qiita.com/e-taka/items/1b15b59fdf7420ef074d
+
+　https://qa.atmarkit.co.jp/q/3189
+　　⇒Java7 u25で、TLSv1.2ができたっぽいことが書いてある！（救世主？） ▲
+　　⇒java -Dhttps.protocols="TLSv1.2" HttpClientHttpURLConnection を行っている（要はSSLContextを起動引数でやっている）
+　　⇒HttpClientHttpURLConnectionは、以下サイトを参考に作ったっぽい。（ただし、HttpURLConnectionは、javax.net.ssl.HttpsURLConnectionに変更。HttpsURLConnectionはHttpURLConnectionの派生クラス）
+　　　http://x68000.q-e-d.net/~68user/net/java-http-url-connection-1.html
+
+        import java.net.*;
+        import java.io.*;
+        import java.util.*;
+
+        /**
+         * Java HTTP クライアントサンプル - HttpURLConnection 版 -
+         *
+         * @author 68user http://X68000.q-e-d.net/~68user/
+         */
+        public class HttpClientHttpURLConnection {
+            public static void main(String[] args)
+                throws MalformedURLException, ProtocolException, IOException {
+
+                URL url = new URL("http://www.debian.org/");
+
+                HttpURLConnection urlconn = (HttpURLConnection)url.openConnection();
+                urlconn.setRequestMethod("GET");
+                urlconn.setInstanceFollowRedirects(false);
+                urlconn.setRequestProperty("Accept-Language", "ja;q=0.7,en;q=0.3");
+
+                urlconn.connect();
+
+                Map headers = urlconn.getHeaderFields();
+                Iterator it = headers.keySet().iterator();
+                System.out.println("レスポンスヘッダ:");
+                while (it.hasNext()){
+                    String key= (String)it.next();
+                    System.out.println("  " + key + ": " + headers.get(key));
+                }
+
+                System.out.println("レスポンスコード[" + urlconn.getResponseCode() + "] " +
+                                   "レスポンスメッセージ[" + urlconn.getResponseMessage() + "]");
+                System.out.println("\n---- ボディ ----");
+
+                BufferedReader reader =
+                    new BufferedReader(new InputStreamReader(urlconn.getInputStream()));
+
+                while (true){
+                    String line = reader.readLine();
+                    if ( line == null ){
+                        break;
+                    }
+                    System.out.println(line);
+                }
+
+                reader.close();
+                urlconn.disconnect();
+            }
+        }
 
 --------
-■2008年8月にRFC 5246としてTLS 1.2が制定された。
+■JSSE   (Java Secure Socket Extension)
+　https://docs.oracle.com/javase/jp/7/technotes/guides/security/jsse/JSSERefGuide.html     ▲
+　https://docs.oracle.com/javase/jp/7/technotes/guides/security/SunProviders.html          ▲
+
+　SSLクライアントおよびサーバが使用するSSLプロトコルを扱うための標準API
+　JRE 1.4以降の標準コンポーネントとして含まれている
+　拡張可能なプロバイダベースのアーキテクチャ
+　　⇒つまり開発者が好きなプロパイダを選択できる(SunJSSEはそのうちの1つ)
+
+　●パッケージ
+　　javax.net.ssl
+　　　⇒JSSE APIのコアクラスとインターフェイスセットが含まれる
+　　javax.security.cert
+　　　⇒基本的な証明書の管理機能をサポート
+
+　●主なクラス
+　　SocketFactory
+　　ServerSocketFactory
+　　SSLSocketFactory           ▲
+　　SSLServerSocketFactory
+　　SSLSocket                  ▲
+　　SSLServerSocket
+　　SSLEngine
+　　HttpsURLConnection         ▲
+　　　https://web.plus-idea.net/2016/08/httpurlconnection-post-get-proxy-sample/  (HttpURLConnectionを使ってPOSTやGETでリクエストするサンプル(proxyも考慮))
+　　SSLContext                 ▲
+　　TrustManagerFactory
+　　X509ExtendedTrustManager
+　　KeyManagerFactory
+　　X509ExtendedKeyManager
+
+
+　●上級JSSE開発者のためのカスタムSSL
+　　https://www.ibm.com/developerworks/jp/java/library/j-customssl/
+
+　●チューニングパラメータ
+　　https://blogs.oracle.com/java-platform-group/diagnosing-tls,-ssl,-and-https  ▲
+
+　　●https.protocols
+　　　HttpsURLConnectionクラスを使用するかURL.openStream（）オペレーションを介してhttps接続を取得するJavaクライアントが使用するプロトコルバージョンを制御します。
+　　　古いバージョンでは、Java 7クライアントがデフォルトとしてTLS 1.2を使用したい場合に備えて、これでデフォルトを更新できます。
+　　　例：-Dhttps.protocols = TLSv1、TLSv1.1、TLSv1.2
+　　　非HTTPプロトコルの場合、これはSocketFactoryのSSLContextを通じて制御できます。▲
+
+　　●jdk.tls.client.protocols
+　　　基盤となるプラットフォームのTLS実装を制御します。追加情報はJSSE Reference Guideにあります。https://docs.oracle.com/javase/8/docs/technotes/guides/security/jsse/JSSERefGuide.html#InstallationAndCustomization
+　　　例：-Djdk.tls.client.protocols = TLSv1.1、TLSv1.2 
+　　　すべてのJDK 8リリース、またはJava 7 Update 95（2016年1月）およびJava 6 Update 121（2016年7月）以降で使用可能です。▲
+　　　　⇒Java 7 Update 95は、Oracleにログインしないと入手できない。
+
+　　　⇒System.setProperty("jdk.tls.client.protocols", "TLSv1.2");の設定できるが、Java 7 Update 95でないと意味ない??
+
+　●HttpsURLConnectionのGET/POSTの実装例 ▲
+　　https://www.mkyong.com/java/how-to-send-http-request-getpost-in-java/
 
 --------
-■JSSEについて  Java Secure Socket Extension
-　⇒SSLクライアントおよびサーバが使用するSSLプロトコルを扱うための標準API
-　⇒パッケージ
-　[1] javax.net.ssl
-　　　　=> JSSE APIのコアクラスとインターフェイスセットが含まれる
-　[2] javax.security.cert
-　　　　=> 基本的な証明書の管理機能をサポート
-　https://docs.oracle.com/javase/jp/7/technotes/guides/security/jsse/JSSERefGuide.html
-　https://docs.oracle.com/javase/jp/7/technotes/guides/security/jsse/JSSERefGuide.html#SunJSSE
-　https://docs.oracle.com/javase/jp/7/technotes/guides/security/SunProviders.html#SunJSSEProvider
-　https://docs.oracle.com/javase/jp/7/technotes/guides/security/jsse/JSSERefGuide.html#SSLContext
-　https://www.ibm.com/developerworks/jp/java/library/j-customssl/
+■SunJSSE
+　JSSEのプロパイダの1つ
+　JDK 1.4以降のリリースには、SunJSSEというJSSE暗号化サービス・プロバイダ(略称はプロバイダ)が標準で付属  ▲
+　　⇒結局、OracleJDKのJSSE = SunJSSEってこと？(合併したので多分そう) 
 
-　JDK 1.4以降のリリースには、SunJSSEというJSSE暗号化サービス・プロバイダ(略称はプロバイダ)が標準で付属しています。
-　　⇒SunJSSEでは、SSLContextというEngineクラスで TLSv1.2をサポートしているみたい。
-　　　⇒でもクライアントのデフォルトはTLS1。https://docs.oracle.com/javase/jp/7/technotes/guides/security/SunProviders.html#SunJSSEProvider
+　●SunJSSEでは、SSLContextというEngineクラスで TLSv1.2をサポートしているみたい。
+　　⇒でもクライアントのデフォルトはTLS1。有効にする方法は書いていない。▲
+　　　　Java SE 7 リリースの SunJSSE は TLS 1.1 と TLS 1.2 をサポートしますが、クライアント接続の場合はどちらのバージョンもデフォルトで有効になりません。
+　　　　一部のサーバーは、上位互換性を正しく実装していないため、TLS 1.1 または TLS 1.2 クライアントとの通信を拒否します。
+　　　　SunJSSE は、相互運用性を確保するため、クライアント接続の場合は TLS 1.1 または TLS 1.2 をデフォルトで有効にしません。
 
---------
-■結論（途中）★
-・SunJSEE + Apache HttpClient で、TLS通信を実現する。
-・HttpClientは、TLS云々は設定できないので、キモはSunJSSEだと思う。
-・さらにキモなのは、SunJSSEのSSLContextクラスだと思う。
+　●TLSv1.2を有効にする?
 
+　　https://superuser.com/questions/747377/enable-tls-1-1-and-1-2-for-clients-on-java-7
+　　　⇒SSLContextを使えばよいっぽいことが書いてある ▲
 
---------
-■基本　　https://qiita.com/nowokay/items/c1de127354cd1b0ddc5e
-Java = エコシステム
-Java SE = 仕様
-OpenJDK = Java SEの実装
-Oracle JDK = オラクルがビルドしたOpenJDK + インストーラ
+　　https://stackoverflow.com/questions/39157422/how-to-enable-tls-1-2-in-java-7
+　　　⇒SSLContextを使えばよいっぽいことが書いてある ▲
 
---------
-■Sunは、2010年1月27日にオラクルにより吸収合併
+        context = SSLContext.getInstance("TLSv1.2");
+        context.init(null,null,null);
+        SSLContext.setDefault(context); 
+        SSLSocketFactory factory = (SSLSocketFactory)context.getSocketFactory();
+        SSLSocket socket = (SSLSocket)factory.createSocket();
+        protocols = socket.getEnabledProtocols();
 
+        OR
 
---------
-■SunJSSE で、TLSv1.2を有効にする? ★
-https://superuser.com/questions/747377/enable-tls-1-1-and-1-2-for-clients-on-java-7
+        try {
+                SSLContext ctx = SSLContext.getInstance("TLSv1.2");
+                ctx.init(null, null, null);
+                SSLContext.setDefault(ctx);
+        } catch (Exception e) {
+                System.out.println(e.getMessage());
+        }
 
-　https://stackoverflow.com/questions/39157422/how-to-enable-tls-1-2-in-java-7
-　　⇒★
-　https://bugs.launchpad.net/ubuntu/+source/openjdk-7/+bug/1314113
-　　⇒★
+　　　⇒JDK 7u_80でも、TLSv1.2にできるっぽいことが書いてる ▲
+
+        import java.security.NoSuchAlgorithmException;
+        import java.security.Provider;
+        import javax.net.ssl.SSLContextSpi;
+        import sun.security.jca.GetInstance;
+        import sun.security.jca.ProviderList;
+        import sun.security.jca.Providers;
+
+        public static void enableTLSv12ForMssqlJdbc() throws NoSuchAlgorithmException
+        {
+            ProviderList providerList = Providers.getProviderList();
+            GetInstance.Instance instance = GetInstance.getInstance("SSLContext", SSLContextSpi.class, "TLS");
+            for (Provider provider : providerList.providers())
+            {
+                if (provider == instance.provider)
+                {
+                    provider.put("Alg.Alias.SSLContext.TLS", "TLSv1.2");
+                }
+            }
+        }
+
+　　https://bugs.launchpad.net/ubuntu/+source/openjdk-7/+bug/1314113
+　　　⇒SSLContextを使えばよいっぽいことが書いてある ▲
 
         // javac ProtocolTest.java && java ProtocolTest
 
@@ -156,18 +333,29 @@ https://superuser.com/questions/747377/enable-tls-1-1-and-1-2-for-clients-on-jav
                 {
                      System.out.println("  " + protocols[i]);
                 }
+
+                // kawa add >
+                if (socket != null && (socket instanceof SSLSocket)) {
+                    ((SSLSocket)socket).setEnabledProtocols(new String[] {"TLSv1.2"});
+                }
+                // kawa add <<
             }
         }
 
 
 
+--------
+■結論 ▲
+・SunJSSE + Apache HttpClient で、TLS通信を実現する。
+・HttpClientは、TLS云々は設定できないので、キモはSunJSSEだと思う。
+・さらにキモなのは、SunJSSEのSSLContextクラスだと思う。
+・Java7でもTLSv1.2を有効にできそうだが、もしかしたらJava7でもマイナーバージョンによっては出来ないのかも。
+・おそらくJava 7 Update 95へのアップデートは必要かも。（jdk.tls.client.protocolsを設定するために）
+・Java 7 Update 95（2016年1月）はOracleのユーザーでないとダウンロードできない。（多分Java7の最後のリリース）
+・いろいろ調べると、Java8にするのがベストっぽい。(デフォルトでTLSv1.2になるので)
 
-
-
-
-
-
-
+・もしかして、JSSEのHTTPクライアントクラス（HttpsURLConnection）を使えば、Java7 u95にしなくてもいけるかも。▲
+・HttpClientHttpURLConnectionを実験してみたい。。▲
 
 
 
