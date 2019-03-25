@@ -372,4 +372,6 @@ http://kkv.hatenablog.com/entry/2014/11/01/170003
 https://stackoverflow.com/questions/28391798/how-to-set-tls-version-on-apache-httpclient
 http://archive.apache.org/dist/httpcomponents/httpclient/source/
 
+https://ameblo.jp/sakuracsblog2/entry-12382200284.html   (Windows7 OSのTLS1.2対応)
+https://www.catalog.update.microsoft.com/Search.aspx?q=kb3140245  (上記と同じ)
 
