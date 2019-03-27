@@ -1,2 +1,3 @@
 ﻿https://www.programcreek.com/java-api-examples/?action=search   (java-api-examples)
 https://www.programcreek.com/java-api-examples/index.php?api=org.apache.http.client.HttpClient
+https://stackoverflow.com/questions/51163460/understanding-ssl-in-apache-httpclient-java
