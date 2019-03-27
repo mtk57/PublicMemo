@@ -1,60 +1,4 @@
-﻿
--------------------------------------------------------------------------------------------------
-
-
-・SSLSocketFactoryで以下の例外が発生しており、通信確認まで行えていない。
-  知見があれば教示をお願いしたい。
-  ⇒これは聞かなくてよいかも。
-
-・本番サーバーはクライアント認証を行うのか？
-　⇒行う場合、クライアント証明書のインストール等はどうするのか？
-　⇒本番サーバーとの接続テストはSTで行うのか？（SSTではダミーサーバーでよいのか？）
-
-
--------------------------------------------------------------------------------------------------
-
-
-
--------------------------------------------------------------------------------------------------
-■直近の問題点
-・OC SSLSocketFactoryで例外。(まだ通信前なので環境っぽいが)
-  ⇒FIPS mode only SunJSSE TrustManagers may be used   FIPSモードのみのSunJSSE TrustManagerが使用可能
-  ⇒TrustStrategy
-  ⇒JSSE = Java Secure Socket Extension
-  ⇒なんとなく、cacertsが絡んでいるっぽい。(https://docs.oracle.com/javase/jp/7/technotes/guides/security/jsse/JSSERefGuide.html#HTTPSSample)
-  ⇒http://blog.livedoor.jp/k_urushima/tag/JSSE
-  ⇒https://www2.cs.duke.edu/csed/java/jdk1.7/technotes/guides/security/jsse/FIPS.html
-  ⇒https://www.databaseadm.com/article/12258684/java.security.KeyManagementException%3A+FIPS+mode%3A+only+SunJSSE+TrustManagers
-  ⇒FIPSモードの場合、暗号化プロバイダはSunPKCS11-NSS
-  ⇒https://docs.oracle.com/cd/E57014_01/wls/SECMG/fips.htm#BABHHFFB
-  ⇒https://living-sun.com/ja/java/449160-is-there-a-way-to-load-a-different-cacerts-than-the-one-specified-in-the-java_home-jre-lib-security-folder-java-security-ssl-jsse.html
-  ⇒https://stackoverflow.com/questions/24847742/only-sunjsse-trustmanagers-may-be-used-when-debugging-in-eclipse
-
-
-
-・OCM HttpClient.executeで例外。(なんとなくこれも環境っぽいが)
-  ⇒
-
-
-・RawcapでTCPしかキャプチャできない
-  ⇒もしかしてFirewall?
-・家のWiresharkは Ver3.0.0
-
-
-org.apache.http.conn.ssl.SSLSocketFactory
-
-
-
-=======================================================================================
-3/22 ～   ★は課題、調査すること  ▲重要ポイント
-
-
-■ダメ元で試してみること (3/25)
-1.OpenSSL.exeを入れ替えてみる  (絶対関係ないと思うが)
-2.SunJSSEに変えてみる　（import javax.net.ssl とかって出来る?）
-3.Java7で動くコンソールアプリ
-
---------
+﻿--------
 ■基本
 　https://qiita.com/nowokay/items/c1de127354cd1b0ddc5e
 
@@ -103,6 +47,30 @@ org.apache.http.conn.ssl.SSLSocketFactory
 　　Tomcatで提供される機能は基本的にServlet, JSP, JDBC接続プールのみ。
 
 　　⇒要は、JBossもTomcatもJavaをWebで動かすためのアプリ。
+
+　●cacerts  (...\jre\lib\security\cacerts)
+　　JREに同梱されているJavaのデフォルトのCA証明書ファイル（トラストストア）
+　　CAが発行したルート証明書・中間証明書など自らが信頼する証明書が保存されます。
+
+
+　●キーストア
+　　自らの証明書を保存
+
+　　キーストアに保存するサーバー証明書の作成手順（OpenSSLで可能）
+
+　　　1.秘密鍵・公開鍵を作成
+　　　2.1からCSR（Certificate Signing Request:証明書要求）を作成
+　　　3.CA（Certificate Authority:認証局）に2を提出
+　　　4.CAがサーバー証明書を発行
+　　　5.キーストアに4をインポート（JDK付属のkeytoolで可能）
+　　　6.トラストストア構築
+
+
+
+　●トラストストア
+　　信頼するCAが発行した証明書を保存
+
+
 
 
 --------
@@ -344,34 +312,12 @@ org.apache.http.conn.ssl.SSLSocketFactory
 
 
 
---------
-■結論 ▲
-・SunJSSE + Apache HttpClient で、TLS通信を実現する。
-・HttpClientは、TLS云々は設定できないので、キモはSunJSSEだと思う。
-・さらにキモなのは、SunJSSEのSSLContextクラスだと思う。
-・Java7でもTLSv1.2を有効にできそうだが、もしかしたらJava7でもマイナーバージョンによっては出来ないのかも。
-・おそらくJava 7 Update 95へのアップデートは必要かも。（jdk.tls.client.protocolsを設定するために）
-・Java 7 Update 95（2016年1月）はOracleのユーザーでないとダウンロードできない。（多分Java7の最後のリリース）
-・いろいろ調べると、Java8にするのがベストっぽい。(デフォルトでTLSv1.2になるので)
-
-・もしかして、JSSEのHTTPクライアントクラス（HttpsURLConnection）を使えば、Java7 u95にしなくてもいけるかも。▲
-・HttpClientHttpURLConnectionを実験してみたい。。▲
 
 
 
 
-
-
-
-===========================================================================================
-http://kkv.hatenablog.com/entry/2014/10/30/000117
-http://kkv.hatenablog.com/entry/2014/10/31/095307
-http://kkv.hatenablog.com/entry/2014/11/01/170003
-
-
-https://stackoverflow.com/questions/28391798/how-to-set-tls-version-on-apache-httpclient
-http://archive.apache.org/dist/httpcomponents/httpclient/source/
-
-https://ameblo.jp/sakuracsblog2/entry-12382200284.html   (Windows7 OSのTLS1.2対応)
-https://www.catalog.update.microsoft.com/Search.aspx?q=kb3140245  (上記と同じ)
-
+https://qiita.com/kompiro/items/25b2e01c2e9aaab7f67d   (SSLクライアント証明書を使って通信する)
+https://www.programcreek.com/java-api-examples/index.php?api=org.apache.http.client.HttpClient
+https://stackoverflow.com/questions/51163460/understanding-ssl-in-apache-httpclient-java
+https://codezine.jp/article/detail/105   (JSSEを利用した簡単なSSLサーバー/クライアントの実装例)
+https://qiita.com/hakozaki/items/f9b8605f5907faad4d68   (HttpClientにて自己証明書や、ルート証明書なしでのSSLアクセスを可能とする  DefaultHttpClient)
