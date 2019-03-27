@@ -1,0 +1,2 @@
+﻿https://www.programcreek.com/java-api-examples/?action=search   (java-api-examples)
+https://www.programcreek.com/java-api-examples/index.php?api=org.apache.http.client.HttpClient
