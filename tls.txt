@@ -353,6 +353,7 @@ https://qiita.com/hakozaki/items/f9b8605f5907faad4d68   (HttpClientにて自己�
                 ⇒ServletContextを使う
                   http://rikutoto.blogspot.com/2013/06/servlet.html
                   http://park1.wakwak.com/~ima/java_tips0009.html
+                  https://www.javadrive.jp/servlet/webxml/index11.html   (web.xml)
 
                 ⇒やはり既存で同じようなことをしている箇所を調べるのがよい。●
 
