@@ -321,3 +321,44 @@ https://www.programcreek.com/java-api-examples/index.php?api=org.apache.http.cli
 https://stackoverflow.com/questions/51163460/understanding-ssl-in-apache-httpclient-java
 https://codezine.jp/article/detail/105   (JSSEを利用した簡単なSSLサーバー/クライアントの実装例)
 https://qiita.com/hakozaki/items/f9b8605f5907faad4d68   (HttpClientにて自己証明書や、ルート証明書なしでのSSLアクセスを可能とする  DefaultHttpClient)
+
+
+
+------------------------
+2019/4/2 課題
+
+1.評価用サーバ にTLSv1.0専用がない。
+  ⇒C#のOR指定はおそらく大丈夫なはず。(OpenSSLでテスト済)
+
+2.SSLContext.getInstance()は 1つしか指定できない。"TLS"を指定してもv1になる。
+  ⇒案は2つ
+    A.まずv1.2で接続して、失敗したらv1.0で接続する
+       ⇒失敗時は、HttpClient.execute()で IOException?
+        ⇒とりあえずログ強化して、いろいろ実験するしかない●
+
+    B.外部で、v1.0 or v1.2を指定できるようにする
+       ⇒Javaサーブレットで可能なのは?
+          B-1.DB
+                ⇒絶対却下。一時的にしか使用しないのにカラム追加できる訳がない
+          B-2.レジストリ
+                ⇒JNAが必要
+          B-3.ファイル
+                ⇒ServletContextが必要?
+
+                ⇒ServletContextを使わない
+                  ⇒URL resourceUrl = this.getClass().getClassLoader().getResource("hoge.xml");  // 無い場合は戻り値はnull
+                    https://docs.oracle.com/javase/jp/8/docs/api/java/lang/ClassLoader.html
+                    http://g0nchang.hatenablog.com/entry/2016/06/28/223859
+
+                ⇒ServletContextを使う
+                  http://rikutoto.blogspot.com/2013/06/servlet.html
+                  http://park1.wakwak.com/~ima/java_tips0009.html
+
+                ⇒やはり既存で同じようなことをしている箇所を調べるのがよい。●
+
+
+
+
+
+
+
