@@ -1,1 +1,37 @@
 ﻿https://www.programcreek.com/java-api-examples/?action=search   (java-api-examples)
+
+
+
+
+■SOAP
+HTTP、FTP、SMTPなどのプロトコルを使ってWebサービスを呼び出すもので、通信にはXML文書が用いられる。
+
+
+■WSDL  (Web Services Description Language)
+
+Webサービス記述言語、または定義ファイル
+XML形式
+
+Webサービスの具体的内容を記述し、サービス提供されている場所、
+サービスに用いられているメッセージのフォーマット、プロトコルなどが記述されている。
+
+---
+XMLを用いてWebサービスが記述されたもの。
+Webサービスのアドレスの最後に『?wsdl』と追加すると閲覧、使用することができる。
+Apache Axisや.Net等を使用することで、WSDLからスタブ（WebサービスのSOAP通信の部分等・・）を自動生成することができ、
+XMLやSOAPを意識することなく、簡単にクライアントが作成できる。
+
+
+■Apache Axis
+Javaで書かれたSOAP実装の一つです。 
+Apache SOAP2.xの後継にあたり、Apache SOAPに比べ JAX-RPC、WSDLへの対応など大幅機能追加されています。 
+
+
+
+■参考
+https://blogs.yahoo.co.jp/dk521123/36872164.html
+http://d.hatena.ne.jp/htz/20090218/1234957870
+http://muimi.com/j/axis/
+http://axis.apache.org/axis/
+https://axis.apache.org/axis/ja/java/integration-guide.html
+https://www.atmarkit.co.jp/ait/articles/0303/18/news003.html
