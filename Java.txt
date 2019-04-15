@@ -22,9 +22,26 @@ Apache Axisや.Net等を使用することで、WSDLからスタブ（Webサー�
 XMLやSOAPを意識することなく、簡単にクライアントが作成できる。
 
 
+AxisについているWSDL2Javaみたいなコマンドで、WSDLファイルからスタブを自動生成するイメージだと思う。
+
+
+
+
 ■Apache Axis
 Javaで書かれたSOAP実装の一つです。 
 Apache SOAP2.xの後継にあたり、Apache SOAPに比べ JAX-RPC、WSDLへの対応など大幅機能追加されています。 
+
+JavaとXML技術に基づいたWebサービスのフレームワーク
+SOAPサーバの実装、Webサービスを生成するためのツール、Webサービスをデプロイ（配備）するためのツールなどから構成
+
+Axis1とAxis2があり、Axis1はかなりダメな実装らしい。
+Axis1は1.4が最後。（2006年開発終了）
+Axis2は1.7.8が最新 (2018/5/19)
+
+
+
+
+
 
 
 
@@ -35,3 +52,8 @@ http://muimi.com/j/axis/
 http://axis.apache.org/axis/
 https://axis.apache.org/axis/ja/java/integration-guide.html
 https://www.atmarkit.co.jp/ait/articles/0303/18/news003.html
+https://www.zaneli.com/blog/20111218
+https://stackoverflow.com/questions/34180289/how-to-enforce-an-axis-client-to-use-tlsv1-2-protocol
+https://axis.apache.org/axis/java/apiDocs/org/apache/axis/AxisProperties.html
+https://axis.apache.org/axis/ja/java/user-guide.html
+https://axis.apache.org/axis/ja/java/developers-guide.html
