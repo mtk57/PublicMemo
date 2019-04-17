@@ -57,3 +57,14 @@ https://stackoverflow.com/questions/34180289/how-to-enforce-an-axis-client-to-us
 https://axis.apache.org/axis/java/apiDocs/org/apache/axis/AxisProperties.html
 https://axis.apache.org/axis/ja/java/user-guide.html
 https://axis.apache.org/axis/ja/java/developers-guide.html
+
+
+
+https://wiki.apache.org/ws/FrontPage/Axis/AxisClientConfiguration/Ssl
+https://wiki.apache.org/ws/FrontPage/Axis/DynamicSSLConfig
+https://github.com/linhkuivanen/axistools
+https://stackoverflow.com/questions/30827978/how-to-programmatically-set-the-ssl-context-of-a-axis-client
+https://stackoverflow.com/questions/3247746/java-loading-ssl-keystore-via-a-resource/3256676#3256676
+http://axis.apache.org/axis/java/transports/http-hc3/index.html
+  ⇒ここを見ると、トランスポート層はHttpClient3を使っているとあるので、
+    ImageUploadで用いた手法が使えるのでは???
