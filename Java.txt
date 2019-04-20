@@ -68,3 +68,8 @@ https://stackoverflow.com/questions/3247746/java-loading-ssl-keystore-via-a-reso
 http://axis.apache.org/axis/java/transports/http-hc3/index.html
   ⇒ここを見ると、トランスポート層はHttpClient3を使っているとあるので、
     ImageUploadで用いた手法が使えるのでは???
+
+
+
+https://www.soapui.org/soap-mocking/tips-and-tricks/securing-mockservices-with-ssl.html
+SoapUIでSSL
