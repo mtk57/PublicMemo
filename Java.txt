@@ -78,6 +78,24 @@ https://docs.oracle.com/cd/E77565_01/E54670/html/ol7-keytool-sec.html
 https://www.qoosky.io/techs/9db75cec15
 
 
+-------------------------
+https://hc.apache.org/httpclient-3.x/sslguide.html
+http://svn.apache.org/viewvc/httpcomponents/oac.hc3x/trunk/src/contrib/org/apache/commons/httpclient/contrib/ssl/EasySSLProtocolSocketFactory.java?view=markup
+
+
+public boolean equals(Object obj) {
+    return ((obj != null) && obj.getClass().equals(EasySSLProtocolSocketFactory.class));
+}
+
+public int hashCode() {
+    return EasySSLProtocolSocketFactory.class.hashCode();
+}
+
+https://stackoverflow.com/questions/52875113/does-protocol-registerprotocol-for-apache-httpclient-cause-a-global-static-chang
+⇒Protocol.registerProtocolは全スレッドが影響を受けるとある
+
+
+
 
 ------------------------------------------
 https://go-journey.club/archives/4038
