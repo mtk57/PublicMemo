@@ -227,90 +227,8 @@
 　　https://stackoverflow.com/questions/39157422/how-to-enable-tls-1-2-in-java-7
 　　　⇒SSLContextを使えばよいっぽいことが書いてある ▲
 
-        context = SSLContext.getInstance("TLSv1.2");
-        context.init(null,null,null);
-        SSLContext.setDefault(context); 
-        SSLSocketFactory factory = (SSLSocketFactory)context.getSocketFactory();
-        SSLSocket socket = (SSLSocket)factory.createSocket();
-        protocols = socket.getEnabledProtocols();
-
-        OR
-
-        try {
-                SSLContext ctx = SSLContext.getInstance("TLSv1.2");
-                ctx.init(null, null, null);
-                SSLContext.setDefault(ctx);
-        } catch (Exception e) {
-                System.out.println(e.getMessage());
-        }
-
-　　　⇒JDK 7u_80でも、TLSv1.2にできるっぽいことが書いてる ▲
-
-        import java.security.NoSuchAlgorithmException;
-        import java.security.Provider;
-        import javax.net.ssl.SSLContextSpi;
-        import sun.security.jca.GetInstance;
-        import sun.security.jca.ProviderList;
-        import sun.security.jca.Providers;
-
-        public static void enableTLSv12ForMssqlJdbc() throws NoSuchAlgorithmException
-        {
-            ProviderList providerList = Providers.getProviderList();
-            GetInstance.Instance instance = GetInstance.getInstance("SSLContext", SSLContextSpi.class, "TLS");
-            for (Provider provider : providerList.providers())
-            {
-                if (provider == instance.provider)
-                {
-                    provider.put("Alg.Alias.SSLContext.TLS", "TLSv1.2");
-                }
-            }
-        }
-
 　　https://bugs.launchpad.net/ubuntu/+source/openjdk-7/+bug/1314113
 　　　⇒SSLContextを使えばよいっぽいことが書いてある ▲
-
-        // javac ProtocolTest.java && java ProtocolTest
-
-        import javax.net.ssl.SSLSocket;
-        import javax.net.ssl.SSLContext;
-        import javax.net.SocketFactory;
-        import javax.net.ssl.SSLSocketFactory;
-
-        public class ProtocolTest {
-            
-            public static void main(String[] args) throws Exception {
-
-                SSLContext context = SSLContext.getInstance("TLS");
-                context.init(null,null,null);
-
-                SSLSocketFactory factory = (SSLSocketFactory)context.getSocketFactory();
-                SSLSocket socket = (SSLSocket)factory.createSocket();
-
-                String[] protocols = socket.getSupportedProtocols();
-
-                System.out.println("Supported Protocols: " + protocols.length);
-                for(int i = 0; i < protocols.length; i++)
-                {
-                     System.out.println("  " + protocols[i]);
-                }
-
-                protocols = socket.getEnabledProtocols();
-
-                System.out.println("Enabled Protocols: " + protocols.length);
-                for(int i = 0; i < protocols.length; i++)
-                {
-                     System.out.println("  " + protocols[i]);
-                }
-
-                // kawa add >
-                if (socket != null && (socket instanceof SSLSocket)) {
-                    ((SSLSocket)socket).setEnabledProtocols(new String[] {"TLSv1.2"});
-                }
-                // kawa add <<
-            }
-        }
-
-
 
 
 
@@ -324,39 +242,21 @@ https://qiita.com/hakozaki/items/f9b8605f5907faad4d68   (HttpClientにて自己�
 
 
 
-------------------------
-2019/4/2 課題
+■Wireshark
 
-1.評価用サーバ にTLSv1.0専用がない。
-  ⇒C#のOR指定はおそらく大丈夫なはず。(OpenSSLでテスト済)
+ネットワークインターフェースが見つかりません。の対処方法
 
-2.SSLContext.getInstance()は 1つしか指定できない。"TLS"を指定してもv1になる。
-  ⇒案は2つ
-    A.まずv1.2で接続して、失敗したらv1.0で接続する
-       ⇒失敗時は、HttpClient.execute()で IOException?
-        ⇒とりあえずログ強化して、いろいろ実験するしかない●
+https://osqa-ask.wireshark.org/questions/61560/no-interfaces-found
+   No Interfaces Found
 
-    B.外部で、v1.0 or v1.2を指定できるようにする
-       ⇒Javaサーブレットで可能なのは?
-          B-1.DB
-                ⇒絶対却下。一時的にしか使用しないのにカラム追加できる訳がない
-          B-2.レジストリ
-                ⇒JNAが必要
-          B-3.ファイル
-                ⇒ServletContextが必要?
+http://nyatla.hatenadiary.jp/entry/20131226/1388036638
+   WiresharkがWindows8.1で動かない場合の対処方法
 
-                ⇒ServletContextを使わない
-                  ⇒URL resourceUrl = this.getClass().getClassLoader().getResource("hoge.xml");  // 無い場合は戻り値はnull
-                    https://docs.oracle.com/javase/jp/8/docs/api/java/lang/ClassLoader.html
-                    http://g0nchang.hatenablog.com/entry/2016/06/28/223859
+http://zettai-non-sugar.blogspot.com/2009/08/windows-7-rc-64-bit-wireshark.html
+   Windows 7 RC 64-bit で Wireshark をインストールしてみた
 
-                ⇒ServletContextを使う
-                  http://rikutoto.blogspot.com/2013/06/servlet.html
-                  http://park1.wakwak.com/~ima/java_tips0009.html
-                  https://www.javadrive.jp/servlet/webxml/index11.html   (web.xml)
 
-                ⇒やはり既存で同じようなことをしている箇所を調べるのがよい。●
-
+ ★キモは、WinPcap、管理者権限あたり。
 
 
 
