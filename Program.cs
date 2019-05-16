@@ -58,3 +58,27 @@ namespace ConsoleApp1
         }
     }
 }
+
+
+
+
+設計方針
+　・ツール共通項
+
+概念図
+　http://gihyo.jp/dev/serial/01/hdesign/0001
+
+
+
+クラス一覧
+　・責務
+
+クラス図
+
+
+データフロー
+
+
+
+
+
