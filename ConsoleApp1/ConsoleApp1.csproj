@@ -43,11 +43,28 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controller\ServiceContoller.cs" />
+    <Compile Include="DataAccess\ExcelAccess.cs" />
+    <Compile Include="DataAccess\SqlAccess.cs" />
+    <Compile Include="Factory\ServiceFactory.cs" />
+    <Compile Include="Presentation\ToolMain.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Service\Convert\ConvertService.cs" />
+    <Compile Include="Service\Exception\ExceptionHandler.cs" />
+    <Compile Include="DataAccess\LogAccess.cs" />
+    <Compile Include="Service\Exception\ToolException.cs" />
+    <Compile Include="Service\Output\OutputService.cs" />
+    <Compile Include="Service\Validation\ValidationService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Interface\Contoller\" />
+    <Folder Include="Interface\DataAccess\" />
+    <Folder Include="Interface\Presentation\" />
+    <Folder Include="Interface\Service\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
