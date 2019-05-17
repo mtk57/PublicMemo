@@ -1,12 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ConsoleApp1.Factory;
+using ConsoleApp1.Interface.DataAccess;
 
 namespace ConsoleApp1.Presentation
 {
-    class ToolMain
+    public class ToolMain : AbstractTool
     {
+        protected override void PreProcess()
+        {
+        }
+
+        protected override IResult MainProcess(IParam param)
+        {
+            var contoller = ConrollerFactory.GetContoller();
+
+            return contoller.Run(param);
+        }
+
+        protected override void PostProcess()
+        {
+        }
     }
 }

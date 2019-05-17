@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ConsoleApp1.Service.Common
+﻿namespace ConsoleApp1.DataAccess
 {
-    class Logger
+    public static class LogAccess
     {
+        public static void Logger()
+        {
+
+        }
     }
 }

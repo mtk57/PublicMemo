@@ -2,16 +2,17 @@
 
 namespace ConsoleApp1.DataAccess
 {
-    public class SqlAccess : IDataAccess
+    public class Param : IParam
     {
         public object Value { get; private set; }
 
-        private SqlAccess()
-        {
+        private Param()
+        { 
         }
 
-        public SqlAccess(IParam param)
+        public Param(object value)
         {
+            this.Value = value;
         }
     }
 }

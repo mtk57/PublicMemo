@@ -43,10 +43,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Constant.cs" />
     <Compile Include="Controller\ServiceContoller.cs" />
     <Compile Include="DataAccess\ExcelAccess.cs" />
+    <Compile Include="DataAccess\Param.cs" />
+    <Compile Include="DataAccess\Result.cs" />
     <Compile Include="DataAccess\SqlAccess.cs" />
+    <Compile Include="Factory\PresentationFactory.cs" />
+    <Compile Include="Factory\ConrollerFactory.cs" />
     <Compile Include="Factory\ServiceFactory.cs" />
+    <Compile Include="Interface\Contoller\IContoller.cs" />
+    <Compile Include="Interface\DataAccess\IDataAccess.cs" />
+    <Compile Include="Interface\DataAccess\IParam.cs" />
+    <Compile Include="Interface\DataAccess\IResult.cs" />
+    <Compile Include="Interface\Exception\IToolException.cs" />
+    <Compile Include="Interface\Presentation\IPresentation.cs" />
+    <Compile Include="Interface\Service\IService.cs" />
+    <Compile Include="Presentation\AbstractTool.cs" />
     <Compile Include="Presentation\ToolMain.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -60,11 +73,6 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Interface\Contoller\" />
-    <Folder Include="Interface\DataAccess\" />
-    <Folder Include="Interface\Presentation\" />
-    <Folder Include="Interface\Service\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,12 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ConsoleApp1.DataAccess;
+using ConsoleApp1.Interface.DataAccess;
+using ConsoleApp1.Interface.Service;
 
 namespace ConsoleApp1.Service.Convert
 {
-    class ConvertService
+    public class ConvertService : IService
     {
+        public IResult Execute(IParam param)
+        {
+            return new Result(0, new Param(null));
+        }
     }
 }
