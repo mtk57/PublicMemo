@@ -7,6 +7,11 @@ namespace ConsoleApp1
     {
         static int Main(string[] args)
         {
+            // test >>
+            var testA = new TestTableA(123, false, "testStr");
+            var str = SqlAccess.CreateInsert(testA);
+            // test <<
+
             var tool = PresentationFactory.GetPresentation(PresentationFactory.PresentaionType.Console);
 
             var result = tool.Run(new Param(args));
