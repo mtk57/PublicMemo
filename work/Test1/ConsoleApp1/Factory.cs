@@ -7,19 +7,23 @@ namespace ConsoleApp1
 {
     public static class Factory
     {
+        private const string KEY_FILE_NAME = @"FileName{0}";
+        private const string KEY_CLASS_NAME = @"ClassName{0}";
+
         public static IService GetService(int param)
         {
-            if (param == 1)
-            {
-                string val1 = ConfigurationManager.AppSettings["key1"];
+            var fileNameKey = string.Format(KEY_FILE_NAME, param);
+            var classNameKey = string.Format(KEY_CLASS_NAME, param);
 
-                Assembly asm = Assembly.LoadFrom(val1);
-                Module mod = asm.GetModule("ServiceA.dll");
-                System.Type type = mod.GetType("ServiceA.ServiceA");
-                if (type != null)
-                {
-                    return (IService)Activator.CreateInstance(type);
-                }
+            var valFileName = ConfigurationManager.AppSettings[fileNameKey];
+            var valClassName = ConfigurationManager.AppSettings[classNameKey];
+
+            Assembly asm = Assembly.LoadFrom(valFileName);
+            Module mod = asm.GetModule(valFileName);
+            System.Type type = mod.GetType(valClassName);
+            if (type != null)
+            {
+                return (IService)Activator.CreateInstance(type);
             }
             return null;
         }
