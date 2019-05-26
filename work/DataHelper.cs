@@ -9,6 +9,70 @@ namespace CommonLib.Data.Helper
     public static class DataHelper
     {
         /// <summary>
+        /// DataTableの指定位置から指定方向に進み空セルを見つけたら直前の位置を返す
+        /// 位置は0始まり
+        /// </summary>
+        /// <param name="table">DataTable</param>
+        /// <param name="startRow">指定位置(行)</param>
+        /// <param name="startClm">指定位置(列)</param>
+        /// <param name="direction">探索方向</param>
+        /// <returns>テーブルの端の位置</returns>
+        public static int GetPositionOfTableEdge(DataTable table, int startRow, int startClm, Constant.Direction direction = Constant.Direction.Right)
+        {
+            var result = 0;
+
+            var srcRowCnt = table.Rows.Count;
+            var srcClmCnt = table.Columns.Count;
+
+            var sr = startRow;
+            var sc = startClm;
+
+            if (sr < 0) sr = 0;
+            if (sc < 0) sc = 0;
+            if (sr >= srcRowCnt) sr = srcRowCnt - 1;
+            if (sc >= srcClmCnt) sc = srcClmCnt - 1;
+
+            if (direction == Constant.Direction.Right)
+            {
+                for (var c = sc; ; c++)
+                {
+                    if (c >= srcClmCnt) break;
+
+                    var value = table.Rows[sr][c].ToString();
+
+                    if (string.IsNullOrEmpty(value)) break;
+
+                    result++;
+                }
+                return startClm + result-1;
+            }
+            else if (direction == Constant.Direction.Down)
+            {
+                for (var r = sr; ; r++)
+                {
+                    if (r >= srcRowCnt) break;
+
+                    var value = table.Rows[r][sc].ToString();
+
+                    if (string.IsNullOrEmpty(value)) break;
+
+                    result++;
+                }
+                return startRow + result-1;
+            }
+            else if (direction == Constant.Direction.Up)
+            {
+                // 未サポート
+            }
+            else
+            {
+                // 未サポート
+            }
+
+            return result;
+        }
+
+        /// <summary>
         /// DataTableの指定位置から指定方向に進み空セルを見つけるまで値を収集する
         /// 位置は0始まり
         /// </summary>
@@ -68,6 +132,22 @@ namespace CommonLib.Data.Helper
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// DataTableを指定範囲で切り出す
+        /// 範囲指定は0始まり
+        /// </summary>
+        /// <param name="table">DataTable</param>
+        /// <param name="startRow">開始行</param>
+        /// <param name="startClm">開始列</param>
+        /// <returns>DataTable</returns>
+        public static DataTable TrimmingTable(DataTable table, int startRow, int startClm)
+        {
+            var endRow = GetPositionOfTableEdge(table, startRow, startClm, Constant.Direction.Down);
+            var endClm = GetPositionOfTableEdge(table, startRow, startClm, Constant.Direction.Right);
+
+            return TrimmingTable(table, startRow, startClm, endRow, endClm);
         }
 
         /// <summary>
