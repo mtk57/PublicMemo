@@ -9,6 +9,114 @@ namespace CommonLib.Data.Helper
     public static class DataHelper
     {
         /// <summary>
+        /// DataTable内のテーブルを収集する
+        /// 
+        /// 例.
+        /// 
+        ///    A,  B,    C,    D,    E,    F
+        /// 0      TableName1
+        /// 1    , Clm1, Clm2, Clm3, CLm4,
+        /// 2    , Val1, Val2, Val3, Val4, 
+        /// 3    ,
+        /// 4    , TableName2
+        /// 5    , Clm1, Clm2,     ,     ,
+        /// 6    , Val1, Val2,     ,     ,
+        /// 7    ,     ,     ,     ,     ,
+        /// 8    ,     ,     ,     ,     ,
+        /// 
+        /// 
+        /// 開始位置(行,列)には、テーブル名があるものとする。（上記例の"TableName1"）
+        /// テーブルには列名があるものとする。（上記例の"Clm1"～"Clm4"）
+        /// 列名の終わりは空文字とする。（上記例のF1）
+        /// 列名の次の行からは値の行が続くものとする。（上記例の"Val1"～"Val4"）
+        /// テーブルの終わりは先頭列の行が空文字とする。（上記例のB3）
+        /// 複数のテーブルは縦に並ぶものとする。（上記例の"TableName2"）
+        /// テーブルの終わりの空文字が2行以上連続した場合は収集を終了する。（上記例のB8）
+        /// </summary>
+        /// <param name="table">テーブル</param>
+        /// <param name="startRow">開始位置(行)</param>
+        /// <param name="startClm">開始位置(列)</param>
+        /// <returns>収集したテーブルリスト</returns>
+        public static List<DataTable> CollectInnerTable(DataTable table, int startRow = 0, int startClm = 0)
+        {
+            var retTable = new List<DataTable>();
+
+            var sr = startRow;      // start row
+            var sc = startClm;      // start clm
+
+            var er = table.Rows.Count-1;    // end row
+
+            // 開始位置は空か?
+            if (string.IsNullOrEmpty(table.Rows[sr][sc].ToString())) return retTable;
+
+
+            // 開始列の行に空文字が2行以上連続するまでループ
+            for(var r = sr; ; r++)
+            {
+                if (r > er) return retTable;
+
+                // テーブル名を収集
+                var tableName = table.Rows[r][sc].ToString();
+
+                // テーブル名が空文字なので終了
+                if (string.IsNullOrEmpty(tableName)) return retTable;
+
+
+                // ワークテーブルを作成
+                var wkTable = new DataTable(tableName);
+
+                r++;
+
+                // 列名を収集
+                var clmNames = CollectString(table, r, sc);
+
+                // 列名が空文字なので終了
+                if (clmNames.Count() == 0) return retTable;
+
+                // 列名をワークテーブルに追加
+                wkTable.Columns.AddRange(clmNames.Select(n => new DataColumn(n)).ToArray());
+
+
+                r++;
+                var valRowCnt = 0;
+
+                // 開始列の行に空文字を検知するまでループ (vr = value row)
+                for (var vr = r; ; vr++)
+                {
+                    // テーブルの行数を超えているのでループを抜ける
+                    if (vr > er) break;
+
+                    // 値を収集
+                    var rowVals = CollectString(table, vr, sc);
+
+                    // 空文字を検知したのでループを抜ける
+                    if (rowVals.Count() == 0) break;
+
+                    // 値をワークテーブルに追加
+                    wkTable.Rows.Add(rowVals.ToArray());
+
+                    // 収集した行数++
+                    valRowCnt++;
+                }
+
+                // ワークテーブルをリストに追加
+                retTable.Add(wkTable);
+
+                // 収集した行数分カウンタを進める
+                r += valRowCnt;
+
+                // テーブルの行数を超えていれば終了
+                if (r > er) return retTable;
+
+                // 次の行も空文字?
+                var nextRowVal = table.Rows[r+1][sc].ToString();
+
+                // 空文字なので終了
+                if (string.IsNullOrEmpty(nextRowVal)) return retTable;
+            }
+        }
+
+        /// <summary>
         /// DataTableの指定位置から指定方向に進み空セルを見つけたら直前の位置を返す
         /// 位置は0始まり
         /// </summary>
