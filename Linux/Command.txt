@@ -1,0 +1,33 @@
+﻿Linux Command memo   since.2019/10/17-
+
+CentOS8
+
+
+コマンド		概要と使用例
+-------------------------------------------------------------------
+
+cat				
+cd
+chmod
+diff
+grep
+ls
+pwd
+su
+vi
+vim
+
+
+
+
+
+systemctl		systemdをコントロールする
+
+				sshdの再起動
+				# systemctl restart sshd
+
+				sshdの状態表示
+				# systemctl status sshd
+
+
+
