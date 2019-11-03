@@ -1,0 +1,808 @@
+﻿Python memo
+
+C#と比較している。
+結構、JavaScriptに似ているかも。
+
+
+■参考
+
+Python入門  （★オススメ）
+http://www.tohoho-web.com/python/index.html
+
+9cubed
+https://9cubed.info/list/Python
+
+動的にメソッド呼び出し（getattr）※C#のリフレクションみたいに文字列でメソッドを呼び出す
+https://symfoware.blog.fc2.com/blog-entry-1676.html
+
+動的にメソッドを追加（setattr）
+https://symfoware.blog.fc2.com/blog-entry-893.html
+
+PythonのABC - 抽象クラスとダック・タイピング
+https://qiita.com/kaneshin/items/269bc5f156d86f8a91c4
+
+■基本
+・C#みたいに波括弧でブロックする文化ではなく、インデントでブロックする。（rubyっぽい）
+・文の末尾にセミコロンは不要。（rubyっぽい）
+・スクリプト言語だがコンパイルも出来たりする。
+・変数宣言不要！（jsっぽい）
+　スコープはグローバルとローカルがある。（jsっぽい）
+・intやstringのような型はない！（変数に入っている値によって決まる）（jsっぽい）
+・文字の連結は+を使う。（C#っぽい）
+・クラスがある。（C#っぽい）
+・全てのクラスはオブジェクトは暗黙的にobjectを継承している。（C#っぽい。ただしPython3の場合）
+・組み込み関数が70個くらいある。（つまりそれと同じ名称のグローバルメソッドは作らないほうがよい）
+    ⇒https://docs.python.org/ja/3/library/functions.html
+・例外処理がある。（C#っぽい）
+・タプルがある。（C#っぽい）
+・ラムダ式がある。（C#っぽい）
+・yieldがある。（C#っぽい）
+・抽象クラス、抽象メソッドは言語仕様上ない！（しかし外部モジュール(abc)を使えば実現可能）
+・「__」で囲まれた特殊属性、特殊メソッドがある。（例：__init__）
+・「@」で始まるデコレータがある。C#の属性みたいなものかも。（例：@property）
+・行頭にエンコードルールを入れる必要がある。（例：# coding: utf-8）⇒Python3では不要！
+・ガベージコレクションがいる。（メモリリークする可能性もある）
+
+■グローバル変数
+関数の外部で定義された変数は グローバル変数 として扱われます。数の中でグローバル変数を参照することはできますが、
+代入することはできません。
+代入する場合は、global で宣言する必要があります。
+例：
+　count = 0         # グローバル変数
+
+　def func():
+　　print count       # 参照することはできる
+　　global count    # global宣言してやれば
+　　count += 1      # 代入することもできる
+
+■関数（メソッド）全般
+・クラス外の関数はグローバル関数となる。
+
+・return を省略すると「None」が返る。(いわゆるnull)
+
+・戻り値は複数返せる！（タプルとは違う）
+例：
+　def func():
+　　return 3, "ABC"
+
+　n, s = func()
+　print n, s #=> 3 ABC
+
+・デフォルト引数、キーワード付き引数が使える。(C#と同じ)
+例：
+　def repeat_msg(msg, repeat=3):    # デフォルト引数
+　　pass
+
+　repeat_msg('Hello')
+　repeat_msg('Yahho', repeat=5)    # キーワード付き引数
+
+・「*name」 は残りの順序引数を、「**name」 はキーワード付き引数を辞書型で受け取ります。
+例：
+　def func(a1, a2, *args, **params):
+　　print a1               #=> A
+　　print a2               #=> B
+　　print args            #=> ('C', 'D')
+　　print params       #=> {'k1': 'K1', 'k2': 'K2'}
+
+　func('A', 'B', 'C', 'D', k1='K1', k2='K2')
+
+■書式
+例１：
+
+　from datetime import datetime 
+
+　# 今日の日付（例：20180904）
+　today = datetime.now().strftime("%Y%m%d") 
+
+　# 1. 連結演算子を使用
+　file_1 = "file_" + today + ".txt"
+
+　# 2. %構文を使用
+　file_2 = "file_%s.txt" % today
+
+　# 3. formatメソッドを使用
+　file_3 = "file_{}.txt".format(today)
+
+　# 結果はすべて同じ（例：file_20180904.txt）
+
+例２：format()
+　print('りんご：{0}円 みかん：{1}円 合計：{2}円'.format(apple, orange, total))
+
+例３：format([])
+　apple = 50
+　orange = 100
+　total = apple + orange
+
+　list = [apple, orange, total] #リストの作成
+
+　print('りんご：{0[0]}円 みかん：{0[1]}円 合計：{0[2]}円'.format(list))
+
+
+例４：format()の数値表現
+　decimal = 106
+　print('{0}は2進数だと{0:b}、8進数だと{0:o}、16進数だと{0:X}'.format(decimal))
+
+例５：format()の幅指定
+　string1 = '左詰め'
+　string2 = '中央寄せ'
+　string3 = '右詰め'
+
+　print('{0:<10}'.format(string1))
+　print('{0:^10}'.format(string2))
+　print('{0:>10}'.format(string3))
+
+■例外処理
+
+例１：例外をcatch
+　try:
+　　print(1 / 0)
+　except ZeroDivisionError:
+　　print('Error')
+
+例２；例外をcatch
+　try:
+　　print(1 / 0)
+　except ZeroDivisionError as e:
+　　print(e)
+　　print(type(e))
+
+例３：全ての例外をcatch
+　try:
+　　print(a / b)
+　except Exception as e:
+　　print(e)
+
+例４：else
+try節で例外が発生せず正常終了したあとに行う処理をelse節に指定できる。
+例外が発生してexceptでキャッチした場合はelse節の処理は実行されない。
+　try:
+　　print(a / b)
+　except ZeroDivisionError as e:
+　　print('catch ZeroDivisionError:', e)
+　else:
+　　print('finish (no error)')
+
+例５：finally
+例外が発生した場合もしなかった場合も常に最後に行う処理をfinally節に指定できる。
+　try:
+　　print(a / b)
+　except ZeroDivisionError as e:
+　　print('catch ZeroDivisionError:', e)
+　finally:
+　　print('all finish')
+
+例６：例外スロー(raise)
+　try:
+　　raise ValueError("error!") 
+　except ValueError as e:
+　　print(e)
+
+例７：スタックトレース
+　import traceback
+
+　try:
+　　raise Exception
+　except:
+　　traceback.print_exc()
+
+
+■クラス
+class クラス名:
+
+■コンストラクタ
+def __init__(self):
+第1引数のselfはC#のthisと同じ。(selfは必ず付ける！　いわゆる明示的なthis。C#だと暗黙的だが)
+
+例：
+　class Car:
+　　def __init__(self):
+　　　self.speed = 0
+
+　car = Car()
+　print( car.speed )
+
+
+■デストラクタ
+def __del__(self):
+
+■インスタンス化
+　
+例：
+　class Calculator:
+　　#足し算
+　　def add(self, value1, value2):
+　　　return value1 + value2
+
+　#インスタンス（オブジェクト）の生成
+　calc = Calculator();
+
+　#メソッド（関数）の実行
+　result = calc.add(1, 2)　
+
+■インスタンス変数
+selfに設定する。（JavaScriptと同じノリ）
+
+例：
+　class Car:
+　　def __init__(self):
+　　　self.speed = 0
+
+　car = Car()
+　print( car.speed )
+
+■インスタンスメソッド
+def メソッド名():
+コンストラクタと同じでselfは必ず付ける！
+
+例：
+　class Car:
+　　def speed_up(self):
+　　　self.speed += 10
+
+　car = Car()
+　print( car.speed_up() )
+
+■クラス変数(static)
+　
+例：
+　class Car:
+　　note = "車"
+
+　print(Car.note)   # 車
+
+■クラスメソッド(static)
+@classmethodをメソッドにつける。
+クラス変数には第1引数(cls)でアクセスする。
+
+例：
+　class Car:
+　　note = "車"
+
+　　@classmethod
+　　def get_note(cls):
+　　　return cls.note
+
+■アクセス修飾子
+ない！
+外部から隠蔽したい場合には、変数名の先頭に __ を付けます。（ただしアクセス出来る方法があるが。。）
+
+例：
+　class Car:
+　　def __init__(self):
+　　　self.__speed = 100
+
+■メソッドの引数
+全て「参照渡し」
+ただし、文字列などのイミュータブルなオブジェクトの値は変更できない。（実質的には値渡しの挙動と同じ）
+つまり、C#と同じってこと。
+
+■コメント
+①行単位のコメント：#
+        #に続けて記述します。
+
+　　例：
+　　　# Hello, world!を表示する
+　　　print "Hello, world!"
+
+②複数行単位のコメント："""  または'''
+        複数行にまたがるコメントアウト記号はありません。
+　　しかし、プログラム中に記述された文字列は実行に影響を及ぼさないため、これを利用してクォーテーションを使って
+　　複数行単位のコメントを記述します。
+　　具体的には、'''(シングルクォーテーション3つ）あるいは"""（ダブルクォーテーション3つ）で囲まれた部分がコメントアウトされます。
+
+　　例１：
+　　　'''
+　　　この行はシングルクォーテーションコメント
+　　　'''
+
+　　　"""
+　　　この行はダブルクォーテーションコメント
+　　　"""
+       
+　　注意：インデントがあってないのとエラーになる！
+　　例２：
+　　　for x in {1,2,3}:
+    　　　print "test"
+　　　'''
+　　　このコメントはエラー（printのインデントに合わせる必要がある）
+　　　'''
+    　　　print x
+
+
+■継承
+基底クラスを()に書く。
+
+例：
+　class Test:
+　　def test(self):
+　　　print("親クラスのメソッド")
+
+　class TestEx(Test):
+　　pass
+
+親クラスにアクセスする場合はsuper()を使う。
+
+■多重継承
+ある！
+使わないと思うので省略ww
+
+■オーバーロード
+ない！！
+
+■オーバーライド
+
+例：
+　class Test:
+　　def test(self):
+　　　print("親クラスのメソッド")
+
+　class TestEx(Test):
+　　def test(self):      # オーバーライド
+　　　super().test()    # 親クラスのメソッドにはsuper()でアクセス
+　　　print("子クラスのメソッド")
+
+　objEx = TestEx()
+　objEx.test()
+
+■データ型
+⚫リスト（配列）
+
+例１：
+　#空のリストの生成
+　lst = []
+
+　#値の追加
+　lst.append(1)
+　lst.append(2)
+　lst.append(3)
+
+　#値の取得
+　print(lst[0])
+　print(lst[1])
+　print(lst[2])
+
+例２：
+　#リスト生成時に初期値
+　lst = ["a", "b", "c"]
+
+例３：
+　#要素数の取得
+　print(len(lst))
+
+例４：
+　#要素の存在チェック
+　if (5 in lst):
+　　print("5が含まれています")
+
+例５：
+　lst = [10, 20, 30, 40, 50]
+　#要素があるインデックスの取得
+　i = lst.index(30)
+　print(i) # 2
+
+
+⚫セット
+順序と重複要素がない値の集合で、集合同士の演算が行えます。
+リストの [ ] を { } にしたものになります。
+ループで取り出すと、生成時の順番と異なる場合があります。
+
+例：
+　s = { 3, 1, 2, "a", "b", "c" }
+
+　for item in s:
+　　print(item)
+
+■ラムダ式、無名関数、匿名関数
+名前のない小さな関数を定義します。
+
+ラムダ式自体は式として扱われるため、関数の引数に指定することができます。
+例１：
+　myfunc = lambda x, y: x + y
+　print myfunc(3, 5) #=> 8
+
+sorted(), map(), filter()などの関数に渡す無名関数として利用されることがあります。
+例２：
+　a = [1, 2, 3]
+　print map(lambda x: x ** 2, a)    #=> [1, 4, 9]
+
+■モジュール、パッケージ、名前空間パッケージ
+⚫モジュール
+複数のクラスや関数が定義されたファイルのことです。
+モジュールで定義されたクラスや関数は、モジュールをインポートすることにより、他のファイルでも使用することができます。
+ファイル名から拡張子を除いたものがモジュール名となります。
+
+⚫パッケージ
+モジュールを複数含んだフォルダ（ディレクトリ）のことです。
+パッケージ単位でモジュールをまとめてインポートすることができます。
+フォルダ名がパッケージ名となります。
+calc（パッケージ）
+├─ mod1.py（モジュール）
+└─ mod2.py（モジュール）
+
+⚫名前空間パッケージ
+異なるパスにある同一パッケージ名のパッケージです。
+名前空間パッケージは、同一パッケージとみなして、まとめてインポートできます。
+
+
+■インポート
+⚫モジュールのインポート
+例1：
+　import calc      #  「import モジュール名」でインポート
+　print( calc.add(1, 2) )    # 関数を使うにはモジュール名が必要
+　print( calc.mul(3, 4) )
+
+例２：
+　from calc import add, mul     # 「from モジュール名 import 関数名」でインポート。関数名は複数可。
+　print( add(1, 2) )    # モジュール名が不要
+　print( mul(3, 4) )
+
+
+⚫パッケージのインポート
+例１：
+　<ファイル構成>
+　test.py （メイン）
+　calc （パッケージ）
+　├─ mod1.py （モジュール）
+　└─ mod2.py （モジュール）
+
+　<test.py>
+　from calc import mod1    # 「from パッケージ名 import モジュール名」でインポート
+　from calc import mod2
+　print( mod1.add(1, 2) )    # 関数を使うにモジュール名が必要
+　print( mod2.mul(3, 4) )
+
+例２：
+　<test.py>
+　from calc.mod1 import add     # 「from パッケージ名.モジュール名 import 関数名」でインポート
+　from calc.mod2 import mul
+　print( add(1, 2) )    # モジュール名が不要
+　print( mul(3, 4) )
+
+例３：
+　<test.py>
+　import calc.mod1 as m1    # 「import パッケージ名.モジュール名 as モジュールの別名」でインポート
+　import calc.mod2 as m2
+　print( m1.add(1, 2) )
+　print( m2.mul(3, 4) )
+
+例４：__init__.pyを使う
+　<ファイル構成>
+　test.py （メイン）
+　calc （パッケージ）
+　├─ __init__.py
+　├─ mod1.py （モジュール：add()関数を定義）
+　└─ mod2.py （モジュール：mul()関数を定義）
+
+　<__init__.py>
+　from calc.mod1 import add      # パッケージから参照できるメンバーを指定する
+　from calc.mod2 import mul
+
+　<test.py>
+　import calc
+　print( calc.add(1, 2) )    # __init__.pyでインポートした関数が使える
+　print( calc.mul(3, 4) )
+
+例５：
+　<__init__.py>
+　__all__ = ["mod1", "mod2"]     # __all__ でモジュールを指定すると、import * により、まとめてインポートすることができます。
+
+　<test.py>
+　from calc import *
+　print( calc.add(1, 2) )    # __init__.pyでインポートした関数が使える
+　print( calc.mul(3, 4) )
+
+■ループ
+for, whileがある。
+break, continueもある。
+
+例１：
+　list = [0, 1, 2, 3, 4]
+　for i in list:
+　　print(i)
+
+例２：
+　for i in range(0, 5):
+　　print(i)
+
+例３：
+　i = 0
+　while 5 > i:
+　　i += 1
+　　print(i)
+
+■条件分岐
+switch文はない！
+if, elif, elseがある。
+インデントが変わるまでがブロック
+
+例：
+　a = "a"
+
+　if a == "b":
+　　print("b")
+　elif a == "c":
+　　print("c")
+　elif a == "d":
+　　print("d")
+　else:
+　　print("a");
+
+■比較
+and     ※&&と同じ
+or        ※||と同じ
+not      ※!と同じ
+==
+!=
+>
+<
+>=
+<=
+
+三項演算子(? : )はない！
+　
+■変数の型チェック
+type()を使う
+
+■文字コード⇔文字変換
+ord() で文字から文字コード
+chr() で文字コードから文字
+
+■文字⇔数値変換
+文字列から数値に変換するには int()、または float()、
+数値から文字列に変換するには str()
+
+■filter()
+リストなどの各要素を関数を使って絞り込むことができます。
+
+例：
+　def is_odd(value):
+　　if value % 2 == 1:
+　　　return True
+　　return False
+
+　lst = [1,2,3,4,5]
+
+　for item in filter(is_odd, lst):
+　　print(item)    # 1  3  5
+
+■reduce()
+リストなどの各要素を関数を使って集計することができます。
+
+例：
+　from functools import reduce
+
+　def add(value1, value2):
+　　print(str(value1) + " + " + str(value2))
+　　return value1 + value2
+
+　lst = [1,2,3,4,5]
+　result = reduce(add, lst)
+　print("合計：" + result)     # 合計:15
+
+■zip()
+指定された各リストの同一インデックスの要素をまとめて取得することができます。
+
+例：
+　no_list = [1, 2, 3, 4, 5]
+　name_list = ["一郎", "次郎", "三郎", "四郎", "五郎"]
+　addr_list = ["東京", "千葉", "茨城", "埼玉", "神奈川"]
+
+　for (no, name, addr) in zip(no_list, name_list, addr_list):
+　　print(str(no) + ":" + name + ":" + addr)
+
+　# 結果
+　# 1:一郎:東京
+　# 2:次郎:千葉
+　# 3:三郎:茨城
+　# 4:四郎:埼玉
+　# 5:五郎:神奈川
+
+■仮想環境
+仮想環境により、Python の実行環境を複数持つことができます。
+これにより、異なるバージョンのモジュールをインポートしたり、必要最低限のモジュールだけにした環境などを切り替えて使うことができます。
+
+＜手順＞
+1. 仮想環境の作成
+仮想環境は任意の場所に作成できます。
+Anacondaプロンプトで以下のコマンドを実行すると、カレントに仮想環境のファイルが作成されます。
+cd 仮想環境を作成するパス
+python -m venv 仮想環境名
+
+2. 仮想環境の有効化（アクティベート）
+仮想環境に入ります。
+{仮想環境のパス}/{仮想環境名}/Scripts/activate
+
+3. 仮想環境の無効化
+仮想環境から抜けます。
+{仮想環境のパス}/{仮想環境名}/Scripts/deactivate
+
+4.VS Code で仮想環境を使う
+Anacondaプロンプトで仮想環境をアクティベートして、
+Anacondaプロンプトから VS Code を起動します。
+{仮想環境のパス}/{仮想環境名}/Scripts/activate
+code
+
+次に、VS Code で ワークスペースの settings.json を開き、以下を追加、または変更してください。
+"python.pythonPath": "{仮想環境のパス}/{仮想環境名}/Scripts/python.exe",
+
+
+■デコレータ
+関数を実行する前後に特殊な処理を実行したい場合、@デコレータ を用いることができます。
+下記の例では、hello()関数を mydecolater でデコレート(装飾)しています。
+デコレーション関数では、関数実行前に start を、関数実行後に end を出力しています。
+
+例１：
+　def mydecolater(func):      # デコレータを定義する
+　　def wrapper():
+　　　print "start"                # 前処理を実行する
+　　　func()                          # デコレート対象の関数を実行する
+　　　print "end"                 # 後処理を実行する
+　　return wrapper
+
+　@mydecolater
+　def hello():
+　　print "hello"
+
+　hello()                #=> start, hello, end
+
+
+■メモリ開放
+大抵はGCが回収してくれるので気にしなくよい。
+しかし、巨大なメモリを確保した場合等、任意のタイミングで開放したいときは以下のようにする。
+
+例１：del
+　del_test = ["memory del test"] * 10
+　print(del_test)
+
+　del del_test
+
+例２：gc
+　import gc
+
+　gc_test = ["memory del test"] * 10
+　del gc_test
+　gc.collect()
+
+
+
+
+■組み込み関数一覧
+abs()
+
+delattr()
+
+hash()
+
+memoryview()
+
+set()
+
+all()
+
+dict()
+
+help()
+
+min()
+
+setattr()
+
+any()
+
+dir()
+
+hex()
+
+next()
+
+slice()
+
+ascii()
+
+divmod()
+
+id()
+
+object()
+
+sorted()
+
+bin()
+
+enumerate()
+
+input()
+
+oct()
+
+staticmethod()
+
+bool()
+
+eval()
+
+int()
+
+open()
+
+str()
+
+breakpoint()
+
+exec()
+
+isinstance()
+
+ord()
+
+sum()
+
+bytearray()
+
+filter()
+
+issubclass()
+
+pow()
+
+super()
+
+bytes()
+
+float()
+
+iter()
+
+print()
+
+tuple()
+
+callable()
+
+format()
+
+len()
+
+property()
+
+type()
+
+chr()
+
+frozenset()
+
+list()
+
+range()
+
+vars()
+
+classmethod()
+
+getattr()
+
+locals()
+
+repr()
+
+zip()
+
+compile()
+
+globals()
+
+map()
+
+reversed()
+
+__import__()
+
+complex()
+
+hasattr()
+
+max()
+
+round()
+
+
