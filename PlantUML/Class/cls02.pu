@@ -1,20 +1,32 @@
 @startuml クラス図 2
 
-abstract class AbstractList
-abstract AbstractCollection
-interface List
-interface Collection
+'クラスのアイコン表示をやめる
+hide circle
 
-List <|-- AbstractList
-Collection <|-- AbstractCollection
+package "パッケージは package" #DDDDDD {
+  interface リストインターフェース <<interface>>{
+    string[] GetList()
+  }
+  
+  abstract class 抽象リストクラス{
+    string[] GetList()
+  }
 
-Collection <|- List
-AbstractCollection <|- AbstractList
-AbstractList <|-- ArrayList
+  class 具象リストクラス {
+    Object[] elementData
+    size()
+    string[] GetList()
+  }
 
-class ArrayList {
-  Object[] elementData
-  size()
+  リストインターフェース <|-- 抽象リストクラス
+  抽象リストクラス <|-- 具象リストクラス
+}
+
+namespace 名前空間はnamespace #DDDDDD {
+	.BaseClass <|-- Person
+	Meeting o-- Person
+	
+	.BaseClass <|- Meeting
 }
 
 @enduml
