@@ -1,0 +1,41 @@
+@startuml アクティビティ図 1
+
+'コメント
+
+title タイトルはtitle\n改行は\\n
+
+note top: 注釈（上は） note top\n開始は (*) -->
+(*) --> if "分岐は if/then/else/endif" then
+
+  'ラベルは[]  アクティビティは""
+  -->[ラベル真] "下の矢印は -->" as a1
+  
+  
+  if "" then
+	-> "右の矢印は ->" as a3
+  else
+	if "" then
+
+	  -left-> "左の矢印は -left->"
+      
+	else
+	  --> "activity 6"
+      --> (*)
+	endif
+  endif
+  
+else
+
+  ->[ラベル偽] "activity 2"
+  
+endif
+
+a3 --> if "" then
+  --> "activity 7"
+  --> (*)
+  note bottom: 注釈（下）は note bottom\n終わりは -->(*)
+else
+  -> "activity 8"
+endif
+
+@enduml
