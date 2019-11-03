@@ -1,0 +1,34 @@
+@startuml クラス図 1
+
+'コメント
+
+'可視性の図形表現をOFF
+skinparam classAttributeIconSize 0
+
+Parent <|-- Child : 汎化　<|--
+Super *-- Sub : コンポジション *--
+BaseClass o-- Class : 集約 o--
+
+'フィールド、メソッドの定義方法1
+Parent : - int field_!
+Parent : # string field_2
+Parent : + void Method_1()
+
+'フィールド、メソッドの定義方法2
+class Child {
+    + float field_3
+    + int Method_2()
+    {static} + String staticField
+    {abstract} + void AbstractMethods()
+}
+
+'注釈いろいろ
+note top of Parent : 注釈（上）は note top of クラス名
+note left of Child : 注釈（左）は note left of クラス名
+
+note "注釈は note" as N1
+note "注釈を挟むには .." as N2
+Super .. N2
+N2 .. Sub
+
+@enduml
