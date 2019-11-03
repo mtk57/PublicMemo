@@ -1,0 +1,25 @@
+@startuml  シーケンス図1
+
+'コメント
+
+title タイトルは title\n改行は\\n
+
+'自動採番
+autonumber
+
+'宣言 & エイリアス
+participant Alice as A
+
+'基本  Bobのように宣言が無くてもOK
+
+[->A : STARTは [->A
+
+note left: 自動採番は autonumber\nエイリアスは as
+
+A -> Bob : メッセージは A -> Bob
+
+A <-- Bob : リプライは A <-- Bob
+
+[<--A : ENDは [<--A
+
+@enduml

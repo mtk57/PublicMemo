@@ -1,0 +1,28 @@
+@startuml シーケンス図3
+
+participant Alice as A
+participant Bob as B
+
+box "囲みは box～end box" #LightBlue
+participant Charles as C
+end box
+
+' 分岐は「end」まで。
+alt  分岐はalt～else～end
+
+  A -> B: 分岐1
+  B -> C
+
+else  else
+
+  A -> B: 分岐2
+
+  loop 分岐のネスト
+
+    A -> B: 分岐2-1
+
+  end
+
+end
+
+@enduml

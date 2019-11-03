@@ -1,0 +1,44 @@
+@startuml シーケンス図2
+
+'コメント
+
+participant Alice as A
+participant Bob as B
+
+A -> A: 自分へのメッセージ(A -> A)
+
+A -> B: ライフラインは activate
+activate B
+
+note right: 注釈（右）は note right
+
+return リターンは return
+
+note left: 注釈（左）は note left
+
+A -> B:
+activate B
+
+B -> B : ライフラインのネスト
+activate B
+
+'ライフラインの終わり
+deactivate B
+
+return
+
+note left
+  複数行の注釈は
+  note XXX～end note
+end note
+
+note over A, B #FFAAAA: またがった注釈は note over。\n色指定あり。\\nで改行。
+
+... 遅延は ... ...
+A -> B
+note over A:間隔を空けるには ||100||
+||100||
+A <- B
+
+
+@enduml
