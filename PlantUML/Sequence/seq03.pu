@@ -4,7 +4,7 @@ participant Alice as A
 participant Bob as B
 
 box "囲みは box～end box" #LightBlue
-participant Charles as C
+  participant Charles as C
 end box
 
 ' 分岐は「end」まで。
