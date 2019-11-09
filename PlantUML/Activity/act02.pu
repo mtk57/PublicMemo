@@ -1,0 +1,54 @@
+@startuml sdf_db_access
+
+title SDF dbaccess.py ExecuteQuery()
+
+
+(*) --> "引数チェック(DBクエリ)"
+if "" then
+  -->[OK] "設定ファイル存在チェック"
+  if "" then
+    -->[OK] "設定ファイル読み込み"
+    if "" then
+      -->[OK] "設定データ検証"
+      if "" then
+        -->[OK] "DBファイル存在チェック"
+        if "" then
+          -->[OK] "DBファイルロック"
+          if "" then
+            -->[OK] "DBオープン"
+            if "" then
+              -->[OK] "クエリ実行"
+              if "" then
+                -->[OK] "DBクローズ"
+                if "" then
+                  -->[OK] "DBファイルロック解除"
+                  --> (*)
+                else
+                  -->[NG] (*)
+                endif
+              else
+                -->[NG] (*)
+              endif
+            else
+              -->[NG] (*)
+            endif
+          else
+            -->[NG] (*)
+          endif
+        else
+          -->[NG] (*)
+        endif
+      else
+        -->[NG] (*)
+      endif
+    else
+      -->[NG] (*)
+    endif
+  else
+    -->[NG] (*)
+  endif
+else
+  -->[NG] (*)
+endif
+
+@enduml

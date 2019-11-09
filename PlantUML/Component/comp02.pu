@@ -1,0 +1,45 @@
+@startuml SDF_Modules
+
+title SDF CLI MODULE
+
+folder sdfcli {
+  file  sdfadmin
+  file  version
+  file  help
+
+  folder config {
+    file  create
+    file  update
+    file  delete
+    file  list
+    file  get
+    file  help
+  }
+
+  folder service {
+    file  start
+    file  stop
+    file  restart
+    file  reload
+    file  status
+    file  help
+  }
+
+  folder maint {
+    file  restore
+    file  help
+  }
+}
+
+folder clicommon{
+    file dbaccess
+    file servicectrl
+    file ioaccess
+    file cloudaccess
+}
+
+package libs {
+    component s3lib
+}
+
+@enduml

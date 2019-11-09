@@ -1,0 +1,54 @@
+@startuml SDF_CLI_CLASS
+
+title SDF CLI CLASS
+
+'クラスのアイコン表示をやめる
+hide circle
+
+
+abstract class clibase{
+  execute()
+}
+note top: executeは抽象メソッド
+
+class sdfadmin{
+  commandFactory() : clibase
+}
+
+package sdfCommand #DDDDDD {
+    class create{
+    execute()
+    }
+
+    class update{
+    execute()
+    }
+
+    class help{
+    execute()
+    }
+}
+
+clibase <|-- create
+clibase <|-- update
+clibase <|-- help
+
+sdfadmin -- create : new >
+sdfadmin -- update : new >
+sdfadmin -- help : new >
+
+package sdfCliCmnLib #DDDDDD {
+    class dbaccess{
+        executeQuery()
+    }
+
+    class setting{
+        dbinfo()
+    }
+}
+
+create --[hidden]> dbaccess
+update --[hidden]> dbaccess
+help --[hidden]> setting
+
+@enduml
