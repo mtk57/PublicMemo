@@ -1,0 +1,36 @@
+﻿例外ハンドリング
+
+https://terasoluna-batch.github.io/guideline/5.1.1.RELEASE/ja/Ch06_ExceptionHandling.html
+
+●ビジネス例外
+　ビジネスルールの違反を検知したことを通知する例外
+　想定できる業務エラー
+　→回復可能
+　　入力値を見直す
+　⇒CliBusinessError 
+
+●正常稼働時のライブラリエラー
+　一意制約違反
+　排他ロック取られた
+　→回復可能
+　　ユーザーにリトライしてもらう
+　⇒CliExternalError
+
+●システム例外
+　存在しているはずのマスタデータ、ディレクトリ、ファイルなどが存在しない
+　→管理者に連絡が必要
+　⇒CliEnvironmentError
+
+●予期しないシステム例外
+　バグ
+　サーバなどがダウン
+　→開発者の解析が必要
+　⇒CliUnexpectedError
+
+●致命的なエラー
+　システム(アプリケーション)全体に影響を及ぼす、致命的な問題が発生している事を通知するエラー
+　メモリ不足
+　HDD不足
+　ハードウェア障害
+　⇒CliCriticalError
+
