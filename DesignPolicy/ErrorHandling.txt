@@ -35,3 +35,87 @@ https://terasoluna-batch.github.io/guideline/5.1.1.RELEASE/ja/Ch06_ExceptionHand
 　⇒CriticalError
   ⇒これは例外中の例外なので、むしろcatchしないのが良いかも。（システムによる）
 
+
+
+-----------------
+その他
+
+
+
+
+■sqlite3   (https://docs.python.org/ja/3.6/library/sqlite3.html)
+  sqlite3.Error
+    このモジュールにおける他の例外クラスの基底クラスです。
+
+  sqlite3.DatabaseError
+    データベースに関連するエラーで例外が発生しました。
+
+  sqlite3.IntegrityError
+    外部キー・チェックが失敗するなど、データベースのリレーショナル整合性に影響がある場合に例外が発生します。
+
+  sqlite3.ProgrammingError
+    プログラミング・エラーで例外が発生しました。たとえば、テーブルが見つからない、またはすでに存在する、SQL文の構文エラー、指定されたパラメータの数が間違っているなどです。
+
+  sqlite3.OperationalError
+    データベースの操作に関連し、必ずしもプログラマの制御下にないエラーに対して例外が発生します。たとえば、予期しない切断が発生した場合、データ・ソース名が見つからなかった場合、トランザクションを処理できなかった場合などです。
+
+  sqlite3.NotSupportedError
+    データベースでサポートされていないメソッドまたはデータベースAPIが使用された場合に、例外が発生しました。たとえば、トランザクションをサポートしていない、またはトランザクションが無効になっている接続でrollback()メソッドを呼び出しました。
+
+
+■boto3
+
+boto3での例外の対応については、特にガイドラインというものは存在していないようです。
+botocoreのソース（exceptions.pyやs3\2006-03-01\service-2.json）を見るしかないみたい。
+
+
+https://github.com/boto/botocore/blob/develop/botocore/exceptions.py
+https://dev.classmethod.jp/cloud/aws/2018-solo-boto3-advent-calendar-day22/
+
+
+head_bucket
+  NoSuchBucket
+
+get_bucket
+  NoSuchBucket
+
+put_bucket
+  BucketAlreadyExists
+  BucketAlreadyOwnedByYou
+
+list_object_v2
+  NoSuchBucket
+
+
+
+
+
+例：
+try:
+    s3 = boto3.client('s3')
+    ..
+except s3.exceptions.BucketAlreadyExists as e:
+    print(e)
+
+
+
+BucketAlreadyExistsは、s3\2006-03-01\service-2.jsonに定義されている
+
+
+    "CreateBucket":{
+      "name":"CreateBucket",
+      "http":{
+        "method":"PUT",
+        "requestUri":"/{Bucket}"
+      },
+      "input":{"shape":"CreateBucketRequest"},
+      "output":{"shape":"CreateBucketOutput"},
+      "errors":[
+        {"shape":"BucketAlreadyExists"},
+        {"shape":"BucketAlreadyOwnedByYou"}
+      ],
+      "documentationUrl":"http://docs.amazonwebservices.com/AmazonS3/latest/API/RESTBucketPUT.html",
+      "documentation":"<p>Creates a new bucket.</p>",
+      "alias":"PutBucket"
+    },
+
