@@ -7,10 +7,11 @@ from time import sleep, time
 class RetryOverError(Exception):
     pass
 
-def retry(count:int=3, delay:float=3):
+def retry(count:int, delay:float, errs:tuple):
     """ リトライデコレーター
         count:int:回数
         delay:float:インターバル(秒)
+        errs:tuple:
     """
 
     def _retry(func):
@@ -24,13 +25,13 @@ def retry(count:int=3, delay:float=3):
                 _delay = abs(delay)
  
             for c in range(_count):
-                ret = func(*args, **kwargs)
-                if ret:
-                    break
-                elif c >= _count-1:
-                    raise RetryOverError('Retry over!')
-                sleep(_delay)
-            return ret
+                try:
+                    return func(*args, **kwargs)
+                except errs as e:
+                    sleep(_delay)
+
+            raise RetryOverError('Retry over!')
+
         return wrapper
     return _retry
 
@@ -39,7 +40,7 @@ RETRY_DELAY = 1.5
 try_count = 0
 
 
-@retry(count=RETRY_CNT, delay=RETRY_DELAY)
+@retry(count=RETRY_CNT, delay=RETRY_DELAY, errs=(Exception,))
 def retry_test(threshold):
     try:
         global try_count
@@ -48,7 +49,11 @@ def retry_test(threshold):
     except:
         print(traceback.format_exc())   # リトライオーバー時はここには来ない
     else:
-        return True if try_count > threshold else False
+        ret = True
+        if try_count > threshold:
+            return ret
+        else:
+            raise ValueError()
 
 if __name__ == '__main__':
     try:
