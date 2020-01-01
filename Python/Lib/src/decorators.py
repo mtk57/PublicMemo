@@ -11,18 +11,21 @@ def retry(count:int, delay:float, errs:tuple):
     """ リトライデコレーター
         count:int:回数
         delay:float:インターバル(秒)
-        errs:tuple:
+        errs:tuple:捕捉するエラータイプ
     """
 
     def _retry(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             _count = _delay = 3
+            _errs = (Exception,)
 
             if isinstance(count, int):
                 _count = abs(count)
             if isinstance(delay, float):
                 _delay = abs(delay)
+            if isinstance(errs, tuple):
+                _errs = errs
  
             for c in range(_count):
                 try:
@@ -37,10 +40,12 @@ def retry(count:int, delay:float, errs:tuple):
 
 RETRY_CNT = 3
 RETRY_DELAY = 1.5
+RETRY_ERRORS = (Exception,)
+
 try_count = 0
 
 
-@retry(count=RETRY_CNT, delay=RETRY_DELAY, errs=(Exception,))
+@retry(count=RETRY_CNT, delay=RETRY_DELAY, errs=RETRY_ERRORS)
 def retry_test(threshold):
     try:
         global try_count
@@ -49,9 +54,8 @@ def retry_test(threshold):
     except:
         print(traceback.format_exc())   # リトライオーバー時はここには来ない
     else:
-        ret = True
         if try_count > threshold:
-            return ret
+            return True
         else:
             raise ValueError()
 
