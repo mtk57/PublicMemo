@@ -3,6 +3,7 @@
 from collections import UserList, defaultdict
 import traceback
 
+
 class DictList(UserList):
     """ 要素がdictであることを保証するlist
         <使用例>
@@ -12,7 +13,7 @@ class DictList(UserList):
         values = dl.get_values(key='key2')          # ['apple', 'banana']
     """
 
-    def __init__(self, keys:list):
+    def __init__(self, keys: list):
         """ 初期化する
             keys:list:dictのキー名 (ex. DictList(['key1', 1]))
                       重複したキーがある場合はエラーとなる
@@ -33,23 +34,23 @@ class DictList(UserList):
         super().__init__([])
 
     @property
-    def keys(self)->list:
+    def keys(self) -> list:
         """ dictのキー名(list) """
 
         return self._keys
 
-    def get_values(self, key)->list:
+    def get_values(self, key) -> list:
         """ キー名に対応する全ての値をlistで返す (ex. dl.get_values('key1'))
             key:キー名
             ret:list:キーに対応する全ての値
         """
 
-        if not key in self._keys:
+        if key not in self._keys:
             raise TypeError('key not exist!')
 
         return [dict_[key] for dict_ in self.data]
 
-    def set_values(self, values:tuple):
+    def set_values(self, values: tuple):
         """ dictの値をtupleで指定する
             values:tuple:dictの値 (ex. dl.set_values(('val1', 'val2')))
             ret:-
@@ -61,10 +62,10 @@ class DictList(UserList):
             raise TypeError('Values count unmatch!')
 
         # 辞書を作成してリストに追加
-        item = {k:v for k, v in zip(self._keys, values)}
+        item = {k: v for k, v in zip(self._keys, values)}
         self.data.append(item)
 
-    def _validate(self, item:dict)->bool:
+    def _validate(self, item: dict) -> bool:
         """ listの要素を検証する
             item:dict:listの要素
             ret:bool:True=成功
@@ -78,7 +79,7 @@ class DictList(UserList):
             raise TypeError('Key name unmatch!')
         return True
 
-    def __setitem__(self, index:int, item:dict):
+    def __setitem__(self, index: int, item: dict):
         """ listに要素を代入する
             index:int:listのインデクス
             item:dict:代入する要素
@@ -87,8 +88,8 @@ class DictList(UserList):
 
         self._validate(item)
         self.data[index] = item
-    
-    def __getitem__(self, index:int)->dict:
+
+    def __getitem__(self, index: int) -> dict:
         """ listから要素を取得する
             index:int:listのインデクス
             ret:dict:取得した要素
@@ -99,7 +100,7 @@ class DictList(UserList):
             raise TypeError('item is not dict!')
         return self.data[index]
 
-    def append(self, item:dict):
+    def append(self, item: dict):
         """ 要素を追加する
             item:dict:追加する要素
             ret:-
@@ -108,7 +109,7 @@ class DictList(UserList):
         self._validate(item)
         super(DictList, self).append(item)
 
-    def extend(self, seq:list):
+    def extend(self, seq: list):
         """ リストの要素を追加する
             seq:list:追加シーケンス
             ret:-
@@ -120,7 +121,7 @@ class DictList(UserList):
             self._validate(item)
         super(DictList, self).extend(seq)
 
-    def insert(self, index:int, item:dict):
+    def insert(self, index: int, item: dict):
         """ listに要素を挿入する
             index:int:listのインデクス
             item:dict:挿入する要素
@@ -134,6 +135,7 @@ class DictList(UserList):
 def _print(seq):
     for s in seq:
         print(s)
+
 
 if __name__ == '__main__':
     try:
