@@ -39,6 +39,15 @@ class DictList(UserList):
 
         return self._keys
 
+    @property
+    def values(self) -> list:
+        """ dictの値(list) """
+
+        vals = []
+        for dic in self.data:
+            vals.extend(dic.values())
+        return vals
+
     def get_values(self, key) -> list:
         """ キー名に対応する全ての値をlistで返す (ex. dl.get_values('key1'))
             key:キー名
@@ -48,7 +57,7 @@ class DictList(UserList):
         if key not in self._keys:
             raise TypeError('key not exist!')
 
-        return [dict_[key] for dict_ in self.data]
+        return [dic[key] for dic in self.data]
 
     def set_values(self, values: tuple):
         """ dictの値をtupleで指定する
@@ -153,6 +162,12 @@ if __name__ == '__main__':
         # 値がキーの数と一致していること
         diclist.set_values(values=(10, 20, 30))         # OK
         diclist.set_values(values=('A', 'B', 'C'))      # OK
+
+        vals = diclist.values
+
+        for dic in diclist:
+            a, b, c = dic[1], dic[2], dic[3]
+            print('{}, {}, {}'.format(a, b, c))
 
         import copy
         aa = copy.copy(diclist)
