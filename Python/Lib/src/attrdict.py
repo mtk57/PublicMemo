@@ -6,6 +6,7 @@ import json
 
 class AttrDict():
     """ JavaScriptライクに属性アクセス可能なdict
+        ただし、dictは継承していないので最低限の機能のみを提供する。
 
         <使用例>
         data = json.loads(
@@ -60,16 +61,30 @@ class AttrDict():
         else:
             return None
 
+    def __setattr__(self, name: str, value):
+        """ 属性への代入 """
+
+        if name == '_dict':
+            object.__setattr__(self, name, value)
+        else:
+            self._dict[name] = value
+
+    def __getitem__(self, key):
+        """ [キー]の値を返す """
+        return self._dict[key]
+
+    def __setitem__(self, key, value):
+        """ [キー]に値を代入する """
+        self._dict[key] = value
+
     @property
     def data(self) -> dict:
         """ dictを返す """
-
         return self._dict
 
     @property
     def keys(self) -> list:
         """ dictのキー名を返す """
-
         return self._dict.keys()
 
 
@@ -83,7 +98,9 @@ if __name__ == '__main__':
         #     jsonData = json.load(f)
 
         # a = AttrDict(jsonData)
+        # # a.group2 = 123
         # b = a.group2
+        # # a.group2.Eric = 123
         # c = a.group2.Eric
 
         data = json.loads(
