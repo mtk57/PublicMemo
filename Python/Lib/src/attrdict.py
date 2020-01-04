@@ -5,21 +5,29 @@ import json
 
 
 class AttrDict():
-    """ JavaScriptライクな属性アクセス可能なdict
+    """ JavaScriptライクに属性アクセス可能なdict
+
         <使用例>
         data = json.loads(
-                '{"v1":"xxxx",
-                  "v2":"vvvv"}',
+                '{"v1":"apple", "v2":"banana"}',
                 object_hook=AttrDict)
-        v1 = data.v1        # 'xxxx'
+        print("data.v1 = {0}".format(data.v1))
 
         data2 = json.loads(
-                '{"arr":[
-                          {"v":"xxxx"},
-                          {"v":"vvvv"}
-                        ]}',
+                '{"arr":[{"v":"orange"}, {"v":"mango"}]}',
                 object_hook=AttrDict)
-        v = data2.arr[0].v  # 'xxxx'
+        print("data2[0].v = {0}".format(data2.arr[0].v))
+
+        data3 = json.loads(
+                '{"group2":{"Eric":44, "ken":33, "John":44, "Mike":99},\
+                "group1":{"Adam":40, "David":71, "Chris":60, "Bob":74}}',
+                object_hook=AttrDict)
+        print("data3.group2.Eric = {0}".format(data3.group2.Eric))
+
+        # RESULT
+        data.v1 = apple
+        data2[0].v = orange
+        data3.group2.Eric = 44
     """
 
     def __init__(self, dict_: dict):
@@ -35,21 +43,6 @@ class AttrDict():
 
         self._dict = dict_
 
-    def __getstate__(self):
-        """ dictのitemsを返す """
-
-        return self._dict.items()
-
-    def __setstate__(self, items):
-        """ dictのitemsを設定する """
-
-        if items is None:
-            raise TypeError('items is None!')
-        if not hasattr(self, '_dict'):
-            self._dict = {}
-        for key, val in items:
-            self._dict[key] = val
-
     def __getattr__(self, name: str):
         """ 未定義属性の取得
             name:str:属性名
@@ -57,7 +50,13 @@ class AttrDict():
         """
 
         if name in self._dict:
-            return self._dict.get(name)
+            val = self._dict.get(name)
+
+            # Valueがdictなら自身のオブジェクトを返す
+            if isinstance(val, dict):
+                return AttrDict(val)
+            else:
+                return val
         else:
             return None
 
@@ -76,12 +75,32 @@ class AttrDict():
 
 if __name__ == '__main__':
     try:
+        # from os import path
+        # filename = 'test.json'
+        # filepath = path.join(path.dirname(__file__), filename)
+
+        # with open(filepath, 'r') as f:
+        #     jsonData = json.load(f)
+
+        # a = AttrDict(jsonData)
+        # b = a.group2
+        # c = a.group2.Eric
+
         data = json.loads(
-                '{"v1":"xxxx", "v2":"vvvv"}', object_hook=AttrDict)
+                '{"v1":"apple", "v2":"banana"}',
+                object_hook=AttrDict)
         print("data.v1 = {0}".format(data.v1))
 
         data2 = json.loads(
-                '{"arr":[{"v":"xxxx"}, {"v":"vvvv"}]}', object_hook=AttrDict)
+                '{"arr":[{"v":"orange"}, {"v":"mango"}]}',
+                object_hook=AttrDict)
         print("data2[0].v = {0}".format(data2.arr[0].v))
+
+        data3 = json.loads(
+                '{"group2":{"Eric":44, "ken":33, "John":44, "Mike":99},\
+                "group1":{"Adam":40, "David":71, "Chris":60, "Bob":74}}',
+                object_hook=AttrDict)
+        print("data3.group2.Eric = {0}".format(data3.group2.Eric))
+
     except:
         print(traceback.format_exc())
