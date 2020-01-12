@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 from unittest.mock import MagicMock
-import fcntl
+import fcntl_mock
 
 from sqlite3_mock import Connection
 from dbmgr import DbMgr
@@ -9,8 +9,8 @@ from dbmgr import DbMgr
 # fcntlモジュールは、Windowsには存在しないため、
 # モックに書き換える
 import sys
-sys.modules['fcntl'] = fcntl
-sys.modules['fcntl.flock'] = fcntl.flock
+sys.modules['fcntl'] = fcntl_mock
+sys.modules['fcntl.flock'] = fcntl_mock.flock
 
 # flake8に怒られるが,flockerでfcntlがimportされる前に↑の書き換えを
 # 行う必要があるため直せない。
