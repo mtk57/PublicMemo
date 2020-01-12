@@ -5,6 +5,8 @@ import fcntl_mock
 
 from sqlite3_mock import Connection
 from dbmgr import DbMgr
+from command import Command
+from subprocess_mock import CompletedProcess
 
 # fcntlモジュールは、Windowsには存在しないため、
 # モックに書き換える
@@ -49,6 +51,15 @@ class TestFlocker(unittest.TestCase):
     def test_flocker_failed_test_mock_version(self):
         """ flockのテスト(異常系) """
         flocker.flocker()
+
+
+class TestSubprocess(unittest.TestCase):
+    @patch('subprocess.run', return_value=CompletedProcess('test.log'))
+    def test_subprocess_mock_version(self, patched_object):
+        """ subprocess.run()の戻り値をテキストファイルの中身に差替 """
+        cmd = Command('dir')
+        for line in cmd.run():
+            print(line, end="")
 
 
 if __name__ == '__main__':
