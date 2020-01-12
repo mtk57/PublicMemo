@@ -1,28 +1,20 @@
 import unittest
 from unittest.mock import patch
+from unittest.mock import MagicMock
+import fcntl
 
+from sqlite3_mock import Connection
 from dbmgr import DbMgr
 
+# fcntlモジュールは、Windowsには存在しないため、
+# モックに書き換える
+import sys
+sys.modules['fcntl'] = fcntl
+sys.modules['fcntl.flock'] = fcntl.flock
 
-class Cursor():
-    """ sqlite3.Cursorのモック """
-    def execute(self, *args):
-        pass
-
-    def executemany(self, *args):
-        pass
-
-
-class Connection():
-    """ sqlite3.Connectionのモック """
-    def cursor(self):
-        return Cursor()
-
-    def commit(self):
-        pass
-
-    def close(self):
-        pass
+# flake8に怒られるが,flockerでfcntlがimportされる前に↑の書き換えを
+# 行う必要があるため直せない。
+import flocker
 
 
 class TestDbMgr(unittest.TestCase):
@@ -46,6 +38,17 @@ class TestDbMgr(unittest.TestCase):
         """ DbMgr.run()の実行 """
         db = DbMgr()
         return db.run()
+
+
+class TestFlocker(unittest.TestCase):
+    def test_flocker_mock_version(self):
+        """ flockのテスト(正常系) """
+        flocker.flocker()
+
+    @patch('fcntl.flock', MagicMock(side_effect=IOError()))
+    def test_flocker_failed_test_mock_version(self):
+        """ flockのテスト(異常系) """
+        flocker.flocker()
 
 
 if __name__ == '__main__':
