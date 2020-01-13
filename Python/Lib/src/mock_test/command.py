@@ -48,6 +48,66 @@ class Command():
             print('外部プログラムの実行に失敗しました', file=sys.stderr)
             raise
 
+    def validate_volinfo(self) -> dict:
+        import re
+        from copy import deepcopy
+        dict_main = {}
+        dict_sub = {}
+        list_brk = []
+        ptn_brk = re.compile(r'Brick\d')
+        last_volname = ''
+        for line in self.run():
+            split_line = self._split_line(line)
+            print(split_line)
+
+            if split_line[0] == 'Volume Name':
+                if not last_volname:
+                    last_volname = split_line[1].strip()
+                else:
+                    dict_sub['Bricks'] = deepcopy(list_brk)
+                    dict_main[last_volname] = deepcopy(dict_sub)
+                    list_brk = []
+                    dict_sub = {}
+                    last_volname = split_line[1].strip()
+            else:
+                if len(split_line) == 0 or not split_line[0]:
+                    continue
+                if ptn_brk.match(split_line[0]):
+                    info = BrickInfo(
+                            split_line[0],
+                            split_line[1].strip(),
+                            split_line[2].strip()
+                            )
+                    list_brk.append(info)
+                else:
+                    dict_sub[split_line[0]] = split_line[1].strip()
+
+        dict_main[last_volname] = deepcopy(dict_sub)
+
+        return dict_main
+
+    def _split_line(self, line: str) -> str:
+        return line.replace('\n', '').strip().split(':')
+
+
+class BrickInfo():
+    def __init__(self, num: str, node: str, path: str):
+        self._num = num
+        self._node = node
+        self._path = path
+
+    @property
+    def num(self) -> str:
+        return self._num
+
+    @property
+    def node(self) -> str:
+        return self._node
+
+    @property
+    def path(self) -> str:
+        return self._path
+
 
 if __name__ == '__main__':
     try:

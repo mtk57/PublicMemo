@@ -62,6 +62,16 @@ class TestSubprocess(unittest.TestCase):
             print(line, end="")
         self.assertTrue(patched_object.called)
 
+    @patch('subprocess.run', return_value=CompletedProcess('volinfo_test.txt'))
+    def test_subprocess_run_mock_version_volinfo(self, patched_object):
+        """ subprocess.run()の戻り値をテキストファイルの中身に差替 """
+        cmd = Command('gluster volume info')
+
+        volinfo = cmd.validate_volinfo()
+        self.assertIsInstance(volinfo, dict)
+
+        self.assertTrue(patched_object.called)
+
     @patch('subprocess.Popen', return_value=Popen('test.log'))
     def test_subprocess_popen_mock_version(self, patched_object):
         """ subprocess.Popen()の戻り値をテキストファイルの中身に差替 """
@@ -73,3 +83,31 @@ class TestSubprocess(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
+
+"""
+volinfo_test.txt
+
+Volume Name: vol1
+    Type: Distributed-Replicate
+    Volume ID: 24a0437a-daa0-4044-8acf-7aa82efd76fd
+    Status: Started
+    Number of Bricks: 2 x 2 = 4
+    Transport-type: tcp
+    Bricks:
+    Brick1: Server1:/home/gfs/r1_0
+    Brick2: Server2:/home/gfs/r1_1
+    Brick3: Server1:/home/gfs/r1_2
+    Brick4: Server2:/home/gfs/r1_3
+
+Volume Name: vol2
+    Type: Distributed-Replicate
+    Volume ID: 24a0437a-daa0-4044-8acf-7aa82efd76fe
+    Status: Started
+    Number of Bricks: 2 x 2 = 4
+    Transport-type: tcp
+    Bricks:
+    Brick1: Server1:/home/gfs/r2_0
+    Brick2: Server2:/home/gfs/r2_1
+    Brick3: Server1:/home/gfs/r2_2
+    Brick4: Server2:/home/gfs/r2_3
+"""
