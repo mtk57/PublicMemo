@@ -80,6 +80,16 @@ class TestSubprocess(unittest.TestCase):
             print(line, end="")
         self.assertTrue(patched_object.called)
 
+    @patch('subprocess.Popen', return_value=Popen('volinfo_test.txt'))
+    def test_subprocess_popen_mock_version_volinfo(self, patched_object):
+        """ subprocess.Popen()の戻り値をテキストファイルの中身に差替 """
+        cmd = Command('gluster volume info')
+
+        volinfo = cmd.validate_volinfo(isasync=True)
+        self.assertIsInstance(volinfo, dict)
+
+        self.assertTrue(patched_object.called)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

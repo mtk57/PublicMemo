@@ -48,7 +48,7 @@ class Command():
             print('外部プログラムの実行に失敗しました', file=sys.stderr)
             raise
 
-    def validate_volinfo(self) -> dict:
+    def validate_volinfo(self, isasync=False) -> dict:
         import re
         from copy import deepcopy
         dict_main = {}
@@ -56,7 +56,13 @@ class Command():
         list_brk = []
         ptn_brk = re.compile(r'Brick\d')
         last_volname = ''
-        for line in self.run():
+
+        if not isasync:
+            func = self.run
+        else:
+            func = self.run_async
+
+        for line in func():
             split_line = self._split_line(line)
             print(split_line)
 
@@ -82,6 +88,7 @@ class Command():
                 else:
                     dict_sub[split_line[0]] = split_line[1].strip()
 
+        dict_sub['Bricks'] = deepcopy(list_brk)
         dict_main[last_volname] = deepcopy(dict_sub)
 
         return dict_main
