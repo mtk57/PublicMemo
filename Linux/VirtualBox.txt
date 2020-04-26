@@ -70,6 +70,159 @@ MS Name/IP address         Stratum Poll Reach LastRx Last sample
 * がついていれば同期しているってことらしい。
 
 
+==============================================================
+
+<Python3.6>
+
+# yum install -y https://centos7.iuscommunity.org/ius-release.rpm
+# yum search python36
+メタデータの期限切れの最終確認: 0:01:15 時間前の 2020年04月24日 07時26分12秒 に実施しました。
+================================================================================ 名前 完全一致: python36 ================================================================================
+python36.x86_64 : Interpreter of the Python programming language
+================================================================================== 名前 一致: python36 ==================================================================================
+python36-debug.x86_64 : Debug version of the Python runtime
+python36-devel.x86_64 : Libraries and header files needed for Python development
+python36-rpm-macros.noarch : RPM macros for building RPMs with Python 3.6
+# yum install python36
+メタデータの期限切れの最終確認: 0:02:30 時間前の 2020年04月24日 07時26分12秒 に実施しました。
+依存関係が解決しました。
+=========================================================================================================================================================================================
+ パッケージ                                   アーキテクチャー                 バージョン                                                      リポジトリー                        サイズ
+=========================================================================================================================================================================================
+インストール:
+ python36                                     x86_64                           3.6.8-2.module_el8.1.0+245+c39af44f                             AppStream                            19 k
+依存関係のインストール:
+ python3-pip                                  noarch                           9.0.3-15.el8                                                    AppStream                            19 k
+ python3-setuptools                           noarch                           39.2.0-5.el8                                                    BaseOS                              162 k
+モジュールストリームの有効化:
+ python36                                                                      3.6
+
+トランザクションの概要
+=========================================================================================================================================================================================
+インストール  3 パッケージ
+
+ダウンロードサイズの合計: 201 k
+インストール済みのサイズ: 466 k
+これでよろしいですか? [y/N]: y
+パッケージのダウンロード:
+(1/3): python36-3.6.8-2.module_el8.1.0+245+c39af44f.x86_64.rpm                                                                                            48 kB/s |  19 kB     00:00
+(2/3): python3-pip-9.0.3-15.el8.noarch.rpm                                                                                                                41 kB/s |  19 kB     00:00
+[MIRROR] python3-setuptools-39.2.0-5.el8.noarch.rpm: Curl error (28): Timeout was reached for http://ftp.nara.wide.ad.jp/pub/Linux/centos/8.1.1911/BaseOS/x86_64/os/Packages/python3-setuptools-39.2.0-5.el8.noarch.rpm [Operation too slow. Less than 1000 bytes/sec transferred the last 30 seconds]
+(3/3): python3-setuptools-39.2.0-5.el8.noarch.rpm                                                                                                        3.0 kB/s | 162 kB     00:54
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+合計                                                                                                                                                     3.5 kB/s | 201 kB     00:57
+警告: /var/cache/dnf/AppStream-a520ed22b0a8a736/packages/python3-pip-9.0.3-15.el8.noarch.rpm: ヘッダー V3 RSA/SHA256 Signature、鍵 ID 8483c65d: NOKEY
+CentOS-8 - AppStream                                                                                                                                     240 kB/s | 1.6 kB     00:00
+GPG 鍵 0x8483C65D をインポート中:
+ Userid     : "CentOS (CentOS Official Signing Key) <security@centos.org>"
+ Fingerprint: 99DB 70FA E1D7 CE22 7FB6 4882 05B5 55B3 8483 C65D
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-centosofficial
+これでよろしいですか? [y/N]: y
+鍵のインポートに成功しました
+トランザクションの確認を実行中
+トランザクションの確認に成功しました。
+トランザクションのテストを実行中
+トランザクションのテストに成功しました。
+トランザクションを実行中
+  準備             :                                                                                                                                                                 1/1
+  インストール中   : python3-setuptools-39.2.0-5.el8.noarch                                                                                                                          1/3
+  インストール中   : python36-3.6.8-2.module_el8.1.0+245+c39af44f.x86_64                                                                                                             2/3
+  scriptletの実行中: python36-3.6.8-2.module_el8.1.0+245+c39af44f.x86_64                                                                                                             2/3
+  インストール中   : python3-pip-9.0.3-15.el8.noarch                                                                                                                                 3/3
+  scriptletの実行中: python3-pip-9.0.3-15.el8.noarch                                                                                                                                 3/3
+  検証             : python3-pip-9.0.3-15.el8.noarch                                                                                                                                 1/3
+  検証             : python36-3.6.8-2.module_el8.1.0+245+c39af44f.x86_64                                                                                                             2/3
+  検証             : python3-setuptools-39.2.0-5.el8.noarch                                                                                                                          3/3
+
+インストール済み:
+  python36-3.6.8-2.module_el8.1.0+245+c39af44f.x86_64                     python3-pip-9.0.3-15.el8.noarch                     python3-setuptools-39.2.0-5.el8.noarch
+
+完了しました!
 
 
+==============================================================
+
+<GlusterFS 7>
+
+
+# yum install centos-release-gluster
+メタデータの期限切れの最終確認: 0:08:50 時間前の 2020年04月24日 07時29分50秒 に実施しました。
+依存関係が解決しました。
+=========================================================================================================================================================================================
+ パッケージ                                                   アーキテクチャー                      バージョン                               リポジトリー                          サイズ
+=========================================================================================================================================================================================
+インストール:
+ centos-release-gluster7                                      noarch                                1.0-2.el8                                extras                                9.5 k
+依存関係のインストール:
+ centos-release-storage-common                                noarch                                2-2.el8                                  extras                                9.4 k
+
+トランザクションの概要
+=========================================================================================================================================================================================
+インストール  2 パッケージ
+
+ダウンロードサイズの合計: 19 k
+インストール済みのサイズ: 2.4 k
+これでよろしいですか? [y/N]: y
+パッケージのダウンロード:
+(1/2): centos-release-storage-common-2-2.el8.noarch.rpm                                                                                                  138 kB/s | 9.4 kB     00:00
+(2/2): centos-release-gluster7-1.0-2.el8.noarch.rpm                                                                                                      131 kB/s | 9.5 kB     00:00
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+合計                                                                                                                                                      18 kB/s |  19 kB     00:01
+トランザクションの確認を実行中
+トランザクションの確認に成功しました。
+トランザクションのテストを実行中
+トランザクションのテストに成功しました。
+トランザクションを実行中
+  準備             :                                                                                                                                                                 1/1
+  インストール中   : centos-release-storage-common-2-2.el8.noarch                                                                                                                    1/2
+  インストール中   : centos-release-gluster7-1.0-2.el8.noarch                                                                                                                        2/2
+  scriptletの実行中: centos-release-gluster7-1.0-2.el8.noarch                                                                                                                        2/2
+  検証             : centos-release-gluster7-1.0-2.el8.noarch                                                                                                                        1/2
+  検証             : centos-release-storage-common-2-2.el8.noarch                                                                                                                    2/2
+
+インストール済み:
+  centos-release-gluster7-1.0-2.el8.noarch                                                  centos-release-storage-common-2-2.el8.noarch
+
+完了しました!
+# yum install glusterfs-server
+CentOS-8 - Gluster 7                                                                                                                                      36 kB/s |  26 kB     00:00
+メタデータの期限切れの最終確認: 0:00:01 時間前の 2020年04月24日 07時39分09秒 に実施しました。
+エラー:
+ 問題: cannot install the best candidate for the job
+  - nothing provides python3-pyxattr needed by glusterfs-server-7.5-1.el8.x86_64
+(インストール不可のパッケージをスキップするには、'--skip-broken' を追加してみてください または、'--nobest' を追加して、最適候補のパッケージのみを使用しないでください)
+
+
+
+==============================================================
+
+<boto3>   ※PythonからAWS(Amazon Web Service)を操作するためのモジュール
+
+
+# pip3 install boto3
+WARNING: Running pip install with root privileges is generally not a good idea. Try `pip3 install --user` instead.
+Collecting boto3
+  Downloading https://files.pythonhosted.org/packages/8c/b9/d9da1f57c0535afacbdf20f3f0ce0c6cdae1b8adab0fd48459c6d72222e5/boto3-1.12.46-py2.py3-none-any.whl (128kB)
+    100% |????????????????????????????????| 133kB 1.0MB/s
+Collecting botocore<1.16.0,>=1.15.46 (from boto3)
+  Downloading https://files.pythonhosted.org/packages/6c/21/d015b86c8fa291f78e8fe7d7cf0a60645989efa5db5e8302e2b7ccf9539a/botocore-1.15.46-py2.py3-none-any.whl (6.1MB)
+    100% |????????????????????????????????| 6.1MB 114kB/s
+Collecting s3transfer<0.4.0,>=0.3.0 (from boto3)
+  Downloading https://files.pythonhosted.org/packages/69/79/e6afb3d8b0b4e96cefbdc690f741d7dd24547ff1f94240c997a26fa908d3/s3transfer-0.3.3-py2.py3-none-any.whl (69kB)
+    100% |????????????????????????????????| 71kB 288kB/s
+Collecting jmespath<1.0.0,>=0.7.1 (from boto3)
+  Downloading https://files.pythonhosted.org/packages/a3/43/1e939e1fcd87b827fe192d0c9fc25b48c5b3368902bfb913de7754b0dc03/jmespath-0.9.5-py2.py3-none-any.whl
+Collecting docutils<0.16,>=0.10 (from botocore<1.16.0,>=1.15.46->boto3)
+  Downloading https://files.pythonhosted.org/packages/22/cd/a6aa959dca619918ccb55023b4cb151949c64d4d5d55b3f4ffd7eee0c6e8/docutils-0.15.2-py3-none-any.whl (547kB)
+    100% |????????????????????????????????| 552kB 241kB/s
+Collecting urllib3<1.26,>=1.20; python_version != "3.4" (from botocore<1.16.0,>=1.15.46->boto3)
+  Downloading https://files.pythonhosted.org/packages/e1/e5/df302e8017440f111c11cc41a6b432838672f5a70aa29227bf58149dc72f/urllib3-1.25.9-py2.py3-none-any.whl (126kB)
+    100% |????????????????????????????????| 133kB 549kB/s
+Requirement already satisfied: python-dateutil<3.0.0,>=2.1 in /usr/lib/python3.6/site-packages (from botocore<1.16.0,>=1.15.46->boto3)
+Requirement already satisfied: six>=1.5 in /usr/lib/python3.6/site-packages (from python-dateutil<3.0.0,>=2.1->botocore<1.16.0,>=1.15.46->boto3)
+Installing collected packages: docutils, urllib3, jmespath, botocore, s3transfer, boto3
+Successfully installed boto3-1.12.46 botocore-1.15.46 docutils-0.15.2 jmespath-0.9.5 s3transfer-0.3.3 urllib3-1.25.9
+
+
+==============================================================
 
