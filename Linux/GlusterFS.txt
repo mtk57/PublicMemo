@@ -1,0 +1,110 @@
+GlusterFS memo
+
+
+-------------------------------------------------------
+■ボリューム作成
+
+gluster vol create <ボリューム名> <ホスト名>:<ブリックまでの絶対パス>
+
+例：
+# gluster vol create kawa_vol 10.0.2.15:/home/kawa/brick force
+
+→forceをつけているのは、ルートパーティションにブリックを作ろうとすると怒られるため。
+
+
+-------------------------------------------------------
+■ボリュームリスト表示
+
+# gluster vol list
+
+
+-------------------------------------------------------
+■ボリューム情報表示
+
+gluster vol info <ボリューム名>
+
+例：
+# gluster vol info kawa_vol
+
+Volume Name: kawa_vol
+Type: Distribute
+Volume ID: 102d9a4b-239f-4586-a8f0-5f60463f4baa
+Status: Created
+Snapshot Count: 0
+Number of Bricks: 1
+Transport-type: tcp
+Bricks:
+Brick1: 10.0.2.15:/home/kawa/brick
+Options Reconfigured:
+transport.address-family: inet
+storage.fips-mode-rchecksum: on
+nfs.disable: on
+
+-------------------------------------------------------
+■ボリュームの開始と停止
+
+gluster vol start|stop <ボリューム名>
+
+例：
+# gluster vol start kawa_vol
+
+
+-------------------------------------------------------
+■ボリューム状態を確認（開始中のみ）
+
+gluster vol status <ボリューム名>
+
+例：
+# gluster vol status kawa_vol
+Status of volume: kawa_vol
+Gluster process                             TCP Port  RDMA Port  Online  Pid
+------------------------------------------------------------------------------
+Brick 10.0.2.15:/home/kawa/brick            49152     0          Y       822
+
+Task Status of Volume kawa_vol
+------------------------------------------------------------------------------
+There are no active volume tasks
+
+-------------------------------------------------------
+■ボリュームのマウント
+
+例：
+# mount -t glusterfs -o aux-gfid-mount 10.0.2.15:kawa_vol /mnt/tmp
+
+
+これで、/mnt/tmp でのファイル操作が、Brickに反映される。
+
+また、Brickには、「.glusterfs」なる隠しディレクトリが存在する。
+
+-------------------------------------------------------
+■Volファイル
+
+gluterfsが管理するボリュームの情報を設定しているファイル
+
+ボリューム名でディレクトリを検索すると以下がヒットする
+# find / -name "kawa_vol" -type d
+/run/gluster/vols/kawa_vol
+/var/lib/glusterd/vols/kawa_vol
+/var/log/glusterfs/snaps/kawa_vol
+/var/log/glusterfs/gfproxy/kawa_vol
+
+
+/run/gluster/vols/kawa_vol/10.0.2.15-home-kawa-brick.pid
+→GlusterFSが、1つのBrickにつき1つのデーモン(glusterfsd)が管理する。
+  そのglusterfsdのPIDを格納しているファイル
+
+/var/lib/glusterd/vols/kawa_vol/kawa_vol.10.0.2.15.home-kawa-brick.vol
+→volファイル
+
+
+
+
+
+-------------------------------------------------------
+-------------------------------------------------------
+-------------------------------------------------------
+-------------------------------------------------------
+-------------------------------------------------------
+-------------------------------------------------------
+
+

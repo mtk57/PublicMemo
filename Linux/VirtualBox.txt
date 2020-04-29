@@ -33,8 +33,7 @@
 
 
 ==============================================================
-
-■ NATモードとは
+■ NATモード
 
 VirtualBoxがルータとなり、ホストOSとゲストOSを中継するモードです。
 ゲストOSからホストOSにアクセスすることや、ゲストOSからホストOSを経由してインターネットアクセスをすることができます。
@@ -42,16 +41,14 @@ VirtualBoxがルータとなり、ホストOSとゲストOSを中継するモー
 ただし、デフォルトではホストOSからゲストOSへのアクセスは行えません。
 
 ==============================================================
-
-■ ポートフォワーディングとは
+■ ポートフォワーディング
 
 NATモードでホストOSからゲストOSにアクセスできるようにする設定です。
 ホストOSのあるポートにアクセスすると自動でゲストOSのあるポート（通常はSSHの22番ポート）に
 転送（フォワーディング）してくれます。
 
 ==============================================================
-
-<時刻同期>
+■ 時刻同期
 
 スナップショットを使うと、スナップショットを取った時刻で復元されるので、
 chronyで時刻の同期を行う。
@@ -71,8 +68,7 @@ MS Name/IP address         Stratum Poll Reach LastRx Last sample
 
 
 ==============================================================
-
-<Python3.6>
+■ Python3.6
 
 # yum install -y https://centos7.iuscommunity.org/ius-release.rpm
 # yum search python36
@@ -141,8 +137,14 @@ GPG 鍵 0x8483C65D をインポート中:
 
 
 ==============================================================
+■ GlusterFS 7
 
-<GlusterFS 7>
+入れるのは3つ
+1.centos-release-gluster
+2.python3-pyxattr
+  →glusterfs-serverが使っている
+3.glusterfs-server
+
 
 
 # yum install centos-release-gluster
@@ -184,19 +186,147 @@ GPG 鍵 0x8483C65D をインポート中:
   centos-release-gluster7-1.0-2.el8.noarch                                                  centos-release-storage-common-2-2.el8.noarch
 
 完了しました!
-# yum install glusterfs-server
-CentOS-8 - Gluster 7                                                                                                                                      36 kB/s |  26 kB     00:00
-メタデータの期限切れの最終確認: 0:00:01 時間前の 2020年04月24日 07時39分09秒 に実施しました。
-エラー:
- 問題: cannot install the best candidate for the job
-  - nothing provides python3-pyxattr needed by glusterfs-server-7.5-1.el8.x86_64
-(インストール不可のパッケージをスキップするには、'--skip-broken' を追加してみてください または、'--nobest' を追加して、最適候補のパッケージのみを使用しないでください)
 
+
+
+
+
+
+# dnf --enablerepo=PowerTools install python3-pyxattr
+CentOS-8 - PowerTools                           148 kB/s | 2.0 MB     00:13
+メタデータの期限切れの最終確認: 0:00:08 時間前の 2020年04月24日 08時25分56秒 に                                                                                                          実施しました。
+依存関係が解決しました。
+================================================================================
+ パッケージ            Arch         バージョン           リポジトリー     サイズ
+================================================================================
+インストール:
+ python3-pyxattr       x86_64       0.5.3-18.el8         PowerTools        36 k
+
+トランザクションの概要
+================================================================================
+インストール  1 パッケージ
+
+ダウンロードサイズの合計: 36 k
+インストール済みのサイズ: 64 k
+これでよろしいですか? [y/N]: y
+パッケージのダウンロード:
+python3-pyxattr-0.5.3-18.el8.x86_64.rpm         183 kB/s |  36 kB     00:00
+--------------------------------------------------------------------------------
+合計                                             39 kB/s |  36 kB     00:00
+トランザクションの確認を実行中
+トランザクションの確認に成功しました。
+トランザクションのテストを実行中
+トランザクションのテストに成功しました。
+トランザクションを実行中
+  準備             :                                                        1/1
+  インストール中   : python3-pyxattr-0.5.3-18.el8.x86_64                    1/1
+  scriptletの実行中: python3-pyxattr-0.5.3-18.el8.x86_64                    1/1
+  検証             : python3-pyxattr-0.5.3-18.el8.x86_64                    1/1
+
+インストール済み:
+  python3-pyxattr-0.5.3-18.el8.x86_64
+
+完了しました!
+
+
+
+
+
+# yum install -y glusterfs-server
+メタデータの期限切れの最終確認: 0:47:08 時間前の 2020年04月24日 07時39分09秒 に                                                                                                          実施しました。
+依存関係が解決しました。
+================================================================================
+ パッケージ                  Arch      バージョン      リポジトリー       サイズ
+================================================================================
+インストール:
+ glusterfs-server            x86_64    7.5-1.el8       centos-gluster7    1.4 M
+アップグレード:
+ glusterfs                   x86_64    7.5-1.el8       centos-gluster7    688 k
+ glusterfs-api               x86_64    7.5-1.el8       centos-gluster7    123 k
+ glusterfs-cli               x86_64    7.5-1.el8       centos-gluster7    215 k
+ glusterfs-client-xlators    x86_64    7.5-1.el8       centos-gluster7    888 k
+ glusterfs-fuse              x86_64    7.5-1.el8       centos-gluster7    170 k
+ glusterfs-libs              x86_64    7.5-1.el8       centos-gluster7    445 k
+
+トランザクションの概要
+================================================================================
+インストール    1 パッケージ
+アップグレード  6 パッケージ
+
+ダウンロードサイズの合計: 3.8 M
+パッケージのダウンロード:
+(1/7): glusterfs-api-7.5-1.el8.x86_64.rpm       482 kB/s | 123 kB     00:00
+(2/7): glusterfs-cli-7.5-1.el8.x86_64.rpm       643 kB/s | 215 kB     00:00
+(3/7): glusterfs-client-xlators-7.5-1.el8.x86_6 620 kB/s | 888 kB     00:01
+(4/7): glusterfs-7.5-1.el8.x86_64.rpm           338 kB/s | 688 kB     00:02
+(5/7): glusterfs-fuse-7.5-1.el8.x86_64.rpm      372 kB/s | 170 kB     00:00
+(6/7): glusterfs-libs-7.5-1.el8.x86_64.rpm      213 kB/s | 445 kB     00:02
+(7/7): glusterfs-server-7.5-1.el8.x86_64.rpm    306 kB/s | 1.4 MB     00:04
+--------------------------------------------------------------------------------
+合計                                            795 kB/s | 3.8 MB     00:04
+警告: /var/cache/dnf/centos-gluster7-997b5572243b3033/packages/glusterfs-server-                                                                                                         7.5-1.el8.x86_64.rpm: ヘッダー V4 RSA/SHA1 Signature、鍵 ID e451e5b5: NOKEY
+CentOS-8 - Gluster 7                            137 kB/s | 1.0 kB     00:00
+GPG 鍵 0xE451E5B5 をインポート中:
+ Userid     : "CentOS Storage SIG (http://wiki.centos.org/SpecialInterestGroup/S                                                                                                         torage) <security@centos.org>"
+ Fingerprint: 7412 9C0B 173B 071A 3775 951A D4A2 E50B E451 E5B5
+ From       : /etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-SIG-Storage
+鍵のインポートに成功しました
+トランザクションの確認を実行中
+トランザクションの確認に成功しました。
+トランザクションのテストを実行中
+トランザクションのテストに成功しました。
+トランザクションを実行中
+  準備             :                                                        1/1
+  アップグレード中 : glusterfs-libs-7.5-1.el8.x86_64                       1/13
+  scriptletの実行中: glusterfs-7.5-1.el8.x86_64                            2/13
+  アップグレード中 : glusterfs-7.5-1.el8.x86_64                            2/13
+  scriptletの実行中: glusterfs-7.5-1.el8.x86_64                            2/13
+  アップグレード中 : glusterfs-client-xlators-7.5-1.el8.x86_64             3/13
+  アップグレード中 : glusterfs-api-7.5-1.el8.x86_64                        4/13
+  アップグレード中 : glusterfs-fuse-7.5-1.el8.x86_64                       5/13
+  アップグレード中 : glusterfs-cli-7.5-1.el8.x86_64                        6/13
+  インストール中   : glusterfs-server-7.5-1.el8.x86_64                     7/13
+  scriptletの実行中: glusterfs-server-7.5-1.el8.x86_64                     7/13
+  整理             : glusterfs-fuse-6.0-15.el8.x86_64                      8/13
+  整理             : glusterfs-api-6.0-15.el8.x86_64                       9/13
+  整理             : glusterfs-6.0-15.el8.x86_64                          10/13
+  scriptletの実行中: glusterfs-6.0-15.el8.x86_64                          10/13
+  整理             : glusterfs-client-xlators-6.0-15.el8.x86_64           11/13
+  整理             : glusterfs-cli-6.0-15.el8.x86_64                      12/13
+  整理             : glusterfs-libs-6.0-15.el8.x86_64                     13/13
+  scriptletの実行中: glusterfs-libs-6.0-15.el8.x86_64                     13/13
+  検証             : glusterfs-server-7.5-1.el8.x86_64                     1/13
+  検証             : glusterfs-7.5-1.el8.x86_64                            2/13
+  検証             : glusterfs-6.0-15.el8.x86_64                           3/13
+  検証             : glusterfs-api-7.5-1.el8.x86_64                        4/13
+  検証             : glusterfs-api-6.0-15.el8.x86_64                       5/13
+  検証             : glusterfs-cli-7.5-1.el8.x86_64                        6/13
+  検証             : glusterfs-cli-6.0-15.el8.x86_64                       7/13
+  検証             : glusterfs-client-xlators-7.5-1.el8.x86_64             8/13
+  検証             : glusterfs-client-xlators-6.0-15.el8.x86_64            9/13
+  検証             : glusterfs-fuse-7.5-1.el8.x86_64                      10/13
+  検証             : glusterfs-fuse-6.0-15.el8.x86_64                     11/13
+  検証             : glusterfs-libs-7.5-1.el8.x86_64                      12/13
+  検証             : glusterfs-libs-6.0-15.el8.x86_64                     13/13
+
+アップグレード済み:
+  glusterfs-7.5-1.el8.x86_64        glusterfs-api-7.5-1.el8.x86_64
+  glusterfs-cli-7.5-1.el8.x86_64    glusterfs-client-xlators-7.5-1.el8.x86_64
+  glusterfs-fuse-7.5-1.el8.x86_64   glusterfs-libs-7.5-1.el8.x86_64
+
+インストール済み:
+  glusterfs-server-7.5-1.el8.x86_64
+
+完了しました!
+
+
+
+# systemctl start glusterd
 
 
 ==============================================================
-
-<boto3>   ※PythonからAWS(Amazon Web Service)を操作するためのモジュール
+■ boto3
+   ※PythonからAWS(Amazon Web Service)を操作するためのモジュール
 
 
 # pip3 install boto3
@@ -225,4 +355,14 @@ Successfully installed boto3-1.12.46 botocore-1.15.46 docutils-0.15.2 jmespath-0
 
 
 ==============================================================
+■ WinSCP
+
+◎隠しフォルダ・ファイルを表示
+CTRL + ALT + H
+
+
+
+
+
+
 
