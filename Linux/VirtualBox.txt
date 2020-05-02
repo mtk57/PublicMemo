@@ -48,6 +48,73 @@ NATモードでホストOSからゲストOSにアクセスできるようにす�
 転送（フォワーディング）してくれます。
 
 ==============================================================
+■ ブリッジアダプター
+
+NATだと、VM同士の通信が出来ないため、ブリッジアダプターの手順も以下に示す。
+
+
+1.VirtualBoxの設定変更は以下のみ。
+  [設定] - [ネットワーク]
+    [アダプター1]
+      割り当て：ブリッジアダプター
+
+  →設定後は再起動
+
+3.CentOSの設定
+
+  デフォルトでは、NIC (enp0s3)のDHCP等が有効になっていないので、IPアドレスが割り当たっていないため
+  接続できないため、手動でIPアドレスを設定をする必要がある。
+  設定は、NetworkManagerの「nmcli」というCLIを使用する。
+
+  3-1.デバイス(NIC)の一覧を確認。（未接続になっているのが判る）
+      # nmcli device
+      DEVICE  TYPE      STATE          CONNECTION
+      enp0s3  ethernet  disconnected   --
+      (省略)
+
+  3-2.念の為、MACアドレスを確認。（VMのネットワーク設定と一致していること）
+      # nmcli device show enp0s3
+      (省略)
+      GENERAL.TYPE:     08:00:27:8F:D5:14
+      (省略)
+
+  3-3.enp0s3の設定を確認。（自動接続がOFFなのが判る）
+      # nmcli connection show enp0s3 | less
+      (省略)
+      connection.autoconnect:    no
+      (省略)
+
+  3-4.IPアドレス、DNS、Gatewayを手動で設定する。
+      # nmcli connection modify enp0s3 ipv4.method manual ipv4.address 192.168.11.100/24
+      # nmcli connection modify enp0s3 ipv4.dns 192.168.11.1
+      # nmcli connection modify enp0s3 ipv4.gateway 192.168.11.1
+      # nmcli connection modify enp0s3 connection.autoconnect yes
+
+  3-5.設定を有効にする。
+      # nmcli device disconnect enp0s3
+      Device 'enp0s3' successfully disconnected.
+      # nmcli connection up enp0s3
+      Connection successfully activated (D-Bus active path: /org/freedesktop/NetworkManager/ActiveConnection/4)
+
+  3-6.NICの状態を確認。
+      # nmcli device
+      DEVICE      TYPE      STATE      CONNECTION
+      enp0s3      ethernet  connected  enp0s3
+      (省略)
+
+
+4.あとは、TeraTermで「192.168.11.100」でSSH接続できるはず。
+  →WinSCPも同じ。
+
+
+
+
+参考：
+https://bleu-bleut.hatenablog.jp/entry/2017/05/09/171832
+https://qiita.com/feifo/items/0fde474005589afcff68
+
+
+==============================================================
 ■ 時刻同期
 
 スナップショットを使うと、スナップショットを取った時刻で復元されるので、
