@@ -6,20 +6,41 @@ GlusterFS memo
 
 gluster vol create <ボリューム名> <ホスト名>:<ブリックまでの絶対パス>
 
-例：
+例１：1ノードでボリュームを作成する
 # gluster vol create kawa_vol 10.0.2.15:/home/kawa/brick force
 
-→forceをつけているのは、ルートパーティションにブリックを作ろうとすると怒られるため。
+→forceをつけているのは、ルートパーティション(/)にブリックを作ろうとすると怒られるため。
+  GlusterFSではルートパーティション以外のパーティションにブリックを作ることを推奨している。
+
+
+例２：2ノードでボリュームを作成する（やはり分散FSなので2ノード以上あったほうが勉強になる）
+
+ 1.全ノードの/etc/hostsに全ノードの情報(IPとホスト名)を追加する。（全ノード同じ内容）
+     192.168.11.100 node1
+     192.168.11.101 node2
+
+ 2.VirtualBoxでノード1をクローンして作成した場合、ノード2のglusterサーバインストール時のUUIDがノード1と被るので、
+   以下コマンドでリセットしておく。（ノード2でのみ実行）
+   # gluster system uuid reset
+
+ 3.いずれかのノードで以下コマンドを実行し、ノードを検索してピアとして紐付ける。（以下はノード1で実行する場合）
+   # gluster peer probe node2
+
+ 4.全ノードにBrickとして使用するディレクトリを作成しておく。
+
+ 5.いずれかのノードで以下コマンドを実行し、Glusterボリュームを作成する。
+   # gluster vol create kawa_vol node1:/home/kawa/node1/brick node2:/home/kawa/node2/brick force
+
 
 
 -------------------------------------------------------
-■ボリュームリスト表示
+■ボリュームの一覧を表示
 
 # gluster vol list
 
 
 -------------------------------------------------------
-■ボリューム情報表示
+■ボリュームの情報を表示
 
 gluster vol info <ボリューム名>
 
@@ -47,10 +68,18 @@ gluster vol start|stop <ボリューム名>
 
 例：
 # gluster vol start kawa_vol
-
+# gluster vol stop kawa_vol
 
 -------------------------------------------------------
-■ボリューム状態を確認（開始中のみ）
+■ボリュームの削除
+
+gluster vol delete <ボリューム名>
+
+例：
+# gluster vol delete kawa_vol
+
+-------------------------------------------------------
+■ボリュームの状態を確認（開始中のみ可能）
 
 gluster vol status <ボリューム名>
 
@@ -72,7 +101,7 @@ There are no active volume tasks
 # mount -t glusterfs -o aux-gfid-mount 10.0.2.15:kawa_vol /mnt/tmp
 
 
-これで、/mnt/tmp でのファイル操作が、Brickに反映される。
+これで、/mnt/tmp でのファイル操作が、Brickに反映される。（複数ノードの場合、いずれかのBrickに反映）
 
 また、Brickには、「.glusterfs」なる隠しディレクトリが存在する。
 
