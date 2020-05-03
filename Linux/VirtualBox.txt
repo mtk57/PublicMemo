@@ -503,6 +503,331 @@ Successfully installed boto3-1.12.46 botocore-1.15.46 docutils-0.15.2 jmespath-0
 CTRL + ALT + H
 
 
+==============================================================
+■ Samba (CIFS)
+
+Linux上でWindowsのネットワーク機能を実現するソフトウェアです。
+Sambaサーバが稼働していれば、Linux上のディレクトリに、Windowsからアクセスできる。
+
+<手順概要>
+1.sambaをインストール
+2.Firewallでsambaを許可
+3.sambaの設定ファイルを変更   (/etc/samba/smb.conf)
+4.公開ディレクトリを作成      (/home/share/)
+5.アクセス用ユーザーを作成    (rem-test01)
+6.SELinuxを無効化             (/etc/sysconfig/selinux)
+7.samba再起動                 (systemctl restart smb nmb)
+8.Windowsから公開ディレクトリにアクセス
+
+
+<前提条件>
+ホスト名：node1
+
+
+<手順>
+
+1.sambaをインストール
+# dnf -y install samba
+
+--------------------------------------------------------
+インストール後の確認
+--------------------------------------------------------
+# dnf list installed samba*
+インストール済みパッケージ
+samba.x86_64                  4.10.4-101.el8_1    @BaseOS
+samba-client.x86_64           4.10.4-101.el8_1    @BaseOS
+samba-client-libs.x86_64      4.10.4-101.el8_1    @BaseOS
+samba-common.noarch           4.10.4-101.el8_1    @BaseOS
+samba-common-libs.x86_64      4.10.4-101.el8_1    @BaseOS
+samba-common-tools.x86_64     4.10.4-101.el8_1    @BaseOS
+samba-libs.x86_64             4.10.4-101.el8_1    @BaseOS
+
+# which smbd nmbd
+/usr/sbin/smbd
+/usr/sbin/nmbd
+
+
+--------------------------------------------------------
+Samba起動の確認 (smbd, nmbdが開始できることを確認する)
+--------------------------------------------------------
+# systemctl start smb nmb
+# systemctl status smb nmb
+● smb.service - Samba SMB Daemon
+   Loaded: loaded (/usr/lib/systemd/system/smb.service; disabled; vendor preset: disabled)
+   Active: active (running) since Sat 2020-05-02 19:11:40 JST; 5s ago
+     Docs: man:smbd(8)
+           man:samba(7)
+           man:smb.conf(5)
+ Main PID: 30044 (smbd)
+   Status: "smbd: ready to serve connections..."
+    Tasks: 4 (limit: 5035)
+   Memory: 11.6M
+   CGroup: /system.slice/smb.service
+           tq30044 /usr/sbin/smbd --foreground --no-process-group
+           tq30047 /usr/sbin/smbd --foreground --no-process-group
+           tq30048 /usr/sbin/smbd --foreground --no-process-group
+           mq30049 /usr/sbin/smbd --foreground --no-process-group
+
+ 5月 02 19:11:40 localhost.localdomain systemd[1]: Starting Samba SMB Daemon...
+ 5月 02 19:11:40 localhost.localdomain smbd[30044]: [2020/05/02 19:11:40.562169,  0] ../../lib/util/become_daemon.c:136(daemon_ready)
+ 5月 02 19:11:40 localhost.localdomain systemd[1]: Started Samba SMB Daemon.
+ 5月 02 19:11:40 localhost.localdomain smbd[30044]:   daemon_ready: daemon 'smbd' finished starting up and ready to serve connections
+
+● nmb.service - Samba NMB Daemon
+   Loaded: loaded (/usr/lib/systemd/system/nmb.service; disabled; vendor preset: disabled)
+   Active: active (running) since Sat 2020-05-02 19:11:40 JST; 5s ago
+     Docs: man:nmbd(8)
+           man:samba(7)
+           man:smb.conf(5)
+ Main PID: 30045 (nmbd)
+   Status: "nmbd: ready to serve connections..."
+    Tasks: 1 (limit: 5035)
+   Memory: 4.1M
+   CGroup: /system.slice/nmb.service
+           mq30045 /usr/sbin/nmbd --foreground --no-process-group
+
+ 5月 02 19:11:40 localhost.localdomain systemd[1]: Starting Samba NMB Daemon...
+ 5月 02 19:11:40 localhost.localdomain nmbd[30045]: [2020/05/02 19:11:40.495802,  0] ../../lib/util/become_daemon.c:136(daemon_ready)
+ 5月 02 19:11:40 localhost.localdomain systemd[1]: Started Samba NMB Daemon.
+ 5月 02 19:11:40 localhost.localdomain nmbd[30045]:   daemon_ready: daemon 'nmbd' finished starting up and ready to serve connections
+
+
+--------------------------------------------------------
+Samba自動起動の設定 （OS再起動後もsmbd, nmbdが自動起動させるため）
+--------------------------------------------------------
+[root@localhost ~]# systemctl enable smb nmb
+Created symlink /etc/systemd/system/multi-user.target.wants/smb.service → /usr/lib/systemd/system/smb.service.
+Created symlink /etc/systemd/system/multi-user.target.wants/nmb.service → /usr/lib/systemd/system/nmb.service.
+
+
+2.Firewallでsambaを許可
+
+------------------
+現状の設定を確認
+------------------
+# firewall-cmd --list-all
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: enp0s3
+  sources:
+  services: cockpit dhcpv6-client glusterfs ssh       ※sambaサービスは許可されていない
+  ports:
+  protocols:
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+
+
+---------------------
+sambaサービスを許可
+---------------------
+# firewall-cmd --add-service=samba --permanent
+success
+
+
+---------------------
+設定をリロード
+---------------------
+# firewall-cmd --reload
+success
+
+
+---------------------
+再度、状態を確認
+---------------------
+# firewall-cmd --list-all
+public (active)
+  target: default
+  icmp-block-inversion: no
+  interfaces: enp0s3
+  sources:
+  services: cockpit dhcpv6-client glusterfs samba ssh         ※sambaサービスが追加されている
+  ports:
+  protocols:
+  masquerade: no
+  forward-ports:
+  source-ports:
+  icmp-blocks:
+  rich rules:
+
+
+
+3.sambaの設定ファイルを変更
+
+---------------------------
+設定ファイルをバックアップ
+---------------------------
+# cd /etc/samba
+# cp -p smb.conf smb.conf.org
+
+
+---------------------------
+以下の内容に書き換える (★は環境により変わる)
+---------------------------
+～～～～～～～～～～～～～～～～～～～～～～～～～ここから
+# See smb.conf.example for a more detailed config file or
+# read the smb.conf manpage.
+# Run 'testparm' to verify the config is correct after
+# you modified it.
+ 
+[global]
+workgroup = WORKGROUP
+server string = SAMBA SERVER Version %v
+netbios name = node1                       ★
+security = user
+ 
+passdb backend = tdbsam
+ 
+dos charset = CP932
+wins support = yes
+# printing = cups
+# printcap name = cups
+load printers = no
+disable spoolss = yes
+# cups options = raw
+ 
+[Share]
+comment = Share Folder for All Users
+path = /home/share/
+browsable = yes
+read only = no
+ 
+[homes]
+comment = Home Directories
+valid users = %S, %D%w%S
+browseable = No
+read only = No
+inherit acls = Yes
+ 
+#[printers]
+# comment = All Printers
+# path = /var/tmp
+# printable = Yes
+# create mask = 0600
+# browseable = No
+ 
+#[print$]
+# comment = Printer Drivers
+# path = /var/lib/samba/drivers
+# write list = @printadmin root
+# force group = @printadmin
+# create mask = 0664
+# directory mask = 0775
+～～～～～～～～～～～～～～～～～～～～～～～～～ここまで
+
+
+
+4.公開ディレクトリを作成
+
+# cd /home/
+# mkdir share
+# chmod -R 0777 share
+# chown -R nobody:nobody share
+# ll
+合計 0
+drwxrwxrwx. 2 nobody nobody  6  5月  2 19:25 share
+
+
+
+5.アクセス用ユーザーを作成 
+
+# useradd rem-test01
+# passwd rem-test01
+ユーザー rem-test01 のパスワードを変更。
+新しいパスワード: 
+新しいパスワードを再入力してください: 
+passwd: すべての認証トークンが正しく更新できました。
+
+
+------------------------------
+Windows側のユーザー属性追加  (PWは↑と同じ)
+------------------------------
+# pdbedit -a -u rem-test01 -f "test user01"
+new password:
+retype new password:
+Unix username:        rem-test01
+NT username:
+Account Flags:        [U          ]
+User SID:             S-1-5-21-3229097609-707887061-1259947667-1000
+Primary Group SID:    S-1-5-21-3229097609-707887061-1259947667-513
+Full Name:            test user01
+Home Directory:       \\node1\rem-test01
+HomeDir Drive:
+Logon Script:
+Profile Path:         \\node1\rem-test01\profile
+Domain:               NODE1
+Account desc:
+Workstations:
+Munged dial:
+Logon time:           0
+Logoff time:          木, 07  2月 2036 00:06:39 JST
+Kickoff time:         木, 07  2月 2036 00:06:39 JST
+Password last set:    土, 02  5月 2020 19:29:17 JST
+Password can change:  土, 02  5月 2020 19:29:17 JST
+Password must change: never
+Last bad password   : 0
+Bad password count  : 0
+Logon hours         : FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+
+
+
+6.SELinuxを無効化
+
+---------------------------------------------
+/etc/sysconfig/selinuxの以下行を書き換える
+---------------------------------------------
+
+<書き換え前>
+SELINUX=enforcing
+
+<書き換え後>
+#SELINUX=enforcing
+SELINUX=disabled
+
+
+-------------
+OSをリブート
+-------------
+# reboot
+
+
+
+7.samba再起動 (リブートしたので不要かも)
+
+# systemctl restart smb nmb
+
+
+
+8.Windowsから公開ディレクトリにアクセス
+
+ここからはWindowsでの作業。
+
+
+--------------------------
+念の為、pingが通るか確認
+--------------------------
+> ping node1
+
+
+----------------------------------------
+エクスプローラからsambaサーバにアクセス
+----------------------------------------
+\\node1
+
+→ID/PWは、rem-test01
+
+
+共有ディレクトリ(share)にアクセスできれば成功。
+
+
+参考：
+https://www.rem-system.com/centos8-samba-install/
+
+==============================================================
+
 
 
 
