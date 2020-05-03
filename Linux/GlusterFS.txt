@@ -194,6 +194,33 @@ Uuid: 92956d88-8f30-4d15-aa95-a0ac2d1e024b
 State: Peer in Cluster (Connected)
 
 -------------------------------------------------------
+■ファイルリネーム時の動作について
+
+ノードが複数あるボリュームにおいて、ブリックのファイルのリネームをリネームした場合、
+元々ブリック1にあったファイルが、ブリック2に作成されることがある。
+その場合、元々のファイルに「StickyBitが立ち」、さらに拡張属性「trusted.glusterfs.dht.linkto」が追加される。
+
+
+   1.リネーム前
+       ノード1のBrick：abc.txt
+       ノード2のBrick：
+
+   2.リネーム後 (abc.txt→XYZ.txt)
+       ノード1のBrick：XYZ.txt    ※元々あったabc.txtがリネームされた
+                                    StickyBitはON
+                                    拡張属性(trusted.glusterfs.dht.linkto)は存在する
+       ノード2のBrick：XYZ.txt    ※ノード2に再配置された
+                                    StickyBitはOFF
+                                    拡張属性(trusted.glusterfs.dht.linkto)はない
+
+       →このように同じファイル名が複数に散らばっているのを解消するには、リバランスを実施する。
+         # gluster vol rebalance kawa_vol start
+
+   3.リバランス後 (どのBrickに再配置されるかはGluster次第)
+     ノード1のBrick：
+     ノード2のBrick：XYZ.txt      StickyBitはOFF
+                                  拡張属性(trusted.glusterfs.dht.linkto)はない
+
 -------------------------------------------------------
 -------------------------------------------------------
 -------------------------------------------------------
