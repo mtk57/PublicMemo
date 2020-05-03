@@ -38,8 +38,8 @@ cd              カレントディレクトリを移動する★
 -------------------------------------------------------------------
 chacl           ファイルまたはディレクトリのアクセス制御リスト (Access Control List) を変更する
 -------------------------------------------------------------------
-chattr          ファイルの属性を変更する
-                属性の前に+/-をつけることで、属性のON/OFFを行う。
+chattr          ファイルのinode属性フラグを変更する
+                属性の前に+/-/=をつけることで、属性のADD/REMOVE/UPDATEを行う。
 
                 例：samplefileを削除不可能にする。
                 # chattr +i samplefile
@@ -342,7 +342,12 @@ lsusb           USBバスと接続されているデバイスに関する情報�
 -------------------------------------------------------------------
 lsmod           システムにロードされているモジュールの状態を表示する
 -------------------------------------------------------------------
-lsattr          ファイルの属性を表示する
+lsattr          ファイルのinode属性フラグを表示する
+
+                例：
+                # lsattr aaa.txt
+                ----ia------------- aaa.txt     ※i, a フラグがONになっている
+
 -------------------------------------------------------------------
 man             コマンドのマニュアルを表示する
 
@@ -470,6 +475,48 @@ sed             テキストファイルの文字列を置換する
 set             シェル変数の一覧を表示する
 -------------------------------------------------------------------
 setfacl         ファイルのアクセス制御リスト (access control list) を設定する
+
+                <主なオプション>
+                -m 設定            拡張ACLを設定する
+                -x 設定            指定した拡張ACLを削除する
+                -b                 全ての拡張ACLを削除する
+                -R                 全ての操作をディレクトリに対して再帰的に実施する
+
+                <設定>
+                u:ユーザー:許可内容(r|w|x)     ユーザーに対する許可
+                g:グループ:許可内容(r|w|x)     グループに対する許可
+                or:許可内容(r|w|x)             その他に対する許可
+
+
+                例：ユーザyokoにaaa.txtのアクセス権(rw)を与える
+                # getfacl aaa.txt       ※現状を確認
+                # file: aaa.txt
+                # owner: root
+                # group: root
+                user::rw-
+                group::r--
+                other::r--
+
+                # setfacl -m u:yoko:rw aaa.txt     ※アクセス権を付与
+
+                # getfacl aaa.txt
+                # file: aaa.txt
+                # owner: root
+                # group: root
+                user::rw-
+                user:yoko:rw-            ※追加された
+                group::r--
+                mask::rw-
+                other::r--
+
+                # getfattr -d -m - -e hex aaa.txt    ※拡張属性を確認
+                # file: aaa.txt
+                security.selinux=0x756e636f6e66696e65645f753a6f626a6563745f723a757365725f686f6d655f743a733000
+                system.posix_acl_access=0x0200000001000600ffffffff02000600e803000004000400ffffffff10000600ffffffff20000400ffffffff
+                trusted.SGI_ACL_FILE=0x0000000500000001ffffffff0006000000000002000003e80006000000000004ffffffff0004000000000010ffffffff0006000000000020ffffffff00040000
+
+                →「system.posix_acl_access」と「trusted.SGI_ACL_FILE」が追加されている
+
 -------------------------------------------------------------------
 setfattr        ファイルの拡張属性を設定・削除を行う
                 attrパッケージに含まれている
@@ -796,8 +843,55 @@ who             ログインしているユーザを表示する
         USB
 
 -------------------------------------------------------------------
-■ACL (Access Control List)
+■inode属性フラグ
 
+    <取得・設定コマンド>
+    lsattr
+    chattr
+
+-------------------------------------------------------------------
+■拡張ファイル属性、拡張属性、EA(extended attributes)
+
+    従来のinode内に格納されるファイル属性（パーミッション）に加えて、
+    inode領域外の拡張属性ブロックに格納される。inodeから参照される属性。
+    ext2, ext3, ext4, JFS, ReiserFS, XFS, Btrfs といった主要なファイルシステムで利用することができる。
+    主にACL, SELinux, capabilityなどが拡張属性を利用する。
+
+    <形式>
+    名前空間 + "." + 属性名 + "=" + 値
+
+    例：
+    user.myattr='123'
+
+
+    <名前空間>
+    system    ACL(system.posix_acl_access)が利用する
+    security  SELinux(security.selinux)やケーパビリティ(security.capability)が利用する
+              特権を持つプロセスだけが変更できる
+    trusted   特権を持つプロセスだけがアクセスできる
+              (GlusterFSとかもこれを使用している)
+    user      一般ユーザーが利用する（自由に定義可能）
+
+    <取得・設定コマンド>
+    getfattr
+    setfattr
+
+    <システムコール>
+    getxattr
+    setxattr
+
+-------------------------------------------------------------------
+■ACL (Access Control Lists)
+    POSIXで定義されているアクセス制御を実装したもの。
+    従来のUnix形式での「所有者/グループ/その他のユーザ」によるアクセス制御に加えて
+    特定のユーザあるいはグループに対するアクセス権限を設定できる。
+
+    <取得・設定コマンド>
+    getfacl
+    setfacl
+
+    <システムコール>
+    ???
 
     参考：https://siguniang.wordpress.com/2013/11/19/notes-on-linux-extended-attributes/
 
