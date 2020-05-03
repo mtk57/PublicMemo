@@ -893,7 +893,19 @@ who             ログインしているユーザを表示する
     <システムコール>
     ???
 
-    参考：https://siguniang.wordpress.com/2013/11/19/notes-on-linux-extended-attributes/
 
+    WindowsのACLとLinuxのパーミッションは1対1で対応していない。
+
+    Windows ACL              Linux Permission
+    ---------------------------------------------
+    読み取り                 4 (r--)
+    書き込み                 2 (-w-)
+    読み取りと実行           1 (--x)
+    フルコントロール、変更   7 (rwx)
+    アーカイブ属性           所有者の実行権
+    隠しファイル属性         無視
+    読み取り専用             所有者の書き込み権限の削除
+
+    Everyone                 その他のユーザに相当
 
 
