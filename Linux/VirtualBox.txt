@@ -220,6 +220,7 @@ python36.x86_64 : Interpreter of the Python programming language
 python36-debug.x86_64 : Debug version of the Python runtime
 python36-devel.x86_64 : Libraries and header files needed for Python development
 python36-rpm-macros.noarch : RPM macros for building RPMs with Python 3.6
+
 # yum install python36
 メタデータの期限切れの最終確認: 0:02:30 時間前の 2020年04月24日 07時26分12秒 に実施しました。
 依存関係が解決しました。
