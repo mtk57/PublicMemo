@@ -238,7 +238,25 @@ foo:
 foo['field1']     # 参照
 
 
+----------------------------
+コマンドを実行する
+----------------------------
+shellモジュールを用いる
 
+例：
+- name: generate passwod salt for new user
+  shell: "cat /dev/urandom | tr -dc '[:alnum:]' | head -c 20"
+  register: salt
+  ignore_errors: true
+  changed_when: false
+
+
+----------------------------
+コマンド実行結果を取得する
+----------------------------
+
+標準出力を取得する
+register_val.stdout
 
 
 
@@ -250,3 +268,5 @@ http://c.itdo.jp/technical-information/ansible/ansible-tutorial/#heading3
 https://docs.ansible.com/ansible/latest/modules/list_of_all_modules.html
 https://magazine.rubyist.net/articles/0009/0009-YAML.html
 https://qiita.com/sts-sd2/items/626884053e7df6a2e41d
+https://qiita.com/uzresk/items/1aa391eef232766bf817
+https://lab.tricorn.co.jp/kamo/4836
