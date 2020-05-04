@@ -2,6 +2,11 @@
 
 
 1.VirtualBox、CentOSのインストールは省略。（ググればすぐ出るので）
+  CentOSのVersionは「8」
+
+  # cat /etc/redhat-release
+  CentOS Linux release 8.1.1911 (Core)
+
 
 2.VirtualBoxの設定変更は以下のみ。
   [設定] - [ネットワーク]
@@ -825,6 +830,136 @@ OSをリブート
 
 参考：
 https://www.rem-system.com/centos8-samba-install/
+
+==============================================================
+■Ansible
+
+<インストール>
+# dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+(省略)
+
+# dnf install  --enablerepo epel-playground  ansible
+(省略)
+
+→パッケージ管理ツール(dnfやyum)を使わなくても、# pip3 install ansible
+  からでも一応インストールできるが、ansibleディレクトリ（/etc/ansible/）が作成されない。(中身はほぼ空に等しいので自分で作ってもよい)
+    # tree /etc/ansible/
+    /etc/ansible/
+    ├ ansible.cfg
+    ├ hosts
+    └ roles
+
+
+
+
+
+<テスト環境>
+・コントロールノード（Ansibleをインストールしているノード）：
+  IP      ：192.168.11.100
+  HostName：node1
+
+・ターゲットノード：
+  IP      ：192.168.11.101
+  HostName：node2
+
+
+
+
+
+<前準備>
+・Ansibleは sshでターゲットノードに接続するため、パスワード無しで接続できるように、
+  node1のssh公開鍵をnode2にコピーしておく必要がある。
+
+--------------
+sshの鍵を生成
+--------------
+# ssh-keygen       ※いろいろ入力を促されるが全てEnterでよい
+(省略)
+
+作成された鍵(公開/秘密)は、~/.ssh/ に作成される。
+# pwd
+/root/.ssh
+# ll
+合計 12
+-rw------- 1 root root 2590  5月  2 20:14 id_rsa
+-rw-r--r-- 1 root root  564  5月  2 20:14 id_rsa.pub
+-rw-r--r-- 1 root root  176  5月  2 20:12 known_hosts
+
+------------------------------------
+authorized_keysの作成して権限を変更
+------------------------------------
+# cat id_rsa.pub >> authorized_keys
+# chmod 600 authorized_keys
+
+
+--------------
+node2にコピー
+--------------
+# scp -pr ~/.ssh/ root@192.168.11.101:~/
+
+
+-------------------------------
+node2にssh(PWなし)できるか確認
+-------------------------------
+# ssh root@192.168.11.101
+
+
+
+
+
+
+
+
+<疎通確認>
+・node1からnode2へAnsibleのコマンドが実行できるか確認。
+
+-----------------------------------
+インベントリファイルにnode2を追加
+-----------------------------------
+# cd /etc/ansible/
+# ll
+合計 24
+-rw-r--r-- 1 root root 19985  4月 19 06:21 ansible.cfg
+-rw-r--r-- 1 root root  1016  4月 19 06:21 hosts           ※インベントリファイル
+drwxr-xr-x 2 root root     6  4月 19 06:21 roles
+
+以下を追加する。
+[my_target]                           ※ターゲットグループ名。自由に決められる。
+node2 ansible_host=192.168.11.101     ※ターゲット。複数記載可能。
+
+
+----------------------------------------
+コマンド実行例1 (ansibleコマンド)
+----------------------------------------
+# ansible all -i hosts -m ping
+node2 | SUCCESS => {
+    "ansible_facts": {
+        "discovered_interpreter_python": "/usr/libexec/platform-python"
+    },
+    "changed": false,
+    "ping": "pong"
+}
+
+
+※ansibleコマンドの引数について
+all  インベントリに記載しているすべてのターゲットを対象。
+     ターゲットグループ名を直接記載してもよい。
+-i   インベントリを指定
+-m   モジュールを指定 (ここではpingモジュール)
+     モジュールは以下に置かれている
+     /usr/lib/python3.6/site-packages/ansible/modules/
+     モジュール一覧は以下。
+     https://docs.ansible.com/ansible/latest/modules/list_of_all_modules.html
+
+
+------------------------------------------
+コマンド実行例2 (ansible-playbookコマンド)
+------------------------------------------
+Ansible.txtを参照。
+
+
+参考：
+http://c.itdo.jp/technical-information/ansible/ansible-tutorial/#heading3
 
 ==============================================================
 
