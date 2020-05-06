@@ -1,7 +1,7 @@
 Ansible memo   2020.5.4
 
 
-簡単にまとめると、複数のノードに同じことをやらせる場合に便利な自動化支援フレームワーク。
+簡単にまとめると、複数のノードに同じことをやらせる場合に便利な自動化支援ツール。
 
 例えば、100台のサーバに手作業で同じこと（httpdインストールだったり）をさせる場合、
 Ansibleでその手作業の内容をPlayBookに書いておけば、保守も楽だし、手順書も作らなくても済むかも。
@@ -38,7 +38,7 @@ Ansibleには標準で2,000近くのモジュールがありますが、自分で作成することも出来ます
 
 
 Role (ロール)
-PlayBookで読み込む作業単位。
+PlayBookの一連のtask、handlers、files、templatesなどをまとめたものです。
 
 
 =========================================================================
@@ -60,12 +60,14 @@ PlayBookで読み込む作業単位。
     │      │ └-- httpd.conf.j2
     │      └- vars                        ※変数ファイルを格納する(任意)
     │         └-- main.yml
-    └-- site.yml                           ※ansible-playbookコマンドに指定するPlayBook。ファイル名は自由に決めてよい。
+    └-- site.yml                           ※ansible-playbookコマンドに指定するメインのPlayBook。
+                                              ファイル名は自由に決めてよい。
                                               rolesディレクトリの各ロールを読み込み実行するような記述にする。
 
 main.ymlはファイル名固定かつ必須。
 
 実際には、ansible-playbookコマンドで、PlayBookのパスを絶対パスで指定する場合は、どのような構成でも問題ないかも。
+適切に切り分けられたroleはplaybookの再利用性も高めてくれます。
 
 =========================================================================
 ■ansible-playbookkコマンドの実行
@@ -77,6 +79,11 @@ ansible-playbook -i <インベントリファイルのパス> <PlayBookのパス>
 
 
 <主なオプション>
+-i                     インベントリファイルのパスを指定する
+-e                     パラメータを渡す
+                       例：
+                       -e "xxx=yes"
+                       {{ xxx }}でplaybookで変数取得可能。
 --list-task            実行されるタスクを確認する
 --list-hosts           コマンド実行時に対象となるホスト名が表示される
 --syntax-check         playbookの構文チェック(対象のplaybookのみであり、include,importされるものは対象でなく、
@@ -90,6 +97,9 @@ ansible-playbook -i <インベントリファイルのパス> <PlayBookのパス>
 
 =========================================================================
 ■YAMLの基本
+
+先頭行は`---`必須
+
 
 主に次の3つの組み合わせでデータを表現します。
 
@@ -193,25 +203,49 @@ all グループ
 ■PlayBookの基本
 
 ---------
+予約語
+---------
+https://docs.ansible.com/ansible/latest/reference_appendices/playbooks_keywords.html#
+
+
+---------
 基本構造
 ---------
 
 play領域とtask領域から成り立つ。play領域はtask領域を含む。
+他にも、role領域とblock領域があり、それぞれ使える予約語が異なる。
 task領域には具体的な処理を記述する。
 play領域の先頭でリモートホストで実行するユーザーだったり、対象のホスト(通常は後述のインベントリファイル内で
 定義したグループ名を記載)だったりを指定する。
 
 例：
 --------------------------------
+---
 - name: 説明コメント
   host: web_servers                ※インベントリファイルのグループを指定
   become: yes
-                                   ※task領域
-  tasks:
-    - name: 説明コメント
-      yum: …
 
+  tasks:                           ※task領域
+    - name: 説明コメント
+      yum: …                      ※モジュール(タスク1つにつき、1つまで)
+
+  roles:
+    - common                       ※role領域
+
+  block:                           ※block領域 (関連するタスクをグルーピング)
+    - 
 --------------------------------
+
+
+
+
+----------------------------
+他のPlayBookをインクルード
+----------------------------
+---
+- include: webservers.yml
+- include: dbservers.yml
+
 
 
 
@@ -258,6 +292,114 @@ shellモジュールを用いる
 標準出力を取得する
 register_val.stdout
 
+標準出力結果に文字が含まれているかで分岐する。findで-1は存在しない場合を表す。
+when: register_val.stdout.find('test') != -1
+
+コマンドが成功したか、失敗したかで分岐する
+when: register_val | success
+when: register_val | failed
+
+
+
+-------------------
+デバッグ出力
+-------------------
+- debug: msg="XXXX"
+
+
+
+
+-----------------------------------------------
+設定ファイルが変更されたタイミングで再起動
+-----------------------------------------------
+/etc/httpd/httpd-proxy.confが変更されたらapacheを再起動する。
+notify:の後の文字と、handlers/main.ymlのnameの文字が一致している必要がある。
+
+
+handlers/main.yml
+---
+- name: restart httpd
+  service: name=httpd state=restarted
+
+
+tasks/httpd.yml
+- name: copy httpd-proxy.conf
+  template: src=httpd-proxy.conf dest=/etc/httpd/conf.d/
+  notify: restart httpd
+
+
+
+---------------------
+ディレクトリを作成
+---------------------
+- name: create springboot root directory
+  file: path=/home/cmp/app
+        state=directory
+        owner=cmp
+        group=cmp
+        mode=0755
+
+
+----------------------
+ファイルの存在を確認
+----------------------
+/etc/init.d/kdumpというファイルが存在しない場合、エラーメッセージを表示する
+
+- name: stat /etc/init.d/kdump
+  stat: path=/etc/init.d/kdump
+  register: kdump
+
+- name: install check kdump
+  fail: msg="kdump(kexec-tool) is not installed."
+  when: not kdump.stat.exists
+
+
+
+------------------
+環境変数を取得
+------------------
+lookupを使うことで実現できます。
+以下はec2を起動するときの例でprivate ipやimage idを環境変数から取得しています。
+
+  tasks:
+    - name: launch ec2 instance
+      ec2:
+        private_ip: "{{ lookup('env', 'PRIVATE_IP') }}"
+        key_name: LegoTestKeyPair
+        group: LegoTestInstanceSecurityGroup
+        instance_type: "{{ lookup('env', 'INSTANCE_TYPE') }}"
+        image: "{{ lookup('env', 'IMAGE_ID') }}"
+        wait: yes
+        wait_timeout: 300
+        count: 1
+        instance_tags:
+          Name: xxxxxxxx
+        monitoring: no
+        vpc_subnet_id: subnet-xxxxxxx
+        assign_public_ip: yes
+        region: ap-northeast-1
+
+
+
+---------------------------
+よく出てくるディレクティブ
+---------------------------
+hosts               インベントリファイルに記載されている対象のホストまたはグループを指定する
+                    カンマ区切りでも、YAML のリスト指定でも大丈夫です
+become              yesを指定すると、リモートホストで sudo (default) を使って実行する
+                    デフォルトでは root としての実行ですが、別途 become_user を指定することで
+                    別のユーザーとして実行することも可能です
+tasks               実行する処理を定義します
+                    1つのタスクに複数のモジュールを記載するとエラーになる。
+                     →エラー例：ERROR! conflicting action statements: shell, debug
+gather_facts        noを指定すると、実行時に対象ホストの情報を収集しなくなるため、タスク実行までの時間が少し短縮される
+when                条件分岐用
+                    真になる場合のみタスクが実行される
+                    当然複数の条件を書ける(リストで書く)
+
+
+
+
 
 
 =========================================================================
@@ -270,3 +412,7 @@ https://magazine.rubyist.net/articles/0009/0009-YAML.html
 https://qiita.com/sts-sd2/items/626884053e7df6a2e41d
 https://qiita.com/uzresk/items/1aa391eef232766bf817
 https://lab.tricorn.co.jp/kamo/4836
+https://qiita.com/comefigo/items/a37b47f394f0a9a3e518
+https://knowledge.sakura.ad.jp/3084/
+https://yteraoka.github.io/ansible-tutorial/#simple-playbook
+http://tdoc.info/ansible-book/ansible-sample.pdf
