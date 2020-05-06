@@ -90,7 +90,7 @@ ansible-playbook -i <インベントリファイルのパス> <PlayBookのパス>
 
 
                        例２：JSONでも渡せる
-                       -e '{ "foo":"FOO", "fruits":["apple", "cherry", "orange"] }')
+                       -e '{ "foo":"FOO", "fruits":["apple", "cherry", "orange"] }'
 
                        playbook:
                        - name: show param foo
@@ -439,3 +439,4 @@ https://qiita.com/comefigo/items/a37b47f394f0a9a3e518
 https://knowledge.sakura.ad.jp/3084/
 https://yteraoka.github.io/ansible-tutorial/#simple-playbook
 http://tdoc.info/ansible-book/ansible-sample.pdf
+https://qiita.com/yanoshi/items/3f1550c109f3f29f3b95
