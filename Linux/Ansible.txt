@@ -81,9 +81,25 @@ ansible-playbook -i <インベントリファイルのパス> <PlayBookのパス>
 <主なオプション>
 -i                     インベントリファイルのパスを指定する
 -e                     パラメータを渡す
-                       例：
+
+                       例１：
                        -e "xxx=yes"
-                       {{ xxx }}でplaybookで変数取得可能。
+
+                       playbook:
+                       "{{ xxx }}"でplaybookで変数取得可能。
+
+
+                       例２：JSONでも渡せる
+                       -e '{ "foo":"FOO", "fruits":["apple", "cherry", "orange"] }')
+
+                       playbook:
+                       - name: show param foo
+                         debug: msg="{{ foo }}"
+
+                       - name: show param fruits
+                         debug: msg="{{ item }}"
+                         with_items: "{{ fruits }}"
+
 --list-task            実行されるタスクを確認する
 --list-hosts           コマンド実行時に対象となるホスト名が表示される
 --syntax-check         playbookの構文チェック(対象のplaybookのみであり、include,importされるものは対象でなく、
@@ -396,7 +412,14 @@ gather_facts        noを指定すると、実行時に対象ホストの情報を収集しなくなるため
 when                条件分岐用
                     真になる場合のみタスクが実行される
                     複数の条件を書ける(リストで書く)
-
+with_items          ループ処理に使う。
+                    例：
+                    - name: ディレクトリの作成
+                      file: path=/root/{{ item }} state=directory
+                      with_items:
+                        - test1
+                        - test2
+                        - test3
 
 
 
