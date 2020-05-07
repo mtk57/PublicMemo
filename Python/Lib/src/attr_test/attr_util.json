@@ -1,0 +1,15 @@
+{
+    "getxattr":{
+       "to_hex":[
+          "trusted.gfid$",
+          "trusted.glusterfs.mdata$"
+       ],
+       "to_decode":[
+          "trusted.gfid2path.*$",
+          "security.selinux"
+       ]
+    },
+    "from_file":{
+       "user.test_attr_name":"test_attr_value"
+    }
+ }

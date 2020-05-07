@@ -1,0 +1,28 @@
+---
+- hosts: target
+  become: yes
+  gather_facts: no
+  tasks:
+    - name: execute shell command
+      shell: "ls /root"
+      register: ls_result
+
+    - name: show command result
+      debug:
+        # msg: "{{ ls_result.stdout }}"
+        var=ls_result.stdout_lines
+
+    # - name: show param foo
+    #   debug: msg="{{ foo }}"
+
+    # - name: show param fruits
+    #   debug: msg="{{ item }}"
+    #   with_items: "{{ fruits }}"
+
+    - name: execute python script
+      shell: "python3 /home/kawa/tools/playbook_kick_sample.py dummy dummy '{\"uris\":[\"www.yahoo.com\"]}' --callback"
+      register: py_result
+
+    - name: show py result
+      debug:
+        var=py_result.stdout_lines
