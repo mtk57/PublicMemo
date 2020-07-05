@@ -962,9 +962,105 @@ Ansible.txtを参照。
 http://c.itdo.jp/technical-information/ansible/ansible-tutorial/#heading3
 
 ==============================================================
+■ mongoDB
+
+参考：https://qiita.com/one-kelvin/items/b1740824da0b3e9af9dd
+
+<手順概要>
+1.mongoのrepoファイルを作成
+2.yumでインストール
+3.SELinuxを無効化
+4.OSリブート
+5.mongoDBが動作しているか確認
+
+
+<手順>
+1.mongoのrepoファイルを作成
+
+[root@localhost yum.repos.d]# pwd
+/etc/yum.repos.d
+[root@localhost yum.repos.d]# ll
+合計 48
+-rw-r--r--. 1 root root  731  8月 14  2019 CentOS-AppStream.repo
+・・・（省略）・・・・
+-rw-r--r--. 1 root root  338  8月 14  2019 CentOS-fasttrack.repo
+-rw-r--r--. 1 root root  200  7月  5 20:02 mongodb-org-3.4.repo    ★
+[root@localhost yum.repos.d]# cat mongodb-org-3.4.repo
+[mongodb-org-3.4]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/3.4/x86_64/
+gpgcheck=1
+enabled=1
+gpgkey=https://www.mongodb.org/static/pgp/server-3.4.asc
+
+
+2.yumでインストール
+[root@localhost yum.repos.d]# yum install -y mongodb-org
+MongoDB Repository                                           1.7 kB/s | 3.7 kB     00:02
+依存関係が解決しました。
+=============================================================================================
+ パッケージ                アーキテクチャー
+                                         バージョン             リポジトリ             サイズ
+=============================================================================================
+Installing:
+ mongodb-org               x86_64        3.4.24-1.el8           mongodb-org-3.4         10 k
+依存関係をインストール中:
+ mongodb-org-mongos        x86_64        3.4.24-1.el8           mongodb-org-3.4         12 M
+ mongodb-org-server        x86_64        3.4.24-1.el8           mongodb-org-3.4         20 M
+ mongodb-org-shell         x86_64        3.4.24-1.el8           mongodb-org-3.4         11 M
+ mongodb-org-tools         x86_64        3.4.24-1.el8           mongodb-org-3.4         67 M
+
+・・・（省略）・・・・
+
+インストール済み:
+  mongodb-org-3.4.24-1.el8.x86_64               mongodb-org-mongos-3.4.24-1.el8.x86_64
+  mongodb-org-server-3.4.24-1.el8.x86_64        mongodb-org-shell-3.4.24-1.el8.x86_64
+  mongodb-org-tools-3.4.24-1.el8.x86_64
+
+完了しました!
+
+
+3.SELinuxを無効化
+[root@localhost yum.repos.d]# cat /etc/sysconfig/selinux
+
+# This file controls the state of SELinux on the system.
+# SELINUX= can take one of these three values:
+#     enforcing - SELinux security policy is enforced.
+#     permissive - SELinux prints warnings instead of enforcing.
+#     disabled - No SELinux policy is loaded.
+#SELINUX=enforcing
+SELINUX=disabled    ★
+# SELINUXTYPE= can take one of these three values:
+#     targeted - Targeted processes are protected,
+#     minimum - Modification of targeted policy. Only selected processes are protected.
+#     mls - Multi Level Security protection.
+SELINUXTYPE=targeted
+
+4.OSリブート
+# reboot
+
+
+5.mongoDBが動作しているか確認
+[root@localhost ~]# systemctl status mongod.service
+● mongod.service - MongoDB Database Server
+   Loaded: loaded (/usr/lib/systemd/system/mongod.service; enabled; vendor preset: disabled)
+   Active: active (running) since Sun 2020-07-05 20:15:19 JST; 2min 44s ago    ★
+     Docs: https://docs.mongodb.org/manual
+  Process: 1004 ExecStart=/usr/bin/mongod $OPTIONS (code=exited, status=0/SUCCESS)
+・・・（省略）・・・・
+
+
+[root@localhost ~]# cat /var/log/mongodb/mongod.log
+2020-07-05T20:15:15.764+0900 I CONTROL  [main] ***** SERVER RESTARTED *****
+2020-07-05T20:15:16.164+0900 I CONTROL  [initandlisten] MongoDB starting : pid=1469 port=27017 dbpath=/var/lib/mongo 64-bit host=localhost.localdomain
+2020-07-05T20:15:16.164+0900 I CONTROL  [initandlisten] db version v3.4.24
+・・・（省略）・・・・
+2020-07-05T20:15:19.357+0900 I COMMAND  [initandlisten] setting featureCompatibilityVersion to 3.4
+2020-07-05T20:15:19.378+0900 I NETWORK  [thread1] waiting for connections on port 27017    ★
 
 
 
-
+==============================================================
+■
 
 
