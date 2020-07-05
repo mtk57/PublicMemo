@@ -1061,6 +1061,49 @@ SELINUXTYPE=targeted
 
 
 ==============================================================
+■ag (The Silver Searcher) のインストール
+
+[root@localhost ~]# yum install -y https://dl.bintray.com/subchen/yum-repo/the_silver_searcher-2.1.0-1.el8.x86_64.rpm
+CentOS-8 - AppStream                                               3.0 kB/s | 4.3 kB     00:01
+CentOS-8 - Base                                                    2.4 kB/s | 3.9 kB     00:01
+CentOS-8 - Extras                                                  1.1 kB/s | 1.5 kB     00:01
+Extra Packages for Enterprise Linux Modular 8 - x86_64              13 kB/s | 8.5 kB     00:00
+Extra Packages for Enterprise Linux 8 - x86_64                      28 kB/s | 9.3 kB     00:00
+MongoDB Repository                                                 1.7 kB/s | 2.5 kB     00:01
+the_silver_searcher-2.1.0-1.el8.x86_64.rpm                          27 kB/s |  56 kB     00:02
+依存関係が解決しました。
+===================================================================================================
+ パッケージ                    アーキテクチャー バージョン            リポジトリ             サイズ
+===================================================================================================
+Installing:
+ the_silver_searcher           x86_64           2.1.0-1.el8           @commandline            56 k
+
+トランザクションの概要
+===================================================================================================
+インストール  1 パッケージ
+
+合計サイズ: 56 k
+インストール済みのサイズ: 156 k
+パッケージのダウンロード中です:
+トランザクションの確認を実行中
+トランザクションの確認に成功しました。
+トランザクションのテストを実行中
+トランザクションのテストに成功しました。
+トランザクションを実行中
+  準備             :                                                                           1/1
+  Installing       : the_silver_searcher-2.1.0-1.el8.x86_64                                    1/1
+  scriptletの実行中: the_silver_searcher-2.1.0-1.el8.x86_64                                    1/1
+  検証             : the_silver_searcher-2.1.0-1.el8.x86_64                                    1/1
+
+インストール済み:
+  the_silver_searcher-2.1.0-1.el8.x86_64
+
+完了しました!
+
+[root@localhost ~]# which ag
+/usr/bin/ag
+
+==============================================================
 ■
 
 
