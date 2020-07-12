@@ -102,9 +102,9 @@ def from_json(json_path, excel_path, conf):
 
 def main(mode, excel_path, json_path, conf):
     if mode == Mode.TO_JSON:
-        return to_json(excel_path, json_path, conf[Mode.TO_JSON])
+        return to_json(excel_path, json_path, conf[mode])
     else:
-        return from_json(json_path, excel_path, conf[Mode.FROM_JSON])
+        return from_json(json_path, excel_path, conf[mode])
 
 
 class Mode():
