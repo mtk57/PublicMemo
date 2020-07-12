@@ -962,7 +962,7 @@ Ansible.txtを参照。
 http://c.itdo.jp/technical-information/ansible/ansible-tutorial/#heading3
 
 ==============================================================
-■ mongoDB
+■ MongoDB
 
 参考：https://qiita.com/one-kelvin/items/b1740824da0b3e9af9dd
 
@@ -1104,7 +1104,7 @@ Installing:
 /usr/bin/ag
 
 ==============================================================
-■ vagrant
+■ Vagrant  (ベイグラント)
 
 設定ファイルだけで、VirtualBoxのゲストOSを1から自動でセットアップしてくれるツール。
 
@@ -1168,11 +1168,33 @@ VirtualBoxを起動すれば、ゲストOSが起動中であることを確認�
 →つまり、vagrantは、セットアップまでしか使わない。
 
 ==============================================================
-■ docker
+■ Docker
 
-現時点は、CentOS8には対応していないらしいので、↑のvagrantで作ったCentOS7.xで実行すること。
+<概要>
+コンテナ型の仮想化アプリ。OSまるごと使わないので軽い。
+※現時点は、CentOS8には対応していないらしいので、↑のvagrantで作ったCentOS7.xで実行すること。
 
-参考：https://qiita.com/daichannel/items/e4928c07f613ea9154c3
+
+<用語>
+イメージ：コンテナを作るための母体。いちど作ったイメージは不変であり、固定。
+コンテナ：Linuxの通常のプロセスとほぼ同じもの。
+          利用できる名前空間やリソースが他のプロセスやコンテナからは隔離される
+          コンテナ内のアプリケーションから見ると、独立したコンピュータ上で動作しているように振る舞う。
+          コンテナを管理するコストはプロセスを管理するコストとほとんど変わらず、仮想マシンを管理するコストと比較すると非常に軽い。
+Dockerfile：自前のイメージを作るための手順を書いたファイル。
+$ docker run：イメージを元にコンテナを走らせるコマンド。
+$ docker build：Dockerfile を元にイメージを作るためのコマンド。
+$ docker inspect：イメージやコンテナの詳細を調べるコマンド。
+Docker Hub：docker のイメージがたくさん置いてある場所。
+            docker pull とか docker run すると、自動的にレポジトリからイメージをクローンしてきてくれる。
+
+
+
+<参考>
+https://qiita.com/daichannel/items/e4928c07f613ea9154c3
+https://www.atmarkit.co.jp/ait/articles/1701/30/news037.html
+https://qiita.com/wMETAw/items/34ba5c980e2a38e548db
+
 
 <手順>
 1.Dockerを利用するのに必要なパッケージ(yum-utils, device-mapper-persistent-data, lvm2)をインストールします。
@@ -1189,14 +1211,61 @@ $ sudo yum install docker-ce
 
 5.Dockerデーモンを起動します。
 $ sudo systemctl start docker
+$ sudo systemctl enable docker
+→enable は、OS起動時に自動的にdockerサービスを起動するようにするため。
+
+
+<よく使うコマンド>
+-----------------------------------------
+コンテナの一覧を表示
+$ sudo docker ps -a
+→STATUSが「Up」となっていれば実行中。
+
+-----------------------------------------
+コンテナを開始
+sudo docker run イメージ名
+
+-----------------------------------------
+コンテナを停止
+sudo docker stop コンテナID
+
+-----------------------------------------
+イメージの一覧を表示
+$ sudo docker images
+
+-----------------------------------------
+イメージを削除
+$ sudo docker rmi イメージID
 
 
 
+==============================================================
+■ MongoDB  (Docker版)
 
 
+イメージを取得
+$ sudo docker pull mongo
+
+コンテナの作成＆起動
+$ sudo docker run --name some-mongo -d mongo
+
+mongo CLI を起動
+$ sudo docker run -it --link some-mongo:mongo --rm mongo sh -c 'exec mongo "$MONGO_PORT_27017_TCP_ADDR:$MONGO_PORT_27017_TCP_PORT/test"'
+
+→MongoDBに接続するためには通常MongoDBクライアントコマンドであるmongoコマンドを用いるが、
+  MongoDB自体をコンテナイメージとしてインストールしているため、ローカル環境にmongoコマンドは存在しない。
+  そのため、Docker経由でmongoコマンドを呼び出す必要がある。
+
+→オプション
+-it     対話するために必要
+--link  既に起動しているmongodbコンテナと接続。別コンテナなので、こうしないと接続できない。
+        mongoでコンテナイメージを指定
+--rm    終わったらコンテナを消す(コマンドを一回打つためだけのコンテナなので)
+sh -c   実行コマンドとして'mongo xxx'を指定。これが実行される。
+        $MONGO_PORT_27017_TCP_ADDR:$MONGO_PORT_27017_TCP_PORTの部分はDockerで自動的に生成される環境変数で
+        MongoDBのIPアドレスとポート番号を参照している。
+        /testはデータベース名。testというデータベースに接続している
 
 
-
-
-
-
+==============================================================
+■ 
