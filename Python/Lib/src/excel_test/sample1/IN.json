@@ -1,0 +1,12 @@
+[
+    {
+        "code": "code1",
+        "message": "message1",
+        "severity": "severity1"
+    },
+    {
+        "code": "code2",
+        "message": "message2",
+        "severity": "severity2"
+    }
+]

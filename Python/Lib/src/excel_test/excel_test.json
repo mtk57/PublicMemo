@@ -1,0 +1,36 @@
+{
+    "--to_json": {
+        "sheet_name": "Sheet2",
+        "start_row": 2,
+        "end_row": 255,
+        "columns_info": [
+            {
+                "clm": 1,
+                "name": "id",
+                "not_null": true,
+                "is_key": true
+            },
+            {
+                "clm": 2,
+                "name": "message",
+                "not_null": true,
+                "is_key": false
+            },
+            {
+                "clm": 3,
+                "name": "sevelity",
+                "not_null": true,
+                "is_key": false
+            },
+            {
+                "clm": 4,
+                "name": "action",
+                "not_null": true,
+                "is_key": false
+            }
+        ]
+    },
+    "--from_json": {
+        "sheet_name": "Sheet3"
+    }
+}
