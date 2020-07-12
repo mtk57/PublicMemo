@@ -1170,7 +1170,7 @@ Vagrant.configure("2") do |config|
   # Create a forwarded port mapping which allows access to a specific port
   # within the machine from a port on the host machine and only allow access
   # via 127.0.0.1 to disable public access
-  # config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
+  config.vm.network "forwarded_port", guest: 80, host: 8080, host_ip: "127.0.0.1"
 
   # Create a private network, which allows host-only access to the machine
   # using a specific IP.
@@ -1245,8 +1245,36 @@ VirtualBoxを起動すれば、ゲストOSが起動中であることを確認�
 あと、vagrantしかいないので、root権限が必要なコマンドには、sudoをつけて実行すること。
 
 
+あとは、今まで通り、VirtualBoxを起動して、スナップショットを復元すればよい。
+→つまり、vagrantは、セットアップまでしか使わない。
+
 ==============================================================
-■ 
+■ docker
+
+現時点は、CentOS8には対応していないらしいので、↑のvagrantで作ったCentOS7.xで実行すること。
+
+参考：https://qiita.com/daichannel/items/e4928c07f613ea9154c3
+
+<手順>
+1.Dockerを利用するのに必要なパッケージ(yum-utils, device-mapper-persistent-data, lvm2)をインストールします。
+$ sudo yum install -y yum-utils device-mapper-persistent-data lvm2
+
+2.Dockerをダウンロードするリポジトリをyum(パッケージ管理)に追加します。
+$ sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+
+3.yumのパッケージインデックスを更新(DockerのINSTALLやUPGRADEの前に一回実行することが推奨されている)
+$ sudo yum makecache fast
+
+4.最新版のDockerをインストールします。
+$ sudo yum install docker-ce
+
+5.Dockerデーモンを起動します。
+$ sudo systemctl start docker
+
+
+
+
+
 
 
 
