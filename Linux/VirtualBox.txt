@@ -1273,3 +1273,93 @@ sh -c   実行コマンドとして'mongo xxx'を指定。これが実行され�
 
 
 ==============================================================
+■ td-agent
+
+fluentdというRubyで書かれたログ収集ツールがある。
+fluentdは、GEM(RPMのRuby版みたいなもの)で配布されているが、td-agentは
+RPMで配布されているので入れやすい。（中身はfluentdと一緒）
+
+-----------------------------------------
+参考：https://www.atmarkit.co.jp/ait/articles/1402/06/news007.html
+      https://www.atmarkit.co.jp/ait/articles/1403/05/news012.html
+      https://nec-baas.github.io/baas-manual/latest/server/ja/server/configure/fluentd.html
+      https://knowledge.sakura.ad.jp/1336/
+      https://qiita.com/nkg/items/cbf72adb436456804d76
+
+-----------------------------------------
+td-agentインストール
+# curl -L https://toolbelt.treasuredata.com/sh/install-redhat-td-agent3.sh | sh
+
+-----------------------------------------
+mongoプラグイン インストール
+# /usr/sbin/td-agent-gem install fluent-plugin-mongo
+
+-----------------------------------------
+設定ファイルを変更
+※この例では、Apache(httpd)に対して、ホストPCからアクセス(http://localhost:50080)して、
+  /var/log/httpd/access_logを更新して、その内容をmongoDB(fluentdデータベース。apache_accessコレクション)に登録する。
+
+/etc/td-agent/td-agent.conf
+<source>
+  @type tail
+  path /var/log/httpd/access_log
+  tag apache.access
+  pos_file /var/log/td-agent/httpd-access_log.pos
+  format apache2
+</source>
+
+<match apache.access>
+  @type copy
+
+  <store>
+    @type mongo
+    host localhost
+    port 27017
+    database fluentd
+    collection apache_access
+    capped
+    capped_size 1024m
+    # flush
+    flush_interval 10s
+  </store>
+</match>
+
+
+-----------------------------------------
+td-agentサービスを開始
+# systemctl start td-agent
+
+-----------------------------------------
+td-agentのログを確認
+/var/log/td-agent/td-agent.log
+
+
+→error="Permission denied @ rb_file_s_stat - /var/log/nginx/access.log"　が出た場合。
+
+# chown -R root:td-agent /var/log
+# chmod -R 775 /var/log/
+
+# vim /etc/init.d/td-agent
+#TD_AGENT_USER=td-agent
+TD_AGENT_USER=root
+#TD_AGENT_GROUP=td-agent
+TD_AGENT_GROUP=root
+
+
+td-agentを再起動
+# systemctl restart td-agent
+
+ホストPCのブラウザから、もう一度Apacheにアクセス。
+
+td-agent.logにエラーがなくなっていれば、
+# mongo
+> show dbs    で、fluentdデータベースが出てくるはず。
+
+
+
+
+-----------------------------------------
+最初から入っているプラグイン
+/opt/td-agent/embedded/lib/ruby/gems/2.4.0/gems/fluentd-1.11.1/lib/fluent/plugin
+
+
