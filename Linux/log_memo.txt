@@ -104,14 +104,101 @@ fatal  アプリケーションがこれ以上動作できない場合など。
 
 
 
+--------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
+rsyslog memo
+
+rsyslog.conf
+  syslogで送信されたデータを、「どのようなフォーマットでどこに出力するか」を定義。
+  フォーマットは、テンプレートで指定可能。
+  出力先はaction()で指定可能。
 
 
 
+syslogで送信されたメッセージを整形して、指定ファイルに出力するサンプル
+
+/etc/rsyslog.d/hoge_rsyslog.conf
+------------------------
+template(name="hoge-eventlog-style" type="list") {
+  constant(value="{")
+    constant(value="¥"syslogtime\":\"")
+    property(name="timereported" dateFormat="rfc3339")
+    constant(value="¥",")
+    property(name="msg")
+  constant(value="}\n")
+}
+if ($msg contains 'hoge') then {
+  user.info action(type="omfile" file="/var/log/hoge/event.log" sync="on" template="hoge-eventlog-style")
+  user.info stop
+}
+------------------------
+●サンプル解析
+
+template
+  構文：template(
+          name=”TEMPLATE_NAME”
+          type=”string”
+          string="text %PROPERTY% more text" 
+          [option.OPTION="on"])
+
+  name：テンプレート名。この名前で参照できる
+  type：「list」、「subtree」、「string」、「plugin」が指定できる
+         string：% または " などのその他の文字を使用する場合は、
+                 それらの文字を文字どおりエスケープする必要があります。
+
+テンプレート本体（{}で囲まれた部分）には以下が使える
+  constant()   出力する文字列を指定する
+  property()   プロパティを指定する
+
+
+property(name="timereported" dateFormat="rfc3339")
+  timereported  テンプレートで使えるマクロの1つ。ログが出力された日時を返す。
+  dateFormat    日時の形式
+
+
+$msg
+  →syslog送信されたmsgそのもの
+
+
+if ($msg contains 'hoge') then {
+  →$msgに'hoge'を含む場合は真
+
+
+action(type="omfile" file="/var/log/hoge/event.log" sync="on" template="hoge-eventlog-style")
+  type      モジュールを指定する
+            omfile：ファイル書き出しモジュール(OutputModuleFile)
+  file      出力先
+  sync      ログの書き込み後にsync（バッファのフラッシュ）が行われる
+  template  使用するテンプレート名
+
+
+user.info
+  →Facility (ファシリティー) /Priority (優先度) ベースのフィルター
+    user   ユーザプログラムが対象
+    info   INFOレベル以上が対象
+
+
+stop
+  →選択したメッセージを破棄する
 
 
 
+●出来上がる文字列
+constant(value="{")
+constant(value="¥"syslogtime\":\"")
+property(name="timereported" dateFormat="rfc3339")
+constant(value="¥",")
+property(name="msg")
+constant(value="}\n")
+{"syslogtime":"2016-12-31T20:02:05.123456Z",syslog送信されたmsgそのもの}\n
 
 
 
+参考
+https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/system_administrators_guide/s1-basic_configuration_of_rsyslog
 
+
+
+--------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------
 
