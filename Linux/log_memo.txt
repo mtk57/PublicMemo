@@ -195,17 +195,22 @@ constant(value="}\n")
 
 
 
-参考
+●参考
 https://access.redhat.com/documentation/ja-jp/red_hat_enterprise_linux/7/html/system_administrators_guide/s1-basic_configuration_of_rsyslog
 https://knowledge.sakura.ad.jp/8975/
+
+
+●まとめ
+/etc/rsyslog.conf 無修正でも、syslogにメッセージを送信($ logger -p user.info "hoge message")したら、event.log に出力された。
 
 
 --------------------------------------------------------------------------------------------
 --------------------------------------------------------------------------------------------
 ■rsyslog survey
 
-●参考
 
+●/etc/rsyslog.conf  や  /etc/rsyslog.d/*.conf  を修正した場合は、rsyslogdの再起動が必要。
+$ systemctl restart rsyslog.service
 
 
 ●メッセージをrsyslogdに送る
