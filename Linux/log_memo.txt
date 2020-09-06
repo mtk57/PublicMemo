@@ -180,7 +180,7 @@ user.info
 
 
 stop
-  →選択したメッセージを破棄する
+  →選択したメッセージを破棄する（/var/log/messages には書かれない）
 
 
 
@@ -239,8 +239,8 @@ Jan  4 13:05:02 hostname testtag: this is a test log.
 #### MODULES ####
 
 # The imjournal module bellow is now used as a message source instead of imuxsock.
-$ModLoad imuxsock # provides support for local system logging (e.g. via logger command)     ★ソケット」(/run/systemd/journal/syslog)から読み込むモジュール
-$ModLoad imjournal # provides access to the systemd journal                                 ★systemd-journaldが格納した揮発性(*1)あるいは不揮発性(*2)ストレージから読み込むモジュール
+$ModLoad imuxsock # provides support for local system logging (e.g. via logger command)     ★ソケット」(/run/systemd/journal/syslog)から読み込むモジュール (InputModuleUnixSocket)
+$ModLoad imjournal # provides access to the systemd journal                                 ★systemd-journaldが格納した揮発性(*1)あるいは不揮発性(*2)ストレージから読み込むモジュール(InputModuleJournal)
                                                                                           # ★ *1 /run/log/journal/5c6d22c2f2ef4954a5b5cd085bae69bd/system@e686a614124045ae8d10bfee427159be-0000000000000001-0005aa3df1e60a75.journal
                                                                                           # ★ *2 
 #$ModLoad imklog # reads kernel messages (the same are read from journald)
@@ -348,454 +348,11 @@ local6   22
 local7   23
 
 ●参考
+https://milestone-of-se.nesuke.com/l7protocol/syslog/rsyslog-summary/    ★Good!
 https://qiita.com/suzukit14/items/7bc05d1422c4bce5485b
 https://north.thco.mp/2019/06/05/rsyslog-journald/
 https://blog.a-know.me/entry/2016/03/19/144138
-
-
-----------
-
-	
-	
-このサイトは、もともと作者の自分用メモとして書き始めたものです。書いてあることが全て正しいとは限りません。他の文献、オフィシャルなサイトも確認して、自己責任にて利用してください。	
-
-カスタム検索
- 
- 	Journald	 
- 	HOME	 
-
- 
-オフィシャルサイト freedesktop.org
-Journald
-移転しました
-独自ドメインサイトへ移行しました。5秒後に
-
-https://straypenguin.winfield-net.com/
-
-へジャンプします。
-
-RHEL/CentOS 7 から (...と言わず他の多数のディストリビューションも)、伝統的な init が systemd に取って代わられ、自ずと SYSLOG は systemd スィートの一部である journal というものに替わってしまった。しばらくは「RHEL7糞食らえ」と遠ざけていたのだが、遂に触らざるをえない機会が訪れ、そうもいかなくなった。こうなったら毒を食らわば皿まで。使い切ってやろうではないか。
-
-Table of Contents
-永続ストレージの有効化
-rsyslogとの兼ね合い
-rsyslogにほぼ何もさせない方向の設定
-UDPリモートログを取得してジャーナルに送る
-より使いやすく
-Journalctl 使い方メモ
-一般オプション
-フィルタオプション
-メンテナンス系オプション
-永続ストレージの有効化
-少なくともこれだけはやっておきたい。RHEL/CentOS 7 のデフォルトでは、ジャーナルは /run/log/journal に書き込まれるが、これはメモリ上の揮発性のログであり、リブートすれば消えてしまう。そもそも /run/ は tmpfs つまりRAMディスクである。journald.conf の既定値は Storage=auto であり、/var/log/journal/ ディレクトリを作ってやれば次回の systemd-journald の起動からジャーナルは揮発性でないファイル実体としてそこで管理される。Storage=persistent にしておくと、/var/log/journal/ が存在しなかった場合には自動的にディレクトリが作成される。
-
-rsyslogとの兼ね合い
-
-rsyslog とジャーナルとの棲み分けをどうするか、答はひとつではない。
-この節はあくまでも筆者の今の考えであるということをお断りしておく。
-今後使っていくうちに方針が変わることもあるかもしれない。
-RHEL/CentOS 7 の既定値では、journald は SYSLOGソケット /run/systemd/journal/syslog へもログを転送するにようになっている。
-そして rsyslog 側では、imjournal インプットモジュールを利用して journalプロトコルによってジャーナルデータベースファイルそのものを直接ポーリングしつつ、
-imuxsock インプットモジュールで前記の journal/syslog ソケットを開いておきながらなお且つ "$OmitLocalLogging on" でソケットを無視するというどっちつかずな設定になっている。
-"$OmitLocalLogging on" になっているのは、そうしないとジャーナルからの直接読み取りとソケット転送とでほとんど全てのログエントリがダブって記録されてしまうからだ。
-
-永続ストレージが有効化してあれば、journald 自体がテキストログファイルより容量効率の良いバイナリデータでログを保存しており、
-同様な内容のものを rsyslog でテキストログにも保存するのは無駄である。
-また、imjournal によるジャーナルデータベースのポーリングというのは負荷が高く低速な処理であり、
-rsyslog 開発者は、特に理由のない限り imjournal の使用を推奨していない。
-ジャーナル特有のリッチな構造化ログデータを受け取るには journal/syslog ソケット経由では無理で imjournal モジュールが必要だが、
-構造化データを SYSLOG で利用する機会は希で、もし従来型のテキストログにも保存したいとしても、
-imuxsock 経由つまり journald からの SYSLOGソケット転送で充分だということだ。
-
-また、もしログファイルを従来のようにファシリティやデーモン毎に分けたいというだけの理由で rsyslog でも書き出したいというのなら、ナンセンスだと私は思う。
-必要なログを絞り込んで閲覧する機能を journalctl は充分に備えている。あとは journalctl コマンドへの慣れの問題だけだ。
-
-rsyslogにほぼ何もさせない方向の設定
-そんなわけで、ログはほぼ全て journald に管理させ、rsyslog は、rsyslog自体のログやTCPやUDP経由でのリモートロギングを受け取りたい場合を除い
-て何もさせない方針で行くのがよいと今現在は思っている。
-
-ほぼ全てのログを journald だけで管理すると、logwatch はレポートしてこなくなる。現在の logwatch は従来のテキストログだけしか監視できない作りだからだ。
-何とかしたければ、logwatch に Journal を読む機能を付け加えるパッチが SourceForge に上がっている。
-
-/etc/systemd/journald.conf のポイント
-以下の箇所を修正・確認後 `systemctl restart systemd-journald.service' で journald をリスタートする。
-
-ForwardToSyslog=no
-ログエントリを /run/systemd/journal/syslog を介して SYSLOG にも転送するかどうか。no にして、転送による無駄なエネルギーを省く。
-
-SystemMaxUse=4G
-永続ジャーナルファイル全体の上限サイズ。既定値は永続ジャーナルのあるファイルシステムサイズの10%。単位記号 K, M, G, T, P, E が使用でき、裸での数値はバイト指定と見なされる。
-
-#SystemKeepFree=
-永続ジャーナルファイルのあるファイルシステムの確保空き容量。コメントアウトのまま指定しない。空き容量とはつまり、ジャーナルはもちろん他のファイルにも消費されていない未使用容量のことだ。既定はファイルシステムサイズの15%。SystemMaxUse とのいずれか小さい方が尊重される。ただし、journald の起動時に空き容量がこれを超えていた時には、SystemKeepFree は動的に現空き率へ勝手に引き上げられる。単位記号等については SystemMaxUse と同様。
-
-#SystemMaxFileSize=
-これもコメントアウトのまま。ジャーナルファイル1個の最大サイズ、つまりアーカイブへの切り替えの閾値となるサイズだ。暗黙のデフォルトは SystemMaxUse の 1/8。単位記号等については SystemMaxUse と同様。
-
-/etc/rsyslog.conf のポイント
-以下の箇所を修正・確認後 `systemctl restart rsyslog.service' で rsyslog をリスタートする。
-rsyslog 7 についてはこちらでみっちりと検証している。
-
-$ModLoad imuxsock
-#$ModLoad imjournal
-パフォーマンスに響く imjournal インプットモジュールはコメントアウトしロードをやめる。
-imuxsock インプットモジュールは一応ロードしておく。
-とはいえ journald.conf 側で ForwardToSyslog=no にしているので現状では意味なしだが、
-少なくとも、journald 側の設定を変えるだけでいつでも SYSLOGソケット入力が有効にできる。
-この状態で試しに `logger -p local3.info Logger test' とやってみても /var/log/messages に記録されない。
-逆に、ジャーナルには記録される。
-
-というのは、logger は SYSLOGソケット /dev/log へメッセージを送るが、
-systemd-journald の動いているシステムでは、/dev/log ソケットを生成しそれに聞き耳を立てているのは SYSLOG デーモンではなく journald なのだ。
-imuxsock がソケットファイルをどこに生成して聞き耳を立てるかは、
-RHEL/CentOS 7 のデフォルト設定では、インクルードファイル rsyslog.d/listen.conf 内の $SystemLogSocketName ディレクティブで定義されている。
-
-#$IMJournalStateFile imjournal.state
-これは imjournal インプットモジュールに関するオプションであり、モジュールをロードしていないとエラーになるので一緒にコメントアウトする。
-
-$OmitLocalLogging off
-ローカルSYSLOGソケットつまり /run/systemd/journal/syslog からの入力を無視するかどうか。
-/run/systemd/journal/syslog ソケットを作るのは rsyslog で、そこへ journald がログをフォワードするお約束になっている。
-journald から rsyslog へのログ転送に使われる。
-/dev/log ソケットファイルを作るのは journald で、それをリッスンするのも journald。journald へのレガシーSYSLOG入力ソケットである。
-それとは別に、journald はジャーナルネイティブAPI 経由でもログを受け付ける。
-
-従来のSYSLOGで、ロギングのテストや、シェルスクリプトによるバッチ処理の中でログを出したい時には logger コマンドを使ってきた。
-ではその JournalネイティブAPI 版は？といえば systemd-cat コマンドだ。
-書式は、
-systemd-cat [-t SYSLOG_IDENTIFIER] [-p PRIORITY] [COMMAND [ARGS..]] 
-
-例えば、
-systemd-cat -t journaltest -p info uptime
--t オプションの引数はジャーナルレコードの "prog[PID]:" といったフィールド (レガシーSYSLOGで言うところのTAGフィールド) の
- prog 部分にする文字列。-p オプションで指定するのは SYSLOGプライオリティ(シビアリティ)で、
-文字表記でも数字表記でも可 (後述 journalctlコマンド解説のフィルタオプション参照)。
-そして `COMMAND + 引数` の STDOUT と STDERR の両方がジャーナルに送られる。
-また、パイプでメッセージを渡すことも可能で、
-
-vmstat -S M 2>&1 |systemd-cat -t journaltest
-といった具合に使うこともできる。
-systemd-cat を何も引数を付けずにコマンドした場合は、標準入力待ち受け状態となり、Ctrl-D (EOF) を叩くまで、タイプした全てがジャーナルに送られる。
-RHEL/CentOS 7 の rsyslog.conf や rsyslog.d/ 配下のインクルードファイルは下位互換性を重視して古いフォーマットで書かれているが、
-Rsyslogの推奨する通り可能な限り rsyslog ver.7以降の新フォーマットを使うように全面的に書き直すと以下のようになる。
-module(load="imjournal") の行は、新書式での記述法を示すため参考として載せた。
-
-rsyslog.conf (新書式)
-
-module(load="imuxsock" SysSock.Use="off" SysSock.Name="/run/systemd/journal/syslog")
-#module(load="imjournal" StateFile="/var/lib/rsyslog/imjournal.state")
- 
-#### GLOBAL DIRECTIVES ####
-$WorkDirectory /var/lib/rsyslog
-$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
-$IncludeConfig /etc/rsyslog.d/*.conf
- 
-#### RULES ####
-# Log all kernel messages to the console.
-# Logging much else clutters up the screen.
-#kern.*                                                 /dev/console
-<-ローカルロギングルールが続く. 中略->
-local7.*                                                /var/log/boot.log
-rsyslog.d/listen.conf (メイン設定ファイルに新書式のオプションとして指定するので全てコメントアウト)
-
-#$SystemLogSocketName /run/systemd/journal/syslog
-/etc/logrotate.conf
-上記変更により /var/log 配下の大多数のテキストログが更新されなくなるので、
-空のログファイルを無駄にログローテートしないよう、notifempty 行を加えておくのがよい。
-logrotate についてはこちらで解説している。
-
-UDPリモートログを取得してジャーナルに送る
-ジャーナル=>rsyslog=>テキストログ の逆に、レガシーSYSLOGプロトコル=>rsyslog=>ジャーナル という処理もできる。
-rsyslog の omjournal アウトプットモジュールを使う。
-リモートロギング全般に関して詳しくは rsyslog(v7) のページを参照のこと。
-ただし、素直に omjounal を使うと、リモートから受け取ったログエントリのホスト名が、リモートでなく SYSLOGサーバのホスト名になってしまって区別ができず実用に堪えない(※)。
-善後策は見つけたが、それを示す前に、まずは素のやり方を示そう。
-
-※ CentOS 7.2 の rsyslog-7.4.7 での検証。
-ログフォーマットTemplate を使ってリモートホスト名をメッセージに追加することも模索してみたが、
-今のところ、omjournal ではメッセージTemplate が使えないようだ。
-GitHubを覗いてみたところ、最先端の rsyslog ver.8系にはパッチが既にマージされている。
-
-rsyslog.conf
-
-module(load="imuxsock" SysSock.Use="off" SysSock.Name="/run/systemd/journal/syslog")
-module(load="imudp")
-module(load="omjournal")
- 
-#### GLOBAL DIRECTIVES ####
-$WorkDirectory /var/lib/rsyslog
-$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
-$IncludeConfig /etc/rsyslog.d/*.conf
- 
-#### RULES ####
-# Log all kernel messages to the console.
-# Logging much else clutters up the screen.
-#kern.*                                                 /dev/console
-<-ローカルロギングルールが続く. 中略->
-local7.*                                                /var/log/boot.log
- 
-ruleset(name="RemoteUDP"
-        queue.type="FixedArray"
-       ) {
-    $IncludeConfig /etc/rsyslog.d/remote-udp.conf_r
-}
- 
-input(type="imudp" port="514" ruleset="RemoteUDP")
-rsyslog.d/listen.conf (全てコメントアウト)
-
-#$SystemLogSocketName /run/systemd/journal/syslog
-rsyslog.d/remote-udp.conf_r (UDPログ送信元マシンのIPが192.168.1.24と仮定)
-
-$AllowedSender UDP, 192.168.1.24/32
- 
-if $fromhost-ip == '192.168.1.24' then {
-    action(type="omjournal")
-    stop
-}
-ジャーナルに注ぎ込まれたエントリはこんな具合になる (centos7u は当のジャーナルのあるローカルサーバ)：
-
-8月 04 23:25:55 centos7u ntpd[2485]:[4715]:  Listen normally on 2 eth0 192.168.1.24 UDP 123
-8月 04 23:25:55 centos7u ntpd[2485]:[4715]:  peers refreshed
-8月 04 23:25:55 centos7u ntpd[2485]:[4715]:  0.0.0.0 c012 02 freq_set kernel -0.139 PPM
-これでは、[PID]: が二重になっていること以外、ローカル発のログなのかリモートからのログなのか区別する手掛かりがなく、どのマシンから送られてきたのかに至っては全く分からない。
-
-とりあえずの解決策
-そこで、一捻り加えて、rsyslog の omprog アウトプットモジュールを活用する。
-メッセージが来る毎に、systemd-cat を実行することによって Journal API でジャーナルへ注ぎ込むという寸法だ。
-omprog ならメッセージフォーマットテンプレートが使える。rsyslog ver.7 の omjournal にも Template パッチが当たるか 
-RHEL/CentOS 7 で rsyslog8 パッケージが選択できるようになるまでの一時凌ぎには充分だろう。
-
-omprog のやっていることは rsyslog のレガシー書式での "local3 ^/path/to/prog" といったログ振り分けルールと表面上は一緒だ。
-しかし、ドキュメントによると、内部処理は別もので、旧式の "^" ルールは大量のログエントリを扱うのには向いていないという旨のことが書かれている。
-やるなら必ず、下記のように新しいスタイルで書くことをお勧めする。
-
-rsyslog.conf
-
-module(load="imuxsock" SysSock.Use="off" SysSock.Name="/run/systemd/journal/syslog")
-module(load="imudp")
-module(load="omprog")        <-omjournalでなくomprogモジュールをロード
- 
-#### GLOBAL DIRECTIVES ####
-$WorkDirectory /var/lib/rsyslog
-$ActionFileDefaultTemplate RSYSLOG_TraditionalFileFormat
-$IncludeConfig /etc/rsyslog.d/*.conf
- 
-#### RULES ####
-# Log all kernel messages to the console.
-# Logging much else clutters up the screen.
-#kern.*                                                 /dev/console
-<-ローカルロギングルールが続く. 中略->
-local7.*                                                /var/log/boot.log
- 
-template(name="RemoteToJnlTpl" type="string"
-         string="%HOSTNAME%: %syslogtag:F,58:1%%msg:::sp-if-no-1st-sp%%msg:::drop-last-lf%\n")
- 
-ruleset(name="RemoteUDP"
-        queue.type="FixedArray"
-       ) {
-    $IncludeConfig /etc/rsyslog.d/remote-udp.conf_r
-}
- 
-input(type="imudp" port="514" ruleset="RemoteUDP")
-メッセージ用 template は、rsyslog の現在のところのデフォルトフォーマットである RSYSLOG_TraditionalFileFormat
-
-"%TIMESTAMP% %HOSTNAME% %syslogtag%%msg:::sp-if-no-1st-sp%%msg:::drop-last-lf%\n"
-を元に、%TIMESTAMP% を取り除き (受け取り側で付くので送り側での発生時刻は邪魔)、%HOSTNAME% の後ろにコロンを付け、%syslogtag% の最後のコロンを取り除くため rsyslog の プロパティリプレーサー機能 によりコロン(16進文字コード"3A"-> 10進に変換して"58") をデリミタとして分解した第1フィールドだけにする、という味付けをしてみた。
-
-rsyslog.d/remote-udp.conf_r (UDPログ送信元マシンのIPが192.168.1.24と仮定)
-
-$AllowedSender UDP, 192.168.1.24/32
- 
-if $fromhost-ip == '192.168.1.24' then {
-    action(type="omprog"
-           binary="/bin/systemd-cat"
-           template="RemoteToJnlTpl")
-    stop
-}
-omprog はログメッセージを、指定されたテンプレートに従って整形した後、指定のプログラムの標準入力に流し込み、メッセージの終わりでプログラムに EOF を送る。まさに systemd-cat に打ってつけだ。 binary= 属性は、rsyslog ver.7 で試した限り、実行ファイルパスだけしか受け付けなかった。Rsyslog のドキュメント(Ver.8の方が分かりやすい) で使用例として示されているように binary="/bin/systemd-cat --identifier=centos6u" とオプションまで指定してしまうと機能してくれなかった。
-
-ジャーナルに注ぎ込まれたエントリはこうなった (centos6u はリモートマシン)：
-
-8月 04 23:30:20 centos7u cat[7416]: centos6u: ntpd[2731] Listen normally on 2 eth0 192.168.1.24 UDP 123
-8月 04 23:30:20 centos7u cat[7416]: centos6u: ntpd[2731] peers refreshed
-8月 04 23:30:20 centos7u cat[7416]: centos6u: ntpd[2731] 0.0.0.0 c012 02 freq_set kernel -0.139 PPM
-これならしっかり区別がつく。これらのログエントリを journalctl で選り出して読むには、これまた少し工夫が要る (journalctl のフィルタについては後述)。アイデンティファイアが cat となっているのは、どうやら systemd-cat が中間処理的に /bin/cat および /usr/bin/cat を呼んでいるためらしい。そこで、下記のようにやれば当該のレコードがフィルタリングできる。
-
-journalctl /bin/cat --no-pager |grep centos6u:
-さらなる改善
-いや、しかしやはり、IDENTIFIER が "cat" では納得がいかない。omprog アクションの binary 属性が引数を採れないなら、ラッパーシェルスクリプトを噛ませてやれ、というわけで、以下のような改善策を思いついた。まず、このようなラッパーを作る。
-
-#!/bin/sh
-MYNAME=$(basename $0)
-exec /bin/systemd-cat -t ${MYNAME#*-}
-これを例えば /usr/local/bin/ に remote2jour として実行ビットを立てて置き、systemd-cat の -t オプション引数にしたい文字列をハイフォンでつないだ名前でシンボリックリンクを作る。アイデンティファイアを "omprog" にしたいとすれば：
-
-# cd /usr/local/bin
-# ln -s remote2jour remote2jour-omprog
-そして、remote-udp.conf_r をこう書き換える。
-
-$AllowedSender UDP, 192.168.1.24/32
- 
-if $fromhost-ip == '192.168.1.24' then {
-    action(type="omprog"
-           binary="/usr/local/bin/remote2jour-omprog"
-           template="RemoteToJnlTpl")
-    stop
-}
-ジャーナルにはこのように記録されるようになった。
-
-8月 04 23:40:35 centos7u omprog[7416]: centos6u: ntpd[2132] Listen normally on 2 eth0 192.168.1.24 UDP 123
-8月 04 23:40:35 centos7u omprog[7416]: centos6u: ntpd[2132] peers refreshed
-8月 04 23:40:35 centos7u omprog[7416]: centos6u: ntpd[2132] 0.0.0.0 c012 02 freq_set kernel -0.153 PPM
-ログを選り分けるには、今度はこうやる。識別名が "omprog" のログなど自然には現れないはずなので、リモートログをより確実に選び出すことができる。目出度しめでたし。
-
-journalctl SYSLOG_IDENTIFIER=omprog --no-pager |grep centos6u:
-より使いやすく
-rootアカウントなら全てのジャーナルを読めるのは当たり前だが、一般ユーザを adm グループまたは systemd-journal グループに加えるとそのユーザは全てのジャーナルを読むことができる。
-
-# usermod hoge -a -G adm
-"journalctl" は長くていちいち打ちづらい。alias を設定しておくとよい。~/.bashrc でエイリアスを設定。
-
-alias jour='journalctl'
-設定したら、シェルセッションに入り直し、`type jour' あるいは `which jour' で確認。
-
-journalctl 使い方メモ
-とりあえず使いこなしたいものだけ、実際に叩いてみながら挙げてみた。もちろん適宜組み合わせて使う。
-
-一般オプション
-journalctl -n N
-旧来のファイルログで言えば `tail -n N /var/log/logfile'。最後のN 行だけを表示する。 -n の引数を省いた時のデフォルトは 10、つまり -n 10 と同義。
-
-journalctl -f
-旧来のファイルログで言えば `tailf /var/log/logfile'。追加されるエントリをリアルタイムに追加表示していく。-f を使うと暗黙的に -n (10)も宣言される。コマンドした後からの新エントリだけしか表示したくなければ `-f -n 0' と指定すればよい。逆に、以前のエントリも全部表示した上で追跡を始めたい場合は `-f --no-tail'。表示をやめるには Ctrl-C。
-
-journalctl -e
-長いオプションでは --pager-end つまり、カーソルを自動的に最終行にフォーカスする。バッファを食い潰さないよう暗黙的に '-n 1000' も宣言される。
-
-journalctl -r
-つまり --reverse。古いエントリが最後、最新のエントリが最上段になるよう逆順で表示する。-e と併用すると、最上行にフォーカスされるかと思いきや、最下行つまり一番古いエントリにフォーカスされてあまり意味がない。
-
-journalctl -x
-ジャーナルメッセージカタログからの説明テキストも付加して表示する。時としてデバグの役に立つ。
-
-journalctl -o OutputType
-表示形式の選択。他に幾つもあるが、今のところ使い道の分からないものは省く。
-
--o short
--o オプションを指定しない時の既定値。従来のsyslogメッセージとの互換性を重視した表示形式。
--o short-iso
-タイムスタンプが ISO 8601 wallclock 形式となる。それ以外は short と同様。
--o short-precise
-タイムスタンプが "7月 13 22:30:01.977454" といったようにマイクロ秒精度の表示となる。
--o verbose
-各エントリの構造化データ (Full-Structured Data) を表示する。後に述べるフィールドフィルタに指定すべきフィールド名を調べるチートテクニックとしても役に立つ。
-journalctl --utc
-言わずもがな、タイムスタンプをUTCに。
-
-フィルタオプション
-journalctl -n N
-上でも既に書いたが、旧来のファイルログで言えば `tail -n N /var/log/logfile'。-n の引数を省いた時のデフォルトは 10、つまり -n 10 と同義。
-
-journalctl -b N
-どのシステムブート・ライフのエントリを表示するか。`-b 0' `-b -0' もしくは `-b' だけで引数を省くと今回のブートライフ中のメッセージ。`-b -1' は前回のブートライフ中のメッセージ。`journalctl --list-boots' でブートID (32文字) を調べておき、'-b xxxxxxxxxxx' という具合にブートIDで指定することもできるし、それを起点として2回前のブートライフなら '-b xxxxxxxxxxx-2' という指定もできる。
-
-journalctl -k
-長いオプションだと --dmesg。つまり、旧来テキストログの ` dmesg' あるいは ` less /var/log/dmesg' と同義。
-
-journalctl -u SystemdUnitPattern
-マッチする Systemdユニットに関するエントリを表示する。例えば `journalctl -u ntpd'。
-
-さて、ここらあたりから Journalフィールドを使った `JournalField=Value ' フィルタの話がぞろぞろと出てくるので、その前説をしておかなければならない。これは、ジャーナルエントリが構造化データとして持っている属性とその値に基づいたマッチ。例えば `journalctl _SYSTEMD_UNIT=ntpd.service' といったクエリだ。どういったJournalフィールドがあるかは `man systemd.journal-fields' で不十分ながらおおよそ見られる。
-ひとつの journalctl クエリの中で同じフィールド名を複数回使うと、それらは OR で評価される。`journalctl _SYSTEMD_UNIT=ntpd.service _SYSTEMD_UNIT=sshd.service' といった場合だ。別のフィールド名が併用されていると、それらは AND で評価される。`journalctl _SYSTEMD_UNIT=ntpd.service _PID=678' といった時だ。
-
-これになお且つ「ユニット名がntpdate.service」のログエントリもヒットさせたい時は、"+" 記号を使って前後のフィールドマッチの結果を論理和させて表示させることができる。`journalctl _SYSTEMD_UNIT=ntpd.service _PID=678 + _SYSTEMD_UNIT=ntpdate.service' は「_SYSTEMD_UNITフィールド属性がntpd.service且つ_PID属性が678のエントリ、または _SYSTEMD_UNITがntpdate.serviceのものを表示せよ」という意味になる。"+" が使えるのはフィールドマッチどうしをつなげる時だけで、`-u ntpd + _SYSTEMD_UNIT=sshd.service' といった風に他の "-"付きオプションと結びつけようとするとエラーになる。
--u オプションの引数はユニット名ではなくユニット名グロブパターンであり、裏では、journal フィールドマッチに変換されている。例えば `-u ntpd' というフィルタをコマンドすると、journalctl は Systemd に問い合わせて "ntpd" を名前に持つユニット (.serviceや .socket などのユニットタイプ一切合切) があるかどうか探し、得られた完全ユニット名 (.service や.socket付き) を使って Journalフィールドマッチ "_SYSTEMD_UNIT=ntpd.service + UNIT=ntpd.service" を発行していると見られる。_SYSTEMD_UNIT= やUNIT= フィールドマッチの引数は必ず完全ユニット名でなければならないのに対して、-u オプションの引数文字列は完全ユニット名でもベースネームやそのグロブパターンでもいい。-u の引数がドットを含んでいない時は、ユニットのベースネームとの一致を探していると見なすようで、`-u ntpd' は ntpdate.service にはマッチしない。グロブパターンはシェルグロブ相当で、`-u ntp?' や `-u ntp[a-z]' はユニット名 ntpd.service (や、もし仮に存在すればntpd.socketにも) にヒットするし、`-u ntp*' は加えて ntpdate.service などにもマッチする。最後の例によって発行されている実際のフィールドマッチは "_SYSTEMD_UNIT=ntpd.service + UNIT=ntpd.service + _SYSTEMD_UNIT=ntpdate.service + UNIT=ntpdate.service" だと考えると、検証で得られた各種出力内容の辻褄が合う。
-
-journalctl -p Priority
-SYSLOGプライオリティ(つまりシビアリティ/SYSLOGレベル/重篤度)によるフィルタ。数値表記と文字表記のどちらでも指定可能。
-
-数値表記	文字表記
-0	emerg
-1	alert
-2	crit
-3	err
-4	warning
-5	notice
-6	info
-7	debug
-一般的なログハンドリング規則と同様、`-p warning' を指定した場合は SYSLOGレベル 4 以上 (4～0) のエントリが表示される。warning レベルのみ、あるいは warning から crit までだけに絞り込みたい時は、`-p 4..4' や `-p 4..2' といった指定方法がある。-p オプションは裏では、PRIORITY=PriorityNum というJournalフィールドフィルタに変換されている。-p が引数に文字表記も採れるのに対して、PRIORITY= は数値表記しか受け付けない。-p が通約してくれているとも言える。
-
-journalctl SYSLOG_FACILITY=FacilityNum
-Journalフィールド系フィルタのひとつ。認証系のログを見たい時、旧来のテキストログだと `less /var/log/secure' とやるところだが、journalctl で同義のことをやるには `journalctl SYSLOG_FACILITY=10' となる。文字列(キーワード)での指定は受け付けてもらえない。
-
-数値	キーワード	数値	キーワード	数値	キーワード
-0	kern	8	uucp	16	local0
-1	user	9	-	17	local1
-2	mail	10	authpriv	18	local2
-3	daemon	11	ftp	19	local3
-4	auth	12	-	20	local4
-5	syslog	13	-	21	local5
-6	lpr	14	-	22	local6
-7	news	15	cron	23	local7
-journalctl /path/to/program
-ログエントリを生成した実行プログラムを基準にログを絞り込む。例えば、
-
-# journalctl /usr/sbin/ntpd
-journalctl はまず /usr/sbin/ntpd が実行プログラムとしてファイルシステム上に存在するかどうか確認してから、カノニカライズつまり "ntpd" というファイル名だけにして、Journalフィールドクエリ `_EXE=ntpd + _COMM=ntpd + _CMDLINE=ntpd' を発行していると見られる。例えば /usr/bin/vncserver のように Systemdユニットの ExecStart が perl によるラッパースクリプトである場合、Journalフィールド _EXE の値は `/usr/bin/perl' になってしまっているが、これならヒットするというわけだ。
-
-全く同じ書式でも、引数のパスがデバイスファイルだった場合は、`_KERNEL_DEVICE=Value ' Journalフィールドマッチが行われる。
-
-journalctl _PID=XXXX
-Journalフィールドフィルタのひとつ。プロセスのPIDで絞り込む。例えば、下記のようにしてデバグの手がかりにする使い方が考えられる。
-
-まず、systemctl で ntpdサービスユニットの現在のPIDを調べる：
-
-# systemctl status ntpd.service
-Main PID: 679 (ntpd)
-PID 679のプロセスのログエントリを詳しく見る：
-
-# journalctl -x -e _PID=679
-journalctl _UID=XXX
-Journalフィールドフィルタのひとつ。プロセスのUIDでフィルタ。UIDは数値表記でないとヒットしない。よって、例えばこんな具合に使う。もちろん同様に _GID でのフィルタも可能。
-
-# journalctl _UID=$(id -u ntp)
-journalctl SYSLOG_IDENTIFIER=XXX
-これもJournalフィールドマッチのひとつ。ログエントリの "prog[PID]:" (レガシーSYSLOGで言えばTAGフィールド) の prog 部分でフィルタリングする。
-
-journalctl --since=xxxx --until=xxxx
-期間によるフィルタ。イコール記号はあってもなくてよい。今が 2016/07/14 00:15:00 だったと仮定して例によって示す。
-
-ローカルタイムの今日 2016/07/14 00:00:00 から現在までのログエントリを表示：
-
-# journalctl --since=today
-下記もこれと同義。'00:00:00' は既定値なので省略可能で、指定する場合は年月日と時刻をまとめてクォートしないとエラーになる。
-
-# journalctl --since '2016-07-14 00:00:00'
-昨日7月13日の 00:00:00 から現在までのログエントリを表示：
-
-# journalctl --since yesterday
-これを下記のようにすると、感覚とは違って今日の分は含まれないので注意。
-
-# journalctl --since yesterday --until today
-`yesterday' が前日の 00:00:00 を意味するのに対して、`-1days' は相対的な24時間前の意味になるので同じではない：
-
-# journalctl --since -1days
-ここ2時間分のログを表示：
-
-# journalctl --since -2h
-ここ30分のログを表示：
-
-# journalctl --since -30min
-メンテナンス系オプション
-journalctl --disk-usage
-ディスク上の現在のジャーナルファイル合計サイズを表示する。アーカイブ(ローテーション)された分も含まれる。
-
-journalctl --vacuum-time --vacuum-size
-ジャーナルファイルをトランケートする。トランケートの対象となるのはアーカイブされたジャーナルだけだ。時間基準で10日より前のエントリを削除するなら `journalctl --vacuum-time 10days'。単位には "s", "min", "h", "days", "months", "weeks", "years" が使えるとある。サイズ基準の場合は K, M, G, T (大文字小文字区別あり) が使え、アーカイブ総計サイズが指定したサイズに収まるところまで古いエントリが削除される。
-
-journalctl --verify
-ジャーナルファイルの論理的整合性チェックを行う。
------
+https://qiita.com/11ohina017/items/c97fa9c07ff33272f983
 
 
 
@@ -808,7 +365,7 @@ journald は、
 　・syslogメッセージ
 　・journald 用メッセージ
 ・その他のプロセスからの
-　・syslogメッセージ
+　・syslogメッセージ (/dev/logソケット。昔のsyslogdもここをListenしていた。syslogプロトコル用)
 　・journald 用メッセージ
 を収集してる
 それを見たいときは journalctl を使う（ journald はバイナリ形式でログを保管している）。
@@ -817,6 +374,37 @@ journald は、
 rsyslogd にも転送されていて、 rsyslogd はそれをファイルに書き出す（永続化する）役割をする。
 
 つまり、rsyslogd は常に journald を経由して syslog メッセージを受け取っている。
+
+
+なので、ジャーナルと/var/log/messages に2重にログが出力されることになる。
+rsyslogdがjournaldに依存せず、syslog(/dev/logソケット)を直接Listenするには以下の設定をするとできる。（ただし全てのsyslogに影響があるので注意）
+
+/usr/lib/systemd/system/systemd-journald.socket
+#journaldが/dev/logソケットをListenしないようにコメントアウト
+#ListenDatagram=/dev/log
+
+
+/etc/rsyslog.d/listen.conf
+# rsyslogdが/dev/logソケットを直接Listenするように変更
+#$SystemLogSocketName /run/systemd/journal/syslog
+$SystemLogSocketName /dev/log
+
+
+/etc/rsyslog.conf
+# /dev/logソケット経由でのログを受け付ける設定(デフォルトでは有効のはず)
+$ModLoad imuxsock
+
+# rsyslogdがjournaldからログを受け取る設定を無効化させるため、コメントアウト                
+#$ModLoad imjournal
+
+# onの場合 : /run/systemd/journal/syslogソケットからの入力を受け付ける。
+# offの場合: /run/systemd/journal/syslogソケットからの入力を無視する  
+#$OmitLocalLogging on
+$OmitLocalLogging off
+
+# imjournalモジュールをロードしていない場合、利用できないオプションなので、コメントアウト                
+#$IMJournalStateFile imjournal.state
+
 
 
 --------------------------------------------------------------------------------------------
