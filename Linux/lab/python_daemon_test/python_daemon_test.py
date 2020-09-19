@@ -4,6 +4,9 @@ import os
 import sys
 """
 https://qiita.com/croquisdukke/items/9c5d8933496ba6729c78
+
+注意：このスクリプトはpython_daemon_test@.serviceから起動されることを想定している。
+      スクリプト単体で実行するとゾンビプロセス(親がすぐ死ぬので)となる。
 """
 
 
@@ -25,16 +28,20 @@ def main_unit():
 def daemonize():
     pid = os.fork()
 
+    print(f'pid={pid}')
+
     if pid > 0:
         # 親プロセスの場合(pidは子プロセスのプロセスID)
         with open('/var/run/python_daemon_test.pid', 'w') as pid_file:
             pid_file.write(str(pid)+"\n")
         sys.exit()
-    if pid == 0:
+    elif pid == 0:
         # 子プロセスの場合
         main_unit()
+    else:
+        # メモリ不足でfork失敗
+        sys.exit(-1)
 
 
 if __name__ == '__main__':
-    while True:
-        daemonize()
+    daemonize()
