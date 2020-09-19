@@ -5,9 +5,8 @@ Description = hello daemon
 # OnFailure=
 
 [Service]
-Type=simple
-# Type=forking
-ExecStart=/opt/daemon_test.py %i
+Type=forking
+ExecStart=/opt/python_daemon_test.py %i
 # ExecReload=
 # ExecStop=
 # TimeoutStartSec=15
