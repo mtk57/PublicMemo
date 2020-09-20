@@ -2,6 +2,7 @@
 import time
 import os
 import sys
+import signal
 """
 https://qiita.com/croquisdukke/items/9c5d8933496ba6729c78
 
@@ -11,10 +12,30 @@ https://qiita.com/croquisdukke/items/9c5d8933496ba6729c78
 """
 
 
+def handler(signum, frame):
+    # signal 受信時の処理
+
+    print(f'signal num=[{signum}]')
+
+    if signum == signal.SIGTERM:
+        print(f'SIGTERM received.')
+    elif signum == signal.SIGINT:
+        print(f'SIGINT received.')
+    elif signum == signal.SIGKILL:
+        print(f'SIGKILL received.')
+    elif signum == signal.SIGHUP:
+        print(f'SIGHUP received.')
+    else:
+        print(f'SIGxxx received.')
+
+    sys.exit(0)
+
+
 def main_unit():
     """
     10秒おきに時刻を書き込む
     """
+
     args = sys.argv
     instance = ''
     if len(args) > 1:
@@ -38,6 +59,13 @@ def daemonize():
         sys.exit()
     elif pid == 0:
         # 子プロセスの場合
+
+        # シグナルをハンドリング
+        signal.signal(signal.SIGTERM, handler)
+        signal.signal(signal.SIGINT, handler)
+        # signal.signal(signal.SIGKILL, handler)  # KILLは捕捉不可なのでエラーとなる
+        signal.signal(signal.SIGHUP, handler)
+
         main_unit()
     else:
         # メモリ不足でfork失敗
