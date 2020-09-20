@@ -6,6 +6,7 @@ import sys
 https://qiita.com/croquisdukke/items/9c5d8933496ba6729c78
 
 注意：このスクリプトはpython_daemon_test@.serviceから起動されることを想定している。
+      Ex. systemctl start python_daemon_test@.service
       スクリプト単体で実行するとゾンビプロセス(親がすぐ死ぬので)となる。
 """
 
