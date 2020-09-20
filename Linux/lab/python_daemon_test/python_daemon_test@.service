@@ -32,14 +32,17 @@
 #   ユニットの開始時に実行するコマンドまたはスクリプトを指定します。
 #   ExecStartPre および ExecStartPost は、ExecStart の前後に実行するカスタムコマンドを指定します。
 #   Type=oneshot を使用すれば、連続して実行する複数のカスタムコマンドを指定できます。
+#   要は systemctl start <ユニットファイル> を行ったときに呼ばれる部分。
 #
 # ExecReload
 #   設定ファイルの再読み込みをするコマンドを必要な引数をつけて絶対パスで指定。
 #   ユニットの再読み込み時に実行するコマンドまたはスクリプトを指定します。
+#   要は systemctl reload <ユニットファイル> を行ったときに呼ばれる部分。
 #
 # ExecStop
 #   ExecStartで指定したプログラムを停止するコマンドを必要な引数をつけて絶対パスで指定。
 #   ユニットの停止時に実行するコマンドまたはスクリプトを指定します。
+#   要は systemctl stop <ユニットファイル> を行ったときに呼ばれる部分。
 #
 # TimeoutStartSec
 #   プロセス開始タイムアウト値を指定する(秒)
@@ -54,7 +57,8 @@
 #   要は生死監視
 #
 # Restart
-#   サービスプロセス停止時の再起動条件を指定する
+#   プロセスが勝手に死んだ場合などに自動で再起動するための条件を指定する
+#   当然、systemd経由で停止させた場合は対象外。
 #     always     : 常に再起動される
 #     on-failure : サービスプロセスが正常終了以外の時に再起動される
 #                   - 終了コードがゼロでない
@@ -72,7 +76,7 @@
 #                   - ウォッチドッグタイムアウト
 #
 # NotifyAccess
-#   Type=notifyのときの場合に有効。
+#   Type=notify or WatchdogSec指定時の場合のみ有効。
 #   通知をリッスンするために使用されるソケットへのアクセスを指定します。
 #     none : デフォルト。すべてのステータスメッセージを無視します。
 #     main : メインプロセスからのメッセージをリッスンする。
@@ -119,8 +123,7 @@ ExecStart=/opt/python_daemon_test.py %i
 # TimeoutStartSec=15
 # TimeoutStopSec=3
 # WatchdogSec=100
-Restart=always
-# Restart=on-failure
+Restart=on-failure
 # NotifyAccess=main
 # StartLimitInterval=90
 # StartLimitBurst=3
