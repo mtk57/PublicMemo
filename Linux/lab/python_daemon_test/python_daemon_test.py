@@ -17,16 +17,16 @@ def handler(signum, frame):
 
     print(f'signal num=[{signum}]')
 
-    if signum == signal.SIGTERM:
-        print(f'SIGTERM received.')
-    elif signum == signal.SIGINT:
-        print(f'SIGINT received.')
-    elif signum == signal.SIGKILL:
-        print(f'SIGKILL received.')
-    elif signum == signal.SIGHUP:
-        print(f'SIGHUP received.')
-    else:
-        print(f'SIGxxx received.')
+    # if signum == signal.SIGTERM:
+    #     print(f'SIGTERM received.')
+    # elif signum == signal.SIGINT:
+    #     print(f'SIGINT received.')
+    # elif signum == signal.SIGKILL:
+    #     print(f'SIGKILL received.')
+    # elif signum == signal.SIGHUP:
+    #     print(f'SIGHUP received.')
+    # else:
+    #     print(f'SIGxxx received.')
 
     sys.exit(0)
 
