@@ -37,6 +37,7 @@ def execute_thread(method: callable, targets: list, max_workers: int) -> int:
     if queue_size < max_workers:
         workers_cnt = queue_size
 
+    failed_cnt = 0
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         futures = []
         for _ in range(workers_cnt):
@@ -45,15 +46,22 @@ def execute_thread(method: callable, targets: list, max_workers: int) -> int:
         for future in as_completed(futures):
             try:
                 result = future.result()
-                if not result:
-                    continue
-                ret = 0
+                if result != 0:
+                    print(f'task failed.[{result}]')
+                    failed_cnt = failed_cnt + 1
+                else:
+                    print(f'task success.[{result}]')
             except Exception as e:
                 print(f'{e}')
+    if failed_cnt == 0:
+        ret = 0
+    else:
+        ret = 1
+        print(f'failed count={failed_cnt}')
     return ret
 
 
-def _start_service(queue: Queue) -> int:
+def start_service(queue: Queue) -> int:
     ret = 1
 
     while not queue.empty():
@@ -78,31 +86,53 @@ def _start_service(queue: Queue) -> int:
     return 0
 
 
-def start() -> int:
+def start(max_instance=5, is_seq=False, worker_cnt=2) -> int:
+    print(
+        f'start() START  max_instance={max_instance}, is_sqe={is_seq}, worker_cnt={worker_cnt}')
+
     ret = 0
 
-    pid = os.fork()
+    # pid = os.fork()
 
-    if pid > 0:
-        # 親プロセスの場合(pidは子プロセスのプロセスID)
-        pass
-    elif pid == 0:
-        # 子プロセスの場合
-        ret = execute_thread(method=_start_service,
-                             targets=TARGETS, max_workers=2)
+    # if pid > 0:
+    #     # 親プロセスの場合(pidは子プロセスのプロセスID)
+    #     pass
+    # elif pid == 0:
+    #     # 子プロセスの場合
+
+    TARGETS = list(range(max_instance))
+    print(f'targets={TARGETS}')
+
+    if is_seq:
+        # シーケンシャル版
+        print('Sequence start')
+        queue = Queue()
+        queue.queue = deque(TARGETS)
+        ret = start_service(queue)
+        print('Sequence end')
     else:
-        # メモリ不足でfork失敗
-        ret = -1
+        # 非同期版
+        print('Async start')
+        ret = execute_thread(method=start_service,
+                             targets=TARGETS, max_workers=worker_cnt)
+        print('Async end')
+    # else:
+    #     # メモリ不足でfork失敗
+    #     ret = -1
 
+    print(f'start() END ({ret})')
     return ret
 
 
 def stop() -> int:
     ret = 1
 
+    print('stop() START')
+
     try:
         # サービス開始
-        args = ['pkill', 'USR', KILL]
+        args = ['pkill', 'python3']
+        print(f'exec cmd={args}')
         result = run_command(args)
         if result.returncode != 0:
             print(f'cmd failed!. [{args}]')
@@ -112,6 +142,7 @@ def stop() -> int:
         print(f'{e}')
         return ret
 
+    print(f'stop() END ({ret})')
     return ret
 
 
@@ -121,8 +152,21 @@ def main() -> int:
     args = sys.argv
     if len(args) > 1:
         method = args[1]
+
+        max_instance = 5
+        if len(args) > 2:
+            max_instance = int(args[2])
+
+        is_seq = False
+        if len(args) > 3:
+            is_seq = bool(args[3])
+
+        worker_cnt = 2
+        if len(args) > 4:
+            worker_cnt = int(args[4])
+
         if method == 'start':
-            ret = start()
+            ret = start(max_instance, is_seq, worker_cnt)
         elif method == 'stop':
             ret = stop()
     return ret
