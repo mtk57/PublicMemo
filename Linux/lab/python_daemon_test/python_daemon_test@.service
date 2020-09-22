@@ -117,17 +117,17 @@ Description = python daemon test
 # OnFailure=
 
 [Service]
-Type=forking
-ExecStart=/opt/python_daemon_test.py %i
+Type = forking
+ExecStart = /opt/python_daemon_test.py %i
 # ExecReload=
 # ExecStop=
-# TimeoutStartSec=15
-# TimeoutStopSec=3
-# WatchdogSec=100
-Restart=on-failure
-# NotifyAccess=main
-# StartLimitInterval=90
-# StartLimitBurst=3
+# TimeoutStartSec = 15
+# TimeoutStopSec = 3
+# WatchdogSec = 100
+Restart = on-failure
+# NotifyAccess = main
+# StartLimitInterval = 90
+# StartLimitBurst = 3
 
 [Install]
 WantedBy = multi-user.target
