@@ -3,6 +3,11 @@ import os
 import subprocess
 import glob
 import re
+import traceback
+
+"""
+gemファイルのバージョン比較
+"""
 
 
 def main():
@@ -26,9 +31,9 @@ def main():
                     for f in result.stdout.decode().splitlines()]
         for gem in gem_list:
             for ins_gem in install_gems:
-                if gem.name() != ins_gem.name():
+                if gem.name != ins_gem.name:
                     continue
-                print(f'gem={gem}, ins_gem={ins_gem}')
+                # print(f'gem={gem}, ins_gem={ins_gem}')
                 ver1 = gem.normailze()
                 ver2 = ins_gem.normailze()
 
@@ -41,26 +46,38 @@ def main():
 
     except Exception as e:
         print(f'Exception!! [{e}]')
+        print(traceback.format_exc())
 
 
 class GemModelBase():
     def __init__(self, name: str):
-        self._name = name
+        self._org_name = name
+        self._name = self._create_name()
+        self._version = self._create_version()
 
-    # def __repr__(self):
-    #     return f'name={self.name()}, ver={self.version}, full={self.full_name}'
+    def __repr__(self):
+        return f'org:{self._org_name}, name={self.name}, ver={self.version}, full={self.full_name}'
 
+    def _create_name(self):
+        pass
+
+    def _create_version(self):
+        pass
+
+    @property
     def name(self) -> str:
-        return ''
+        return self._name
 
+    @property
     def version(self) -> str:
-        return ''
+        return self._version
 
+    @property
     def full_name(self) -> str:
         """
         @retval Ex.'bson (4.10.0)'
         """
-        return f'{self.name()} ({self.version()})'
+        return f'{self.name} ({self.version})'
 
     def normailze(self) -> list:
         """
@@ -68,7 +85,7 @@ class GemModelBase():
         @note https://www.366service.com/jp/qa/2fdd2cc7c1ac56dd8b76e52aeb85d0f9
         """
         # '.0'で終わる場合は削除する(0は1つ以上)
-        return [int(x) for x in re.sub(r'(\.0+)*$', '', self.version()).split('.')]
+        return [int(x) for x in re.sub(r'(\.0+)*$', '', self.version).split('.')]
 
 
 class GemFileModel(GemModelBase):
@@ -76,20 +93,17 @@ class GemFileModel(GemModelBase):
     Ex.'bson-4.10.0.gem'
     """
 
-    def __repr__(self):
-        return f'name={self.name()}, ver={self.version()}'
-
-    def name(self) -> str:
+    def _create_name(self) -> str:
         """
         @retval Ex.'bson'
         """
-        return self._name[:self._name.rfind('-')]
+        return self._org_name[:self._org_name.rfind('-')]
 
-    def version(self) -> str:
+    def _create_version(self) -> str:
         """
         @retval Ex.'4.10.0'
         """
-        return self._name[self._name.rfind('-')+1:].replace('.gem', '')
+        return self._org_name[self._org_name.rfind('-')+1:].replace('.gem', '')
 
 
 class GemListModel(GemModelBase):
@@ -97,17 +111,17 @@ class GemListModel(GemModelBase):
     Ex.'bson (4.10.0)'
     """
 
-    def name(self) -> str:
+    def _create_name(self) -> str:
         """
         @retval Ex.'bson'
         """
-        return self._name[:self._name.rfind('(')-1]
+        return self._org_name[:self._org_name.rfind('(')-1]
 
-    def version(self) -> str:
+    def _create_version(self) -> str:
         """
         @retval Ex.'4.10.0'
         """
-        return self._name[self._name.rfind('(')+1:].replace(')', '')
+        return self._org_name[self._org_name.rfind('(')+1:].replace(')', '')
 
 
 main()
