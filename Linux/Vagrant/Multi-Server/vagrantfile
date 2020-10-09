@@ -1,0 +1,36 @@
+#
+# https://medium.com/@megawan/provisioning-vagrant-multi-machines-with-ansible-32e1809816c5
+#
+# VirtualBox で Failed to open/create the internal network 'HostInterfaceNetworking-VirtualBox Host-Only Ethernet Adapter' が出た時の対処
+#  https://qiita.com/ExA_DEV/items/ae80a7d767144c2e1992
+#   1."ネットワークと共有センター" を開く
+#   2."アダプターの設定の変更" を開く
+#   3."VirtualBox Host-Only Network #N" のプロパティを開く
+#   4."VirtualBox NDIS6 Bridged Networking Driver" にチェックを入れる
+#   5."インターネットプロトコル バージョン6(TCP/IPv6)" のチェックを外す
+#   6.[OK] を押し、プロパティウィンドウを閉じる
+#   7."VirtualBox Host-Only Network #N" の右クリックメニューで「無効」にする
+#   8.再度、「有効」にし直す
+#
+#
+# Master
+#   Teraterm : 127.0.0.1:2222
+#   IP : 10.0.0.10
+#
+# Slave
+#   Teraterm : 127.0.0.1:2200
+#   IP : 10.0.0.11
+#
+#
+Vagrant.configure("2") do |config|
+  config.vm.define "master" do |subconfig|
+  subconfig.vm.box = "centos/7"
+  subconfig.vm.hostname = "master"
+  subconfig.vm.network :private_network, ip: "10.0.0.10"
+  end
+  config.vm.define "slave" do |subconfig|
+  subconfig.vm.box = "centos/7"
+  subconfig.vm.hostname = "slave"
+  subconfig.vm.network :private_network, ip: "10.0.0.11"
+  end
+  end
