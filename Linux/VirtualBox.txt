@@ -212,4 +212,10 @@ MS Name/IP address         Stratum Poll Reach LastRx Last sample
 
 * がついていれば同期しているってことらしい。
 
+# date
 
+
+==============================================================
+■ タイムゾーン変更
+# cp /etc/localtime /etc/localtime.org
+# ln -sf  /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
