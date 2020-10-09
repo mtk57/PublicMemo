@@ -1285,4 +1285,6 @@ Mavenのキモはpom.xmlで、構造は以下。
 </project>
 
 
-
+==============================================================
+■ VisualStudioCode + OpenSSH + PowerShell + Vagrant + VirtualBox + CentOS7
+https://qiita.com/saboyutaka/items/cc07e47acd1bf73c8094

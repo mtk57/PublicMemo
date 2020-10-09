@@ -1110,8 +1110,19 @@ killされやすい候補を確認する (dstatはデフォルトでは入って
 また、-17を設定するとOOM Killerの対象外になります
 
 
+-------------------------------------------------------------------
+■sshでパスワード認証にする
+# vi /etc/ssh/sshd_config
 
+パスワードでのログイン許可
+#PasswordAuthentication yes
+PasswordAuthentication yes
 
+パスワードなしでのログイン禁止
+#PermitEmptyPasswords no
+PermitEmptyPasswords no
+
+# /etc/rc.d/init.d/sshd restart
 
 
 
