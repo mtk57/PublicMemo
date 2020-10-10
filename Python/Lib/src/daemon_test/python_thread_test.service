@@ -1,0 +1,12 @@
+# 配置
+# /etc/systemd/system/python_thread_test.service
+[Unit]
+Description = python thread test
+
+[Service]
+Type=oneshot
+ExecStart = /opt/python_thread_test.py start
+ExecStop = /opt/python_thread_test.py stop
+
+[Install]
+WantedBy = multi-user.target
