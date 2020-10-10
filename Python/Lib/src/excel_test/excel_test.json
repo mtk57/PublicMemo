@@ -18,7 +18,7 @@
             },
             {
                 "clm": 3,
-                "name": "sevelity",
+                "name": "severity",
                 "not_null": true,
                 "is_key": false
             },
