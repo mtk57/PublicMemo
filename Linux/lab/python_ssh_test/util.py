@@ -76,9 +76,6 @@ def ssh_run_command(ssh_model: SshCommandModel) -> CommandResult:
         except socket.error as e:
             # タイムアウトも含む
             raise SshConnectError(f'socket.error! [{e}]')
-
-
-s
         try:
             stdin, stdout, stderr = client.exec_command(
                 command=ssh_model.command, timeout=ssh_model.command_timeout)
