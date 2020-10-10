@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
+import os
 import paramiko
 import socket
 import subprocess
 import sys
+
+
+def get_hostname():
+    return os.uname()[1]
 
 
 def run_command(cmd: list):
@@ -18,22 +23,22 @@ def print_stderr(message: str):
 
 
 class SshConnectError(Exception):
-    def __inin__(self, message: str):
+    def __init__(self, message: str):
         self.message = message
 
 
 class SshExecCommandError(Exception):
-    def __inin__(self, message: str):
+    def __init__(self, message: str):
         self.message = message
 
 
 class SshTimeoutError(Exception):
-    def __inin__(self, message: str):
+    def __init__(self, message: str):
         self.message = message
 
 
 class SshCommandModel():
-    def __inin__(self, ip: str, user: str, password: str, connect_timeout: int, command_timeout: int, command: str):
+    def __init__(self, ip: str, user: str, password: str, connect_timeout: int, command_timeout: int, command: str):
         self.ip = ip
         self.user = user
         self.password = password
@@ -45,7 +50,15 @@ class SshCommandModel():
         return f'ip={self.ip}, user={self.user}, pw={self.password}, con_to={self.connect_timeout}, cmd_to={self.command_timeout}, cmd={self.command}'
 
 
-def ssh_run_command(ssh_model: SshCommandModel):
+class CommandResult():
+    def __init__(self, ret_code: int, stdout: list, stderr: list):
+        self.ret_code = ret_code
+        self.stdout = stdout
+        self.stderr = stderr
+
+
+def ssh_run_command(ssh_model: SshCommandModel) -> CommandResult:
+    ret = None
     client = None
     try:
         client = paramiko.SSHClient()
@@ -68,13 +81,10 @@ def ssh_run_command(ssh_model: SshCommandModel):
             stdin, stdout, stderr = client.exec_command(
                 command=ssh_model.command, timeout=ssh_model.command_timeout)
 
-            if stderr:
-                print(f'{ssh_model}')
-
-            for line in stdout:
-                print(f'stdout={line}')
-            for line in stderr:
-                print(f'stderr={line}')
+            return CommandResult(
+                ret_code=stdout.channel.recv_exit_status(),
+                stdout=[f for f in stdout],
+                stderr=[f for f in stderr])
 
         except paramiko.SSHException as e:
             raise SshExecCommandError(f'SSHException! [{e}]')

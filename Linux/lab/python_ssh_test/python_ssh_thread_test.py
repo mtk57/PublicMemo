@@ -2,6 +2,8 @@
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from queue import Queue, deque
+from enum import IntEnum
+
 import util
 """
 ThreadPoolExecutorを使って、ssh接続をする実験
@@ -15,7 +17,8 @@ K_CMD = 'cmd'
 K_CONN_TO = 'conn_to'
 K_CMD_TO = 'cmd_to'
 
-EXE_CMD = 'python3 /tmp/target.py'
+EXE_CMD_OK = 'python3 /tmp/target.py 0'
+EXE_CMD_NG = 'python3 /tmp/target.py 1'
 VAGRANT = 'vagrant'
 CONN_TIMEOUT = 10
 CMN_TIMEOUT = 10
@@ -28,7 +31,7 @@ SSH_MODELS = [
         K_PW: VAGRANT,
         K_CONN_TO: CONN_TIMEOUT,
         K_CMD_TO: CMN_TIMEOUT,
-        K_CMD: EXE_CMD
+        K_CMD: EXE_CMD_OK
     },
     {
         K_IP: '10.0.0.11',
@@ -36,13 +39,18 @@ SSH_MODELS = [
         K_PW: VAGRANT,
         K_CONN_TO: CONN_TIMEOUT,
         K_CMD_TO: CMN_TIMEOUT,
-        K_CMD: EXE_CMD
+        K_CMD: EXE_CMD_NG
     }
 ]
 
 
+class Result(IntEnum):
+    SUCCESS = 0
+    FAILED = 1
+
+
 def execute_thread(method: callable, targets: list, max_workers: int) -> int:
-    ret = 1
+    ret = Result.FAILED
 
     queue = Queue()
     queue.queue = deque(targets)
@@ -58,26 +66,29 @@ def execute_thread(method: callable, targets: list, max_workers: int) -> int:
         for _ in range(workers_cnt):
             futures.append(executor.submit(method, queue))
 
+        # as_completedは処理がおわったものから結果を返していくジェネレータ
         for future in as_completed(futures):
             try:
+                # 処理結果を取得
                 result = future.result()
-                if result != 0:
+                if result != Result.SUCCESS:
                     print(f'task failed.[{result}]')
                     failed_cnt = failed_cnt + 1
                 else:
                     print(f'task success.[{result}]')
             except Exception as e:
                 print(f'{e}')
+                failed_cnt = failed_cnt + 1
     if failed_cnt == 0:
-        ret = 0
+        ret = Result.SUCCESS
     else:
-        ret = 1
+        ret = Result.FAILED
         print(f'failed count={failed_cnt}')
     return ret
 
 
 def ssh_exec_command(queue: Queue) -> int:
-    ret = 1
+    ret = Result.FAILED
 
     while not queue.empty():
         try:
@@ -86,8 +97,13 @@ def ssh_exec_command(queue: Queue) -> int:
             break
 
         try:
-            util.ssh_run_command(ssh_model=ssh_model)
-            ret = 0
+            cmd_result = util.ssh_run_command(ssh_model=ssh_model)
+
+            ret = cmd_result.ret_code
+
+            if ret != Result.SUCCESS:
+                print(cmd_result.stderr)
+
         except util.SshConnectError as e:
             print(f'{e}')
             return ret
@@ -101,20 +117,29 @@ def ssh_exec_command(queue: Queue) -> int:
             print(f'{e}')
             return ret
 
-    return 0
+    return ret
 
 
 def main() -> int:
     print(f'main() START')
     ret = 0
-    is_seq = False
+    # is_seq = False
+    is_seq = True
     worker_cnt = 2
 
     ssh_models = []
 
     for t in SSH_MODELS:
-        ssh_models.append(util.SshCommandModel(ip=t[K_IP], user=t[K_USER], password=t[K_PW],
-                                               connect_timeout=t[K_CONN_TO], command_timeout=t[K_CMD_TO], command=t[K_CMD]))
+        ssh_models.append(
+            util.SshCommandModel(
+                ip=t[K_IP],
+                user=t[K_USER],
+                password=t[K_PW],
+                connect_timeout=t[K_CONN_TO],
+                command_timeout=t[K_CMD_TO],
+                command=t[K_CMD]
+            )
+        )
 
     if is_seq:
         # シーケンシャル版

@@ -1288,3 +1288,59 @@ Mavenのキモはpom.xmlで、構造は以下。
 ==============================================================
 ■ VisualStudioCode + OpenSSH + PowerShell + Vagrant + VirtualBox + CentOS7
 https://qiita.com/saboyutaka/items/cc07e47acd1bf73c8094
+
+
+◎VisualStudioCode(vscode)から、sshをするには。
+　・OpennSSHを入れるだけ。（https://github.com/PowerShell/Win32-OpenSSH/releases）
+　・あとは、vscodeのターミナルから PowerShellで、ssh root@1.2.3.4 みたいにやるだけ。つまり、TeraTerm不要。
+
+◎vscodeから、ファイル転送(scp)するには。
+　・vscode拡張の、SFTPとDeployを入れて、転送元ディレクトリに以下ディレクトリとファイルを作る。
+      (転送元ディレクトリ)\.vscode\settings.json
+
+  ・settings.jsonには、SFTPと転送先(複数可。SFTP単体では複数不可)を書く。あとは勝手に同期してくれる。つまり、WinSCP不要。
+		{
+		    "deploy": {
+		        "packages": [
+		            {
+		                "name": "HOGE",
+		                "deployOnSave": true,
+		                "files": [
+		                    "**/*.py"
+		                ],
+		                "targets": [
+		                    "remote1",
+		                    "remote2"
+		                ]
+		            }
+		        ],
+		        "targets": [
+		            {
+		                "name": "remote1",
+		                "type": "sftp",
+		                "description": "A SFTP folder",
+		                "dir": "/tmp",
+		                "host": "10.0.0.10",
+		                "user": "vagrant",
+		                "password": "vagrant"
+		            },
+		            {
+		                "name": "remote2",
+		                "type": "sftp",
+		                "description": "A SFTP folder",
+		                "dir": "/tmp",
+		                "host": "10.0.0.11",
+		                "user": "vagrant",
+		                "password": "vagrant"
+		            }
+		        ]
+		    }
+		}
+
+
+
+
+
+
+
+

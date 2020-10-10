@@ -4,16 +4,20 @@ import util
 
 
 def main():
-    try:
-        result = util.run_command(['systemctl', 'restart', 'chronyd'])
-        if result.returncode != 0:
-            util.print_stderr(f'command failed.[{result.returncode}]')
-            return result.returncode
-    except Exception as e:
-        util.print_stderr(f'exception catch.[{e}]')
-        return 99
-    else:
-        return 0
+    args = sys.argv
+
+    if len(args) <= 1:
+        util.print_stderr(f'argment nothing.')
+        return 1
+
+    result = int(args[1])
+
+    if result == 0:
+        return result
+
+    util.print_stderr(
+        f'Test script error! [{result}][host={util.get_hostname()}]')
+    return result
 
 
 if __name__ == '__main__':
