@@ -49,14 +49,13 @@ class Result(IntEnum):
     FAILED = 1
 
 
-def execute_thread(method: callable, tasks: Queue, max_workers: int) -> int:
+def execute_thread(method: callable, tasks: list, max_workers: int) -> int:
     ret = Result.FAILED
-    task_cnt = tasks.qsize()
     failed_cnt = 0
 
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # スレッドで実行するタスクをexecutorに登録
-        futures = [executor.submit(method, tasks) for _ in range(task_cnt)]
+        futures = [executor.submit(method, task) for task in tasks]
 
         # as_completedは処理が終わったタスクから結果を返していくジェネレータ
         for future in as_completed(futures):
@@ -81,35 +80,26 @@ def execute_thread(method: callable, tasks: Queue, max_workers: int) -> int:
     return ret
 
 
-def ssh_exec_command(tasks: Queue) -> int:
+def ssh_exec_command(task: object) -> int:
     ret = Result.FAILED
 
-    while not tasks.empty():
-        try:
-            task = tasks.get_nowait()
-        except Exception:
-            break
-
-        try:
-            cmd_result = util.ssh_run_command(ssh_model=task)
-
-            ret = cmd_result.ret_code
-
-            if ret != Result.SUCCESS:
-                print(cmd_result.stderr)
-
-        except util.SshConnectError as e:
-            print(f'{e}')
-            return ret
-        except util.SshExecCommandError as e:
-            print(f'{e}')
-            return ret
-        except util.SshTimeoutError as e:
-            print(f'{e}')
-            return ret
-        except Exception as e:
-            print(f'{e}')
-            return ret
+    try:
+        cmd_result = util.ssh_run_command(ssh_model=task)
+        ret = cmd_result.ret_code
+        if ret != Result.SUCCESS:
+            print(cmd_result.stderr)
+    except util.SshConnectError as e:
+        print(f'{e}')
+        return ret
+    except util.SshExecCommandError as e:
+        print(f'{e}')
+        return ret
+    except util.SshTimeoutError as e:
+        print(f'{e}')
+        return ret
+    except Exception as e:
+        print(f'{e}')
+        return ret
 
     return ret
 
@@ -121,10 +111,10 @@ def main() -> int:
     # is_seq = True
     worker_cnt = 2
 
-    tasks = Queue()
+    tasks = []
 
     for t in SSH_MODELS:
-        tasks.put(
+        tasks.append(
             util.SshCommandModel(
                 ip=t[K_IP],
                 user=t[K_USER],
@@ -138,7 +128,8 @@ def main() -> int:
     if is_seq:
         # シーケンシャル版
         print('Sequence start')
-        ret = ssh_exec_command(tasks)
+        for task in tasks:
+            ret = ssh_exec_command(task=task)
         print('Sequence end')
     else:
         # 非同期版
