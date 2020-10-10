@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from queue import Queue, deque
+from queue import Queue
 from enum import IntEnum
 
 import util
@@ -17,11 +17,11 @@ K_CMD = 'cmd'
 K_CONN_TO = 'conn_to'
 K_CMD_TO = 'cmd_to'
 
-EXE_CMD_OK = 'python3 /tmp/target.py 0'
-EXE_CMD_NG = 'python3 /tmp/target.py 1'
 VAGRANT = 'vagrant'
 CONN_TIMEOUT = 10
 CMN_TIMEOUT = 10
+EXE_CMD_OK = 'python3 /tmp/target.py 0'
+EXE_CMD_NG = 'python3 /tmp/target.py 1'
 
 # 実行対象
 SSH_MODELS = [
@@ -31,7 +31,7 @@ SSH_MODELS = [
         K_PW: VAGRANT,
         K_CONN_TO: CONN_TIMEOUT,
         K_CMD_TO: CMN_TIMEOUT,
-        K_CMD: EXE_CMD_NG
+        K_CMD: EXE_CMD_OK
     },
     {
         K_IP: '10.0.0.11',
@@ -49,27 +49,19 @@ class Result(IntEnum):
     FAILED = 1
 
 
-def execute_thread(method: callable, targets: list, max_workers: int) -> int:
+def execute_thread(method: callable, tasks: Queue, max_workers: int) -> int:
     ret = Result.FAILED
-
-    queue = Queue()
-    queue.queue = deque(targets)
-
-    workers_cnt = max_workers
-    queue_size = queue.qsize()
-    if queue_size < max_workers:
-        workers_cnt = queue_size
-
+    task_cnt = tasks.qsize()
     failed_cnt = 0
+
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = []
-        for _ in range(workers_cnt):
-            futures.append(executor.submit(method, queue))
+        # スレッドで実行するタスクをexecutorに登録
+        futures = [executor.submit(method, tasks) for _ in range(task_cnt)]
 
         # as_completedは処理が終わったタスクから結果を返していくジェネレータ
         for future in as_completed(futures):
             try:
-                # 処理結果を取得
+                # 各タスクの実行結果を取得
                 result = future.result()
                 if result != Result.SUCCESS:
                     print(f'task failed.[{result}]')
@@ -79,25 +71,27 @@ def execute_thread(method: callable, targets: list, max_workers: int) -> int:
             except Exception as e:
                 print(f'{e}')
                 failed_cnt = failed_cnt + 1
-    if failed_cnt == 0:
-        ret = Result.SUCCESS
-    else:
-        ret = Result.FAILED
-        print(f'failed count={failed_cnt}')
+        else:
+            # 全てのタスクが完了
+            if failed_cnt == 0:
+                ret = Result.SUCCESS
+            else:
+                ret = Result.FAILED
+                print(f'failed count={failed_cnt}')
     return ret
 
 
-def ssh_exec_command(queue: Queue) -> int:
+def ssh_exec_command(tasks: Queue) -> int:
     ret = Result.FAILED
 
-    while not queue.empty():
+    while not tasks.empty():
         try:
-            ssh_model = queue.get_nowait()
+            task = tasks.get_nowait()
         except Exception:
             break
 
         try:
-            cmd_result = util.ssh_run_command(ssh_model=ssh_model)
+            cmd_result = util.ssh_run_command(ssh_model=task)
 
             ret = cmd_result.ret_code
 
@@ -127,10 +121,10 @@ def main() -> int:
     # is_seq = True
     worker_cnt = 2
 
-    ssh_models = []
+    tasks = Queue()
 
     for t in SSH_MODELS:
-        ssh_models.append(
+        tasks.put(
             util.SshCommandModel(
                 ip=t[K_IP],
                 user=t[K_USER],
@@ -144,15 +138,13 @@ def main() -> int:
     if is_seq:
         # シーケンシャル版
         print('Sequence start')
-        queue = Queue()
-        queue.queue = deque(ssh_models)
-        ret = ssh_exec_command(queue)
+        ret = ssh_exec_command(tasks)
         print('Sequence end')
     else:
         # 非同期版
         print('Async start')
         ret = execute_thread(method=ssh_exec_command,
-                             targets=ssh_models, max_workers=worker_cnt)
+                             tasks=tasks, max_workers=worker_cnt)
         print('Async end')
 
     print(f'main() END ({ret})')
