@@ -79,7 +79,7 @@ def ssh_run_command(ssh_model: SshCommandModel) -> CommandResult:
         try:
             stdin, stdout, stderr = client.exec_command(
                 command=ssh_model.command, timeout=ssh_model.command_timeout)
-            #
+
             return CommandResult(
                 ret_code=stdout.channel.recv_exit_status(),
                 stdout=[f for f in stdout],

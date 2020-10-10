@@ -39,7 +39,7 @@ SSH_MODELS = [
         K_PW: VAGRANT,
         K_CONN_TO: CONN_TIMEOUT,
         K_CMD_TO: CMN_TIMEOUT,
-        K_CMD: EXE_CMD_NG
+        K_CMD: EXE_CMD_OK
     }
 ]
 
@@ -123,8 +123,8 @@ def ssh_exec_command(queue: Queue) -> int:
 def main() -> int:
     print(f'main() START')
     ret = 0
-    # is_seq = False
-    is_seq = True
+    is_seq = False
+    # is_seq = True
     worker_cnt = 2
 
     ssh_models = []
