@@ -1,127 +1,56 @@
 #!/usr/bin/env python3
+import pickle
+import pprint
 import os
 import subprocess
 import glob
 import re
 import traceback
 
-"""
-gemファイルのバージョン比較
-"""
+
+# ------------------------
+# dict -> file 4
+from pprint import pprint
+
+hoge_obj = {'has': {'plants': 'yes', 'animals': 'yes',
+                    'cryptonite': 'no'}, 'name': 'Earth'}
+
+with open("hoge.txt", "w") as f:
+    pprint(hoge_obj, width=40, stream=f)
 
 
-def main():
-    SEARCH_DIR = '/opt/td-agent/embedded/lib/ruby/gems/2.4.0/cache'
-    GEM_LIST = ['td-agent-gem', 'list']
+# ------------------------
+# dict -> file 3
+# def format(d, tab=0):
+#     s = ['{\n']
+#     for k, v in d.items():
+#         if isinstance(v, dict):
+#             v = format(v, tab+1)
+#         else:
+#             v = repr(v)
 
-    def run_command(cmd: list):
-        result = subprocess.run(
-            cmd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL)
-        return result
-
-    try:
-        install_gems_tmp = [os.path.basename(f) for f in glob.glob(
-            os.path.join(SEARCH_DIR, '*.gem'))]
-        install_gems = [GemFileModel(f) for f in install_gems_tmp]
-
-        result = run_command(GEM_LIST)
-        gem_list = [GemListModel(f)
-                    for f in result.stdout.decode().splitlines()]
-        for gem in gem_list:
-            for ins_gem in install_gems:
-                if gem.name != ins_gem.name:
-                    continue
-                # print(f'gem={gem}, ins_gem={ins_gem}')
-                ver1 = gem.normailze()
-                ver2 = ins_gem.normailze()
-
-                if ver1 == ver2:
-                    print(f'{ver1} == {ver2}')
-                elif ver1 > ver2:
-                    print(f'{ver1} > {ver2}')
-                else:
-                    print(f'{ver1} < {ver2}')
-
-    except Exception as e:
-        print(f'Exception!! [{e}]')
-        print(traceback.format_exc())
+#         s.append('%s%r: %s,\n' % ('  '*tab, k, v))
+#     s.append('%s}' % ('  '*tab))
+#     return ''.join(s)
 
 
-class GemModelBase():
-    def __init__(self, name: str):
-        self._org_name = name
-        self._name = self._create_name()
-        self._version = self._create_version()
-
-    def __repr__(self):
-        return f'org:{self._org_name}, name={self.name}, ver={self.version}, full={self.full_name}'
-
-    def _create_name(self):
-        pass
-
-    def _create_version(self):
-        pass
-
-    @property
-    def name(self) -> str:
-        return self._name
-
-    @property
-    def version(self) -> str:
-        return self._version
-
-    @property
-    def full_name(self) -> str:
-        """
-        @retval Ex.'bson (4.10.0)'
-        """
-        return f'{self.name} ({self.version})'
-
-    def normailze(self) -> list:
-        """
-        @retval 410
-        @note https://www.366service.com/jp/qa/2fdd2cc7c1ac56dd8b76e52aeb85d0f9
-        """
-        # '.0'で終わる場合は削除する(0は1つ以上)
-        return [int(x) for x in re.sub(r'(\.0+)*$', '', self.version).split('.')]
+# a = {'has': {'plants': 'yes', 'animals': 'yes', 'cryptonite': 'no'}, 'name': 'Earth'}
+# print(format(a, 1))
 
 
-class GemFileModel(GemModelBase):
-    """
-    Ex.'bson-4.10.0.gem'
-    """
+# ------------------------
+# dict -> file 2
+# mydictionary = {'1': 123, 'A': 'xyz'}
 
-    def _create_name(self) -> str:
-        """
-        @retval Ex.'bson'
-        """
-        return self._org_name[:self._org_name.rfind('-')]
+# pp = pprint.PrettyPrinter(indent=4)
+# pp.pprint(mydictionary)
 
-    def _create_version(self) -> str:
-        """
-        @retval Ex.'4.10.0'
-        """
-        return self._org_name[self._org_name.rfind('-')+1:].replace('.gem', '')
+# with open('myfile.txt', 'w') as f:
+#     print(pprint.pformat(mydictionary, depth=2, width=40, indent=2), file=f)
 
+# ------------------------
+# dict -> file
+# mydictionary = {'1': 123, 'A': 'xyz'}
 
-class GemListModel(GemModelBase):
-    """
-    Ex.'bson (4.10.0)'
-    """
-
-    def _create_name(self) -> str:
-        """
-        @retval Ex.'bson'
-        """
-        return self._org_name[:self._org_name.rfind('(')-1]
-
-    def _create_version(self) -> str:
-        """
-        @retval Ex.'4.10.0'
-        """
-        return self._org_name[self._org_name.rfind('(')+1:].replace(')', '')
-
-
-main()
+# with open('myfile.txt', 'w') as f:
+#     print(mydictionary, file=f)
