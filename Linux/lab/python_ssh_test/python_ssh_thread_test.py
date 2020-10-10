@@ -31,7 +31,7 @@ SSH_MODELS = [
         K_PW: VAGRANT,
         K_CONN_TO: CONN_TIMEOUT,
         K_CMD_TO: CMN_TIMEOUT,
-        K_CMD: EXE_CMD_OK
+        K_CMD: EXE_CMD_NG
     },
     {
         K_IP: '10.0.0.11',
@@ -66,7 +66,7 @@ def execute_thread(method: callable, targets: list, max_workers: int) -> int:
         for _ in range(workers_cnt):
             futures.append(executor.submit(method, queue))
 
-        # as_completedは処理がおわったものから結果を返していくジェネレータ
+        # as_completedは処理が終わったタスクから結果を返していくジェネレータ
         for future in as_completed(futures):
             try:
                 # 処理結果を取得
