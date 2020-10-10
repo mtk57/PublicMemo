@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from queue import Queue
 from enum import IntEnum
 
 import util
@@ -23,7 +22,7 @@ CMN_TIMEOUT = 10
 EXE_CMD_OK = 'python3 /tmp/target.py 0'
 EXE_CMD_NG = 'python3 /tmp/target.py 1'
 
-# 実行対象
+# 実行対象 (vagrantで作成した2台のCentOS。それぞれホスト名はmaster/slave)
 SSH_MODELS = [
     {
         K_IP: '10.0.0.10',
