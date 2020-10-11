@@ -1,3 +1,65 @@
+# 
+# --------------------------------
+# 主に入れたもの
+# ・docker
+# ・sosreport
+#    →yum install sos
+# ・vim
+#    →yum install vim
+# ・glusterfs
+#    →yum install centos-release-gluster
+#    →yum install glusterfs-server
+# ・wget
+#    →yum install wget
+# ・mongodb
+#    →https://qiita.com/tomy0610/items/f540150ac8acaa47ff66
+# ・NTP
+#    →http://exrecord.net/centos7-configuration
+# ・td-agent
+#    →https://nec-baas.github.io/baas-manual/latest/server/ja/server/configure/fluentd.html
+# ・fluent-plugin-mongo-1.4.0
+#    →/usr/sbin/td-agent-gem install fluent-plugin-mongo
+# ・apache
+#    →yum install httpd
+# ・HTTPをフォワード
+#    →50080→80
+# ・OpenJDK
+#    →yum -y install java-1.8.0-openjdk-devel
+# ・Maven3.5.2
+# ・python3.x
+#    →yum install python3
+# ・python3 devel
+#    →yum install python3-devel
+# ・posix-ipx
+#    →pip3 install posix_ipc
+# ・dstat
+#    →yum install dstat
+# ・vimの文字化けを修正
+#   ~/.vimrc
+#   に以下を追加
+#   ------------------------------------------
+#   set encoding=utf-8
+#   set fileencodings=iso-2022-jp,euc-jp,sjis,utf-8
+#   set fileformats=unix,dos,mac
+# ・pythonのエンコードをUTF8に変更
+#   ~/.bash_profile
+#   に以下を追加
+#   --------------------------------
+#   export PYTHONIOENCODING=utf-8
+# ・パスワード認証に変更
+#   /etc/ssh/sshd_config
+#   の以下をyesに変更して、systemctl restart sshd
+#   PasswordAuthentication yes
+# ・2つ目のNIC
+#    →ホストオンリーアダプター：VirtualBox Host-Only Ethernet Adapter
+#    →192.168.56.99
+#    https://qiita.com/9ryuuuuu/items/c604d8d086f62aaf2362
+# ・
+# ・
+# ・
+#
+
+
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 

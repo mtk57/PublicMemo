@@ -219,3 +219,150 @@ MS Name/IP address         Stratum Poll Reach LastRx Last sample
 ■ タイムゾーン変更
 # cp /etc/localtime /etc/localtime.org
 # ln -sf  /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+
+
+
+
+
+==============================================================
+■ ネットワークアダプタの追加
+
+
+●VirtualBox
+ネットワークアダプタ2を追加する（ホストオンリーアダプター：VirtualBox Host-Only Ethernet Adapter）
+→これで、ネットワークアダプタは追加されるが、IPアドレスが未割り当ての状態。
+
+
+●CentOS
+参考：https://qiita.com/9ryuuuuu/items/c604d8d086f62aaf2362
+
+
+ネットワークアダプタの状態を確認。
+
+# ifconfig
+eth0: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 10.0.2.15  netmask 255.255.255.0  broadcast 10.0.2.255
+        inet6 fe80::5054:ff:fe4d:77d3  prefixlen 64  scopeid 0x20<link>
+        ether 52:54:00:4d:77:d3  txqueuelen 1000  (Ethernet)
+        RX packets 172  bytes 16774 (16.3 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 139  bytes 17143 (16.7 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+eth1: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        ether 08:00:27:1e:77:20  txqueuelen 1000  (Ethernet)
+        RX packets 132  bytes 12144 (11.8 KiB)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 61  bytes 10430 (10.1 KiB)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+lo: flags=73<UP,LOOPBACK,RUNNING>  mtu 65536
+        inet 127.0.0.1  netmask 255.0.0.0
+        inet6 ::1  prefixlen 128  scopeid 0x10<host>
+        loop  txqueuelen 1000  (Local Loopback)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+        TX packets 0  bytes 0 (0.0 B)
+        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0
+
+→eth1 にinet(IPv4のアドレス)が表示されていない。
+
+
+
+
+# nmcli device status
+DEVICE  TYPE      STATE         CONNECTION
+eth0    ethernet  connected     System eth0
+eth1    ethernet  disconnected  --
+lo      loopback  unmanaged     --
+
+# nmcli connection show
+NAME                UUID                                  TYPE      DEVICE
+System eth0         5fb06bd0-0bb0-7ffb-45f1-d6edd65f3e03  ethernet  eth0
+Wired connection 1  c99ebbbc-5ebf-3126-93a2-b63685e83e2e  ethernet  --
+
+→nmcliでも見ても同じ。
+
+
+コネクション名を変更
+# nmcli connection modify 'Wired connection 1' connection.id enp0s8
+
+
+
+# nmcli connection show
+NAME         UUID                                  TYPE      DEVICE
+enp0s8       c99ebbbc-5ebf-3126-93a2-b63685e83e2e  ethernet  eth1
+System eth0  5fb06bd0-0bb0-7ffb-45f1-d6edd65f3e03  ethernet  eth0
+
+→変わった
+
+
+ホスト(Windows)でVirtualBoxのネットワークを確認する。
+# ipconfig
+
+(中略)
+
+イーサネット アダプター VirtualBox Host-Only Network:
+
+   接続固有の DNS サフィックス . . . . .:
+   リンクローカル IPv6 アドレス. . . . .: fe80::a579:a83f:4809:522a%10
+   IPv4 アドレス . . . . . . . . . . . .: 192.168.56.1
+   サブネット マスク . . . . . . . . . .: 255.255.255.0
+   デフォルト ゲートウェイ . . . . . . .:
+
+(中略)
+
+
+→仮想マシンに設定可能なIPは 192.168.56.2～ 192.168.56.254 。
+
+
+
+IPアドレス(192.168.56.99)を設定する
+# nmcli connection modify enp0s8 ipv4.method manual ipv4.addresses 192.168.56.99/24
+
+
+
+# nmcli device status
+DEVICE  TYPE      STATE      CONNECTION
+eth0    ethernet  connected  System eth0
+eth1    ethernet  connected  enp0s8
+lo      loopback  unmanaged  --
+
+→connectedになった。
+
+
+ネットワークを再起動
+# systemctl restart network
+
+
+
+IPアドレスが設定されたことを確認 (# ip aは「ip address」の短縮版)
+# ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host
+       valid_lft forever preferred_lft forever
+2: eth0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 52:54:00:4d:77:d3 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.2.15/24 brd 10.0.2.255 scope global noprefixroute dynamic eth0
+       valid_lft 86248sec preferred_lft 86248sec
+    inet6 fe80::5054:ff:fe4d:77d3/64 scope link
+       valid_lft forever preferred_lft forever
+3: eth1: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 08:00:27:1e:77:20 brd ff:ff:ff:ff:ff:ff
+    inet 192.168.56.99/24 brd 192.168.56.255 scope global noprefixroute eth1
+       valid_lft forever preferred_lft forever
+    inet6 fe80::5299:779c:bb6f:fb01/64 scope link noprefixroute
+       valid_lft forever preferred_lft forever
+
+→eth1に「192.168.56.99」が割り当たった!
+
+あとは、OSを再起動する。
+ (これでホストからこのアドレスでsshできるはず)
+
+
+
+
+
