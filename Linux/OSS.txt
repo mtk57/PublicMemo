@@ -1336,6 +1336,162 @@ https://qiita.com/saboyutaka/items/cc07e47acd1bf73c8094
 		        ]
 		    }
 		}
+==============================================================
+■mongodb  基本
+
+参考：https://qiita.com/saba1024/items/f2ad56f2a3ba7aaf8521
+
+◎mongoシェル
+# mongo
+
+mongoシェルでは、データの操作にJSON形式のコマンドを利用します。
+基本構文はdb.コレクション名.コマンド名(オプション)となります。
+
+
+◎DBの作成 (ここではstudyとする)
+> use study
+switched to db study
+
+◎DBの状態
+> db.stats()
+{
+        "db" : "study",
+        "collections" : 0,
+        "views" : 0,
+        "objects" : 0,
+        "avgObjSize" : 0,
+        "dataSize" : 0,
+        "storageSize" : 0,
+        "numExtents" : 0,
+        "indexes" : 0,
+        "indexSize" : 0,
+        "fileSize" : 0,
+        "ok" : 1
+}
+
+◎studyデータベースにuserコレクションを作成し、ドキュメントを1件登録する。
+> db.user.insert({name:'mr.a', age:10, gender:'m', hobbies:['programming']});
+WriteResult({ "nInserted" : 1 })
+
+◎確認
+> db.stats()
+{
+        "db" : "study",
+        "collections" : 1,
+        "views" : 0,
+        "objects" : 1,
+        "avgObjSize" : 97,
+        "dataSize" : 97,
+        "storageSize" : 4096,
+        "numExtents" : 0,
+        "indexes" : 1,
+        "indexSize" : 4096,
+        "ok" : 1
+}
+
+
+◎MongoDBとRDBの用語比較（厳密には異なる）
+-----------------------------
+MongoDB	       RDB
+-----------------------------
+データベース   データベース
+コレクション   テーブル
+ドキュメント   行（レコード）
+フィールド     列
+-----------------------------
+
+
+◎ドキュメント取得  (いわゆる SELECT * FROM user)
+> db.user.find()
+{ "_id" : ObjectId("5f898ec04e59ed743d86aa84"), "name" : "mr.a", "age" : 10, "gender" : "m", "hobbies" : [ "programming" ] }
+
+→"_id"は主キーと同じで、mongoが自動で発番する
+
+
+
+◎クエリセレクタ
+検索条件に渡す{フィールド名:値}のことです。
+例えば、nameフィールドがhogeという値のドキュメントを検索したい場合は
+{name:'hoge'}というクエリセレクタになります。
+
+クエリセレクタを渡さない場合はすべてのドキュメントが取得されます。
+また、SQLのような比較演算子が使えます。
+以下が代表的な比較演算子です。
+
+--------------------------------------------
+演算子    MongoDB   概要             サンプル
+--------------------------------------------
+<         $lt       右辺より小さい   { age:{$lt:100} }
+<=        $lte      右辺以下         { age:{$lte:100} }
+>         $gt       右辺より大きい   { age:{$gt:100} }
+>=        $gte      右辺以上         { age:{$gte:100} }
+!=        $ne       等しくない       { name:{$ne:'mr.a'} }
+該当なし  $exists   フィールド（列）自体の存在チェック
+                                     db.mycol.find({ hoge:{$exists:false} })
+OR        $or       $orで指定する条件のいずれかを満たすものを抽出
+                                     db.mycol.find({$or:[{loves:'apple'},{loves:'energon'}]})
+
+
+
+◎フィールドを指定して取得  (いわゆる SELECT name FROM user)
+> db.user.find({}, {name:1})
+{ "_id" : ObjectId("5f898ec04e59ed743d86aa84"), "name" : "mr.a" }
+
+
+◎_idを除外して取得
+> db.user.find({}, {name:1, _id:0})
+{ "name" : "mr.a" }
+
+
+◎更新  ("gender"フィールドの値を"X"で更新)
+> db.user.find({}, {name:1, gender:1, _id:0})
+{ "name" : "mr.a", "gender" : "m" }
+
+> db.user.update({name:'mr.a'}, {$set:{gender:'X'}})
+WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
+
+> db.user.find({}, {name:1, gender:1, _id:0})
+{ "name" : "mr.a", "gender" : "X" }
+
+
+◎削除
+> db.user.find({}, {name:1, gender:1, _id:0})
+{ "name" : "mr.a", "gender" : "X" }
+
+> db.user.insert({name:'mr.b', age:20, gender:'f', hobbies:['travel']});
+WriteResult({ "nInserted" : 1 })
+
+> db.user.find({}, {_id:0})
+{ "name" : "mr.a", "age" : 10, "gender" : "X", "hobbies" : [ "programming" ] }
+{ "name" : "mr.b", "age" : 20, "gender" : "f", "hobbies" : [ "travel" ] }
+
+> db.user.remove({age:10})
+WriteResult({ "nRemoved" : 1 })
+
+> db.user.find({}, {_id:0})
+{ "name" : "mr.b", "age" : 20, "gender" : "f", "hobbies" : [ "travel" ] }
+
+
+◎ソート (1=昇順、-1=降順)
+> db.user.find({},{_id:0}).sort({age:1})
+{ "name" : "mr.b", "age" : 20, "gender" : "f", "hobbies" : [ "travel" ] }
+{ "name" : "mr.c", "age" : 30, "gender" : "m", "hobbies" : [ "travel" ] }
+
+> db.user.find({},{_id:0}).sort({age:-1})
+{ "name" : "mr.c", "age" : 30, "gender" : "m", "hobbies" : [ "travel" ] }
+{ "name" : "mr.b", "age" : 20, "gender" : "f", "hobbies" : [ "travel" ] }
+
+
+◎カウント
+> db.user.find({}).count()
+2
+
+
+◎終了
+> exit
+bye
+==============================================================
+
 
 
 
