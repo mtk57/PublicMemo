@@ -1339,7 +1339,10 @@ https://qiita.com/saboyutaka/items/cc07e47acd1bf73c8094
 ==============================================================
 ■mongodb  基本
 
-参考：https://qiita.com/saba1024/items/f2ad56f2a3ba7aaf8521
+◎参考：
+https://qiita.com/saba1024/items/f2ad56f2a3ba7aaf8521
+https://qiita.com/k-staging/items/a386d272abb2c9b92f1a
+
 
 ◎mongoシェル
 # mongo
@@ -1348,9 +1351,10 @@ mongoシェルでは、データの操作にJSON形式のコマンドを利用�
 基本構文はdb.コレクション名.コマンド名(オプション)となります。
 
 
-◎DBの作成 (ここではstudyとする)
+◎DBの作成/切り替え (ここではstudyを作成)
 > use study
 switched to db study
+
 
 ◎DBの状態
 > db.stats()
@@ -1369,9 +1373,11 @@ switched to db study
         "ok" : 1
 }
 
+
 ◎studyデータベースにuserコレクションを作成し、ドキュメントを1件登録する。
 > db.user.insert({name:'mr.a', age:10, gender:'m', hobbies:['programming']});
 WriteResult({ "nInserted" : 1 })
+
 
 ◎確認
 > db.stats()
@@ -1401,7 +1407,7 @@ MongoDB	       RDB
 -----------------------------
 
 
-◎ドキュメント取得  (いわゆる SELECT * FROM user)
+◎ドキュメントを取得  (いわゆる SELECT * FROM user)
 > db.user.find()
 { "_id" : ObjectId("5f898ec04e59ed743d86aa84"), "name" : "mr.a", "age" : 10, "gender" : "m", "hobbies" : [ "programming" ] }
 
@@ -1433,17 +1439,17 @@ OR        $or       $orで指定する条件のいずれかを満たすものを
 
 
 
-◎フィールドを指定して取得  (いわゆる SELECT name FROM user)
+◎フィールドを指定してドキュメントを取得  (いわゆる SELECT name FROM user)
 > db.user.find({}, {name:1})
 { "_id" : ObjectId("5f898ec04e59ed743d86aa84"), "name" : "mr.a" }
 
 
-◎_idを除外して取得
+◎_idを除外してドキュメントを取得
 > db.user.find({}, {name:1, _id:0})
 { "name" : "mr.a" }
 
 
-◎更新  ("gender"フィールドの値を"X"で更新)
+◎ドキュメントの更新  ("gender"フィールドの値を"X"で更新)
 > db.user.find({}, {name:1, gender:1, _id:0})
 { "name" : "mr.a", "gender" : "m" }
 
@@ -1454,7 +1460,7 @@ WriteResult({ "nMatched" : 1, "nUpserted" : 0, "nModified" : 1 })
 { "name" : "mr.a", "gender" : "X" }
 
 
-◎削除
+◎ドキュメントの削除
 > db.user.find({}, {name:1, gender:1, _id:0})
 { "name" : "mr.a", "gender" : "X" }
 
@@ -1472,7 +1478,7 @@ WriteResult({ "nRemoved" : 1 })
 { "name" : "mr.b", "age" : 20, "gender" : "f", "hobbies" : [ "travel" ] }
 
 
-◎ソート (1=昇順、-1=降順)
+◎ドキュメントのソート (1=昇順、-1=降順)
 > db.user.find({},{_id:0}).sort({age:1})
 { "name" : "mr.b", "age" : 20, "gender" : "f", "hobbies" : [ "travel" ] }
 { "name" : "mr.c", "age" : 30, "gender" : "m", "hobbies" : [ "travel" ] }
@@ -1487,9 +1493,31 @@ WriteResult({ "nRemoved" : 1 })
 2
 
 
+◎DB一覧
+> show dbs
+admin  0.000GB
+local  0.000GB
+study  0.000GB
+
+
+◎DB削除
+> db.dropDatabase()
+
+> show dbs
+admin  0.000GB
+local  0.000GB
+
+
 ◎終了
 > exit
 bye
+
+
+
+◎接続先を指定して接続 (ユーザ認証を有効している場合)
+# mongo 「ホスト名」/「DB名」 -u 「ユーザー名」 -p
+
+
 ==============================================================
 
 
