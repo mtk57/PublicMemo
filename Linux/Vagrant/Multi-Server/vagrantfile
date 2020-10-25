@@ -30,7 +30,7 @@
 # ---------------------------------------
 # yum install vim
 # yum install python3
-#
+# yum install net-tools     ※for ifconfig
 #
 #
 #

@@ -1519,6 +1519,143 @@ bye
 
 
 ==============================================================
+■ Maven + Jersey + OpenAPI(swagger)
+
+pom.xml
+<properties>
+  <swagger-core-version>1.5.15             ※APIコードにアノテーションを付与することで、Swagger Spec仕様を記述したJSONファイルを自動生成できます。
+  <jersey-version>1.18.1
+  <jersey2-version>2.25.1                  ※RESTサービス
+  <servlet-api-version>2.5
+  <jetty-version>9.3.12.v20160915          ※Serveletコンテナ、Webサーバ
+  <swagger-ui-version>3.0.4                ※Swagger Spec で記載された設計からドキュメントをHTML形式で自動生成するツール
+  <jackson-version>2.9.8                   ※jsonとJavaオブジェクトの相互変換
+  <httpclient-version>4.5.12
+
+<dependencies>
+  <dependency>
+    <groupId>io.swagger
+    <artifactId>swagger-jersey2-jaxrs
+    <version>${swagger-core-version}
+  <dependency>
+    <groupId>org.glassfish.jersey.core
+    <artifactId>jersey-server
+    <version>${jersey2-version}
+  <dependency>
+    <groupId>org.glassfish.jersey.core
+    <artifactId>jersey-common
+    <version>${jersey2-version}
+  <dependency>
+    <groupId>org.glassfish.jersey.media
+    <artifactId>jersey-media-multipart
+    <version>${jersey2-version}
+
+==============================================================
+■ Maven  (Windows)
+
+参考：
+https://otoshimtoshi.com/programming/maven-introduction/
+
+
+1.Mavenをダウンロード
+  https://maven.apache.org/download.cgi
+  →apache-maven-3.6.3-bin.zip
+
+2.解凍して、C:\ 直下にコピー
+
+3.以下を環境変数に追加。(bin\mvn にパスを通すため)
+  環境変数：Maven_HOME
+  値：コピーしたディレクトリの絶対パス（例：C:\apache-maven-3.6.3）
+
+  Pathに以下を追加
+  %Maven_HOME%bin
+
+4.動作確認
+C:\Users\motok>mvn -v
+Apache Maven 3.6.3 (cecedd343002696d0abb50b32b541b8a6ba2883f)
+Maven home: C:\apache-maven-3.6.3\bin\..
+Java version: 1.8.0_231, vendor: Oracle Corporation, runtime: C:\Program Files\Java\jre1.8.0_231
+Default locale: ja_JP, platform encoding: MS932
+OS name: "windows 10", version: "10.0", arch: "amd64", family: "windows"
+
+5.%Maven_HOME%conf\settings.xml のバックアップをとり、以下のディレクトリを作成する
+  C:\user\.m2\repository
+
+6.%Maven_HOME%conf\settings.xmlに、以下を<settings>タグ直下に追加
+  <localRepository>C:/user/.m2/repository/</localRepository>
+
+7.C:\user\.m2\repository をカレントにして以下コマンドを実行。(プロジェクトの雛形がダウンロードされて作られる)
+mvn archetype:generate -DarchetypeGroupId=org.apache.maven.archetypes -DarchetypeArtifactId=maven-archetype-simple -DarchetypeVersion=1.4
+→ここにpom.xmlもある
+
+最後にgroupIdとartifactIdを聞かれるので、適当に入れる。それ以外は未入力でエンター。
+Define value for property 'groupId': com.example
+Define value for property 'artifactId': Hello
+Define value for property 'version' 1.0-SNAPSHOT: :
+Define value for property 'package' com.example: :
+Confirm properties configuration:
+groupId: com.example
+artifactId: Hello
+version: 1.0-SNAPSHOT
+package: com.example
+ Y: :
+[INFO] ----------------------------------------------------------------------------
+[INFO] Using following parameters for creating project from Old (1.x) Archetype: maven-archetype-quickstart:1.0
+[INFO] ----------------------------------------------------------------------------
+[INFO] Parameter: basedir, Value: C:\user\.m2\repository
+[INFO] Parameter: package, Value: com.example
+[INFO] Parameter: groupId, Value: com.example
+[INFO] Parameter: artifactId, Value: Hello
+[INFO] Parameter: packageName, Value: com.example
+[INFO] Parameter: version, Value: 1.0-SNAPSHOT
+[INFO] project created from Old (1.x) Archetype in dir: C:\user\.m2\repository\Hello
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  04:09 min
+[INFO] Finished at: 2020-10-17T23:12:57+09:00
+[INFO] ------------------------------------------------------------------------
+
+
+8.C:\user\.m2\repository\Hello をカレントにして以下コマンドを実行すればコンパイル & 実行されて「Hello World!」が出れば成功。（ただし、JDK（※1）が入っていること）
+mvn -q compile exec:java -Dexec.mainClass=com.example.App
+Hello World!
+
+→コンパイルだけなら「mvn compile」
+
+
+※1 JDKを入れても以下をする必要があるみたい。
+1.javacがあるフォルダのパスを通す。（C:\Program Files\Java\jdk1.8.0_261\bin）
+2.DOS窓は管理者権限で開く。
+
+
+------------------------------
+Mavenのキモは、pom.xmlである。
+pom.xmlの記述に従って、Javaプロジェクトがビルドされるので。
+
+ちなみにビルドだけならEclipseは無くてもよさそう。
+
+
+
+<重要なタグ>
+
+◎dependencies
+プロジェクトが依存しているライブラリなどを自動的にダウンロードしますということを記載するタグです。
+有名所のライブラリは、pom.xmlの雛形が公開されている。
+→https://search.maven.org/
+
+
+◎build
+「build」タグの中に「plugin」の情報が記載されています。
+ビルドに関する情報を記載するタグです。
+
+
+
+
+
+
+
+
 
 
 
