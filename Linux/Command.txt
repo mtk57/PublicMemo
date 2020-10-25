@@ -1124,7 +1124,67 @@ PermitEmptyPasswords no
 
 # systemctl restart sshd
 
+-------------------------------------------------------------------
+■ネットワーク系コマンド
 
+◎ nmcli : Network Manager CLI  (CentOS 7以降の推奨。それ以前は設定ファイル(/etc/sysconfig/network-scripts)を書き換えていた?)
+
+<MainCommand>
+d : device
+c : connection
+
+<SubCommand>
+s  : status       (device)
+sh : show         (device)
+di : disconnect   (device)
+s  : show         (connection)
+m  : modify       (connection)
+u  : up           (connection)
+
+# nmcli d                ※デバイス一覧を表示
+# nmcli d st <DEVICE>    ※デバイスの詳細を表示 (DEVICEはデバイス名)
+# nmcli c                ※コネクション一覧を表示
+# nmcli c s <NAME>       ※コネクションの詳細を表示 (NAMEはコネクション名)
+
+IPアドレス、DNS、Gatewayを手動で設定する例
+# nmcli c m enp0s3 ipv4.method manual ipv4.address 192.168.11.100/24
+# nmcli c m enp0s3 ipv4.dns 192.168.11.1
+# nmcli c m enp0s3 ipv4.gateway 192.168.11.1
+# nmcli c m enp0s3 connection.autoconnect yes
+
+設定を反映 (もしくは# systemctl restart network)
+# nmcli d di enp0s3
+# nmcli c u enp0s3
+
+
+
+
+
+◎ ip : CentOS 7以降ではifconfig、routeコマンドの代わりにipコマンドを推奨。
+
+<MainCommand>
+a : address
+r : route
+
+
+# ip a                   ※IP一覧を表示 (ifconfigの代わり)
+# ip r                   ※ルーティングテーブルを表示(routeの代わり)
+# 
+
+
+
+
+
+
+◎ ss : CentOS 7以降ではnetstatの代わりにssコマンドを推奨。
+
+# ss
+
+
+
+
+◎ traceroute : CentOS 7以降ではifconfig, traceroute, netstat が入っていないのでyumで入れる
+# yum install traceroute
 
 
 
