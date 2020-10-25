@@ -124,6 +124,7 @@ https://qiita.com/feifo/items/0fde474005589afcff68
 ■ ネットワークまとめ
 
 参考：https://endy-tech.hatenablog.jp/entry/2018/10/27/134223
+      https://qiita.com/kanatatsu64/items/b7b8eca17202386d27e3
 
 
 1.ホストオンリーアダプター
