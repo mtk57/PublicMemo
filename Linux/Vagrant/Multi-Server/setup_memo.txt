@@ -1,0 +1,126 @@
+
+2020/12/12 create
+
+
+1.VirtualBoxをインストール  (6.1.16)
+2.Vagrantをインストール     (2.2.14)
+3.PublicMemo\Linux\Vagrant\Multi-Server\vagrantfile
+  があるフォルダでDOS窓を開き、以下を実行。
+  >vagrant plugin install vagrant-vbguest
+
+  >vagrant up
+
+   →もし、host only adapterが作れないみたいなエラーが出たら、以下を試してみる。
+     1.ウィルス対策ソフトをOFF (使っていなかったら、2を試す)
+     2.Windows Defenderの デバイスセキュリティ - コア分離 - メモリ整合性 をOFF
+       →Windowsのバージョンによっては OFFにできなくなっているので、以下のレジストリを0にすれば OFFにできる。
+         HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\DeviceGuard\Scenarios\HypervisorEnforcedCodeIntegrity
+
+     →VirtualBoxに中途半端にイメージが出来ていたら削除し、vagrantfileと同じ階層にあるフォルダも削除してから
+       もう一度 vagrant up を試してみる。
+
+  →成功すれば、.vagrantフォルダが作成される。
+
+4.ネットワークと共有センター - アダプターの設定の変更
+  に、２つのVirtualBox用のアダプターが作成されている。
+  - VirtualBox Host-Only Ethernet Adapter      (ホストOSからゲストOSに接続用)
+  - VirtualBox Host-Only Ethernet Adapter #2   (NAT用。つまり、ゲストOSからホストOSを介してインターネットに接続できるためのアダプター)
+
+  それぞれに対して以下を実施する。
+  1) プロパティを開き、IPv6のチェックを外す。
+  2) 無効 -> 有効
+
+5.VirtualBoxを起動し、ファイル - ホストネットワークマネージャー
+  に、２つのアダプターが作成されている。
+  - VirtualBox Host-Only Ethernet Adapter
+  - VirtualBox Host-Only Ethernet Adapter #2 
+
+  それぞれに対して以下を実施する。
+  1) DHCPサーバのチェックがついていたらOFFにする。
+
+  VirtualBox Host-Only Ethernet Adapterに対して以下を実施する。
+  1) アダプターを手動で設定する
+  2) IPアドレス  ：192.168.56.1
+  3) ネットマスク：255.255.255.0
+
+
+6.VirtualBoxのゲストOSが起動していたら、電源OFFにして、
+  設定 - ネットワーク - アダプター2
+  が、ホストオンリーアダプターであることを確認し、
+  「名前」のコンボボックスで、VirtualBox Host-Only Ethernet Adapter
+  を選択する。
+
+--------------------------------------------------
+ここからは、ゲストOSでの作業
+
+
+7.ゲストOSを起動する。
+  id/pw は、vagrant/vagrant
+
+8.rootユーザーに切り替える
+  →sudo su -
+
+9.ip addr
+  で、2つのアダプター(以降はデバイスと呼ぶ)がついていることを確認する
+  →おそらく、eth0とeth1
+  →eth0は、NAT用。
+    →google.comにpingが通るかやってみること。（多分通るはず）
+  →eth1は、ホストからの接続用。でもまだIPアドレスは割当たっていないはず。
+
+10.nmcli device
+  で、デバイスの状態を表示する
+  eth0は、connected とかになっているはず。
+  eth1は、おそらく、connected以外のはず。
+  →/etc/sysconfig/network-scripts
+    に「ifcfg-eth1」ファイルがないはず。
+
+11.eth1のデバイスファイルを作成する
+   →nmcli connection add type ethernet ifname eth1 con-name eth1
+   →/etc/sysconfig/network-scripts/ifcfg-eth1
+     が作成されるはず。
+
+12.eth1にIPアドレスを設定する
+   →nmcli connection modify eth1 ipv4.addresses 192.168.56.90/24
+   →nmcli connection modify eth1 ipv4.method manual
+
+13.ネットワークサービスを再起動する
+   →systemctl restart network.service
+
+14.デバイスを確認する
+   →nmcli device
+   →eth1が、connected になっていればOK
+
+15.ホストOSのDOS窓から、ping 192.168.56.90 が通ればOK
+
+
+--------------------------------------------------
+次に、ゲストOSへのssh接続をパスワード認証にする
+
+# vi /etc/ssh/sshd_config
+
+パスワードでのログイン許可
+#PasswordAuthentication yes
+PasswordAuthentication yes
+
+パスワードなしでのログイン禁止
+#PermitEmptyPasswords no
+PermitEmptyPasswords no
+
+# systemctl restart sshd
+
+
+ホストOSから、パスワードでssh出来ればOK
+→id/pwは、vagrant/vagrant
+
+→公開鍵認証の場合、以下ファイルを秘密鍵として指定する
+  .vagrant\machines\master\virtualbox\private_key
+
+
+
+
+--------------------------------------------------
+
+
+
+
+
