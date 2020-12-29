@@ -1,11 +1,11 @@
-pytest Àsè‡
+ï»¿pytest å®Ÿè¡Œæ‰‹é †
 
-1.WinSCP‚ÅAmock_testƒtƒHƒ‹ƒ_‚ÍLinux‚Ì“K“–‚ÈêŠ‚ÉƒRƒs[‚·‚é (‚±‚±‚Å‚Í/tmp ’¼‰º‚Æ‚·‚é)
+1.WinSCPã§ã€mock_testãƒ•ã‚©ãƒ«ãƒ€ã¯Linuxã®é©å½“ãªå ´æ‰€ã«ã‚³ãƒ”ãƒ¼ã™ã‚‹ (ã“ã“ã§ã¯/tmp ç›´ä¸‹ã¨ã™ã‚‹)
 
-2.ƒJƒŒƒ“ƒgƒfƒBƒŒƒNƒgƒŠ‚ğ•ÏX‚·‚éB
+2.ã‚«ãƒ¬ãƒ³ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã‚’å¤‰æ›´ã™ã‚‹ã€‚
 # cd /tmp/mock_test
 
-3.pytest‚ğÀs‚·‚éB
+3.pytestã‚’å®Ÿè¡Œã™ã‚‹ã€‚
 # pytest -v --cov=src --cov-report term-missing test -x
 
 
