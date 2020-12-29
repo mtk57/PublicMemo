@@ -1,15 +1,32 @@
 #!/usr/bin/env python3
 
 import pytest
-from ..src import child
+# from unittest import mock
+from ..src import base, child
 
 
 def test_1():
+    # pytest.set_trace()  # pdb kick
+
+    # Childのクラスのインスタンス生成
     ins_c = child.Child()
 
-    assert ins_c.child_func() == 'child mem' + '&' + 'ABC'
-    assert child.Child.child_class_func() == 456
+    # Baseクラスのインスタンスメソッドを呼び出す
+    assert ins_c.base_func() == base.Base.BASE_MEM
+
+    # Baseクラスのクラスメソッドを呼び出す
+    assert base.Base.base_class_func() == base.Base.BASE_DEF
+
+    # Childクラスのインスタンスメソッドを呼び出す
+    assert ins_c.child_func() == child.Child.CHILD_MEM + '&' + child.Child.DEF_PRM1
+
+    # Childクラスのクラスメソッドを呼び出す
+    assert child.Child.child_class_func() == child.Child.CHILD_DEF
+
+    # Childクラスのクラスメソッドを呼び出す2
     assert child.Child.child_class_func(prm1=False) is None
+
+    # chileモジュールのモジュールメソッドを呼び出す
     assert child.Child_module_func() == 1230
 
 
@@ -22,15 +39,15 @@ def test_2_child_init_mock(monkeypatch):
         def __init__(*args, **kwargs):
             raise RuntimeError('init failed!')
 
-    def mock_Child(*args, **kwargs):
+    def mock_child(*args, **kwargs):
         """ Childクラスのインスタンスを生成 """
         return Child()
 
-    # Childのクラスのインスタンス生成をモック
-    monkeypatch.setattr(child, 'Child', mock_Child)
+    # Childクラスのインスタンス生成をモック
+    monkeypatch.setattr(child, 'Child', mock_child)
 
     with pytest.raises(RuntimeError):
-        # Childのクラスのインスタンス生成
+        # Childクラスのインスタンス生成
         child.Child()
 
 
@@ -86,53 +103,28 @@ def test_5_child_instance_member_mock(monkeypatch):
     assert ins_c._child_mem == 'mock value'
 
 
-def test_6_child_class_member_mock():
+def test_6_child_class_member_mock(monkeypatch):
     """
-    Childクラスのクラスメンバーをモックする
-    """
-    pass
-
-
-def test_100_base_init_mock(monkeypatch):
-    """
-    Baseクラスの__init__をモックする
+    Childクラスのクラスメンバーをモックする (無理かも...)
     """
     pass
+    # CHILD_DEFインスタンスメンバの値を設定
+    # monkeypatch.setitem(child.Child.__dict__, 'CHILD_DEF', 'mock value')
+
+    # assert child.Child.CHILD_DEF == 'mock value'
 
 
-def test_101_base_instance_method_mock():
-    """
-    Baseクラスのインスタンスメソッドをモックする
-    """
-    pass
-
-
-def test_102_base_class_method_mock():
-    """
-    Baseクラスのクラスメソッドをモックする
-    """
-    pass
-
-
-def test_103_base_instance_member_mock():
-    """
-    Baseクラスのインスタンスメンバーをモックする
-    """
-    pass
-
-
-def test_104_base_class_member_mock():
-    """
-    Baseクラスのクラスメンバーをモックする
-    """
-    pass
-
-
-def test_1000_module_method_mock():
+def test_1000_module_method_mock(monkeypatch):
     """
     モジュールメソッドをモックする
     """
-    pass
+    def mock_Child_module_func(*args, **kwargs):
+        """ Child_module_funcメソッドのモック """
+        return 'mock return'
+
+    # Child_module_funcメソッドのモックを設定
+    monkeypatch.setattr(child, 'Child_module_func', mock_Child_module_func)
+    assert child.Child_module_func() == 'mock return'
 
 
 def test_1001_module_varialble_mock():

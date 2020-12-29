@@ -1,1 +1,29 @@
 ﻿
+
+python のモックは複数のやり方があって、ややこしい。
+
+
+① unittestモジュールのmock  (MagicMockというのもある。これもunittestモジュールに入っている)
+
+   以下をインポートして使う。(unittestは標準モジュール)
+   from unittest import mock
+
+   withを使う方法と、デコレータを使う方法がある。
+
+
+   <with>
+   with mock.patch('os.path.join') as join_mock:
+
+   <デコレータ>
+   @mock.patch('os.path.join')
+   def function(join_mock):
+
+
+② pytestモジュールのmonkeypatch  (pytestは標準モジュールではないので、pipで別途入れる必要がある)
+
+   こっちのが使いやすい気がする
+
+   def function(monkeypatch):
+     monkeypatch.setattr()
+
+

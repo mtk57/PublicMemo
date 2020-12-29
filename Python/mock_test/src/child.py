@@ -11,16 +11,19 @@ def Child_module_func(prm1=123):
 
 
 class Child(Base):
+    CHILD_MEM = 'child mem'
     CHILD_DEF = 456
+    DEF_PRM1 = 'ABC'
 
     def __init__(self, prm1=123):
-        self._child_mem = 'child mem'
+        super(Child, self).__init__()
+        self._child_mem = Child.CHILD_MEM
         self._child_mem_prm1 = None
 
         if prm1 == 123:
             self._child_mem_prm1 = prm1
 
-    def child_func(self, prm1='ABC'):
+    def child_func(self, prm1=DEF_PRM1):
         return self._child_mem + '&' + prm1
 
     @classmethod
