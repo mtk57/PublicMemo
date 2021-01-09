@@ -1092,8 +1092,8 @@ sh -c   実行コマンドとして'mongo xxx'を指定。これが実行され�
 ■ td-agent
 
 fluentdというRubyで書かれたログ収集ツールがある。
-fluentdは、GEM(RPMのRuby版みたいなもの)で配布されているが、td-agentは
-RPMで配布されているので入れやすい。（中身はfluentdと一緒）
+fluentdは、GEM(RPMのRuby版みたいなもの)で配布されているが、
+td-agentはRPMで配布されているので入れやすい。（中身はfluentdと一緒）
 
 -----------------------------------------
 参考：https://www.atmarkit.co.jp/ait/articles/1402/06/news007.html
@@ -1177,6 +1177,115 @@ td-agent.logにエラーがなくなっていれば、
 -----------------------------------------
 最初から入っているプラグイン
 /opt/td-agent/embedded/lib/ruby/gems/2.4.0/gems/fluentd-1.11.1/lib/fluent/plugin
+
+
+-----------------------------------------
+rubygemのインストール
+# yum install rubygems
+
+-----------------------------------------
+rbenv, ruby-buildを入れて、rubyのバージョンを上げる (gitがインストール済であること)
+
+参考：https://qiita.com/NaokiIshimura/items/ff04b6eaa40b33c4bea8
+
+
+# rbenvインストール
+# git clone https://github.com/sstephenson/rbenv.git ~/.rbenv
+
+# ruby-buildインストール
+# git clone https://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build
+
+# 設定
+# echo '# rbenv' >> ~/.bash_profile
+# echo 'export PATH="$HOME/.rbenv/bin:$PATH"' >> ~/.bash_profile
+# echo 'eval "$(rbenv init -)"' >> ~/.bash_profile
+# exec $SHELL --login
+
+# rubyのインストールに必要なパッケージをインストール
+# yum -y install bzip2 gcc openssl-devel readline-devel zlib-devel
+
+# インストールできるrubyのバージョンを確認
+# rbenv install --list
+
+# rubyインストール
+# rbenv install <version>
+
+# rubyのバージョンを切り替え
+# rbenv global <version>
+
+# rubyのバージョンが切り替わったことを確認
+# ruby -v
+
+-----------------------------------------
+fluentdのインストール (Ruby 2.3.0以上であること)
+
+# gem install -N fluentd
+# fluentd --version
+
+-----------------------------------------
+fluentdプラグインを自作
+
+参考：https://qiita.com/suzuki-navi/items/57ec168267466a343a8a
+
+<前提条件>
+1.git, ruby(2.3.0以上), fluentd, td-agent がインストール済
+
+
+<手順>
+1.サンプルプラグインを作成
+# fluent-plugin-generate output sample
+  →fluent-plugin-generateは、fluentdをインストールすると入るコマンド
+  →output : プラグインの種類
+  →sample : プラグイン名
+
+2.作成に成功すると、fluent-plugin-sample ディレクトリが作成される
+  ついでにローカルリポジトリも作成される
+  作成されたディレクトリの中の lib/fluent/plugin/out_sample.rb というファイルがプラグインの本体
+
+3.lib/fluent/plugin/out_sample.rb を開いて、Fluent::Plugin.register_output("sample", self) の下に以下を追記して保存。
+
+      def format(tag, time, record)
+        [tag, time, record].to_msgpack
+      end
+
+      def formatted_to_msgpack_binary?
+        true
+      end
+
+      def write(chunk)
+        chunk.msgpack_each do |tag, time, data|
+          p tag
+          p time
+          p data
+        end
+      end
+
+4.fluent-plugin-sample/fluent-plugin-sample.gemspec を開いて、TODOの部分を以下のように修正して保存。
+
+  spec.summary       = %q{sampe fluent plugin.}
+  spec.description   = %q{sampe fluent plugin.}
+  spec.homepage      = "http://www.example.com/"
+
+  spec.version = "0.1.0"   ※プラグインのバージョン (WANT)
+                             ちなみにRubyのGemは複数のバージョンが共存できる
+
+5.rakeコマンドでビルドすると、pkgディレクトリにgemファイルが作成される
+# rake build
+
+6.gemファイルのあるディレクトリをカレントにする
+
+7.td-agent-gem コマンドでgemをインストールする
+# td-agent-gem install --local gemファイル名
+  →td-agent-gem は、td-agentを入れると入る
+
+8.確認する
+# td-agent-gem list
+
+9.アンインストールする
+# td-agent-gem uninstall gem名
+
+
+
 
 
 ==============================================================
