@@ -1652,14 +1652,139 @@ pom.xmlの記述に従って、Javaプロジェクトがビルドされるので
 
 
 
+==============================================================
+■ git
+
+◎最初にやること
+# git config --global user.name "John Doe"
+# git config --global user.email johndoe@example.com
+# git config --global color.ui auto
+# git config core.ignorecase false
 
 
+◎確認
+# git config --global --list
 
 
+◎クローン
+# git clone https://github.com/mtk57/Memo.git
 
 
+◎ローカルブランチの一覧
+# git branch
 
 
+◎全てのブランチの一覧
+# git branch -a
+
+
+◎ブランチ作成
+# git branch ブランチ名
+
+
+◎ブランチの作成(& 切り替え)
+# git checkout -b ブランチ名
+
+
+◎ブランチの切り替え
+# git checkout ブランチ名
+
+
+◎ローカルリポジトリの作成
+# git init
+
+
+◎staged / modified / untracked の一覧
+# git status
+
+
+◎現在のブランチの履歴
+# git log
+
+
+◎ブランチ間差分表示
+git diff ブランチA ブランチB
+
+
+◎ワーキングディレクトリ と ステージングエリア の差分を表示
+# git diff
+
+
+◎指定したファイルをステージする
+# git add ファイル名
+
+
+◎全ての更新をステージする
+# git add -u
+
+
+◎staged から modified にもどす
+# git reset
+
+
+◎ステージされたファイルをコミット
+# git commit
+
+
+◎マージ (ブランチの合流)
+# git checkout [取込先ブランチ]
+# git merge [対象ブランチ] --no-ff
+  --no-ff    必ずマージコミット
+  --ff-only  必ずファストフォワード
+
+
+◎マージの中止 (マージでコンフリクト発生時、マージ前の状態に戻す(コンフリクト発生からなにも編集をしていない時))
+# git merge --abort
+
+
+◎マージの中止 (マージでコンフリクト発生時、マージ前の状態に戻す(コンフリクト発生から編集を行ったが、コミットはしていない時))
+# git reset --hard HEAD
+
+
+◎リモートリポジトリの一覧表示
+# git remote
+
+
+◎リモートリポジトリのすべてのブランチの更新履歴をリモート追跡ブランチに取り込む
+# git fetch
+
+
+◎リモートブランチの変更をローカルブランチに反映させる
+# git pull
+
+
+◎現在のブランチの変更をリモートブランチに反映させる
+# git push
+
+
+◎ファイルを削除する
+# git rm [file/path]
+
+
+◎直前のコミットのコメントを変更する
+git commit --amend -m "[comment]"
+
+
+◎commit_id 以降のすべてのコミットを取り消し (ワークツリーに残す)
+# git reset --soft [commit_id]
+  [commit_id]をHEAD^に変更すると直前のコミットを取り消す
+
+
+◎commit_id 以降のすべてのコミットを取り消し (ワークツリーに残さない)
+# git reset --hard [commit_id]
+  [commit_id]をHEAD^に変更すると直前のコミットを取り消す
+
+
+◎マージを取り消す
+# git merge --abort
+
+
+◎コミットを打ち消すコミットをする
+# git revert [commit_id]
+
+
+◎特定のファイルだけ以前の状態に戻す
+# git checkout [commit_id] [file/path]
 
 
 
