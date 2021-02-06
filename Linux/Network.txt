@@ -30,9 +30,13 @@ LANケーブルの接続口（ポート）を複数持つ集線装置
 リピータ機能を持つハブ
 無条件に全てのポートへパケットを送出します。（いわゆるバカハブ）
 
-◎スイッチングハブ（スイッチ）
+◎スイッチングハブ（スイッチ） →ブリッジと同義
 ブリッジ機能を持つハブ
 宛先MACアドレスに該当するコンピュータが接続されているポートにのみパケットを送出します。
+
+<ブリッジの処理概要>
+自身のポートにどのMACアドレスの機器が繋がっているか管理すること。
+
 
 ◎ルータ
 IPアドレスが付いたスイッチと思えばよいかも。（逆にルータ以外はIPアドレスは持たない。→イーサネットの機器なので）
@@ -279,6 +283,72 @@ ipコマンドで作成する
                                          │   ns2    │
                                          └─────┘
 
+<構成4 ブリッジ1>
+※ブリッジにしないと、3台以上のNSが繋がらない
+
+1.仮想ネットワークを4つ作成
+# ip netns add ns1
+# ip netns add ns2
+# ip netns add ns3
+# ip netns add bridge
+
+2.仮想NICを3つ作成
+# ip link add ns1-veth0 type veth peer name ns1-br0
+# ip link add ns2-veth0 type veth peer name ns2-br0
+# ip link add ns3-veth0 type veth peer name ns3-br0
+
+3.紐付ける
+# ip link set ns1-veth0 netns ns1
+# ip link set ns2-veth0 netns ns2
+# ip link set ns3-veth0 netns ns3
+# ip link set ns1-br0   netns bridge
+# ip link set ns2-br0   netns bridge
+# ip link set ns3-br0   netns bridge
+
+4.NICをUP
+# ip netns exec ns1     ip link set ns1-veth0  up
+# ip netns exec ns2     ip link set ns2-veth0  up
+# ip netns exec ns3     ip link set ns3-veth0  up
+# ip netns exec bridge  ip link set ns1-br0    up
+# ip netns exec bridge  ip link set ns2-br0    up
+# ip netns exec bridge  ip link set ns3-br0    up
+
+5.IPを付与
+# ip netns exec ns1     ip addr add 192.0.2.1/24      dev ns1-veth0
+# ip netns exec ns2     ip addr add 192.0.2.2/24      dev ns2-veth0
+# ip netns exec ns3     ip addr add 192.0.2.3/24      dev ns3-veth0
+
+6.MACアドレスを変更
+# ip netns exec ns1 ip link set dev ns1-veth0 address 00:00:5E:00:53:01
+# ip netns exec ns2 ip link set dev ns2-veth0 address 00:00:5E:00:53:02
+# ip netns exec ns3 ip link set dev ns3-veth0 address 00:00:5E:00:53:03
+
+7.ブリッジを作成
+# ip netns exec bridge ip link add dev br0 type bridge
+
+8.ブリッジをUP
+# ip netns exec bridge ip link set br0 up
+
+9.NICをブリッジに接続
+# ip netns exec bridge ip link set ns1-br0 master br0
+# ip netns exec bridge ip link set ns2-br0 master br0
+# ip netns exec bridge ip link set ns3-br0 master br0
+
+10.疎通
+# ip netns exec ns1 ping -c 3 192.0.2.2 -I 192.0.2.1
+
+11.MACアドレステーブルを表示
+# ip netns exec bridge bridge fdb show br br0 | grep -i 00:00:5e
+
+
+
+192.0.2.0/24 ────┬────────────┬────────────┬───────
+                     │ns1-veth0               │ns2-veth0               │ns3-veth0 
+                     │192.0.2.1               │192.0.2.2               │192.0.2.3
+               ┌──┴──┐            ┌──┴──┐            ┌──┴──┐
+               │   ns1    │            │   ns2    │            │   ns3    │
+               └─────┘            └─────┘            └─────┘
+
 -------------------------------------------------------------------------
 ■セグメント
 IPアドレスのネットワーク部のこと
@@ -289,9 +359,18 @@ IPアドレスのネットワーク部のこと
 
 ネットワーク部とホスト部に分かれる
 
+プライベートアドレスの範囲
+10.0.0.0/8      : 10.0.0.1    ～ 10.255.255.254   : 16777214個
+172.16.0.0/12   : 172.16.0.1  ～ 172.31.255.254   :  1048574個
+192.168.0.0/16  : 192.168.0.1 ～ 192.168.255.254  :    65534個
+
 
 -------------------------------------------------------------------------
-■
+■リゾルバ
+ドメイン名をIPアドレスに変換（名前解決）する仕組み
+
+/etc/hosts        : 単純にドメイン名とIPアドレスをマッピング
+/etc/resolv.conf  : DNSのIPアドレスを記載
 
 
 
