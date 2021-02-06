@@ -34,8 +34,264 @@ LANケーブルの接続口（ポート）を複数持つ集線装置
 ブリッジ機能を持つハブ
 宛先MACアドレスに該当するコンピュータが接続されているポートにのみパケットを送出します。
 
--------------------------------------------------------------------------
+◎ルータ
+IPアドレスが付いたスイッチと思えばよいかも。（逆にルータ以外はIPアドレスは持たない。→イーサネットの機器なので）
+セグメントを繋げる役割
 
+<ルータの処理概要>
+1.他のノード(Hostやルータ)からパケットを受け取る
+2.受け取ったパケットのヘッダにある送信先IPを調べる
+3.ルーティングテーブルから送信先IPに一致する宛先を探す
+4.一致した宛先に対応するネクストホップを取得する
+5.取得したネクストホップにパケットを渡す
+
+-------------------------------------------------------------------------
+■tracerouteコマンド  (Windows = tracert)
+
+# traceroute <目的のホスト名 or IPアドレス>
+
+1行はパケットが通過したルータのIPアドレスが表示される。
+
+-------------------------------------------------------------------------
+■Host
+IPアドレスを持つルータ以外のコンピュータ。
+
+-------------------------------------------------------------------------
+■ipコマンド
+
+# ip r               ルーティングテーブルを表示 (ip route showの略)
+# 
+
+-------------------------------------------------------------------------
+■ルーティングテーブル
+
+宛先        ネクストホップ
+------------------------------------------------------------------------------------
+default via 10.0.2.2        dev enp0s3 proto dhcp              src 10.0.2.15 metric 100
+10.0.2.0/24                 dev enp0s3 proto kernel scope link src 10.0.2.15
+10.0.2.2                    dev enp0s3 proto dhcp   scope link src 10.0.2.15 metric 100
+
+
+default = デフォルトルート (他のどの宛先にも該当しない場合の宛先)
+ネクストホップ = パケットを渡す次のルータのIPアドレス
+                 10.0.2.0/24は、送信元(10.0.2.15)と同じNWなので次のルータの指定は不要。
+
+-------------------------------------------------------------------------
+■tcpdumpコマンド
+パケットキャプチャを行う
+
+# tcpdump -tn -i any icmp
+
+
+-------------------------------------------------------------------------
+■Network Namespace
+仮想ネットワークが作れる機能
+ipコマンドで作成する
+
+# ip netns add Hoge
+# ip netns list
+
+
+仮想ネットワーク同士を繋ぐには、仮想NIC(veth = Virtual Ethernet Device)を作成して繋ぐ
+
+<構成1>
+
+1.仮想ネットワークを2つ作成
+# ip netns add ns1
+# ip netns add ns2
+
+2.仮想NICを2つ作成して両者を繋ぐ
+# ip link add ns1-veth0 type veth peer name ns2-veth0
+# ip link show
+
+3.仮想NICと仮想ネットワークを紐付ける
+# ip link set ns1-veth0 netns ns1
+# ip link set ns2-veth0 netns ns2
+
+4.確認
+# ip link show
+# ip netns exec ns1 ip link show
+# ip netns exec ns2 ip link show
+
+5.仮想NICにIPを付与
+# ip netns exec ns1 ip addr add 192.0.2.1/24 dev ns1-veth0
+# ip netns exec ns2 ip addr add 192.0.2.2/24 dev ns2-veth0
+
+6.仮想NICをUPする
+# ip netns exec ns1 ip link set ns1-veth0 up
+# ip netns exec ns2 ip link set ns2-veth0 up
+
+7.接続確認
+# ip netns exec ns1 ping -c 3 192.0.2.2
+
+8.削除
+# ip --all netns delete
+
+
+192.0.2.0/24 ────┬────────────┬───────
+                     │ns1-veth0               │ns2-veth0 
+                     │192.0.2.1               │192.0.2.2
+               ┌──┴──┐            ┌──┴──┐
+               │   ns1    │            │   ns2    │
+               └─────┘            └─────┘
+
+
+
+
+<構成2 ルータ1>
+
+1.仮想ネットワークを3つ作成
+# ip netns add ns1
+# ip netns add router
+# ip netns add ns2
+
+2.仮想NICを2つ作成
+# ip link add ns1-veth0 type veth peer name gw-veth0
+# ip link add ns2-veth0 type veth peer name gw-veth1
+
+3.紐付ける
+# ip link set ns1-veth0 netns ns1
+# ip link set gw-veth0  netns router
+# ip link set gw-veth1  netns router
+# ip link set ns2-veth0 netns ns2
+
+4.NICをUP
+# ip netns exec ns1    ip link set ns1-veth0 up
+# ip netns exec router ip link set gw-veth0  up
+# ip netns exec router ip link set gw-veth1  up
+# ip netns exec ns2    ip link set ns2-veth0 up
+
+5.IPを付与
+# ip netns exec ns1    ip addr add 192.0.2.1/24      dev ns1-veth0
+# ip netns exec router ip addr add 192.0.2.254/24    dev gw-veth0
+# ip netns exec router ip addr add 198.51.100.254/24 dev gw-veth1
+# ip netns exec ns2    ip addr add 198.51.100.1/24   dev ns2-veth0
+
+6.ルーティングテーブルを作成
+# ip netns exec ns1 ip route add default via 192.0.2.254
+# ip netns exec ns2 ip route add default via 198.51.100.254
+
+7.フォワーディングを有効にする
+# ip netns exec router sysctl net.ipv4.ip_forward=1
+
+8.疎通
+# ip netns exec ns1 ping -c 3 192.0.2.254    -I 192.0.2.1
+# ip netns exec ns2 ping -c 3 198.51.100.254 -I 198.51.100.1
+# ip netns exec ns1 ping -c 3 198.51.100.1 -I 192.0.2.1
+
+9.削除
+# ip --all netns delete
+
+
+192.0.2.0/24 ────┬────────────┬───────
+                     │ns1-veth0               │gw-veth0
+                     │192.0.2.1               │192.0.2.254
+               ┌──┴──┐            ┌──┴──┐
+               │   ns1    │            │ router   │
+               └─────┘            └──┬──┘
+                                               │gw-veth1
+                                               │198.51.100.254
+198.51.100.0/24  ──┬────────────┴───────
+                     │ns2-veth0
+                     │198.51.100.1
+               ┌──┴──┐
+               │   ns2    │
+               └─────┘
+
+
+
+
+<構成3 ルータ2>
+
+1.仮想ネットワークを4つ作成
+# ip netns add ns1
+# ip netns add router1
+# ip netns add router2
+# ip netns add ns2
+
+2.仮想NICを3つ作成
+# ip link add ns1-veth0 type veth peer name gw1-veth0
+# ip link add gw1-veth1 type veth peer name gw2-veth0
+# ip link add gw2-veth1 type veth peer name ns2-veth0
+
+3.紐付ける
+# ip link set ns1-veth0 netns ns1
+# ip link set gw1-veth0 netns router1
+# ip link set gw1-veth1 netns router1
+# ip link set gw2-veth0 netns router2
+# ip link set gw2-veth1 netns router2
+# ip link set ns2-veth0 netns ns2
+
+4.NICをUP
+# ip netns exec ns1     ip link set ns1-veth0  up
+# ip netns exec router1 ip link set gw1-veth0  up
+# ip netns exec router1 ip link set gw1-veth1  up
+# ip netns exec router2 ip link set gw2-veth0  up
+# ip netns exec router2 ip link set gw2-veth1  up
+# ip netns exec ns2     ip link set ns2-veth0  up
+
+5.IPを付与
+# ip netns exec ns1     ip addr add 192.0.2.1/24      dev ns1-veth0
+# ip netns exec router1 ip addr add 192.0.2.254/24    dev gw1-veth0
+# ip netns exec router1 ip addr add 203.0.113.1/24    dev gw1-veth1
+# ip netns exec router2 ip addr add 203.0.113.2/24    dev gw2-veth0
+# ip netns exec router2 ip addr add 198.51.100.254/24 dev gw2-veth1
+# ip netns exec ns2     ip addr add 198.51.100.1/24   dev ns2-veth0
+
+6.ルーティングテーブルを作成
+# ip netns exec ns1     ip route add default         via 192.0.2.254
+# ip netns exec router1 ip route add 198.51.100.0/24 via 203.0.113.2
+# ip netns exec router2 ip route add 192.0.2.0/24    via 203.0.113.1
+# ip netns exec ns2     ip route add default         via 198.51.100.254
+
+7.フォワーディングを有効にする
+# ip netns exec router1 sysctl net.ipv4.ip_forward=1
+# ip netns exec router2 sysctl net.ipv4.ip_forward=1
+
+8.疎通
+# ip netns exec ns1 ping -c 3 198.51.100.1 -I 192.0.2.1
+# ip netns exec ns2 ping -c 3 192.0.2.1    -I 198.51.100.1
+
+9.削除
+# ip --all netns delete
+
+
+192.0.2.0/24 ────┬────────────┬───────
+                     │ns1-veth0               │gw1-veth0
+                     │192.0.2.1               │192.0.2.254
+               ┌──┴──┐            ┌──┴──┐
+               │   ns1    │            │ router1  │
+               └─────┘            └──┬──┘
+                                               │gw1-veth1
+                                               │203.0.113.1
+203.0.113.0/24 ───┬────────────┴───────
+                     │gw2-veth0
+                     │203.0.113.2
+               ┌──┴──┐
+               │ router2  │
+               └──┬──┘
+                     │gw2-veth1
+                     │198.51.100.254
+198.51.100.0/24  ──┴────────────┬───────
+                                               │ns2-veth0
+                                               │198.51.100.1
+                                         ┌──┴──┐
+                                         │   ns2    │
+                                         └─────┘
+
+-------------------------------------------------------------------------
+■セグメント
+IPアドレスのネットワーク部のこと
+同じセグメントに属するIPアドレス同士はルータがなくても通信できる
+
+-------------------------------------------------------------------------
+■IPアドレス
+
+ネットワーク部とホスト部に分かれる
+
+
+-------------------------------------------------------------------------
+■
 
 
 
