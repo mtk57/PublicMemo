@@ -63,8 +63,68 @@ IPアドレスを持つルータ以外のコンピュータ。
 -------------------------------------------------------------------------
 ■ipコマンド
 
-# ip r               ルーティングテーブルを表示 (ip route showの略)
-# 
+ipで設定した場合、再起動すると破棄されるので注意。
+
+# ip r               ルーティングテーブルを表示 (r = route)
+# ip n               ARPテーブルを表示          (n = neighbour)
+# ip l               MACアドレスを表示          (l = link)
+# ip a               IPアドレスを表示           (a = address)
+
+-------------------------------------------------------------------------
+■nmcliコマンド
+
+nmcliで設定した場合、再起動しても保持される
+→/etc/sysconfig/network-scripts 配下の設定ファイルが更新されるので。（Redhat系の場合）
+
+# nmcli d           デバイスを表示 (d = device)
+# nmcli c           接続を表示 (c = connection)
+
+デバイスeno1の設定内容を表示
+# nmcli d show eno1 | grep ipv4
+
+接続eno1の設定内容を表示
+# nmcli c show eno1
+
+デバイスeno2に新しい接続eno2-conを追加してUP
+# nmcli c add type eth ifname eno2 con-name eno2-con
+# nmcli c mod eno2-con ipv4.method manual ipv4.address "192.168.11.11/24" ipv4.dns "8.8.8.8" ipv4.gateway "192.168.11.254/24"
+# nmcli c up eno2-con
+
+→DNSを設定すると、/etc/resolv.confも更新される
+→IPアドレスは複数設定できる（カンマ区切りで）
+
+接続eno2-conを削除
+# nmcli c del eno2-con
+
+
+デバイスeno1にVLANデバイス(仮想NIC)の接続を追加。VLAN IDは10。
+# nmcli c add type vlan ifname vlan10 con-name vlan-vlan10 dev eno1 id 10
+# nmcli c mod vlan-vlan10 ipv4.method manual ipv4.address "192.168.10.11/24"
+# nmcli c up vlan-vlan10
+
+→VLANデバイスの稼働状況は以下ファイルで確認。
+/proc/net/vlan/config
+/proc/net/vlan/VLANデバイス名
+
+
+チームデバイスを作成。(NICの冗長化) デバイスeno1,eno2を接続team-team0にまとめる
+# nmcli c add type team ifname team0 con-name team-team0
+# nmcli c mod tesm-team0 ipv4.method manual ipv4.address "192.168.1.11.24"
+# nmcli c mod team-team0 ipv4.gateway "192.168.1.1" ipv4.dns "8.8.8.8"
+
+# nmcli c add type team-slave ifname eno1 con-name team-slave-eno1 master team-team0
+# nmcli c add type team-slave ifname eno2 con-name team-slave-eno2 master team-team0
+
+# nmcli c del eno1
+
+→似たような冗長化の概念にボンディング(bonding)があるが、チーミングのが高機能らしい。
+
+
+
+typeに指定可能な接続
+adsl、bond、bond-slave、bridge、bridge-slave、bluetooth、cdma、ethernet、gsm、infiniband、olpc-mesh、team、team-slave、vlan、wifi、wimax
+
+
 
 -------------------------------------------------------------------------
 ■ルーティングテーブル
@@ -372,7 +432,24 @@ IPアドレスのネットワーク部のこと
 /etc/hosts        : 単純にドメイン名とIPアドレスをマッピング
 /etc/resolv.conf  : DNSのIPアドレスを記載
 
+-------------------------------------------------------------------------
+■NICの命名規則
 
+例1：eno1
+
+     en  = Ethernet
+     o   = Onboard
+     1   = Device Number
+
+例2：wlp2
+
+     wl  = Wireless
+     p   = PCI Express
+     2   = Device Number
+
+例3  eth0
+
+     KVMの仮想NIC(VirtIO)の場合
 
 
 -------------------------------------------------------------------------
