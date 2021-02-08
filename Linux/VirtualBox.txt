@@ -1,4 +1,8 @@
 ﻿VirtualBoxに ゲストOSをCentOSを入れて、TeraTermでSSH接続するときのメモ。
+1
+2345
+3
+4
 
 
 1.VirtualBox、CentOSのインストールは省略。（ググればすぐ出るので）
