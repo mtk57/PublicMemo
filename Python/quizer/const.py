@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-VERSION = r'ver=0.4'
+VERSION = r'ver=0.5'
 VER_POS = 'A1'
 
 # DEFAULT_EXCEL_FILE_NAME = r'sample.xlsx'

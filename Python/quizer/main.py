@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import time
 
 import const as const
 from const import Mode
@@ -86,6 +87,8 @@ class Main():
         total_cnt = len(quizer.get_random_quiz_list())
         num = 0
 
+        start = time.time()
+
         for quiz in quizer.get_random_quiz_list():
             num += 1
             print(f'【{num}/{total_cnt}】')
@@ -116,6 +119,9 @@ class Main():
                 incorrects.append(result)
             print('')
 
+        end = time.time()
+        total_sec = end - start
+
         if self.mode == Mode.QUIZ:
             if len(incorrects) == 0:
                 print('----------------')
@@ -123,12 +129,13 @@ class Main():
                 print('----------------')
             else:
                 print('-----------------------------')
-                print(f'{total_cnt}問中, {len(incorrects)}問が不正解です...orz')
+                print(f'{num-1}問中, {len(incorrects)}問が不正解です...orz')
                 print('-----------------------------')
                 for incorrect in incorrects:
                     print(f'# {incorrect.num}')
 
         print('')
+        print(f'所要時間：{Util.get_hhmmss_str_from_sec(total_sec)}')
         print('お疲れ様でした!!')
         print('')
 

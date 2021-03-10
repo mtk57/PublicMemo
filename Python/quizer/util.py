@@ -25,6 +25,10 @@ class Util():
         return utils.datetime.from_excel(value)
 
     @classmethod
+    def get_hhmmss_str_from_sec(cls, seconds) -> str:
+        return str(datetime.timedelta(seconds=seconds))
+
+    @classmethod
     def get_exception_message(cls, ex: Exception) -> str:
         return f'Exception!! ex=[{ex}], trace=[{traceback.format_exc()}]'
 
