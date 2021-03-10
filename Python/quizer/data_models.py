@@ -103,6 +103,10 @@ class QuizInfo():
                 print(f'{choice}')
         print('')
 
+    def show_answer(self):
+        for choice in self.answer_choices:
+            print(f'{choice}')
+
 
 class ResultInfo():
     def __init__(self, num: int, is_right: bool = False, mode: Mode = Mode.QUIZ):

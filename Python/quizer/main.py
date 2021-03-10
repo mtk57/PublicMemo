@@ -34,6 +34,10 @@ class Main():
     def mode_str(self) -> str:
         return self._args.mode
 
+    @property
+    def is_show_answer(self) -> bool:
+        return self._args.show_answer
+
     def parse_args(self):
         fn = 'parse_args'
         self._logger.DEBUG(f'{fn} S')
@@ -41,6 +45,7 @@ class Main():
         parser = argparse.ArgumentParser()
         parser.add_argument('--info_path')
         parser.add_argument('--mode', choices=[Main.MODE_QUIZ, Main.MODE_LEARN])
+        parser.add_argument('--show_answer', action='store_true')
         self._args = parser.parse_args()
         if not self._args.info_path:
             self._args.info_path = const.DEFAULT_EXCEL_FILE_NAME
@@ -53,23 +58,26 @@ class Main():
         fn = 'run'
         self._logger.DEBUG(f'{fn} S')
 
-        print('')
-        print('***********************************************************')
-        print(f'Quizerへようこそ!                              ({const.VERSION})')
-        print('')
-        print(f'mode={self.mode_str}')
-        print('')
-        print('<使い方>')
-        print('[クイズモード]')
-        print('- 回答は半角数字のみです。')
-        print('- 複数の場合は半角カンマで区切って下さい。(例：1,2,3)')
-        print('[学習モード]')
-        print('- エンターキーで次の問題と回答を表示します。')
-        print('')
-        print('[その他]')
-        print('- 途中で終了する場合は、qを入力して下さい。')
-        print('***********************************************************')
-        print('')
+        title = """\
+***********************************************************
+*                Quizerへようこそ!                         *
+***********************************************************
+* {0}
+* mode={1}
+* show answer={2}
+*
+* <使い方>
+* [クイズモード]
+*  - 回答は半角数字のみです。
+*  - 複数の場合は半角カンマで区切って下さい。(例：1,2,3)
+* [学習モード]
+*  - エンターキーで次の問題と回答を表示します。
+*
+* [その他]
+*  - 途中で終了する場合は、qを入力して下さい。
+***********************************************************
+"""
+        print(title.format(const.VERSION, self.mode_str, self.is_show_answer))
 
         quizer = Quizer(logger=self._logger, info_path=self.info_path,
                         mode=self.mode)
@@ -103,6 +111,8 @@ class Main():
                 print('------------')
                 print('不正解です...')
                 print('------------')
+                if self.is_show_answer:
+                    quiz.show_answer()
                 incorrects.append(result)
             print('')
 
@@ -130,10 +140,10 @@ if __name__ == '__main__':
     logger = Logger()
 
     # for DEBUG >>
-    sys.argv.append('--info_path')
-    sys.argv.append(const.DEFAULT_EXCEL_FILE_NAME)
-    sys.argv.append('--mode')
-    sys.argv.append(Main.MODE_LEARN)
+    # sys.argv.append('--info_path')
+    # sys.argv.append(const.DEFAULT_EXCEL_FILE_NAME)
+    # sys.argv.append('--mode')
+    # sys.argv.append(Main.MODE_LEARN)
     # for DEBUG <<
 
     try:
