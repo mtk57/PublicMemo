@@ -1,14 +1,16 @@
 import const as const
-from const import Offset
+from const import Offset, Mode
 from util import Util
 from data_models import CollectorBase, CollectInfo, QuizInfo, ResultInfo
 
 
 class QuizCollector(CollectorBase):
-    def __init__(self, logger, collect_info: CollectInfo):
+    def __init__(self, logger, collect_info: CollectInfo,
+                 mode: Mode = Mode.QUIZ):
         CollectorBase.__init__(self, logger, collect_info)
         self._book = None
         self._sheets = {}
+        self._mode = mode
 
     def start_collection(self):
         fn = 'start_collection'
@@ -41,7 +43,8 @@ class QuizCollector(CollectorBase):
 
         ver = self._sheets[const.SHEET_COMMON][const.VER_POS]
         if ver is None or ver.value is None or ver.value != const.VERSION:
-            raise Exception(f'バージョンが合っていません! expect=[{const.VERSION}], pos=[{const.VER_POS}]')
+            raise Exception(f'バージョンが合っていません! expect=[{const.VERSION}], '
+                            f'pos=[{const.VER_POS}]')
 
         self.logger.DEBUG(f'{fn} E')
 
@@ -50,7 +53,7 @@ class QuizCollector(CollectorBase):
         self.logger.DEBUG(f'{fn} S')
 
         sheet = self._sheets[const.SHEET_QUIZ_ADMIN]
-        q = QuizInfo()
+        q = QuizInfo(mode=self._mode)
         for row in sheet.iter_rows(min_row=const.OFFSET_ADMIN):
             for cell in row:
                 v = cell.value
@@ -59,7 +62,7 @@ class QuizCollector(CollectorBase):
 
                 if cell.column == Offset.NUM:
                     if q.num != v:
-                        q = QuizInfo()
+                        q = QuizInfo(mode=self._mode)
                         q.num = v
                         self.add_collection(q)
                 elif cell.column == Offset.QUESTION:
@@ -75,9 +78,10 @@ class QuizCollector(CollectorBase):
 
 
 class Quizer():
-    def __init__(self, logger, info_path: str):
+    def __init__(self, logger, info_path: str, mode: Mode = Mode.QUIZ):
         self._logger = logger
         self._info_path = info_path
+        self._mode = mode
         self._quiz_collector = None
 
         self._collect_quiz()
@@ -120,7 +124,12 @@ class Quizer():
             return False
         return True
 
+    @property
+    def mode(self) -> Mode:
+        return self._mode
+
     def _collect_quiz(self):
         ci = CollectInfo(info_file_path=self._info_path)
-        self._quiz_collector = QuizCollector(logger=self._logger, collect_info=ci)
+        self._quiz_collector = QuizCollector(logger=self._logger,
+                                             collect_info=ci, mode=self._mode)
         self._quiz_collector.start_collection()

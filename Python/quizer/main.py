@@ -3,12 +3,21 @@ import sys
 import argparse
 
 import const as const
+from const import Mode
 from util import Util
 from logger import Logger
 from quizer import Quizer
 
 
 class Main():
+    MODE_QUIZ = 'quiz'
+    MODE_LEARN = 'learn'
+
+    MODE_MAP = {
+        MODE_QUIZ: Mode.QUIZ,
+        MODE_LEARN: Mode.LEARN
+    }
+
     def __init__(self, logger: object):
         self._logger = logger
         self._args = None
@@ -17,15 +26,26 @@ class Main():
     def info_path(self) -> str:
         return self._args.info_path
 
+    @property
+    def mode(self) -> Mode:
+        return Main.MODE_MAP[self._args.mode]
+
+    @property
+    def mode_str(self) -> str:
+        return self._args.mode
+
     def parse_args(self):
         fn = 'parse_args'
         self._logger.DEBUG(f'{fn} S')
 
         parser = argparse.ArgumentParser()
         parser.add_argument('--info_path')
+        parser.add_argument('--mode', choices=[Main.MODE_QUIZ, Main.MODE_LEARN])
         self._args = parser.parse_args()
         if not self._args.info_path:
             self._args.info_path = const.DEFAULT_EXCEL_FILE_NAME
+        if not self._args.mode:
+            self._args.mode = Main.MODE_QUIZ
 
         self._logger.DEBUG(f'{fn} E')
 
@@ -37,48 +57,70 @@ class Main():
         print('***********************************************************')
         print(f'Quizerへようこそ!                              ({const.VERSION})')
         print('')
+        print(f'mode={self.mode_str}')
+        print('')
         print('<使い方>')
+        print('[クイズモード]')
         print('- 回答は半角数字のみです。')
         print('- 複数の場合は半角カンマで区切って下さい。(例：1,2,3)')
+        print('[学習モード]')
+        print('- エンターキーで次の問題と回答を表示します。')
+        print('')
+        print('[その他]')
         print('- 途中で終了する場合は、qを入力して下さい。')
         print('***********************************************************')
         print('')
 
-        quizer = Quizer(logger=self._logger, info_path=self.info_path)
+        quizer = Quizer(logger=self._logger, info_path=self.info_path,
+                        mode=self.mode)
 
         incorrects = []
-
         total_cnt = len(quizer.get_random_quiz_list())
+        num = 0
 
         for quiz in quizer.get_random_quiz_list():
+            num += 1
+            print(f'【{num}/{total_cnt}】')
             quiz.show()
 
             # キー入力待ち
-            input_answers = input('回答を入力：').split(const.MARK_COMMA)
+            input_answers = input('＞：').split(const.MARK_COMMA)
             if input_answers[0] == 'q':
                 break
-            result = Quizer.verify(quiz_info=quiz, input_answer=input_answers)
+
+            if self.mode == Mode.LEARN:
+                print('')
+                continue
+
+            result = Quizer.verify(quiz_info=quiz,
+                                   input_answer=input_answers)
 
             if result.is_right:
                 print('------------')
-                print('正解!!')
+                print('正解です!!')
                 print('------------')
             else:
                 print('------------')
-                print('不正解...')
+                print('不正解です...')
                 print('------------')
                 incorrects.append(result)
+            print('')
 
-        if len(incorrects) == 0:
-            print('----------------')
-            print('全問正解です!!!')
-            print('----------------')
-        else:
-            print('-----------------------------')
-            print(f'{total_cnt}問中, {len(incorrects)}問が不正解です...')
-            print('-----------------------------')
-            for incorrect in incorrects:
-                print(f'# {incorrect.num}')
+        if self.mode == Mode.QUIZ:
+            if len(incorrects) == 0:
+                print('----------------')
+                print('全問正解です!!!')
+                print('----------------')
+            else:
+                print('-----------------------------')
+                print(f'{total_cnt}問中, {len(incorrects)}問が不正解です...orz')
+                print('-----------------------------')
+                for incorrect in incorrects:
+                    print(f'# {incorrect.num}')
+
+        print('')
+        print('お疲れ様でした!!')
+        print('')
 
         self._logger.DEBUG(f'{fn} E')
 
@@ -86,6 +128,13 @@ class Main():
 if __name__ == '__main__':
     ret = 0
     logger = Logger()
+
+    # for DEBUG >>
+    sys.argv.append('--info_path')
+    sys.argv.append(const.DEFAULT_EXCEL_FILE_NAME)
+    sys.argv.append('--mode')
+    sys.argv.append(Main.MODE_LEARN)
+    # for DEBUG <<
 
     try:
         logger.DEBUG('====================================================')

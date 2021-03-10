@@ -1,6 +1,7 @@
 from abc import ABCMeta, abstractclassmethod
 
 import const as const
+from const import Mode
 from util import Util
 
 
@@ -8,20 +9,25 @@ class CollectInfo():
     def __init__(self, info_file_path: str):
         self._info_file_path = info_file_path
 
+    def __repr__(self):
+        return f'[{self.info_file_path}]'
+
     @property
     def info_file_path(self) -> str:
         return self._info_file_path
 
 
 class QuizInfo():
-    def __init__(self):
+    def __init__(self, mode: Mode = Mode.QUIZ):
         self._num = None        # 番号
         self._question = None   # 問題
         self._choises = []      # 選択肢
         self._answers = []      # 答え
+        self._mode = mode
 
     def __repr__(self):
-        return f'[{self._num}]{self._question} :choices=[{self._choises}], answers=[{self._answers}]'
+        return f'[{self.num}]{self.question} :choices=[{self.choises}], ' \
+               f'answers=[{self.answers}]'
 
     @property
     def num(self) -> int:
@@ -57,35 +63,55 @@ class QuizInfo():
     def answer_nums(self) -> list:
         ret = []
         index = 1
-        for answer in self._answers:
+        for answer in self.answers:
             if answer == const.MARK_CORRECT:
                 ret.append(index)
             index += 1
         return ret
 
     @property
+    def answer_choices(self) -> list:
+        ret = []
+        for num in self.answer_nums:
+            ret.append(self.choices[num - 1])
+        return ret
+
+    @property
     def answer_count(self) -> int:
         ret = 0
-        for answer in self._answers:
+        for answer in self.answers:
             if answer == const.MARK_CORRECT:
                 ret += 1
         return ret
 
+    @property
+    def mode(self) -> Mode:
+        return self._mode
+
     def show(self):
         print('-----------------------------------------')
-        print(f'{self._question}')
+        print(f'{self.question}')
         print('-----------------------------------------')
-        num = 1
-        for choice in self._choises:
-            print(f'{num}:{choice}')
-            num += 1
+
+        if self.mode == Mode.QUIZ:
+            num = 1
+            for choice in self.choices:
+                print(f'{num}:{choice}')
+                num += 1
+        else:
+            for choice in self.answer_choices:
+                print(f'{choice}')
         print('')
 
 
 class ResultInfo():
-    def __init__(self, num: int, is_right: bool = False):
+    def __init__(self, num: int, is_right: bool = False, mode: Mode = Mode.QUIZ):
         self._num = num
         self._is_right = is_right
+        self._mode = mode
+
+    def __repr__(self):
+        return f'{self.num}:{self.is_right}:mode=[{self.mode}]'
 
     @property
     def num(self) -> int:
@@ -94,6 +120,10 @@ class ResultInfo():
     @property
     def is_right(self) -> bool:
         return self._is_right
+
+    @property
+    def mode(self) -> Mode:
+        return self._mode
 
 
 class CollectorBase(metaclass=ABCMeta):
