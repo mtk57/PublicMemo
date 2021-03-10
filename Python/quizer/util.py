@@ -29,5 +29,5 @@ class Util():
         return f'Exception!! ex=[{ex}], trace=[{traceback.format_exc()}]'
 
     @classmethod
-    def get_random_list(cls, src_list: list):
+    def get_random_list(cls, src_list: list) -> list:
         return random.sample(src_list, len(src_list))

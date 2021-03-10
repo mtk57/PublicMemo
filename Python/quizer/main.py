@@ -33,7 +33,10 @@ class Main():
         fn = 'run'
         self._logger.DEBUG(f'{fn} S')
 
+        print('***********************************************************')
+        print('START!!')
         print('回答は半角数字のみです。複数の場合は半角カンマで区切って下さい。')
+        print('***********************************************************')
 
         quizer = Quizer(logger=self._logger, info_path=self.info_path)
 
@@ -67,8 +70,8 @@ if __name__ == '__main__':
     logger = Logger()
 
     try:
-        logger.INFO('====================================================')
-        logger.INFO('START')
+        logger.DEBUG('====================================================')
+        logger.DEBUG('START')
 
         Util.change_current_dir()
 
@@ -86,6 +89,6 @@ if __name__ == '__main__':
         ret = 1
 
     finally:
-        logger.INFO('END')
-        logger.INFO('====================================================')
+        logger.DEBUG('END')
+        logger.DEBUG('====================================================')
         sys.exit(ret)

@@ -29,7 +29,7 @@ class QuizCollector(CollectorBase):
                 raise Exception(f'必須シートがありません! expect=[{sheet_name}]')
             self._sheets[sheet_name] = self._book[sheet_name]
 
-        # self._verify_version()
+        self._verify_version()
 
         self._collect_quiz_from_excel_sheet()
 
@@ -39,7 +39,7 @@ class QuizCollector(CollectorBase):
         fn = '_verify_version'
         self.logger.DEBUG(f'{fn} S')
 
-        ver = self._sheets[const.SHEET_QUIZ][const.VER_POS]
+        ver = self._sheets[const.SHEET_COMMON][const.VER_POS]
         if ver is None or ver.value is None or ver.value != const.VERSION:
             raise Exception(f'バージョンが合っていません! expect=[{const.VERSION}], pos=[{const.VER_POS}]')
 
@@ -49,7 +49,7 @@ class QuizCollector(CollectorBase):
         fn = '_collect_quiz_from_excel_sheet'
         self.logger.DEBUG(f'{fn} S')
 
-        sheet = self._sheets[const.SHEET_QUIZ]
+        sheet = self._sheets[const.SHEET_QUIZ_ADMIN]
         q = QuizInfo()
         for row in sheet.iter_rows(min_row=const.OFFSET_ADMIN):
             for cell in row:

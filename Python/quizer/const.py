@@ -1,20 +1,16 @@
 from enum import IntEnum
 
-VERSION = r'ver=0.1'
-
+VERSION = r'ver=0.2'
 VER_POS = 'A1'
 
 # DEFAULT_EXCEL_FILE_NAME = r'sample.xlsx'
-DEFAULT_EXCEL_FILE_NAME = r'C:\_git\Memo\Other\Salesforce\QUIZ_administrator.xlsx'
+DEFAULT_EXCEL_FILE_NAME = r'C:\_git\Memo\Other\Salesforce\QUIZ.xlsx'
 
-SHEET_QUIZ = 'QUIZ'
-DEFAULT_SHEET_NAME = SHEET_QUIZ
-
-REQUIRED_SHEETS = [SHEET_QUIZ]
-
-
-GROUP_ADMIN = 'QUIZ'
+SHEET_COMMON = 'common'
+SHEET_QUIZ_ADMIN = 'アドミニストレーター'
 OFFSET_ADMIN = 4
+
+REQUIRED_SHEETS = [SHEET_COMMON, SHEET_QUIZ_ADMIN]
 
 
 class Offset(IntEnum):

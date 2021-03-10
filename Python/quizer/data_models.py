@@ -79,6 +79,7 @@ class QuizInfo():
         for choice in self._choises:
             print(f'{num}:{choice}')
             num += 1
+        print('')
 
 
 class ResultInfo():
