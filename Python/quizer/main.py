@@ -34,31 +34,43 @@ class Main():
         self._logger.DEBUG(f'{fn} S')
 
         print('***********************************************************')
-        print('START!!')
         print('回答は半角数字のみです。複数の場合は半角カンマで区切って下さい。')
+        print('途中で終了する場合は、qを入力して下さい。')
         print('***********************************************************')
 
         quizer = Quizer(logger=self._logger, info_path=self.info_path)
 
         incorrects = []
 
+        total_cnt = len(quizer.get_random_quiz_list())
+
         for quiz in quizer.get_random_quiz_list():
             quiz.show()
 
             # キー入力待ち
             input_answers = input('回答を入力：').split(const.MARK_COMMA)
+            if input_answers[0] == 'q':
+                break
             result = Quizer.verify(quiz_info=quiz, input_answer=input_answers)
 
             if result.is_right:
-                print('正解です')
+                print('------------')
+                print('正解!!')
+                print('------------')
             else:
-                print('不正解です')
+                print('------------')
+                print('不正解...')
+                print('------------')
                 incorrects.append(result)
 
         if len(incorrects) == 0:
-            print('全問正解です!')
+            print('----------------')
+            print('全問正解です!!!')
+            print('----------------')
         else:
-            print(f'{len(incorrects)}問が不正解です...')
+            print('-----------------------------')
+            print(f'{total_cnt}問中, {len(incorrects)}問が不正解です...')
+            print('-----------------------------')
             for incorrect in incorrects:
                 print(f'# {incorrect.num}')
 
