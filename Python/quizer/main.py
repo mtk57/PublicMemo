@@ -33,10 +33,16 @@ class Main():
         fn = 'run'
         self._logger.DEBUG(f'{fn} S')
 
+        print('')
         print('***********************************************************')
-        print('回答は半角数字のみです。複数の場合は半角カンマで区切って下さい。')
-        print('途中で終了する場合は、qを入力して下さい。')
+        print(f'Quizerへようこそ!                              ({const.VERSION})')
+        print('')
+        print('<使い方>')
+        print('- 回答は半角数字のみです。')
+        print('- 複数の場合は半角カンマで区切って下さい。(例：1,2,3)')
+        print('- 途中で終了する場合は、qを入力して下さい。')
         print('***********************************************************')
+        print('')
 
         quizer = Quizer(logger=self._logger, info_path=self.info_path)
 
