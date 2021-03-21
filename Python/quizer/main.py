@@ -87,7 +87,7 @@ class Main():
 * <使い方>
 * [クイズモード]
 *  - 回答は半角数字のみです。
-*  - 複数の場合は半角カンマで区切って下さい。(例：1,2,3)
+*  - 複数の場合は半角SP で区切って下さい。(例：1 2 3)
 * [学習モード]
 *  - エンターキーで次の問題と回答を表示します。
 *
@@ -122,7 +122,7 @@ class Main():
             quiz.show()
 
             # キー入力待ち
-            input_answers = input('＞：').split(const.MARK_COMMA)
+            input_answers = input('＞：').split(const.MARK_SP)
             if input_answers[0] == 'q':
                 break
 
