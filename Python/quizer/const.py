@@ -18,6 +18,8 @@ MARK_CORRECT = '○'  # 正解マーク
 MIN_ANSWER = 1      # 回答できる最小数
 MAX_ANSWER = 8      # 回答できる最大数
 
+MAX_COLUMNS = 4
+
 
 class Offset(IntEnum):
     NUM = 1
