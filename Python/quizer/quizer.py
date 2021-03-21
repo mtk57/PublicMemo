@@ -55,18 +55,11 @@ class QuizCollector(CollectorBase):
         sheet = self._sheets[const.SHEET_QUIZ_ADMIN]
         q = QuizInfo(mode=self._mode)
         for row in sheet.iter_rows(min_row=const.OFFSET_ADMIN):
-            cells = []
             for cell in row:
                 v = cell.value
                 if v is None:
-                    break
-                cells.append(cell)
+                    continue
 
-            if len(cells) != const.MAX_COLUMNS:
-                continue
-
-            for cell in cells:
-                v = cell.value
                 if cell.column == Offset.NUM:
                     if q.num != v:
                         q = QuizInfo(mode=self._mode)
@@ -81,6 +74,7 @@ class QuizCollector(CollectorBase):
                 else:
                     continue
 
+        self.cleanup()
         self.logger.DEBUG(f'{fn} E')
 
 

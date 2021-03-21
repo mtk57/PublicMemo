@@ -149,6 +149,14 @@ class CollectorBase(metaclass=ABCMeta):
     def get_random_collection(self) -> list:
         return Util.get_random_list(self._collections)
 
+    def cleanup(self):
+        new_list = []
+        for info in self._collections:
+            if info.question is None:
+                continue
+            new_list.append(info)
+        self._collections = new_list
+
     @property
     def logger(self) -> object:
         return self._logger
