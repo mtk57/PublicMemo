@@ -2,6 +2,7 @@ import os
 import sys
 import argparse
 import time
+import math
 
 import const as const
 from const import Mode
@@ -36,6 +37,14 @@ class Main():
         return self._args.mode
 
     @property
+    def num_of_questions(self) -> int:
+        return self._args.num
+
+    @property
+    def pass_line(self) -> int:
+        return self._args.pass_line
+
+    @property
     def is_show_answer(self) -> bool:
         return self._args.show_answer
 
@@ -47,11 +56,17 @@ class Main():
         parser.add_argument('--info_path')
         parser.add_argument('--mode', choices=[Main.MODE_QUIZ, Main.MODE_LEARN])
         parser.add_argument('--show_answer', action='store_true')
+        parser.add_argument('--num', type=int)
+        parser.add_argument('--pass_line', type=int)
         self._args = parser.parse_args()
         if not self._args.info_path:
             self._args.info_path = const.DEFAULT_EXCEL_FILE_NAME
         if not self._args.mode:
             self._args.mode = Main.MODE_QUIZ
+        if not self._args.num:
+            self._args.num = const.DEFAULT_QUESTION_NUM
+        if not self._args.pass_line:
+            self._args.pass_line = const.DEFAULT_PASS_LINE
 
         self._logger.DEBUG(f'{fn} E')
 
@@ -66,6 +81,8 @@ class Main():
 * {0}
 * mode={1}
 * show answer={2}
+* num={3}
+* pass={4}%
 *
 * <使い方>
 * [クイズモード]
@@ -78,19 +95,29 @@ class Main():
 *  - 途中で終了する場合は、qを入力して下さい。
 ***********************************************************
 """
-        print(title.format(const.VERSION, self.mode_str, self.is_show_answer))
+        print(title.format(
+                const.VERSION,
+                self.mode_str,
+                self.is_show_answer,
+                self.num_of_questions,
+                self.pass_line))
 
         quizer = Quizer(logger=self._logger, info_path=self.info_path,
                         mode=self.mode)
 
         incorrects = []
-        total_cnt = len(quizer.get_random_quiz_list())
+        total_cnt = min([len(quizer.get_random_quiz_list()), self.num_of_questions])
+        pass_line = min([100, self.pass_line])
+
         num = 0
+        correct_cnt = 0
 
         start = time.time()
 
         for quiz in quizer.get_random_quiz_list():
             num += 1
+            if num > total_cnt:
+                break
             print(f'【{num}/{total_cnt}】')
             quiz.show()
 
@@ -110,6 +137,7 @@ class Main():
                 print('------------')
                 print('正解です!!')
                 print('------------')
+                correct_cnt += 1
             else:
                 print('------------')
                 print('不正解です...')
@@ -133,6 +161,13 @@ class Main():
                 print('-----------------------------')
                 for incorrect in incorrects:
                     print(f'# {incorrect.num}')
+
+            correct_rate = math.floor((correct_cnt / total_cnt) * 100)
+            print(f'正解率={correct_rate}%')
+            if int(correct_rate) >= pass_line:
+                print('合格です！！')
+            else:
+                print('不合格です。。。orz')
 
         print('')
         print(f'所要時間：{Util.get_hhmmss_str_from_sec(total_sec)}')

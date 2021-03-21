@@ -1,10 +1,12 @@
 from enum import IntEnum
 
-VERSION = r'ver=0.5'
+VERSION = r'ver=0.6'
 VER_POS = 'A1'
 
 # DEFAULT_EXCEL_FILE_NAME = r'sample.xlsx'
 DEFAULT_EXCEL_FILE_NAME = r'C:\_git\Memo\Other\Salesforce\QUIZ.xlsx'
+DEFAULT_QUESTION_NUM = 60   # 問題数
+DEFAULT_PASS_LINE = 65      # 合格ライン(%)
 
 SHEET_COMMON = 'common'
 SHEET_QUIZ_ADMIN = 'アドミニストレーター'
