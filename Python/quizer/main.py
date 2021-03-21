@@ -157,7 +157,7 @@ class Main():
                 print('----------------')
             else:
                 print('-----------------------------')
-                print(f'{num-1}問中, {len(incorrects)}問が不正解です...orz')
+                print(f'{num-1}問中, {correct_cnt}問が正解、{len(incorrects)}問が不正解でした。')
                 print('-----------------------------')
                 for incorrect in incorrects:
                     print(f'# {incorrect.num}')
