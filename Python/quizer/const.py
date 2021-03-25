@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-VERSION = r'ver=0.6'
+VERSION = r'ver=0.7'
 VER_POS = 'A1'
 
 # DEFAULT_EXCEL_FILE_NAME = r'sample.xlsx'
@@ -17,7 +17,7 @@ REQUIRED_SHEETS = [SHEET_COMMON, SHEET_QUIZ_ADMIN]
 MARK_COMMA = ','
 MARK_SP = ' '
 MARK_PLUS = '+'
-SPLITS = [MARK_SP, MARK_PLUS]
+SPLITS = r'[ \+]'
 
 MARK_CORRECT = '○'  # 正解マーク
 

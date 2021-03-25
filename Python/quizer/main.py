@@ -49,6 +49,10 @@ class Main():
     def is_show_answer(self) -> bool:
         return self._args.show_answer
 
+    @property
+    def is_random(self) -> bool:
+        return self._args.random
+
     def parse_args(self):
         fn = 'parse_args'
         self._logger.DEBUG(f'{fn} S')
@@ -59,6 +63,7 @@ class Main():
         parser.add_argument('--show_answer', action='store_true')
         parser.add_argument('--num', type=int)
         parser.add_argument('--pass_line', type=int)
+        parser.add_argument('--random', action='store_true')
         self._args = parser.parse_args()
         if not self._args.info_path:
             self._args.info_path = const.DEFAULT_EXCEL_FILE_NAME
@@ -84,6 +89,7 @@ class Main():
 * show answer={2}
 * num={3}
 * pass={4}%
+* random={5}
 *
 * <使い方>
 * [クイズモード]
@@ -101,13 +107,15 @@ class Main():
                 self.mode_str,
                 self.is_show_answer,
                 self.num_of_questions,
-                self.pass_line))
+                self.pass_line,
+                self.is_random
+                ))
 
         quizer = Quizer(logger=self._logger, info_path=self.info_path,
                         mode=self.mode)
 
         incorrects = []
-        total_cnt = min([len(quizer.get_random_quiz_list()), self.num_of_questions])
+        total_cnt = min([len(quizer.get_quiz_list()), self.num_of_questions])
         pass_line = min([100, self.pass_line])
 
         num = 0
@@ -115,7 +123,11 @@ class Main():
 
         start = time.time()
 
-        for quiz in quizer.get_random_quiz_list():
+        quizs = quizer.get_quiz_list()
+        if self.is_random:
+            quizs = quizer.get_random_quiz_list()
+
+        for quiz in quizs:
             num += 1
             if num > total_cnt:
                 break

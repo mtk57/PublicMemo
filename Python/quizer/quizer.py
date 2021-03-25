@@ -87,6 +87,9 @@ class Quizer():
 
         self._collect_quiz()
 
+    def get_quiz_list(self) -> list:
+        return self._quiz_collector.get_collection()
+
     def get_random_quiz_list(self) -> list:
         return self._quiz_collector.get_random_collection()
 
