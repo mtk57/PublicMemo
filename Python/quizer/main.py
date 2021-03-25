@@ -3,6 +3,7 @@ import sys
 import argparse
 import time
 import math
+import re
 
 import const as const
 from const import Mode
@@ -122,7 +123,7 @@ class Main():
             quiz.show()
 
             # キー入力待ち
-            input_answers = input('＞：').split(const.MARK_SP)
+            input_answers = re.split(const.SPLITS, input('＞：'))
             if input_answers[0] == 'q':
                 break
 
