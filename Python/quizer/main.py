@@ -70,7 +70,7 @@ class Main():
         if not self._args.mode:
             self._args.mode = Main.MODE_QUIZ
         if not self._args.num:
-            self._args.num = const.DEFAULT_QUESTION_NUM
+            self._args.num = 65535
         if not self._args.pass_line:
             self._args.pass_line = const.DEFAULT_PASS_LINE
 
@@ -79,6 +79,13 @@ class Main():
     def run(self):
         fn = 'run'
         self._logger.DEBUG(f'{fn} S')
+
+        quizer = Quizer(logger=self._logger, info_path=self.info_path,
+                        mode=self.mode)
+
+        incorrects = []
+        total_cnt = min([len(quizer.get_quiz_list()), self.num_of_questions])
+        pass_line = min([100, self.pass_line])
 
         title = """\
 ***********************************************************
@@ -106,17 +113,10 @@ class Main():
                 const.VERSION,
                 self.mode_str,
                 self.is_show_answer,
-                self.num_of_questions,
-                self.pass_line,
+                total_cnt,
+                pass_line,
                 self.is_random
                 ))
-
-        quizer = Quizer(logger=self._logger, info_path=self.info_path,
-                        mode=self.mode)
-
-        incorrects = []
-        total_cnt = min([len(quizer.get_quiz_list()), self.num_of_questions])
-        pass_line = min([100, self.pass_line])
 
         num = 0
         correct_cnt = 0
