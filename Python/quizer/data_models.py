@@ -19,10 +19,11 @@ class CollectInfo():
 
 class QuizInfo():
     def __init__(self, mode: Mode = Mode.QUIZ):
-        self._num = None        # 番号
+        self._num = None        # 項番
+        self._is_skip = False   # SKIP?
         self._question = None   # 問題
         self._choises = []      # 選択肢
-        self._answers = []      # 答え
+        self._answers = []      # 正解
         self._mode = mode
 
     def __repr__(self):
@@ -36,6 +37,14 @@ class QuizInfo():
     @num.setter
     def num(self, num: int):
         self._num = num
+
+    @property
+    def is_skip(self) -> bool:
+        return self._is_skip
+
+    @is_skip.setter
+    def is_skip(self, is_skip: bool):
+        self._is_skip = is_skip
 
     @property
     def question(self) -> str:
@@ -144,7 +153,8 @@ class CollectorBase(metaclass=ABCMeta):
         self._collections.append(data)
 
     def get_collection(self) -> list:
-        return self._collections
+        ret = [i for i in self._collections if i.is_skip is False]
+        return ret
 
     def get_random_collection(self) -> list:
         return Util.get_random_list(self._collections)

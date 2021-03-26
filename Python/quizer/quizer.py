@@ -60,15 +60,24 @@ class QuizCollector(CollectorBase):
                 if v is None:
                     continue
 
+                # 各列から情報を取得する
+
+                # 項番
                 if cell.column == Offset.NUM:
                     if q.num != v:
                         q = QuizInfo(mode=self._mode)
                         q.num = v
                         self.add_collection(q)
+                # SKIP?
+                elif cell.column == Offset.IS_SKIP:
+                    q.is_skip = True if v == const.MARK_Y else False
+                # 問題
                 elif cell.column == Offset.QUESTION:
                     q.question = v
+                # 選択肢
                 elif cell.column == Offset.CHOICE:
                     q.add_choice(v)
+                # 正解
                 elif cell.column == Offset.ANSWER:
                     q.add_answer(v)
                 else:

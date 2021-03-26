@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-VERSION = r'ver=0.7'
+VERSION = r'ver=0.8'
 VER_POS = 'A1'
 
 # DEFAULT_EXCEL_FILE_NAME = r'sample.xlsx'
@@ -21,6 +21,9 @@ SPLITS = r'[ \+]'
 
 MARK_CORRECT = '○'  # 正解マーク
 
+MARK_Y = 'Y'
+MARK_N = 'N'
+
 MIN_ANSWER = 1      # 回答できる最小数
 MAX_ANSWER = 8      # 回答できる最大数
 
@@ -28,12 +31,15 @@ MAX_COLUMNS = 4
 
 
 class Offset(IntEnum):
-    NUM = 1
-    QUESTION = 2
-    CHOICE = 3
-    ANSWER = 4
+    """ シートの列名の桁位置オフセット """
+    NUM = 1         # 項番
+    IS_SKIP = 2     # SKIP?
+    QUESTION = 3    # 問題
+    CHOICE = 4      # 選択肢
+    ANSWER = 5      # 正解
 
 
 class Mode(IntEnum):
-    QUIZ = 1
-    LEARN = 2
+    """ モード """
+    QUIZ = 1        # クイズモード
+    LEARN = 2       # 学習モード
