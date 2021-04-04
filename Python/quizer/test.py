@@ -1,47 +1,28 @@
-from util import Util
+import sqlite3
+import datetime
+
+# DBを開く。適合関数・変換関数を有効にする。
+conn = sqlite3.connect(
+        ':memory:',
+        detect_types=sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES)
+
+# "TIMESTAMP"コンバータ関数 をそのまま ”DATETIME” にも使う
+sqlite3.dbapi2.converters['DATETIME'] = sqlite3.dbapi2.converters['TIMESTAMP']
+
+# カーソル生成
+cur = conn.cursor()
+
+# datetimeという型名のカラムを持つテーブルを作成
+cur.execute("create table mytable(comment text, updated datetime);")
+
+# datetimeなカラムに、文字列表現 と datetime でそれぞれ投入してみる。
+cur.executemany("insert into mytable(comment, updated) value (?,?)",
+        [["text_formated.", "2014-01-02 23:45:00"],
+        ["datetime_class.", datetime.datetime(2014,3,4, 12,34,56)]])
 
 
-class quiz():
-    def __init__(self):
-        self.num = None
-        self.q = None
-        self.choice = []
-        self.a = []
+ret = cur.execute("select * from mytable;")
 
-    def __repr__(self):
-        return f'{self.num}, {self.q}, {self.choice}, {self.a}'
-
-quizes = []
-
-
-PATH = r'sample.xlsx'
-SHEET = r'QUIZ'
-
-book = Util.read_excel(PATH)
-sheet = book[SHEET]
-
-q = quiz()
-for row in sheet.iter_rows(min_row=4):
-    for cell in row:
-        v = cell.value
-        if v is None:
-            continue
-
-        if cell.column == 1:
-            if q.num != v:
-                q = quiz()
-                q.num = v
-                quizes.append(q)
-
-        elif cell.column == 2:
-            q.q = v
-        elif cell.column == 3:
-            q.choice.append(v)
-        elif cell.column == 4:
-            q.a.append(v)
-        else:
-            continue
-
-print(quizes)
-
-pass
+for row in ret.fetchall():
+    pass
+    # print ("'%s'" % row[0], row[1], type(row[1])
