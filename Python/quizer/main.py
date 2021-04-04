@@ -175,7 +175,7 @@ class Main():
             if self._db_util.is_exist():
                 # 正答率を表示
                 correct_rate = self._db_util.get_correct_rate(quiz.num)
-                print(f'正答率={correct_rate}%')
+                print(f'過去の正答率={correct_rate}%')
 
             # キー入力待ち
             input_answers = re.split(const.SPLITS, input('＞：'))
