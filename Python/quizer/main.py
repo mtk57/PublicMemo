@@ -17,7 +17,6 @@ from quizer import Quizer
 ・統計情報DBを利用して、正答率の低い問題を優先的に出題する。
 ・間違えた問題の復習モード
 ・選択肢のランダム化
-・pause機能
 """
 
 
@@ -145,8 +144,9 @@ class Main():
 *  - エンターキーで次の問題と回答を表示します。
 *
 * [その他]
-*  - 終了する場合は、qを入力して下さい。
-*  - 終了時に統計情報をクリアする場合は、cを入力して下さい。
+*  q  終了
+*  c  DBクリア
+*  p  一時停止 & 再開
 ***********************************************************
 """
         print(title.format(
@@ -161,10 +161,12 @@ class Main():
                 ))
 
         is_db_clear = False
+        is_pause = False
         num = 0
         correct_cnt = 0
 
         start = time.time()
+        total_pause = 0
 
         quizs = quizer.get_quiz_list()
         if self.is_random:
@@ -186,9 +188,20 @@ class Main():
             input_answers = re.split(const.SPLITS, input('＞：'))
             if input_answers[0] == 'q':
                 break
-            if input_answers[0] == 'c':
+            elif input_answers[0] == 'c':
                 is_db_clear = True
                 break
+            elif input_answers[0] == 'p':
+                if is_pause is False:
+                    pause_start = time.time()
+                    is_pause = True
+                    while is_pause:
+                        if input('＞：') == 'p':
+                            pause_end = time.time()
+                            is_pause = False
+                            pause_sec = pause_end - pause_start
+                            total_pause += pause_sec
+                            break
 
             if self.mode == Mode.LEARN:
                 print('')
@@ -220,7 +233,7 @@ class Main():
         # 後処理
 
         end = time.time()
-        total_sec = end - start
+        total_sec = (end - start) - total_pause
 
         if self.mode == Mode.QUIZ:
             if len(incorrects) == 0:
