@@ -1,13 +1,23 @@
 from importlib import import_module
+import datetime
 
 
 class DB_Util():
     # 統計情報のテーブル名
     TABLE_STATISTICS = 'statistics'
     # 統計情報のカラム名
-    CLM_QNUM = 'q_num'                  # 問題番号
+    CLM_QNUM = 'q_num'                  # 問題番号(PK)
     CLM_CORRECT = 'correct'             # 正解数
     CLM_TOTAL = 'total'                 # 回答回数
+
+    # 成績のテーブル名
+    TABLE_RESULTS = 'results'
+    # 統計情報のカラム名
+    CLM_DATETIME = 'datetime'           # 実施日時(PK)
+    CLM_QUESTIONS = 'questions'         # 問題数
+    CLM_CORRECT_RATE = 'correct_rate'   # 正解率
+    CLM_RESULT = 'result'               # 合否
+    CLM_TIME = 'time'                   # 所要時間(秒)
 
     def __init__(self, path: str):
         self._path = path
@@ -40,7 +50,28 @@ class DB_Util():
                   DB_Util.CLM_TOTAL
               )
         results = self._execute_query(SQL)
-        return results[0]
+        if results[0] is False:
+            return results[0]
+
+        SQL = 'CREATE TABLE IF NOT EXISTS {0} (' \
+              '  {1} TEXT PRIMARY KEY,' \
+              '  {2} INTEGER,' \
+              '  {3} INTEGER,' \
+              '  {4} REAL,' \
+              '  {5} INTEGER,' \
+              '  {6} INTEGER' \
+              ')'.format(
+                  DB_Util.TABLE_RESULTS,
+                  DB_Util.CLM_DATETIME,
+                  DB_Util.CLM_CORRECT,
+                  DB_Util.CLM_QUESTIONS,
+                  DB_Util.CLM_CORRECT_RATE,
+                  DB_Util.CLM_RESULT,
+                  DB_Util.CLM_TIME
+              )
+        results = self._execute_query(SQL)
+        if results[0] is False:
+            return results[0]
 
     def close(self):
         if self._conn is None:
@@ -64,10 +95,16 @@ class DB_Util():
         results = self._execute_query(SQL)
         if results[0] is False:
             return results[0]
+
+        SQL = 'DELETE FROM {0}'.format(DB_Util.TABLE_RESULTS)
+        results = self._execute_query(SQL)
+        if results[0] is False:
+            return results[0]
+
         self.commit()
         return True
 
-    def update(self, question_num: int, is_correct: bool) -> bool:
+    def update_statistics(self, question_num: int, is_correct: bool) -> bool:
         if self._conn is None:
             return True
 
@@ -107,6 +144,34 @@ class DB_Util():
         else:
             return False
 
+        results = self._execute_query(SQL)
+        if results[0] is False:
+            return results[0]
+
+        self.commit()
+        return True
+
+    def insert_result(self, corrects: int, questions: int, correct_rate: float,
+                      result: bool, required_time: int) -> bool:
+        if self._conn is None:
+            return True
+
+        SQL = 'INSERT INTO {0}({1}, {2}, {3}, {4}, {5}, {6}) VALUES("{7}", {8}, {9}, {10}, {11}, {12})'.format(
+                DB_Util.TABLE_RESULTS,
+                DB_Util.CLM_DATETIME,
+                DB_Util.CLM_CORRECT,
+                DB_Util.CLM_QUESTIONS,
+                DB_Util.CLM_CORRECT_RATE,
+                DB_Util.CLM_RESULT,
+                DB_Util.CLM_TIME,
+
+                str(datetime.datetime.now()),
+                corrects,
+                questions,
+                correct_rate,
+                1 if result else 0,
+                int(required_time)
+        )
         results = self._execute_query(SQL)
         if results[0] is False:
             return results[0]

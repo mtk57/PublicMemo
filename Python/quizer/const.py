@@ -1,6 +1,6 @@
 from enum import IntEnum
 
-VERSION = r'ver=0.9'
+VERSION = r'ver=1.0'
 VER_POS = 'A1'
 
 # クイズファイルパス

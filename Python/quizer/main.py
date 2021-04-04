@@ -16,7 +16,8 @@ from quizer import Quizer
 サポート予定
 ・統計情報DBを利用して、正答率の低い問題を優先的に出題する。
 ・間違えた問題の復習モード
-
+・クイズモードの実績を蓄積（実施日時(PK)、正解数、問題数、合否、所要時間）
+　→折れ線グラフで表示すれば、学習効果が出ているかがわかるかも。
 """
 
 
@@ -76,11 +77,15 @@ class Main():
     def close(self):
         self._db_util.close()
 
-    def clear(self):
-        self._db_util.clear()
+    def clear(self) -> bool:
+        return self._db_util.clear()
 
     def update(self, question_num: int, is_incorrect: bool):
-        self._db_util.update(question_num, is_incorrect)
+        return self._db_util.update_statistics(question_num, is_incorrect)
+
+    def insert(self, corrects: int, questions: int, correct_rate: float,
+               result: bool, required_time: int):
+        return self._db_util.insert_result(corrects, questions, correct_rate, result, required_time)
 
     def parse_args(self):
         fn = 'parse_args'
@@ -231,10 +236,15 @@ class Main():
 
             correct_rate = math.floor((correct_cnt / total_cnt) * 100)
             print(f'正解率={correct_rate}%')
+            is_result = True
             if int(correct_rate) >= pass_line:
                 print('合格です！！')
             else:
                 print('不合格です。。。orz')
+                is_result = False
+
+            if self.insert(correct_cnt, num-1, correct_rate, is_result, total_sec) is False:
+                raise Exception('DB insert failed!')
 
             if is_db_clear:
                 if self.clear() is False:
