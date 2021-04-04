@@ -137,7 +137,7 @@ class DB_Util():
         correct = result[0][0]
         total = result[0][1]
 
-        return round(correct / total, 3)
+        return round(correct / total, 2) * 100
 
     def _execute_query(self, sql: str, is_update: bool = True) -> tuple:
         if self._conn is None:
