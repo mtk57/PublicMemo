@@ -8,6 +8,7 @@ import re
 import const as const
 from const import Mode
 from util import Util
+from db_util import DB_Util
 from logger import Logger
 from quizer import Quizer
 
@@ -28,6 +29,10 @@ class Main():
     @property
     def info_path(self) -> str:
         return self._args.info_path
+
+    @property
+    def db_path(self) -> str:
+        return self._args.db_path
 
     @property
     def mode(self) -> Mode:
@@ -53,12 +58,30 @@ class Main():
     def is_random(self) -> bool:
         return self._args.random
 
+    def open(self):
+        self._db_util = DB_Util(self.db_path)
+        if self._db_util.open() is False:
+            raise Exception('DB open failed')
+
+    def rollback(self):
+        self._db_util.rollback()
+
+    def close(self):
+        self._db_util.close()
+
+    def clear(self):
+        self._db_util.clear()
+
+    def update(self, question_num: int, is_incorrect: bool):
+        self._db_util.update(question_num, is_incorrect)
+
     def parse_args(self):
         fn = 'parse_args'
         self._logger.DEBUG(f'{fn} S')
 
         parser = argparse.ArgumentParser()
         parser.add_argument('--info_path')
+        parser.add_argument('--db_path')
         parser.add_argument('--mode', choices=[Main.MODE_QUIZ, Main.MODE_LEARN])
         parser.add_argument('--show_answer', action='store_true')
         parser.add_argument('--num', type=int)
@@ -67,6 +90,8 @@ class Main():
         self._args = parser.parse_args()
         if not self._args.info_path:
             self._args.info_path = const.DEFAULT_EXCEL_FILE_NAME
+        if not self._args.db_path:
+            self._args.db_path = const.DEFAULT_DB_FILE_NAME
         if not self._args.mode:
             self._args.mode = Main.MODE_QUIZ
         if not self._args.num:
@@ -97,6 +122,8 @@ class Main():
 * num={3}
 * pass={4}%
 * random={5}
+* info_path={6}
+* db_path={7}
 *
 * <使い方>
 * [クイズモード]
@@ -106,7 +133,8 @@ class Main():
 *  - エンターキーで次の問題と回答を表示します。
 *
 * [その他]
-*  - 途中で終了する場合は、qを入力して下さい。
+*  - 終了する場合は、qを入力して下さい。
+*  - 終了時に統計情報をクリアする場合は、cを入力して下さい。
 ***********************************************************
 """
         print(title.format(
@@ -115,9 +143,12 @@ class Main():
                 self.is_show_answer,
                 total_cnt,
                 pass_line,
-                self.is_random
+                self.is_random,
+                self.info_path,
+                self.db_path
                 ))
 
+        is_db_clear = False
         num = 0
         correct_cnt = 0
 
@@ -138,6 +169,9 @@ class Main():
             input_answers = re.split(const.SPLITS, input('＞：'))
             if input_answers[0] == 'q':
                 break
+            if input_answers[0] == 'c':
+                is_db_clear = True
+                break
 
             if self.mode == Mode.LEARN:
                 print('')
@@ -146,6 +180,7 @@ class Main():
             result = Quizer.verify(quiz_info=quiz,
                                    input_answer=input_answers)
 
+            is_incorrect = True
             if result.is_right:
                 print('------------')
                 print('正解です!!')
@@ -158,7 +193,14 @@ class Main():
                 if self.is_show_answer:
                     quiz.show_answer()
                 incorrects.append(result)
+                is_incorrect = False
+
+            if self.update(quiz.num, is_incorrect) is False:
+                raise Exception('DB update failed!')
+
             print('')
+
+        # 後処理
 
         end = time.time()
         total_sec = end - start
@@ -181,6 +223,11 @@ class Main():
                 print('合格です！！')
             else:
                 print('不合格です。。。orz')
+
+            if is_db_clear:
+                if self.clear() is False:
+                    raise Exception('DB clear failed!')
+                print('DBをクリアしました。')
 
         print('')
         print(f'所要時間：{Util.get_hhmmss_str_from_sec(total_sec)}')
@@ -214,13 +261,17 @@ if __name__ == '__main__':
             logger.ERROR(f'Input file not exist! [{main.info_path}]')
             ret = 1
         else:
+            main.open()
+
             main.run()
 
     except Exception as ex:
+        main.rollback()
         logger.ERROR(Util.get_exception_message(ex))
         ret = 1
 
     finally:
+        main.close()
         logger.DEBUG('END')
         logger.DEBUG('====================================================')
         sys.exit(ret)
