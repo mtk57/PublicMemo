@@ -14,6 +14,12 @@ class DB_Util():
         self._sqlite3 = None
         self._conn = None
 
+    def is_exist(self) -> bool:
+        """ DBが存在するか否か """
+        if self._conn is None:
+            return False
+        return True
+
     def open(self) -> bool:
         try:
             self._sqlite3 = import_module("sqlite3")
@@ -73,7 +79,6 @@ class DB_Util():
                 question_num
         )
         results = self._execute_query(SQL, is_update=False)
-        print(f'type={type(results)}')
         if results[0] is False:
             return False
 
@@ -108,6 +113,31 @@ class DB_Util():
 
         self.commit()
         return True
+
+    def get_correct_rate(self, question_num: int) -> float:
+        """ 正答率を返す """
+        if self._conn is None:
+            return 0.0
+
+        SQL = 'SELECT {0}, {1} FROM {2} WHERE {3}={4}'.format(
+                DB_Util.CLM_CORRECT,
+                DB_Util.CLM_TOTAL,
+                DB_Util.TABLE_STATISTICS,
+                DB_Util.CLM_QNUM,
+                question_num
+        )
+        results = self._execute_query(SQL, is_update=False)
+        if results[0] is False:
+            return 0.0
+
+        result = results[1]
+        if len(result) != 1:
+            return 0.0
+
+        correct = result[0][0]
+        total = result[0][1]
+
+        return round(correct / total, 3)
 
     def _execute_query(self, sql: str, is_update: bool = True) -> tuple:
         if self._conn is None:

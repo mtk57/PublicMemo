@@ -12,6 +12,13 @@ from db_util import DB_Util
 from logger import Logger
 from quizer import Quizer
 
+"""
+サポート予定
+・統計情報DBを利用して、正答率の低い問題を優先的に出題する。
+・間違えた問題の復習モード
+
+"""
+
 
 class Main():
     MODE_QUIZ = 'quiz'
@@ -164,6 +171,11 @@ class Main():
                 break
             print(f'【{num}/{total_cnt}】')
             quiz.show()
+
+            if self._db_util.is_exist():
+                # 正答率を表示
+                correct_rate = self._db_util.get_correct_rate(quiz.num)
+                print(f'正答率={correct_rate}%')
 
             # キー入力待ち
             input_answers = re.split(const.SPLITS, input('＞：'))
