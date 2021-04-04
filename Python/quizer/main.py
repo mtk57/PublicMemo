@@ -147,6 +147,7 @@ class Main():
 *  q  終了
 *  c  DBクリア
 *  p  一時停止 & 再開
+*  t  経過時間を表示
 ***********************************************************
 """
         print(title.format(
@@ -184,24 +185,39 @@ class Main():
                 correct_rate = self._db_util.get_correct_rate(quiz.num)
                 print(f'過去の正答率={correct_rate}%')
 
-            # キー入力待ち
-            input_answers = re.split(const.SPLITS, input('＞：'))
-            if input_answers[0] == 'q':
+            is_quit = False
+
+            while True:
+                # キー入力待ち
+                input_answers = re.split(const.SPLITS, input('＞：'))
+                if input_answers[0] == 'q':
+                    is_quit = True
+                    break
+                elif input_answers[0] == 'c':
+                    is_db_clear = True
+                    is_quit = True
+                    break
+                elif input_answers[0] == 'p':
+                    if is_pause is False:
+                        pause_start = time.time()
+                        is_pause = True
+                        while is_pause:
+                            if input('＞：') == 'p':
+                                pause_end = time.time()
+                                is_pause = False
+                                pause_sec = pause_end - pause_start
+                                total_pause += pause_sec
+                                break
+                        continue
+                elif input_answers[0] == 't':
+                    passed_time = (time.time() - start) - total_pause
+                    print(f'経過時間：{Util.get_hhmmss_str_from_sec(passed_time)}')
+                    continue
+                else:
+                    break
+
+            if is_quit:
                 break
-            elif input_answers[0] == 'c':
-                is_db_clear = True
-                break
-            elif input_answers[0] == 'p':
-                if is_pause is False:
-                    pause_start = time.time()
-                    is_pause = True
-                    while is_pause:
-                        if input('＞：') == 'p':
-                            pause_end = time.time()
-                            is_pause = False
-                            pause_sec = pause_end - pause_start
-                            total_pause += pause_sec
-                            break
 
             if self.mode == Mode.LEARN:
                 print('')
@@ -230,8 +246,9 @@ class Main():
 
             print('')
 
+        # -------------------------------
         # 後処理
-
+        # -------------------------------
         end = time.time()
         total_sec = (end - start) - total_pause
 
