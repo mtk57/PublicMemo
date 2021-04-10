@@ -32,10 +32,15 @@ class Main():
     def __init__(self, logger: object):
         self._logger = logger
         self._args = None
+        self._tmp_info_path = None
 
     @property
     def info_path(self) -> str:
         return self._args.info_path
+
+    @property
+    def tmp_info_path(self) -> str:
+        return self._tmp_info_path
 
     @property
     def db_path(self) -> str:
@@ -116,7 +121,9 @@ class Main():
         fn = 'run'
         self._logger.DEBUG(f'{fn} S')
 
-        quizer = Quizer(logger=self._logger, info_path=self.info_path,
+        self._tmp_info_path = Util.create_tmp_file(self.info_path)
+
+        quizer = Quizer(logger=self._logger, info_path=self.tmp_info_path,
                         mode=self.mode)
 
         incorrects = []
@@ -202,7 +209,7 @@ class Main():
                         pause_start = time.time()
                         is_pause = True
                         while is_pause:
-                            if input('＞：') == 'p':
+                            if input('＞＞：') == 'p':
                                 pause_end = time.time()
                                 is_pause = False
                                 pause_sec = pause_end - pause_start

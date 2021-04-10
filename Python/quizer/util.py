@@ -2,9 +2,12 @@ import datetime
 import os
 import traceback
 import random
+import shutil
 
 import openpyxl
 from openpyxl import utils
+
+import const as const
 
 
 class Util():
@@ -35,3 +38,15 @@ class Util():
     @classmethod
     def get_random_list(cls, src_list: list) -> list:
         return random.sample(src_list, len(src_list))
+
+    @classmethod
+    def create_tmp_file(cls, src_file_path: str) -> str:
+        """
+        引数に渡されたファイルをコピーして一時ファイルを作成する
+        作成されたファイルのパスを返す
+        """
+        dst_file_path = os.path.join(os.path.dirname(src_file_path), const.TMP_FILE_NAME)
+        if os.path.exists(dst_file_path):
+            os.remove(dst_file_path)
+        shutil.copy(src_file_path, dst_file_path)
+        return dst_file_path

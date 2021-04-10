@@ -7,6 +7,8 @@ VER_POS = 'A1'
 # DEFAULT_EXCEL_FILE_NAME = r'sample.xlsx'
 DEFAULT_EXCEL_FILE_NAME = r'C:\_git\Memo\Other\Salesforce\QUIZ.xlsx'
 
+TMP_FILE_NAME = r'__QUIZ__.xlsx'
+
 # 統計情報DBファイルパス
 # SQLITE3
 DEFAULT_DB_FILE_NAME = r'C:\_git\Memo\Other\Salesforce\QUIZ.db'
