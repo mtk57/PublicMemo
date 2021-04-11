@@ -8,7 +8,8 @@ import re
 import const as const
 from const import Mode
 from util import Util
-from db_util import DB_Util
+from db_util import DBUtil
+from graph_util import GraphUtil
 from logger import Logger
 from quizer import Quizer
 
@@ -71,7 +72,7 @@ class Main():
         return self._args.random
 
     def open(self):
-        self._db_util = DB_Util(self.db_path)
+        self._db_util = DBUtil(self.db_path)
         if self._db_util.open() is False:
             raise Exception('DB open failed')
 
@@ -89,7 +90,13 @@ class Main():
 
     def insert(self, corrects: int, questions: int, correct_rate: float,
                result: bool, required_time: int):
-        return self._db_util.insert_result(corrects, questions, correct_rate, result, required_time)
+        return self._db_util.insert_result(corrects, questions, correct_rate,
+                                           result, required_time)
+
+    def show_graph(self):
+        results = self._db_util.get_results()
+        gu = GraphUtil(results)
+        gu.show()
 
     def parse_args(self):
         fn = 'parse_args'
@@ -155,6 +162,7 @@ class Main():
 *  c  DBクリア
 *  p  一時停止 & 再開
 *  t  経過時間を表示
+*  g  成績を表示
 ***********************************************************
 """
         print(title.format(
@@ -219,6 +227,9 @@ class Main():
                 elif input_answers[0] == 't':
                     passed_time = (time.time() - start) - total_pause
                     print(f'経過時間：{Util.get_hhmmss_str_from_sec(passed_time)}')
+                    continue
+                elif input_answers[0] == 'g':
+                    self.show_graph()
                     continue
                 else:
                     break
@@ -321,7 +332,6 @@ if __name__ == '__main__':
             ret = 1
         else:
             main.open()
-
             main.run()
 
     except Exception as ex:

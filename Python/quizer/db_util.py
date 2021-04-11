@@ -1,18 +1,20 @@
 from importlib import import_module
 import datetime
+from datetime import datetime as dt
+import re
 
 
-class DB_Util():
-    # 統計情報のテーブル名
+class DBUtil():
+    # 統計情報テーブル
     TABLE_STATISTICS = 'statistics'
-    # 統計情報のカラム名
+    # 統計情報テーブルのカラム名
     CLM_QNUM = 'q_num'                  # 問題番号(PK)
     CLM_CORRECT = 'correct'             # 正解数
     CLM_TOTAL = 'total'                 # 回答回数
 
-    # 成績のテーブル名
+    # 成績テーブル
     TABLE_RESULTS = 'results'
-    # 統計情報のカラム名
+    # 成績テーブルのカラム名
     CLM_DATETIME = 'datetime'           # 実施日時(PK)
     CLM_QUESTIONS = 'questions'         # 問題数
     CLM_CORRECT_RATE = 'correct_rate'   # 正解率
@@ -44,10 +46,10 @@ class DB_Util():
               '  {2} INTEGER,' \
               '  {3} INTEGER' \
               ')'.format(
-                  DB_Util.TABLE_STATISTICS,
-                  DB_Util.CLM_QNUM,
-                  DB_Util.CLM_CORRECT,
-                  DB_Util.CLM_TOTAL
+                  DBUtil.TABLE_STATISTICS,
+                  DBUtil.CLM_QNUM,
+                  DBUtil.CLM_CORRECT,
+                  DBUtil.CLM_TOTAL
               )
         results = self._execute_query(SQL)
         if results[0] is False:
@@ -61,13 +63,13 @@ class DB_Util():
               '  {5} INTEGER,' \
               '  {6} INTEGER' \
               ')'.format(
-                  DB_Util.TABLE_RESULTS,
-                  DB_Util.CLM_DATETIME,
-                  DB_Util.CLM_CORRECT,
-                  DB_Util.CLM_QUESTIONS,
-                  DB_Util.CLM_CORRECT_RATE,
-                  DB_Util.CLM_RESULT,
-                  DB_Util.CLM_TIME
+                  DBUtil.TABLE_RESULTS,
+                  DBUtil.CLM_DATETIME,
+                  DBUtil.CLM_CORRECT,
+                  DBUtil.CLM_QUESTIONS,
+                  DBUtil.CLM_CORRECT_RATE,
+                  DBUtil.CLM_RESULT,
+                  DBUtil.CLM_TIME
               )
         results = self._execute_query(SQL)
         if results[0] is False:
@@ -91,12 +93,12 @@ class DB_Util():
     def clear(self) -> bool:
         if self._conn is None:
             return True
-        SQL = 'DELETE FROM {0}'.format(DB_Util.TABLE_STATISTICS)
+        SQL = 'DELETE FROM {0}'.format(DBUtil.TABLE_STATISTICS)
         results = self._execute_query(SQL)
         if results[0] is False:
             return results[0]
 
-        SQL = 'DELETE FROM {0}'.format(DB_Util.TABLE_RESULTS)
+        SQL = 'DELETE FROM {0}'.format(DBUtil.TABLE_RESULTS)
         results = self._execute_query(SQL)
         if results[0] is False:
             return results[0]
@@ -109,10 +111,10 @@ class DB_Util():
             return True
 
         SQL = 'SELECT {0}, {1} FROM {2} WHERE {3}={4}'.format(
-                DB_Util.CLM_CORRECT,
-                DB_Util.CLM_TOTAL,
-                DB_Util.TABLE_STATISTICS,
-                DB_Util.CLM_QNUM,
+                DBUtil.CLM_CORRECT,
+                DBUtil.CLM_TOTAL,
+                DBUtil.TABLE_STATISTICS,
+                DBUtil.CLM_QNUM,
                 question_num
         )
         results = self._execute_query(SQL, is_update=False)
@@ -124,21 +126,21 @@ class DB_Util():
         result = results[1]
         if len(result) == 0:
             SQL = 'INSERT INTO {0}({1}, {2}, {3}) VALUES({4}, {5}, 1)'.format(
-                    DB_Util.TABLE_STATISTICS,
-                    DB_Util.CLM_QNUM,
-                    DB_Util.CLM_CORRECT,
-                    DB_Util.CLM_TOTAL,
+                    DBUtil.TABLE_STATISTICS,
+                    DBUtil.CLM_QNUM,
+                    DBUtil.CLM_CORRECT,
+                    DBUtil.CLM_TOTAL,
                     question_num,
                     countup
             )
         elif len(result) == 1:
             SQL = 'UPDATE {0} SET {1}={2}, {3}={4} WHERE {5}={6}'.format(
-                    DB_Util.TABLE_STATISTICS,
-                    DB_Util.CLM_CORRECT,
+                    DBUtil.TABLE_STATISTICS,
+                    DBUtil.CLM_CORRECT,
                     result[0][0] + countup,
-                    DB_Util.CLM_TOTAL,
+                    DBUtil.CLM_TOTAL,
                     result[0][1] + 1,
-                    DB_Util.CLM_QNUM,
+                    DBUtil.CLM_QNUM,
                     question_num
             )
         else:
@@ -157,13 +159,13 @@ class DB_Util():
             return True
 
         SQL = 'INSERT INTO {0}({1}, {2}, {3}, {4}, {5}, {6}) VALUES("{7}", {8}, {9}, {10}, {11}, {12})'.format(
-                DB_Util.TABLE_RESULTS,
-                DB_Util.CLM_DATETIME,
-                DB_Util.CLM_CORRECT,
-                DB_Util.CLM_QUESTIONS,
-                DB_Util.CLM_CORRECT_RATE,
-                DB_Util.CLM_RESULT,
-                DB_Util.CLM_TIME,
+                DBUtil.TABLE_RESULTS,
+                DBUtil.CLM_DATETIME,
+                DBUtil.CLM_CORRECT,
+                DBUtil.CLM_QUESTIONS,
+                DBUtil.CLM_CORRECT_RATE,
+                DBUtil.CLM_RESULT,
+                DBUtil.CLM_TIME,
 
                 str(datetime.datetime.now()),
                 corrects,
@@ -185,10 +187,10 @@ class DB_Util():
             return 0.0
 
         SQL = 'SELECT {0}, {1} FROM {2} WHERE {3}={4}'.format(
-                DB_Util.CLM_CORRECT,
-                DB_Util.CLM_TOTAL,
-                DB_Util.TABLE_STATISTICS,
-                DB_Util.CLM_QNUM,
+                DBUtil.CLM_CORRECT,
+                DBUtil.CLM_TOTAL,
+                DBUtil.TABLE_STATISTICS,
+                DBUtil.CLM_QNUM,
                 question_num
         )
         results = self._execute_query(SQL, is_update=False)
@@ -203,6 +205,49 @@ class DB_Util():
         total = result[0][1]
 
         return round(correct / total, 2) * 100
+
+    def get_results(self) -> dict:
+        """
+        成績をdictで返す。
+        {
+            'datetime': 実施日時のリスト,
+            'correct_rate': 正解率のリスト
+        }
+        """
+        CLM_0 = DBUtil.CLM_DATETIME
+        CLM_1 = DBUtil.CLM_CORRECT_RATE
+
+        ret = {CLM_0: [], CLM_1: []}
+        if self._conn is None:
+            return ret
+
+        SQL = 'SELECT {0}, {1} FROM {2}'.format(
+                CLM_0,
+                CLM_1,
+                DBUtil.TABLE_RESULTS
+        )
+
+        results = self._execute_query(SQL, is_update=False)
+        if results[0] is False:
+            return ret
+
+        records = results[1]
+        if len(records) == 0:
+            return ret
+
+        datetimes = []
+        correct_rates = []
+
+        for record in records:
+            new_text = re.sub(r"\.[0-9]*", "", record[0])
+            tdatetime = dt.strptime(new_text, '%Y-%m-%d %H:%M:%S')
+            datetimes.append(tdatetime)
+            correct_rates.append(record[1])
+
+        ret[CLM_0] = datetimes
+        ret[CLM_1] = correct_rates
+
+        return ret
 
     def _execute_query(self, sql: str, is_update: bool = True) -> tuple:
         if self._conn is None:
