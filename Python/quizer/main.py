@@ -231,7 +231,7 @@ class Main():
                 elif input_answers[0] == 'g':
                     self.show_graph()
                     continue
-                elif input_answers[0] == '':
+                elif input_answers[0] == '' and self.mode == Mode.QUIZ:
                     continue
                 else:
                     break
