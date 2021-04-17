@@ -231,6 +231,8 @@ class Main():
                 elif input_answers[0] == 'g':
                     self.show_graph()
                     continue
+                elif input_answers[0] == '':
+                    continue
                 else:
                     break
 
