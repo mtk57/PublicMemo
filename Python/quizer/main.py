@@ -314,10 +314,12 @@ if __name__ == '__main__':
     logger = Logger()
 
     # for DEBUG >>
+    # logger = Logger(level=Logger.LEVEL_DEBUG)
     # sys.argv.append('--info_path')
     # sys.argv.append(const.DEFAULT_EXCEL_FILE_NAME)
     # sys.argv.append('--mode')
     # sys.argv.append(Main.MODE_LEARN)
+    # sys.argv.append('--random')
     # for DEBUG <<
 
     try:

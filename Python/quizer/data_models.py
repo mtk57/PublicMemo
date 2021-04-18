@@ -27,8 +27,9 @@ class QuizInfo():
         self._mode = mode
 
     def __repr__(self):
-        return f'[{self.num}]{self.question} :choices=[{self.choises}], ' \
-               f'answers=[{self.answers}]'
+        return f'[{self._num}]{self._question} :choices=[{self._choises}], ' \
+               f'answers=[{self._answers}], is_skip=[{self._is_skip}], ' \
+               f'mode=[{self._mode}]'
 
     @property
     def num(self) -> int:
@@ -157,7 +158,13 @@ class CollectorBase(metaclass=ABCMeta):
         return ret
 
     def get_random_collection(self) -> list:
-        return Util.get_random_list(self._collections)
+        before_list = self.get_collection()
+        self._logger.DEBUG(f'BEFORE get_random_collection()=[{before_list}]')
+
+        after_list = Util.get_random_list(before_list)
+        self._logger.DEBUG(f'AFTER get_random_collection()=[{after_list}]')
+
+        return after_list
 
     def cleanup(self):
         new_list = []

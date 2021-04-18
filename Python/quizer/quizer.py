@@ -68,12 +68,18 @@ class QuizCollector(CollectorBase):
                         q = QuizInfo(mode=self._mode)
                         q.num = v
                         self.add_collection(q)
+
+                        self.logger.DEBUG(f'num={q.num}')
                 # SKIP?
                 elif cell.column == Offset.IS_SKIP:
                     q.is_skip = True if v == const.MARK_Y else False
+
+                    self.logger.DEBUG(f'is_skip={q.is_skip}')
                 # 問題
                 elif cell.column == Offset.QUESTION:
                     q.question = v
+
+                    self.logger.DEBUG(f'question={q.question}')
                 # 選択肢
                 elif cell.column == Offset.CHOICE:
                     q.add_choice(v)
