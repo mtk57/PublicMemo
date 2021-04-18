@@ -11,6 +11,7 @@ class GraphUtil():
     def show(self):
         left = np.array(self._results[DBUtil.CLM_DATETIME])
         height = np.array(self._results[DBUtil.CLM_CORRECT_RATE])
+        plt.ylim([0, 100])
         plt.plot(left, height)
         plt.gcf().autofmt_xdate()
         plt.hlines([65], left[0], left[-1], "blue", linestyles='dashed')
