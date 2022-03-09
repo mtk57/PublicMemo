@@ -56,6 +56,16 @@ On Error GoTo Exception
         Main map, searchInfos
     End If
 
+    '1Ç¬Ç‡å©Ç¬Ç©ÇÁÇ»Ç©Ç¡ÇΩèÍçáÇÕÅAåãâ ÇAóÒÇ…èëÇ´çûÇﬁ
+    With ActiveSheet
+        For Each obj In searchInfos
+            Cells(obj.GetRow, 1).Value = ""
+            If obj.GetResult = False Then
+                Cells(obj.GetRow, 1).Value = "Not found."
+            End If
+        Next
+    End With
+
     MsgBox "Success!"
     
     Exit Sub
@@ -131,11 +141,13 @@ Function GetSearchInfo(ByVal map As Object) As Collection
             
             Set obj = New SearchInfoDataModel
             obj.SetNum = i
+            obj.SetRow = row + i
             obj.SetWord = word
             obj.SetBgCol = bgcol
             obj.SetLookAt = lookat
             obj.SetMatchCase = matchcase
             obj.SetMatchByte = matchbyte
+            obj.SetResult = False
             
             searchInfos.Add obj
             
@@ -192,7 +204,7 @@ Function Main(ByVal map As Object, ByVal searchInfos As Collection)
 End Function
 
 
-Function UpdateCells(ByVal obj As SearchInfoDataModel)
+Function UpdateCells(ByRef obj As SearchInfoDataModel)
     'Debug.Print obj.ToString()
     
     Dim foundCell As Range, firstCell As Range, target As Range
@@ -228,6 +240,7 @@ Function UpdateCells(ByVal obj As SearchInfoDataModel)
     Loop
     
     target.Interior.Color = bgcol
+    obj.SetResult = True
      
 End Function
 
