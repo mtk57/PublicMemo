@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="sjis" ?>
+  <datamodel>
+    <dao id="DAO1">
+      <table id="T01">
+        <record>
+          <before>CLM_01_1=123,CLM_01_2=456</before>
+          <after>CLM_01_1=999,CLM_01_2=888</after>
+        </record>
+      </table>
+      <table id="T02">
+        <record>
+          <before>CLM_02_1=ABC,CLM_02_2=DEF</before>
+        </record>
+      </table>
+      <table id="T03">
+        <record>
+          <after>CLM_03_1=HOGE,CLM_03_2=FUGA</after>
+        </record>
+      </table>
+    </dao>
+    <dao id="DAO2">
+      <table id="T04">
+        <record>
+          <before>CLM_04_1=789,CLM_04_2=890</before>
+          <after>CLM_04_1=777,CLM_04_2=666</after>
+        </record>
+      </table>
+      <table id="T05">
+        <record>
+          <before>CLM_05_1=XYZ,CLM_05_2=UVW</before>
+        </record>
+      </table>
+      <table id="T06">
+        <record>
+          <after>CLM_06_1=baka,CLM_06_2=aho</after>
+        </record>
+      </table>
+    </dao>
+  </datamodel>
