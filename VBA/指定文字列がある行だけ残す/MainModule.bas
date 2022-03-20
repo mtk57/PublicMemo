@@ -1,9 +1,6 @@
 Attribute VB_Name = "MainModule"
 Option Explicit
 
-Const MAIN_SHEET_NAME = "main"
-Const MAX_ROW = 999999
-
 Sub ボタン1_Click()
 
 On Error GoTo Exception
@@ -22,7 +19,7 @@ On Error GoTo Exception
 
     msg = "success"
 
-    Worksheets(MAIN_SHEET_NAME).Select
+    Worksheets("main").Select
                 
     'パラメータ取得
     inputFilePath = Range("B5").Value
