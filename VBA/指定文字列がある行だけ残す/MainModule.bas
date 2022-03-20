@@ -17,6 +17,13 @@ On Error GoTo Exception
     Dim isFindKeyword As Boolean
     Dim isFinding As Boolean
 
+    Const FLUSH_BYTES = 1700
+    Dim outputCount As Long
+    Dim data As String
+    
+    outputCount = 0
+    data = ""
+
     msg = "success"
 
     Worksheets("main").Select
@@ -53,7 +60,6 @@ On Error GoTo Exception
     'メイン
 
     Open inputFilePath For Input As #1
-    Open outputFilePath For Output As #2
     
     reg.Pattern = first_keyword
     reg.Global = True
@@ -77,17 +83,30 @@ On Error GoTo Exception
            (isFinding = True And (isFindKeyword = True And isFindFirstKeyword = False)) Or _
            (isFinding = True And (isFindKeyword = False And isFindFirstKeyword = False)) Then
             isFinding = True
-            Print #2, buffer
+            data = data & buffer & vbNewLine
         Else
             isFinding = False
         End If
         
+        If FLUSH_BYTES <= LenB(data) Then
+            If outputCount = 0 Then
+                Call CreateOutputFile(outputFilePath, data)
+            Else
+                Call AppendOutputFile(outputFilePath, data)
+            End If
+            
+            data = ""
+            outputCount = outputCount + 1
+        End If
+        
     Wend
 
+    If outputCount = 0 Then
+        Call CreateOutputFile(outputFilePath, data)
+    End If
 
 FINISH:
     Close #1
-    Close #2
 
     MsgBox msg
     
@@ -95,10 +114,27 @@ FINISH:
 
 Exception:
     Close #1
-    Close #2
     MsgBox Err.Number & vbCrLf & Err.Description
 
 End Sub
 
+'高速化
+'参考：https://chuckischarles.hatenablog.com/entry/2018/03/24/211905
 
+Sub CreateOutputFile(ByVal filePath As String, ByVal data As String)
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    With fso.CreateTextFile(filePath)
+        .WriteLine data
+        .Close
+    End With
+    
+    Set fso = Nothing
+End Sub
 
+Sub AppendOutputFile(ByVal filePath As String, ByVal data As String)
+    Open filePath For Append As #2
+    Print #2, data
+    Close #2
+End Sub
