@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32328.378
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TinyRestServer", "TinyRestServer.csproj", "{F0604694-E1A8-46F7-B7EE-95B670CC3460}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F0604694-E1A8-46F7-B7EE-95B670CC3460}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0604694-E1A8-46F7-B7EE-95B670CC3460}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0604694-E1A8-46F7-B7EE-95B670CC3460}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0604694-E1A8-46F7-B7EE-95B670CC3460}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1002F1A2-4477-4A62-BE17-C224DD7372C1}
+	EndGlobalSection
+EndGlobal
