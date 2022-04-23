@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Net;
 using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Windows.Forms;
+using MyData;
 
 /// <summary>
 /// 簡易RESTサーバ
@@ -33,12 +35,16 @@ namespace TinyRestServer
     {
         private HttpListener listener = null;
 
+        private Dictionary<int, String> userDatas = null;
+
         public Form1()
         {
             InitializeComponent();
 
             backgroundWorker1.WorkerReportsProgress = true;
             backgroundWorker1.WorkerSupportsCancellation = true;
+
+            userDatas = new Dictionary<int, string>();
         }
 
         private void button_Start_Click(object sender, EventArgs e)
@@ -87,40 +93,149 @@ namespace TinyRestServer
                     break;
                 }
 
+                // リクエストが来るまでここで止まる
                 var c = listener.GetContext();
 
+                // リクエストを取得
                 var req = c.Request;
 
-                // TODO:ここでURLを切り分けます
-                Console.WriteLine(req.RawUrl);
-
-                if (req.HasEntityBody)
+                var reqSplit = req.RawUrl.Split('/');
+                if (reqSplit.Length < 2)
                 {
-                    // TODO：ここでリクエストボディに対する処理を行います。
-                    using (var sr = new StreamReader(req.InputStream, new UTF8Encoding(false)))
+                    //TODO:エラー処理
+                }
+
+                var api = reqSplit[1];
+                if (api != "users")
+                {
+                    //TODO:エラー処理
+                }
+
+                HttpListenerResponse res = null;
+
+                if (req.HttpMethod == "POST" || req.HttpMethod == "PUT")
+                {
+                    if (req.HasEntityBody)
                     {
-                        Console.WriteLine(sr.ReadToEnd());
+                        // リクエストボディに対する処理
+                        using (var sr = new StreamReader(req.InputStream, new UTF8Encoding(false)))
+                        {
+                            var userData = Utils.Deserialize<UserData>(sr.ReadToEnd());
+
+                            if (req.HttpMethod == "POST")
+                            {
+                                addUser(userData);
+                            }
+                            else
+                            {
+                                updateUser(userData);
+                            }
+                        }
+                    }
+
+                    try
+                    {
+                        res = c.Response;
+                        res.ContentType = "text/plain";
+                        new DataContractJsonSerializer(typeof(Result)).WriteObject(res.OutputStream, "success");
+                    }
+                    finally
+                    {
+                        res.Close();
                     }
                 }
-
-                // JSONとして返したい値
-                var value = new Result() { Value = true, Message = "あいうえおabcde" };
-
-                // レスポンスにJSONを書き込みます。
-                HttpListenerResponse res = null;
-                try
+                else if (req.HttpMethod == "GET" || req.HttpMethod == "DELETE")
                 {
-                    res = c.Response;
-                    res.ContentType = "application/json";
-                    new DataContractJsonSerializer(typeof(Result)).WriteObject(res.OutputStream, value);
+                    int id = -1;
+
+                    try
+                    {
+                        id = int.Parse(reqSplit[2]);
+                    }
+                    catch
+                    {
+                        //TODO:エラー処理
+                    }
+
+                    
+
+                    if (req.HttpMethod == "GET")
+                    {
+                        var retData = getUser(id);
+
+                        if (retData == null)
+                        {
+                            //TODO:エラー処理
+                        }
+
+                        try
+                        {
+                            res = c.Response;
+                            res.ContentType = "application/json";
+                            new DataContractJsonSerializer(typeof(Result)).WriteObject(res.OutputStream, Utils.Serialize<UserData>(retData));
+                        }
+                        finally
+                        {
+                            res.Close();
+                        }
+                    }
+                    else
+                    {
+                        deleteUser(id);
+
+                        try
+                        {
+                            res = c.Response;
+                            res.ContentType = "text/plain";
+                            new DataContractJsonSerializer(typeof(Result)).WriteObject(res.OutputStream, "success");
+                        }
+                        finally
+                        {
+                            res.Close();
+                        }
+                    }
                 }
-                finally
+                else
                 {
-                    res.Close();
-
+                    //TODO:エラー処理
                 }
             }
-            
+        }
+
+        private void addUser(UserData data)
+        {
+            if (!userDatas.ContainsKey(data.Id))
+            {
+                userDatas.Add(data.Id, data.Name);
+            }
+        }
+
+        private void updateUser(UserData data)
+        {
+            if (userDatas.ContainsKey(data.Id))
+            {
+                userDatas[data.Id] = data.Name;
+            }
+        }
+
+        private UserData getUser(int id)
+        {
+            if (userDatas.ContainsKey(id))
+            {
+                var ret = new UserData();
+                ret.Id = id;
+                ret.Name = userDatas[id];
+                return ret;
+            }
+            return null;
+        }
+
+        private void deleteUser(int id)
+        {
+            if (userDatas.ContainsKey(id))
+            {
+                userDatas.Remove(id);
+            }
         }
     }
 
