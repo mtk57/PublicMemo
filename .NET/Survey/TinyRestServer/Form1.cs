@@ -17,16 +17,11 @@ using MyData;
 /// 
 /// [TODO]
 /// MUST
-/// ・Start押しても固まらないようにしよう!
 /// ・Stopに対応しよう!
 /// ・httpsに対応しよう!
 /// ・Vistaで動くか試そう!
 /// ・ステータスコードに対応しよう!
-/// ・タイムアウトに対応しよう!
-/// 
-/// WANT
-/// ・GET以外にも対応しよう!
-/// ・動的にJSONを変更しよう!
+/// ・ログに対応しよう！
 /// 
 /// </summary>
 namespace TinyRestServer
