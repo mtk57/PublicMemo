@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.textBoxURL = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.comboBoxTLS = new System.Windows.Forms.ComboBox();
@@ -45,6 +46,8 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.radioButtonHttps = new System.Windows.Forms.RadioButton();
             this.buttonDefaultURL = new System.Windows.Forms.Button();
+            this.buttonDefaultParam = new System.Windows.Forms.Button();
+            this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -56,6 +59,7 @@
             this.textBoxURL.Name = "textBoxURL";
             this.textBoxURL.Size = new System.Drawing.Size(793, 31);
             this.textBoxURL.TabIndex = 0;
+            this.toolTip1.SetToolTip(this.textBoxURL, "GET, DELETEの場合は末尾にIDを指定すること");
             // 
             // label1
             // 
@@ -70,10 +74,6 @@
             // comboBoxTLS
             // 
             this.comboBoxTLS.FormattingEnabled = true;
-            this.comboBoxTLS.Items.AddRange(new object[] {
-            "v1",
-            "v1.1",
-            "v1.2"});
             this.comboBoxTLS.Location = new System.Drawing.Point(363, 169);
             this.comboBoxTLS.Margin = new System.Windows.Forms.Padding(6);
             this.comboBoxTLS.Name = "comboBoxTLS";
@@ -119,7 +119,7 @@
             this.textBoxValueName.Name = "textBoxValueName";
             this.textBoxValueName.Size = new System.Drawing.Size(256, 31);
             this.textBoxValueName.TabIndex = 9;
-            this.textBoxValueName.Text = "Michael Jackson";
+            this.toolTip1.SetToolTip(this.textBoxValueName, "何でも可");
             // 
             // textBoxValueId
             // 
@@ -128,7 +128,7 @@
             this.textBoxValueId.Name = "textBoxValueId";
             this.textBoxValueId.Size = new System.Drawing.Size(256, 31);
             this.textBoxValueId.TabIndex = 8;
-            this.textBoxValueId.Text = "1";
+            this.toolTip1.SetToolTip(this.textBoxValueId, "1以上の整数");
             // 
             // groupBox1
             // 
@@ -229,11 +229,23 @@
             this.buttonDefaultURL.UseVisualStyleBackColor = true;
             this.buttonDefaultURL.Click += new System.EventHandler(this.buttonDefaultURL_Click);
             // 
+            // buttonDefaultParam
+            // 
+            this.buttonDefaultParam.Location = new System.Drawing.Point(583, 381);
+            this.buttonDefaultParam.Margin = new System.Windows.Forms.Padding(6);
+            this.buttonDefaultParam.Name = "buttonDefaultParam";
+            this.buttonDefaultParam.Size = new System.Drawing.Size(203, 46);
+            this.buttonDefaultParam.TabIndex = 17;
+            this.buttonDefaultParam.Text = "Default Param";
+            this.buttonDefaultParam.UseVisualStyleBackColor = true;
+            this.buttonDefaultParam.Click += new System.EventHandler(this.buttonDefaultParam_Click);
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(13F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(862, 536);
+            this.Controls.Add(this.buttonDefaultParam);
             this.Controls.Add(this.buttonDefaultURL);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.buttonDELETE);
@@ -278,6 +290,8 @@
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.RadioButton radioButtonHttps;
         private System.Windows.Forms.Button buttonDefaultURL;
+        private System.Windows.Forms.Button buttonDefaultParam;
+        private System.Windows.Forms.ToolTip toolTip1;
     }
 }
 

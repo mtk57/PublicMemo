@@ -40,5 +40,11 @@ namespace TinyHttpClient
                @"^s?https?://[-_.!~*'()a-zA-Z0-9;/?:@&=+$,%#]+$"
             );
         }
+
+        public static bool IsNumStr(string numStr)
+        {
+            var result = 0;
+            return int.TryParse(numStr, out result);
+        }
     }
 }

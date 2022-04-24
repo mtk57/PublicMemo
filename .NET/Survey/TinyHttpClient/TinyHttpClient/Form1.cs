@@ -1,43 +1,45 @@
-﻿using System;
+﻿using MyData;
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Cache;
 using System.Net.Security;
-using System.Runtime.Serialization.Json;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Web;
 using System.Windows.Forms;
-using MyData;
 
 namespace TinyHttpClient
 {
     public partial class FormMain : Form
     {
+        private string _method = null;
+        private string _url = null;
+
         public FormMain()
         {
             InitializeComponent();
-        }
 
-        private void buttonPUT_Click(object sender, EventArgs e)
-        {
-            doUrl(Const.METHOD_PUT);
-        }
-
-        private void buttonDELETE_Click(object sender, EventArgs e)
-        {
-            doUrl(Const.METHOD_DELETE);
-        }
-
-        private void buttonGET_Click(object sender, EventArgs e)
-        {
-            doUrl(Const.METHOD_GET);
+            comboBoxTLS.Items.AddRange(new string[] { Const.TLS_10, Const.TLS_11, Const.TLS_12 });
         }
 
         private void buttonPOST_Click(object sender, EventArgs e)
         {
-            doUrl(Const.METHOD_POST);
+            executeWebApi(Const.METHOD_POST);
+        }
+
+        private void buttonGET_Click(object sender, EventArgs e)
+        {
+            executeWebApi(Const.METHOD_GET);
+        }
+
+        private void buttonPUT_Click(object sender, EventArgs e)
+        {
+            executeWebApi(Const.METHOD_PUT);
+        }
+
+        private void buttonDELETE_Click(object sender, EventArgs e)
+        {
+            executeWebApi(Const.METHOD_DELETE);
         }
 
         private void buttonDefaultURL_Click(object sender, EventArgs e)
@@ -52,6 +54,75 @@ namespace TinyHttpClient
             }
         }
 
+        private void buttonDefaultParam_Click(object sender, EventArgs e)
+        {
+            textBoxValueId.Text = Const.DEFAULT_ID.ToString();
+            textBoxValueName.Text = Const.DEFAULT_NAME;
+        }
+
+        private void executeWebApi(string method)
+        {
+            _method = method;
+            _url = textBoxURL.Text;
+
+            if (!checkParama())
+            {
+                return;
+            }
+
+            if (radioButtonHttps.Checked)
+            {
+                setTlsVersion(comboBoxTLS.SelectedItem);
+
+                //自己証明書を突破するために以下を実施する
+                ServicePointManager.ServerCertificateValidationCallback =
+                    new RemoteCertificateValidationCallback(OnRemoteCertificateValidationCallback);
+            }
+
+            try
+            {
+                HttpWebRequest req = request();
+
+                response(req);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+        }
+
+        private bool checkParama()
+        {
+            if (!Utils.IsUrl(_url))
+            {
+                MessageBox.Show(string.Format("URL is bad! [{0}]", _url));
+                return false;
+            }
+
+            var scheme = "http";
+            if (radioButtonHttps.Checked)
+            {
+                scheme = "https";
+            }
+
+            if (!_url.StartsWith(scheme))
+            {
+                MessageBox.Show(string.Format("URL scheme is unmatch! [{0}]", _url));
+                return false;
+            }
+
+            if (_method == Const.METHOD_POST || _method == Const.METHOD_PUT)
+            {
+                if (!Utils.IsNumStr(textBoxValueId.Text))
+                {
+                    MessageBox.Show(string.Format("ID is not number! [{0}]", textBoxValueId.Text));
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         private void setTlsVersion(object tls)
         {
             try
@@ -59,15 +130,15 @@ namespace TinyHttpClient
                 // .NET3.5の場合はTLSv1がデフォルト（拡張するKBを当てないとv1.1以降は使えない）
                 // つまり、.NET3.5だと以下のソースはビルドできない。
 
-                if(tls == null || string.IsNullOrEmpty(tls.ToString()))
+                if (tls == null || string.IsNullOrEmpty(tls.ToString()))
                 {
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls;
                 }
-                else if(tls.ToString() == Const.TLS_11)
+                else if (tls.ToString() == Const.TLS_11)
                 {
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls11;
                 }
-                else if(tls.ToString() == Const.TLS_12)
+                else if (tls.ToString() == Const.TLS_12)
                 {
                     ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
                 }
@@ -89,88 +160,91 @@ namespace TinyHttpClient
             X509Chain chain,
             SslPolicyErrors sslPolicyErrors)
         {
-            return true;  // SSL証明書の使用は問題なし
+            // SSL証明書の使用は問題なし
+            return true;
         }
 
-        private void doUrl(string method)
+        private HttpWebRequest request()
         {
+            var req = (HttpWebRequest)WebRequest.Create(_url);
+            req.Method = _method;
+            req.UserAgent = "TinyHttpClient";
+            req.ReadWriteTimeout = 30 * 1000;
+            req.Timeout = 30 * 1000;
+            req.CachePolicy = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
+            req.KeepAlive = false;
+            req.ContentType = "application/x-www-form-urlencoded";
+
+            if (_method == Const.METHOD_POST || _method == Const.METHOD_PUT)
+            {
+                req.Accept = "application/json";
+                req.ContentType = "application/json;";
+                //req.ContentLength = param.Length;
+
+                using (var s = req.GetRequestStream())
+                {
+                    var userData = new UserData();
+                    userData.Id = int.Parse(textBoxValueId.Text);
+                    userData.Name = textBoxValueName.Text;
+
+                    var json = Utils.Serialize<UserData>(userData);
+                    using (var sw = new StreamWriter(s))
+                    {
+                        sw.Write(json);
+                    }
+                }
+            }
+            return req;
+        }
+
+        private void response(HttpWebRequest req)
+        {
+            HttpWebResponse res = null;
+
             try
             {
-                var url = this.textBoxURL.Text;
-                if(!Utils.IsUrl(url))
+                res = (HttpWebResponse)req.GetResponse();
+
+                using (var s = res.GetResponseStream())
                 {
-                    MessageBox.Show("URL is bad!");
-                    return;
-                }
-
-                var scheme = "http";
-                if (radioButtonHttps.Checked)
-                {
-                    scheme = "https";
-                }
-
-                if (!url.StartsWith(scheme))
-                {
-                    MessageBox.Show("URL scheme is unmatch!");
-                    return;
-                }
-
-                if (radioButtonHttps.Checked)
-                {
-                    setTlsVersion(this.comboBoxTLS.SelectedItem);
-
-                    //自己証明書を突破するために以下を実施する
-                    ServicePointManager.ServerCertificateValidationCallback =
-                        new RemoteCertificateValidationCallback(OnRemoteCertificateValidationCallback);
-                }
-
-                var req = (HttpWebRequest)WebRequest.Create(url);
-                req.Method = method;
-                req.UserAgent = "testApp";
-                req.ReadWriteTimeout = 5 * 1000;
-                req.Timeout = 5 * 1000;
-                req.CachePolicy = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
-                req.KeepAlive = false;
-                req.ContentType = "application/x-www-form-urlencoded";
-
-                if(method == Const.METHOD_POST || method == Const.METHOD_PUT)
-                {
-                    req.Accept = "application/json";
-                    req.ContentType = "application/json;";
-                    //req.ContentLength = param.Length;
-
-                    using (var s = req.GetRequestStream())
+                    using (var sr = new StreamReader(s, Encoding.UTF8))
                     {
-                        var userData = new UserData();
-                        userData.Id = int.Parse(textBoxValueId.Text);
-                        userData.Name = textBoxValueName.Text;
+                        var resData = sr.ReadToEnd();
 
-                        var json = Utils.Serialize<UserData>(userData);
-                        using (var sw = new StreamWriter(s))
+                        if (_method == Const.METHOD_GET)
                         {
-                            sw.Write(json);
+                            var userData = Utils.Deserialize<UserData>(resData);
+
+                            MessageBox.Show(string.Format("id={0}, name={1}", userData.Id, userData.Name));
+                        }
+                        else
+                        {
+                            MessageBox.Show(resData);
                         }
                     }
                 }
-
-                var res = (HttpWebResponse)req.GetResponse();
-
-                using(var s = res.GetResponseStream())
-                {
-                    using(var sr = new StreamReader(s, Encoding.UTF8))
-                    {
-                        MessageBox.Show(sr.ReadToEnd());
-                    }
-                }
-
-                res.Close();
             }
-            catch(Exception e)
+            catch (WebException e)
             {
-                MessageBox.Show(e.Message);
+                if (e.Status == WebExceptionStatus.ProtocolError)
+                {
+                    var errres = (HttpWebResponse)e.Response;
+                    MessageBox.Show(string.Format("WebException!(ProtocolError)\nStatusCode={0}\nStatusDescription={1}",
+                        errres.StatusCode, errres.StatusDescription));
+                }
+                else
+                {
+                    MessageBox.Show(string.Format("WebException!\nStatus={0}\nMessage={1}",
+                        e.Status, e.Message));
+                }
+            }
+            finally
+            {
+                if(res != null)
+                {
+                    res.Close();
+                }
             }
         }
-
-
     }
 }
