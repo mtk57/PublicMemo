@@ -60,6 +60,11 @@ namespace TinyHttpClient
             textBoxValueName.Text = Const.DEFAULT_NAME;
         }
 
+        private void updateTextBoxLog(string data)
+        {
+            textBox_Log.AppendText(data + Environment.NewLine);
+        }
+
         private void executeWebApi(string method)
         {
             _method = method;
@@ -69,6 +74,9 @@ namespace TinyHttpClient
             {
                 return;
             }
+
+            updateTextBoxLog(_method);
+            updateTextBoxLog(_url);
 
             if (radioButtonHttps.Checked)
             {
@@ -81,13 +89,26 @@ namespace TinyHttpClient
 
             try
             {
+                updateTextBoxLog("[REQ]Start");
+
                 HttpWebRequest req = request();
 
+                updateTextBoxLog("[REQ]End");
+
+                updateTextBoxLog("[RES]Start");
+
                 response(req);
+
+                updateTextBoxLog("[RES]End");
             }
             catch (Exception e)
             {
                 MessageBox.Show(e.Message);
+                updateTextBoxLog(e.Message);
+            }
+            finally
+            {
+                updateTextBoxLog("-------------------");
             }
         }
 
@@ -95,7 +116,9 @@ namespace TinyHttpClient
         {
             if (!Utils.IsUrl(_url))
             {
-                MessageBox.Show(string.Format("URL is bad! [{0}]", _url));
+                var msg = string.Format("URL is bad! [{0}]", _url);
+                MessageBox.Show(msg);
+                updateTextBoxLog(msg);
                 return false;
             }
 
@@ -107,7 +130,9 @@ namespace TinyHttpClient
 
             if (!_url.StartsWith(scheme))
             {
-                MessageBox.Show(string.Format("URL scheme is unmatch! [{0}]", _url));
+                var msg = string.Format("URL scheme is unmatch! [{0}]", _url);
+                MessageBox.Show(msg);
+                updateTextBoxLog(msg);
                 return false;
             }
 
@@ -115,7 +140,9 @@ namespace TinyHttpClient
             {
                 if (!Utils.IsNumStr(textBoxValueId.Text))
                 {
-                    MessageBox.Show(string.Format("ID is not number! [{0}]", textBoxValueId.Text));
+                    var msg = string.Format("ID is not number! [{0}]", textBoxValueId.Text);
+                    MessageBox.Show(msg);
+                    updateTextBoxLog(msg);
                     return false;
                 }
             }
@@ -211,32 +238,35 @@ namespace TinyHttpClient
                     {
                         var resData = sr.ReadToEnd();
 
+                        updateTextBoxLog("[RES Data] " + resData);
+
                         if (_method == Const.METHOD_GET)
                         {
                             var userData = Utils.Deserialize<UserData>(resData);
 
-                            MessageBox.Show(string.Format("id={0}, name={1}", userData.Id, userData.Name));
-                        }
-                        else
-                        {
-                            MessageBox.Show(resData);
+                            updateTextBoxLog(string.Format("[Deserialize] id={0}, name={1}", userData.Id, userData.Name));
                         }
                     }
                 }
             }
             catch (WebException e)
             {
+                string msg;
+
                 if (e.Status == WebExceptionStatus.ProtocolError)
                 {
                     var errres = (HttpWebResponse)e.Response;
-                    MessageBox.Show(string.Format("WebException!(ProtocolError)\nStatusCode={0}({1})\nStatusDescription={2}",
-                        errres.StatusCode, (int)errres.StatusCode, errres.StatusDescription));
+                    msg = string.Format("ERROR!\n{0}({1})\n{2}",
+                            errres.StatusCode, (int)errres.StatusCode, errres.StatusDescription);
+
                 }
                 else
                 {
-                    MessageBox.Show(string.Format("WebException!\nStatus={0}\nMessage={1}",
-                        e.Status, e.Message));
+                    msg = string.Format("ERROR!\n{0}\n{1}",
+                            e.Status, e.Message);
                 }
+                MessageBox.Show(msg);
+                updateTextBoxLog(msg);
             }
             finally
             {

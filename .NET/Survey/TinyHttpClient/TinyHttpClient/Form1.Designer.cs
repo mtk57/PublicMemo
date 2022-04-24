@@ -48,6 +48,8 @@
             this.buttonDefaultURL = new System.Windows.Forms.Button();
             this.buttonDefaultParam = new System.Windows.Forms.Button();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.textBox_Log = new System.Windows.Forms.TextBox();
+            this.toolTip2 = new System.Windows.Forms.ToolTip(this.components);
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -240,11 +242,23 @@
             this.buttonDefaultParam.UseVisualStyleBackColor = true;
             this.buttonDefaultParam.Click += new System.EventHandler(this.buttonDefaultParam_Click);
             // 
+            // textBox_Log
+            // 
+            this.textBox_Log.Location = new System.Drawing.Point(28, 518);
+            this.textBox_Log.Multiline = true;
+            this.textBox_Log.Name = "textBox_Log";
+            this.textBox_Log.ReadOnly = true;
+            this.textBox_Log.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.textBox_Log.Size = new System.Drawing.Size(784, 292);
+            this.textBox_Log.TabIndex = 18;
+            this.toolTip1.SetToolTip(this.textBox_Log, "Ex:123,456");
+            // 
             // FormMain
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(13F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(862, 536);
+            this.ClientSize = new System.Drawing.Size(862, 834);
+            this.Controls.Add(this.textBox_Log);
             this.Controls.Add(this.buttonDefaultParam);
             this.Controls.Add(this.buttonDefaultURL);
             this.Controls.Add(this.groupBox2);
@@ -292,6 +306,8 @@
         private System.Windows.Forms.Button buttonDefaultURL;
         private System.Windows.Forms.Button buttonDefaultParam;
         private System.Windows.Forms.ToolTip toolTip1;
+        private System.Windows.Forms.TextBox textBox_Log;
+        private System.Windows.Forms.ToolTip toolTip2;
     }
 }
 
