@@ -170,7 +170,7 @@ namespace TinyHttpClient
             req.Method = _method;
             req.UserAgent = "TinyHttpClient";
             req.ReadWriteTimeout = 30 * 1000;
-            req.Timeout = 30 * 1000;
+            req.Timeout = 180 * 1000;
             req.CachePolicy = new RequestCachePolicy(RequestCacheLevel.NoCacheNoStore);
             req.KeepAlive = false;
             req.ContentType = "application/x-www-form-urlencoded";
@@ -229,8 +229,8 @@ namespace TinyHttpClient
                 if (e.Status == WebExceptionStatus.ProtocolError)
                 {
                     var errres = (HttpWebResponse)e.Response;
-                    MessageBox.Show(string.Format("WebException!(ProtocolError)\nStatusCode={0}\nStatusDescription={1}",
-                        errres.StatusCode, errres.StatusDescription));
+                    MessageBox.Show(string.Format("WebException!(ProtocolError)\nStatusCode={0}({1})\nStatusDescription={2}",
+                        errres.StatusCode, (int)errres.StatusCode, errres.StatusDescription));
                 }
                 else
                 {
