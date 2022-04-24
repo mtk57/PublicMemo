@@ -40,5 +40,16 @@ namespace TinyRestServer
                @"^s?https?://[-_.!~*'()a-zA-Z0-9;/?:@&=+$,%#]+$"
             );
         }
+
+        public static bool IsNumStr(string numStr)
+        {
+            var result = 0;
+            return int.TryParse(numStr, out result);
+        }
+
+        public static string ByteAryToStr(byte[] ary)
+        {
+            return Encoding.UTF8.GetString(ary);
+        }
     }
 }

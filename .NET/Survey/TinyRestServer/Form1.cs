@@ -20,7 +20,6 @@ using MyData;
 /// ・Stopに対応しよう!
 /// ・httpsに対応しよう!
 /// ・Vistaで動くか試そう!
-/// ・ステータスコードに対応しよう!
 /// ・ログに対応しよう！
 /// 
 /// </summary>
@@ -28,9 +27,8 @@ namespace TinyRestServer
 {
     public partial class Form1 : Form
     {
-        private HttpListener listener = null;
-
-        private Dictionary<int, String> userDatas = null;
+        private HttpListener _listener = null;
+        private Dictionary<int, String> _userDatas = null;
 
         public Form1()
         {
@@ -39,187 +37,301 @@ namespace TinyRestServer
             backgroundWorker1.WorkerReportsProgress = true;
             backgroundWorker1.WorkerSupportsCancellation = true;
 
-            userDatas = new Dictionary<int, string>();
+            _userDatas = new Dictionary<int, string>();
+
+            button_Stop.Enabled = false;
         }
 
         private void button_Start_Click(object sender, EventArgs e)
         {
+            if (string.IsNullOrEmpty(textBox_Url.Text))
+            {
+                MessageBox.Show("URL is nothig!");
+                return;
+            }
+            if (string.IsNullOrEmpty(textBox_Port.Text))
+            {
+                MessageBox.Show("Port is nothig!");
+                return;
+            }
+
             if (backgroundWorker1.IsBusy != true)
             {
-                // Start the asynchronous operation.
+                UpdateTextBoxLog("START");
+
+                button_Start.Enabled = false;
+                button_Stop.Enabled = true;
+
                 backgroundWorker1.RunWorkerAsync();
             }
         }
 
         private void button_Stop_Click(object sender, EventArgs e)
         {
+            UpdateTextBoxLog("STOP");
+
             if (backgroundWorker1.WorkerSupportsCancellation == true)
             {
-                // Cancel the asynchronous operation.
                 backgroundWorker1.CancelAsync();
             }
 
-            if (listener != null)
+            closeListener();
+
+            button_Start.Enabled = true;
+            button_Stop.Enabled = false;
+        }
+
+        private void buttonDefaultURL_Click(object sender, EventArgs e)
+        {
+            if(radioButtonHttp.Checked == true)
             {
-                listener.Stop();
-                listener.Close();
-                listener = null;
+                textBox_Url.Text = Const.DEFAULT_URL_HTTP;
+                textBox_Port.Text = Const.DEFAULT_PORT_HTTP.ToString();
+            }
+            else
+            {
+                textBox_Url.Text = Const.DEFAULT_URL_HTTPS;
+                textBox_Port.Text = Const.DEFAULT_PORT_HTTPS.ToString();
             }
         }
 
-        private void backgroundWorker1_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
+        delegate void UpdateTextBoxLogDelegate(string data);
+
+        public void UpdateTextBoxLog(string data)
         {
-            BackgroundWorker worker = sender as BackgroundWorker;
-
-            listener = new HttpListener();
- 
-            // TODO:リッスンするホスト名とポートを指定します。
-            //listener.Prefixes.Add("http://*:7016/");
-
-            listener.Prefixes.Add(textBox_Url.Text + ":" + textBox_Port.Text + @"/");
-
-            listener.Start();
-
-            for (; ; )
+            if (InvokeRequired)
             {
+                Invoke(new UpdateTextBoxLogDelegate(TextBoxLogUpdate), data);
+                return;
+            }
+            TextBoxLogUpdate(data);
+        }
+
+        private void TextBoxLogUpdate(string data)
+        {
+            textBox_Log.AppendText(data + Environment.NewLine);
+        }
+
+        private void startListener(string url)
+        {
+            closeListener();
+
+            _listener = new HttpListener();
+
+            UpdateTextBoxLog(url);
+
+            _listener.Prefixes.Add(url);
+
+            _listener.Start();
+        }
+
+        private void closeListener()
+        {
+            if (_listener != null)
+            {
+                _listener.Stop();
+                _listener.Close();
+                _listener = null;
+            }
+        }
+
+        private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
+        {
+            var worker = sender as BackgroundWorker;
+
+            startListener(textBox_Url.Text + ":" + textBox_Port.Text + @"/");
+
+            run(e, worker);
+        }
+
+        private void run(DoWorkEventArgs e, BackgroundWorker worker)
+        {
+            while (_listener.IsListening)
+            {
+                UpdateTextBoxLog("Listening...");
+
+                // リクエストが来るまでここで止まる
+                var c = _listener.GetContext();
+
                 if (worker.CancellationPending == true)
                 {
                     e.Cancel = true;
                     break;
                 }
 
-                // リクエストが来るまでここで止まる
-                var c = listener.GetContext();
-
                 // リクエストを取得
                 var req = c.Request;
+                var res = c.Response;
 
-                var reqSplit = req.RawUrl.Split('/');
-                if (reqSplit.Length < 2)
+                try
                 {
-                    //TODO:エラー処理
-                }
+                    UpdateTextBoxLog(req.RawUrl);
+                    UpdateTextBoxLog(req.HttpMethod);
 
-                var api = reqSplit[1];
-                if (api != "users")
-                {
-                    //TODO:エラー処理
-                }
-
-                HttpListenerResponse res = null;
-
-                if (req.HttpMethod == "POST" || req.HttpMethod == "PUT")
-                {
-                    if (req.HasEntityBody)
+                    var reqSplit = req.RawUrl.Split('/');
+                    if (reqSplit.Length < 2)
                     {
-                        // リクエストボディに対する処理
-                        using (var sr = new StreamReader(req.InputStream, new UTF8Encoding(false)))
-                        {
-                            var userData = Utils.Deserialize<UserData>(sr.ReadToEnd());
+                        // URL不正
+                        res.StatusCode = 404;
+                        res.StatusDescription = "URL is a strange.";
 
-                            if (req.HttpMethod == "POST")
+                        UpdateTextBoxLog(res.StatusCode.ToString());
+                        UpdateTextBoxLog(res.StatusDescription);
+                        continue;
+                    }
+
+                    var api = reqSplit[1];
+                    if (api != Const.API_USERS)
+                    {
+                        // 存在しないAPI
+                        res.StatusCode = 404;
+                        res.StatusDescription = "API is not exist.";
+
+                        UpdateTextBoxLog(res.StatusCode.ToString());
+                        UpdateTextBoxLog(res.StatusDescription);
+                        continue;
+                    }
+
+                    if (req.HttpMethod == Const.METHOD_POST || req.HttpMethod == Const.METHOD_PUT)
+                    {
+                        if (req.HasEntityBody)
+                        {
+                            // リクエストボディに対する処理
+                            using (var sr = new StreamReader(req.InputStream, new UTF8Encoding(false)))
                             {
-                                addUser(userData);
+                                var reqJson = sr.ReadToEnd();
+                                UpdateTextBoxLog("[REQ]=" + reqJson);
+
+                                var userData = Utils.Deserialize<UserData>(reqJson);
+
+                                if (req.HttpMethod == Const.METHOD_POST)
+                                {
+                                    addUser(userData);
+                                }
+                                else
+                                {
+                                    updateUser(userData);
+                                }
                             }
-                            else
+                        }
+
+                        res.StatusCode = 200;
+                        res.ContentType = Const.CONTENT_TYPE_TEXT;
+                        byte[] text = Encoding.UTF8.GetBytes(Const.MSG_SUCCESS);
+                        res.OutputStream.Write(text, 0, text.Length);
+
+                        UpdateTextBoxLog("userInfo count=" + _userDatas.Count);
+
+                        if (req.HttpMethod == Const.METHOD_POST)
+                            UpdateTextBoxLog("post success");
+                        else
+                            UpdateTextBoxLog("put success");
+                    }
+                    else if (req.HttpMethod == Const.METHOD_GET || req.HttpMethod == Const.METHOD_DELETE)
+                    {
+                        if (!Utils.IsNumStr(reqSplit[2]))
+                        {
+                            // URLに正しいIDが指定されていない
+                            res.StatusCode = 400;
+                            res.StatusDescription = "ID is not number.";
+
+                            UpdateTextBoxLog(res.StatusCode.ToString());
+                            UpdateTextBoxLog(res.StatusDescription);
+                            continue;
+                        }
+
+                        int id = int.Parse(reqSplit[2]);
+
+                        if (req.HttpMethod == Const.METHOD_GET)
+                        {
+                            var retData = getUser(id);
+
+                            if (retData == null)
                             {
-                                updateUser(userData);
+                                // IDに紐づくデータが存在しない
+                                res.StatusCode = 400;
+                                res.StatusDescription = "ID is not exist.";
+
+                                UpdateTextBoxLog(res.StatusCode.ToString());
+                                UpdateTextBoxLog(res.StatusDescription);
+                                continue;
                             }
+
+                            res.ContentType = Const.CONTENT_TYPE_JSON;
+                            res.ContentEncoding = Encoding.UTF8;
+
+                            // JSONを返す
+                            byte[] text = Encoding.UTF8.GetBytes(Utils.Serialize<UserData>(retData));
+                            res.OutputStream.Write(text, 0, text.Length);
+
+                            UpdateTextBoxLog("[RES]=" + Utils.ByteAryToStr(text));
+                            UpdateTextBoxLog("userInfo count=" + _userDatas.Count);
+                            UpdateTextBoxLog("get success");
                         }
-                    }
-
-                    try
-                    {
-                        res = c.Response;
-                        res.ContentType = "text/plain";
-                        new DataContractJsonSerializer(typeof(Result)).WriteObject(res.OutputStream, "success");
-                    }
-                    finally
-                    {
-                        res.Close();
-                    }
-                }
-                else if (req.HttpMethod == "GET" || req.HttpMethod == "DELETE")
-                {
-                    int id = -1;
-
-                    try
-                    {
-                        id = int.Parse(reqSplit[2]);
-                    }
-                    catch
-                    {
-                        //TODO:エラー処理
-                    }
-
-                    
-
-                    if (req.HttpMethod == "GET")
-                    {
-                        var retData = getUser(id);
-
-                        if (retData == null)
+                        else
                         {
-                            //TODO:エラー処理
-                        }
+                            // GETとは異なり、IDが存在しなくてもエラーにはしない
 
-                        try
-                        {
-                            res = c.Response;
-                            res.ContentType = "application/json";
-                            new DataContractJsonSerializer(typeof(Result)).WriteObject(res.OutputStream, Utils.Serialize<UserData>(retData));
-                        }
-                        finally
-                        {
-                            res.Close();
+                            deleteUser(id);
+
+                            res.ContentType = Const.CONTENT_TYPE_TEXT;
+                            byte[] text = Encoding.UTF8.GetBytes(Const.MSG_SUCCESS);
+                            res.OutputStream.Write(text, 0, text.Length);
+
+                            UpdateTextBoxLog("userInfo count=" + _userDatas.Count);
+                            UpdateTextBoxLog("delete success");
                         }
                     }
                     else
                     {
-                        deleteUser(id);
+                        // 未サポートのメソッド
+                        res.StatusCode = 405;
+                        res.StatusDescription = "Not support method.";
 
-                        try
-                        {
-                            res = c.Response;
-                            res.ContentType = "text/plain";
-                            new DataContractJsonSerializer(typeof(Result)).WriteObject(res.OutputStream, "success");
-                        }
-                        finally
-                        {
-                            res.Close();
-                        }
+                        UpdateTextBoxLog(res.StatusCode.ToString());
+                        UpdateTextBoxLog(res.StatusDescription);
                     }
                 }
-                else
+                catch (Exception ex)
                 {
-                    //TODO:エラー処理
+                    res.StatusCode = 500;
+                    res.StatusDescription = ex.Message;
+
+                    UpdateTextBoxLog(res.StatusCode.ToString());
+                    UpdateTextBoxLog(res.StatusDescription);
                 }
-            }
+                finally
+                {
+                    UpdateTextBoxLog("response close");
+                    res.Close();
+                }
+
+            }// while
         }
 
         private void addUser(UserData data)
         {
-            if (!userDatas.ContainsKey(data.Id))
+            if (!_userDatas.ContainsKey(data.Id))
             {
-                userDatas.Add(data.Id, data.Name);
+                _userDatas.Add(data.Id, data.Name);
             }
         }
 
         private void updateUser(UserData data)
         {
-            if (userDatas.ContainsKey(data.Id))
+            if (_userDatas.ContainsKey(data.Id))
             {
-                userDatas[data.Id] = data.Name;
+                _userDatas[data.Id] = data.Name;
             }
         }
 
         private UserData getUser(int id)
         {
-            if (userDatas.ContainsKey(id))
+            if (_userDatas.ContainsKey(id))
             {
                 var ret = new UserData();
                 ret.Id = id;
-                ret.Name = userDatas[id];
+                ret.Name = _userDatas[id];
                 return ret;
             }
             return null;
@@ -227,17 +339,10 @@ namespace TinyRestServer
 
         private void deleteUser(int id)
         {
-            if (userDatas.ContainsKey(id))
+            if (_userDatas.ContainsKey(id))
             {
-                userDatas.Remove(id);
+                _userDatas.Remove(id);
             }
         }
-    }
-
-    public class Result
-    {
-        public bool Value { get; set; }
-
-        public string Message { get; set; }
     }
 }

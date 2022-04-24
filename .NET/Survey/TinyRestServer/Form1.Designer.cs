@@ -35,16 +35,19 @@
             this.label1 = new System.Windows.Forms.Label();
             this.textBox_Url = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.textBox_Status = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.textBox_Log = new System.Windows.Forms.TextBox();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.buttonDefaultURL = new System.Windows.Forms.Button();
+            this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.radioButtonHttps = new System.Windows.Forms.RadioButton();
+            this.radioButtonHttp = new System.Windows.Forms.RadioButton();
+            this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // button_Start
             // 
-            this.button_Start.Location = new System.Drawing.Point(22, 190);
+            this.button_Start.Location = new System.Drawing.Point(22, 392);
             this.button_Start.Name = "button_Start";
             this.button_Start.Size = new System.Drawing.Size(204, 54);
             this.button_Start.TabIndex = 0;
@@ -54,7 +57,7 @@
             // 
             // button_Stop
             // 
-            this.button_Stop.Location = new System.Drawing.Point(561, 190);
+            this.button_Stop.Location = new System.Drawing.Point(561, 392);
             this.button_Stop.Name = "button_Stop";
             this.button_Stop.Size = new System.Drawing.Size(204, 54);
             this.button_Stop.TabIndex = 1;
@@ -68,7 +71,6 @@
             this.textBox_Port.Name = "textBox_Port";
             this.textBox_Port.Size = new System.Drawing.Size(145, 31);
             this.textBox_Port.TabIndex = 2;
-            this.textBox_Port.Text = "7016";
             this.toolTip1.SetToolTip(this.textBox_Port, "Ex:70890");
             // 
             // label1
@@ -86,7 +88,6 @@
             this.textBox_Url.Name = "textBox_Url";
             this.textBox_Url.Size = new System.Drawing.Size(578, 31);
             this.textBox_Url.TabIndex = 4;
-            this.textBox_Url.Text = "http://*";
             this.toolTip1.SetToolTip(this.textBox_Url, "http or https");
             // 
             // label2
@@ -98,31 +99,14 @@
             this.label2.TabIndex = 5;
             this.label2.Text = "URL";
             // 
-            // textBox_Status
-            // 
-            this.textBox_Status.Location = new System.Drawing.Point(22, 138);
-            this.textBox_Status.Name = "textBox_Status";
-            this.textBox_Status.Size = new System.Drawing.Size(145, 31);
-            this.textBox_Status.TabIndex = 6;
-            this.toolTip1.SetToolTip(this.textBox_Status, "Ex:200");
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(18, 111);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(183, 24);
-            this.label3.TabIndex = 7;
-            this.label3.Text = "Http Status Code";
-            // 
             // textBox_Log
             // 
-            this.textBox_Log.Location = new System.Drawing.Point(22, 285);
+            this.textBox_Log.Location = new System.Drawing.Point(22, 452);
             this.textBox_Log.Multiline = true;
             this.textBox_Log.Name = "textBox_Log";
             this.textBox_Log.ReadOnly = true;
             this.textBox_Log.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox_Log.Size = new System.Drawing.Size(743, 574);
+            this.textBox_Log.Size = new System.Drawing.Size(743, 407);
             this.textBox_Log.TabIndex = 17;
             this.toolTip1.SetToolTip(this.textBox_Log, "Ex:123,456");
             // 
@@ -130,14 +114,58 @@
             // 
             this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
             // 
+            // buttonDefaultURL
+            // 
+            this.buttonDefaultURL.Location = new System.Drawing.Point(317, 119);
+            this.buttonDefaultURL.Margin = new System.Windows.Forms.Padding(6);
+            this.buttonDefaultURL.Name = "buttonDefaultURL";
+            this.buttonDefaultURL.Size = new System.Drawing.Size(203, 46);
+            this.buttonDefaultURL.TabIndex = 19;
+            this.buttonDefaultURL.Text = "Default URL";
+            this.buttonDefaultURL.UseVisualStyleBackColor = true;
+            this.buttonDefaultURL.Click += new System.EventHandler(this.buttonDefaultURL_Click);
+            // 
+            // groupBox2
+            // 
+            this.groupBox2.Controls.Add(this.radioButtonHttps);
+            this.groupBox2.Controls.Add(this.radioButtonHttp);
+            this.groupBox2.Location = new System.Drawing.Point(22, 107);
+            this.groupBox2.Name = "groupBox2";
+            this.groupBox2.Size = new System.Drawing.Size(271, 100);
+            this.groupBox2.TabIndex = 18;
+            this.groupBox2.TabStop = false;
+            this.groupBox2.Text = "Scheme";
+            // 
+            // radioButtonHttps
+            // 
+            this.radioButtonHttps.AutoSize = true;
+            this.radioButtonHttps.Location = new System.Drawing.Point(130, 44);
+            this.radioButtonHttps.Name = "radioButtonHttps";
+            this.radioButtonHttps.Size = new System.Drawing.Size(92, 28);
+            this.radioButtonHttps.TabIndex = 15;
+            this.radioButtonHttps.Text = "https";
+            this.radioButtonHttps.UseVisualStyleBackColor = true;
+            // 
+            // radioButtonHttp
+            // 
+            this.radioButtonHttp.AutoSize = true;
+            this.radioButtonHttp.Checked = true;
+            this.radioButtonHttp.Location = new System.Drawing.Point(20, 44);
+            this.radioButtonHttp.Name = "radioButtonHttp";
+            this.radioButtonHttp.Size = new System.Drawing.Size(81, 28);
+            this.radioButtonHttp.TabIndex = 14;
+            this.radioButtonHttp.TabStop = true;
+            this.radioButtonHttp.Text = "http";
+            this.radioButtonHttp.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(13F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 875);
+            this.Controls.Add(this.buttonDefaultURL);
+            this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.textBox_Log);
-            this.Controls.Add(this.label3);
-            this.Controls.Add(this.textBox_Status);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.textBox_Url);
             this.Controls.Add(this.label1);
@@ -149,6 +177,8 @@
             this.MinimumSize = new System.Drawing.Size(826, 946);
             this.Name = "Form1";
             this.Text = "Tiny REST Server";
+            this.groupBox2.ResumeLayout(false);
+            this.groupBox2.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -162,11 +192,13 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox textBox_Url;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox textBox_Status;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ToolTip toolTip1;
         private System.Windows.Forms.TextBox textBox_Log;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
+        private System.Windows.Forms.Button buttonDefaultURL;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.RadioButton radioButtonHttps;
+        private System.Windows.Forms.RadioButton radioButtonHttp;
     }
 }
 
