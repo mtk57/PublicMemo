@@ -42,12 +42,13 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.radioButtonHttps = new System.Windows.Forms.RadioButton();
             this.radioButtonHttp = new System.Windows.Forms.RadioButton();
+            this.buttonAddCert = new System.Windows.Forms.Button();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // button_Start
             // 
-            this.button_Start.Location = new System.Drawing.Point(22, 392);
+            this.button_Start.Location = new System.Drawing.Point(12, 223);
             this.button_Start.Name = "button_Start";
             this.button_Start.Size = new System.Drawing.Size(204, 54);
             this.button_Start.TabIndex = 0;
@@ -57,7 +58,7 @@
             // 
             // button_Stop
             // 
-            this.button_Stop.Location = new System.Drawing.Point(561, 392);
+            this.button_Stop.Location = new System.Drawing.Point(551, 223);
             this.button_Stop.Name = "button_Stop";
             this.button_Stop.Size = new System.Drawing.Size(204, 54);
             this.button_Stop.TabIndex = 1;
@@ -101,7 +102,7 @@
             // 
             // textBox_Log
             // 
-            this.textBox_Log.Location = new System.Drawing.Point(22, 452);
+            this.textBox_Log.Location = new System.Drawing.Point(12, 283);
             this.textBox_Log.Multiline = true;
             this.textBox_Log.Name = "textBox_Log";
             this.textBox_Log.ReadOnly = true;
@@ -158,11 +159,22 @@
             this.radioButtonHttp.Text = "http";
             this.radioButtonHttp.UseVisualStyleBackColor = true;
             // 
+            // buttonAddCert
+            // 
+            this.buttonAddCert.Location = new System.Drawing.Point(576, 119);
+            this.buttonAddCert.Name = "buttonAddCert";
+            this.buttonAddCert.Size = new System.Drawing.Size(179, 43);
+            this.buttonAddCert.TabIndex = 20;
+            this.buttonAddCert.Text = "Add Cert";
+            this.buttonAddCert.UseVisualStyleBackColor = true;
+            this.buttonAddCert.Click += new System.EventHandler(this.buttonAddCert_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(13F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 875);
+            this.ClientSize = new System.Drawing.Size(800, 708);
+            this.Controls.Add(this.buttonAddCert);
             this.Controls.Add(this.buttonDefaultURL);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.textBox_Log);
@@ -173,8 +185,6 @@
             this.Controls.Add(this.button_Stop);
             this.Controls.Add(this.button_Start);
             this.MaximizeBox = false;
-            this.MaximumSize = new System.Drawing.Size(826, 946);
-            this.MinimumSize = new System.Drawing.Size(826, 946);
             this.Name = "Form1";
             this.Text = "Tiny REST Server";
             this.groupBox2.ResumeLayout(false);
@@ -199,6 +209,7 @@
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.RadioButton radioButtonHttps;
         private System.Windows.Forms.RadioButton radioButtonHttp;
+        private System.Windows.Forms.Button buttonAddCert;
     }
 }
 

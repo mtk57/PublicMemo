@@ -1,12 +1,15 @@
-﻿using System;
+﻿using MyData;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Runtime.Serialization.Json;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Windows.Forms;
-using MyData;
+using System.Reflection;
+using System.Runtime.InteropServices;
 
 /// <summary>
 /// 簡易RESTサーバ
@@ -20,7 +23,6 @@ using MyData;
 /// ・Stopに対応しよう!
 /// ・httpsに対応しよう!
 /// ・Vistaで動くか試そう!
-/// ・ログに対応しよう！
 /// 
 /// </summary>
 namespace TinyRestServer
@@ -29,6 +31,8 @@ namespace TinyRestServer
     {
         private HttpListener _listener = null;
         private Dictionary<int, String> _userDatas = null;
+        private int _port;
+        private string _url;
 
         public Form1()
         {
@@ -54,6 +58,14 @@ namespace TinyRestServer
                 MessageBox.Show("Port is nothig!");
                 return;
             }
+            if(!Utils.IsNumStr(textBox_Port.Text))
+            {
+                MessageBox.Show("Port is not a number!");
+                return;
+            }
+
+            _url = textBox_Url.Text;
+            _port = int.Parse(textBox_Port.Text);
 
             if (backgroundWorker1.IsBusy != true)
             {
@@ -93,6 +105,18 @@ namespace TinyRestServer
                 textBox_Url.Text = Const.DEFAULT_URL_HTTPS;
                 textBox_Port.Text = Const.DEFAULT_PORT_HTTPS.ToString();
             }
+        }
+
+        private void buttonAddCert_Click(object sender, EventArgs e)
+        {
+            //try
+            //{
+            //    addCert();
+            //}
+            //catch (Exception ex)
+            //{
+            //    MessageBox.Show(ex.Message);
+            //}
         }
 
         delegate void UpdateTextBoxLogDelegate(string data);
@@ -139,7 +163,10 @@ namespace TinyRestServer
         {
             var worker = sender as BackgroundWorker;
 
-            startListener(textBox_Url.Text + ":" + textBox_Port.Text + @"/");
+            var url = string.Format("{0}:{1}/", _url, _port);
+            //var url = @"https://localhost:4433/users/";
+
+            startListener(url);
 
             run(e, worker);
         }
@@ -344,5 +371,51 @@ namespace TinyRestServer
                 _userDatas.Remove(id);
             }
         }
+
+        //private void addCert()
+        //{
+        //    // オレオレ証明書の作成
+        //    // →Windows10であれば、
+        //    //   1.コンパネからIISをインストール
+        //    //   2.IISを起動して、「サーバ証明書」→「自己署名入り証明書の作成」で作成できる。
+        //    //   →rest_server_test
+
+        //    // makecert -n "CN=localhostCA" -r -pe -sv localhostCA.pvk localhostCA.cer
+        //    // makecert -pe -iv localhostCA.pvk -n "CN=localhost" -ic localhostCA.cer -sv localhostSignedByCA.pvk localhostSignedByCA.cer
+        //    // pvk2pfx -pvk localhostSignedByCA.pvk -spc localhostSignedByCA.cer -pfx localhostSignedByCA.pfx
+
+        //    var certStore = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+
+        //    var cert = new X509Certificate2(
+        //      @"C:\_git\PublicMemo\.NET\Survey\TinyRestServer\localhostSignedByCA.pfx"
+        //      , "1234"
+        //      , X509KeyStorageFlags.Exportable | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet);
+
+        //    //Console.WriteLine();
+            
+
+        //    certStore.Open(OpenFlags.ReadWrite);
+
+        //    //if (!certStore.Certificates.Contains(cert))
+        //    //{
+        //        certStore.Add(cert);
+
+        //        // 自分（このアプリケーション）の Guidを取得する
+        //        var assem = Assembly.GetExecutingAssembly();
+        //        var guid = "{" + (Attribute.GetCustomAttribute(assem, typeof(GuidAttribute)) as GuidAttribute).Value + "}";
+
+        //        var certhash = BitConverter.ToString(cert.GetCertHash()).Replace("-", "");
+        //        var args = string.Format("http add sslcert ipport=0.0.0.0:{0} certhash={1} appid={2}",
+        //                _port, certhash, guid);
+
+        //        Process.Start(new ProcessStartInfo()
+        //        {
+        //            FileName = "netsh",
+        //            Arguments = args
+        //        });
+        //    //}
+
+        //    certStore.Close();
+        //}
     }
 }
