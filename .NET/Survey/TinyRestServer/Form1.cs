@@ -2,14 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Windows.Forms;
-using System.Reflection;
-using System.Runtime.InteropServices;
 
 /// <summary>
 /// 簡易RESTサーバ
@@ -21,8 +17,6 @@ using System.Runtime.InteropServices;
 /// [TODO]
 /// MUST
 /// ・Stopに対応しよう!
-/// ・httpsに対応しよう!
-/// ・Vistaで動くか試そう!
 /// 
 /// </summary>
 namespace TinyRestServer
