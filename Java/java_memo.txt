@@ -1,4 +1,38 @@
 ﻿
+
+
+
+
+-------------------------
+●Pleiades All in One Eclipseについて
+
+Pleiadesは、Eclipse + よく使うプラグイン（日本語ランゲージパックも含む）をまとめたもので、
+サクッとJava開発環境を作るにはベスト。（全部入りなので）
+環境変数にJAVA_HOMEを追加したりしなくてもよい。
+
+http://mergedoc.osdn.jp/
+で公開されている。
+
+-------------------------
+●サーブレットで作成したWebサーバーの公開URLについて
+
+http://localhost:8080/[Project名]/[URLパターン]
+
+URLパターンは、サーブレットのクラス定義の直前に@WebServlet()の引数として定義されているServletSampleとなる。
+
+例：
+http://localhost:8080/WebSample/ServletSample
+の場合、
+
+プロジェクト名：WebSample
+
+@WebServlet("/ServletSample")
+public class ServletSample extends HttpServlet {
+……
+}
+
+
+-------------------------
 ●VS CodeでJavaアプリ開発  (2021/8/9)
 
 <ざっくり手順>  ※VS CodeとOpenJDKはインストール済の前提
@@ -13,6 +47,7 @@
 　⇒プロジェクトが作成される。
 
 
+-------------------------
 ●OpenJDKのインストール  (2021/8/9)
 
 <ざっくり手順>
