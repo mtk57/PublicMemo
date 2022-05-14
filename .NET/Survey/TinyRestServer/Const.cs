@@ -19,5 +19,6 @@
 
         internal const string CONTENT_TYPE_JSON = "application/json";
         internal const string CONTENT_TYPE_TEXT = "text/plain";
+        internal const string CONTENT_TYPE = "application/x-www-form-urlencoded";
     }
 }

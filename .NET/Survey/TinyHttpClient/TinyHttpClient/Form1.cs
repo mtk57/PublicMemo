@@ -205,7 +205,7 @@ namespace TinyHttpClient
             if (_method == Const.METHOD_POST || _method == Const.METHOD_PUT)
             {
                 req.Accept = "application/json";
-                req.ContentType = "application/json;";
+                req.ContentType = "application/json";
                 //req.ContentLength = param.Length;
 
                 using (var s = req.GetRequestStream())

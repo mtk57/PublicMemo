@@ -1,0 +1,15 @@
+{
+	"post_token": {
+		"rw_timeout_sec": 30,
+		"timeout_sec": 180,
+		"method": "POST",
+		"url": "http://localhost:7016/users/",
+		"content_type": "application/x-www-form-urlencoded",
+
+		"client_id": "CID_1",
+		"client_sec": "CSEC_1",
+		"user_name": "UN_1",
+		"user_pw": "PW_1",
+		"g_type": "GT_1"
+	}
+}

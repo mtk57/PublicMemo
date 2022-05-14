@@ -220,18 +220,34 @@ namespace TinyRestServer
                             // リクエストボディに対する処理
                             using (var sr = new StreamReader(req.InputStream, new UTF8Encoding(false)))
                             {
-                                var reqJson = sr.ReadToEnd();
-                                UpdateTextBoxLog("[REQ]=" + reqJson);
+                                var data = sr.ReadToEnd();
+                                UpdateTextBoxLog("[REQ]=" + data);
 
-                                var userData = Utils.Deserialize<UserData>(reqJson);
-
-                                if (req.HttpMethod == Const.METHOD_POST)
+                                if (req.ContentType == Const.CONTENT_TYPE)
                                 {
-                                    addUser(userData);
+                                    // TODO
+                                }
+                                else if (req.ContentType == Const.CONTENT_TYPE_JSON)
+                                {
+                                    var userData = Utils.Deserialize<UserData>(data);
+
+                                    if (req.HttpMethod == Const.METHOD_POST)
+                                    {
+                                        addUser(userData);
+                                    }
+                                    else
+                                    {
+                                        updateUser(userData);
+                                    }
                                 }
                                 else
                                 {
-                                    updateUser(userData);
+                                    // 未サポート
+                                    res.StatusCode = 405;
+                                    res.StatusDescription = "Not support content type.";
+
+                                    UpdateTextBoxLog(res.StatusCode.ToString());
+                                    UpdateTextBoxLog(res.StatusDescription);
                                 }
                             }
                         }
