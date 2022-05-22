@@ -1,0 +1,28 @@
+[
+    {
+        "id":"ID123",
+        "userName":"Hoge User",
+        "age":17,
+        "enable":true,
+        "food":[
+            "apple",
+            "banana"
+        ],
+        "other":{
+            "reserve":"Yobi"
+        }
+    },
+    {
+        "id":"ID234",
+        "userName":"Fuga User",
+        "age":99,
+        "enable":false,
+        "food":[
+            "pasta",
+            "pizza"
+        ],
+        "other":{
+            "reserve":"Yobi"
+        }
+    }
+]

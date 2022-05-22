@@ -1,0 +1,8 @@
+
+●登録
+cd C:\_git\PublicMemo\.NET\Survey\ComLibTest\bin\Release
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\regasm ComLibTest.dll /tlb /codebase
+
+●解除
+cd C:\_git\PublicMemo\.NET\Survey\ComLibTest\bin\Release
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\regasm /u ComLibTest.dll
