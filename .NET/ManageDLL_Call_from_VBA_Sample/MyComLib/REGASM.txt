@@ -1,0 +1,32 @@
+
+---------
+32bit版
+
+●登録
+cd C:\_git\PublicMemo\.NET\ManageDLL_Call_from_VBA_Sample\MyComLib\bin\Release
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\regasm /tlb /codebase /v MyComLib.dll
+
+●解除
+cd C:\_git\PublicMemo\.NET\ManageDLL_Call_from_VBA_Sample\MyComLib\bin\Release
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\regasm /u MyComLib.dll
+
+
+---------
+64bit版
+
+●登録
+cd C:\_git\PublicMemo\.NET\ManageDLL_Call_from_VBA_Sample\MyComLib\bin\Release
+C:\Windows\Microsoft.NET\Framework64\v4.0.30319\regasm /tlb /codebase /v MyComLib.dll
+
+●解除
+cd C:\_git\PublicMemo\.NET\ManageDLL_Call_from_VBA_Sample\MyComLib\bin\Release
+C:\Windows\Microsoft.NET\Framework64\v4.0.30319\regasm /u MyComLib.dll
+
+
+---------
+
+クラスが登録されていません。
+→REGASMでTLBを登録していない。（TLBを使うアプリが32bit/64bitを意識する必要がある）
+
+
+

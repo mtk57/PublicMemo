@@ -10,6 +10,17 @@ namespace NsComLibTest
     public interface IComLibTest
     {
         UserInfos GetUserInfos();
+
+        string StructArgsTest(ref StructTest stTest);
+
+        string SimpleFunc();
+    }
+
+    public struct StructTest
+    {
+        [MarshalAs(UnmanagedType.BStr)]
+        public string x;
+        public int y;
     }
 
     [ClassInterface(ClassInterfaceType.None)]
@@ -22,6 +33,27 @@ namespace NsComLibTest
             userInfos.UserInfoList = Utils.ReadJsonFile<UserInfo[]>(path);
 
             return userInfos;
+        }
+
+        public string StructArgsTest(ref StructTest stTest)
+        {
+            try
+            {
+                var x = stTest.x;
+                var y = stTest.y;
+
+                return $"{x}_{y}";
+            }
+            catch(Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+                return "";
+            }
+        }
+
+        public string SimpleFunc()
+        {
+            return "Hello";
         }
     }
 
