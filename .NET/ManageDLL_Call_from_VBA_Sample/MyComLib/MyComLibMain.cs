@@ -33,7 +33,7 @@ namespace MyComLib
 
         public string[] myStrArray { get; private set; }
 
-        public bool SetStrArray([MarshalAs(UnmanagedType.SafeArray, SafeArraySubType = VarEnum.VT_BSTR)] ref string[] arg)
+        public bool SetStrArray(ref string[] arg)
         {
             try
             {
