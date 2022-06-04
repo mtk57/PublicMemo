@@ -29,4 +29,7 @@ C:\Windows\Microsoft.NET\Framework64\v4.0.30319\regasm /u MyComLib.dll
 →REGASMでTLBを登録していない。（TLBを使うアプリが32bit/64bitを意識する必要がある）
 
 
+RegAsm : error RA0000 : エクスポートしたタイプ ライブラリを保存中にエラーが発生しました: アクセスが拒否されました。 (HRESULT からの例外:0x80070005 (E_ACCESSDENIED))
+→VBAの参照設定から参照されているので、チェックを外してから、登録する。
+
 
