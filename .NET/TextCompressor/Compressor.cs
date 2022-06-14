@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using TextCompressor.Common;
 
 namespace TextCompressor
@@ -14,13 +13,15 @@ namespace TextCompressor
         private string targetDirPath;
         private string outputDirPath;
         private List<string> targetExtensions;
+        private bool noEncrypt;
 
-        public Compressor(string kword, string inPath, string outPath, string ext)
+        public Compressor(string kword, string inPath, string outPath, string ext, bool noEnc = false)
         {
             keyword = kword;
             targetDirPath = inPath;
             outputDirPath = outPath;
             targetExtensions = ext.Split(Const.EXT_DELI).ToList();
+            noEncrypt = noEnc;
 
             Validate();
         }
@@ -48,7 +49,10 @@ namespace TextCompressor
             {
                 throw new DirectoryNotFoundException("Target Dir Path is not exist!");
             }
-
+            if (!Directory.Exists(outputDirPath))
+            {
+                throw new DirectoryNotFoundException("Output Dir Path is not exist!");
+            }
         }
 
         public void Run()
@@ -65,17 +69,33 @@ namespace TextCompressor
 
             foreach(var file in fileList)
             {
-                // ファイルを読み込む
+                // 以下フォルダは除外
+                if (file.Contains(@"\bin\") || file.Contains(@"\obj\"))
+                {
+                    continue;
+                }
+
+                // ファイルを読み込み結合する
+                // ファイルパスは目印を付ける
                 sb.AppendLine(string.Format(Const.FORMAT_PATH, file.Replace(targetDirPath, "")));
                 sb.Append(Utils.ReadFile(file));
+                //sb.AppendLine();
             }
 
-            // 暗号化する
-            var cmpStr = Utils.EncryptString(sb.ToString(), keyword);
-
-            // 保存する
-            var writePath = Path.Combine(outputDirPath, Guid.NewGuid().ToString() + Const.EXT_CMP);
-            Utils.WriteFile(writePath, cmpStr);
+            if (noEncrypt)
+            {
+                // 暗号化しないで保存する
+                Utils.WriteFile(
+                    Path.Combine(outputDirPath, Guid.NewGuid().ToString() + Const.EXT_CMP),
+                    sb.ToString());
+            }
+            else
+            {
+                // 暗号化して保存する
+                Utils.WriteFile(
+                    Path.Combine(outputDirPath, Guid.NewGuid().ToString() + Const.EXT_CMP),
+                    Utils.EncryptString(sb.ToString(), keyword));
+            }
         }
     }
 }

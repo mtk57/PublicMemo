@@ -49,6 +49,7 @@
             this.label8 = new System.Windows.Forms.Label();
             this.buttonRunDecomp = new System.Windows.Forms.Button();
             this.buttonDefault = new System.Windows.Forms.Button();
+            this.checkBoxNoEnc = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // label1
@@ -235,11 +236,22 @@
             this.buttonDefault.UseVisualStyleBackColor = true;
             this.buttonDefault.Click += new System.EventHandler(this.buttonDefault_Click);
             // 
+            // checkBoxNoEnc
+            // 
+            this.checkBoxNoEnc.AutoSize = true;
+            this.checkBoxNoEnc.Location = new System.Drawing.Point(295, 114);
+            this.checkBoxNoEnc.Name = "checkBoxNoEnc";
+            this.checkBoxNoEnc.Size = new System.Drawing.Size(151, 28);
+            this.checkBoxNoEnc.TabIndex = 21;
+            this.checkBoxNoEnc.Text = "No encrypt";
+            this.checkBoxNoEnc.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(13F, 24F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(875, 823);
+            this.Controls.Add(this.checkBoxNoEnc);
             this.Controls.Add(this.buttonDefault);
             this.Controls.Add(this.buttonRunDecomp);
             this.Controls.Add(this.buttonDecompOutDirRef);
@@ -295,6 +307,7 @@
         private System.Windows.Forms.Label label8;
         private System.Windows.Forms.Button buttonRunDecomp;
         private System.Windows.Forms.Button buttonDefault;
+        private System.Windows.Forms.CheckBox checkBoxNoEnc;
     }
 }
 

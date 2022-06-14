@@ -13,6 +13,11 @@ namespace TextCompressor.Common
     /// </summary>
     internal class Utils
     {
+        public static List<string> SplitNewLine(string data)
+        {
+            return new List<string>(data.Replace("\r\n", "\n").Split(new[] { '\n', '\r' }));
+        }
+
         //------------------------------------------
         //文字列を圧縮BASE64に変換して返す
         //https://gurizuri0505.halfmoon.jp/20121211/52033
