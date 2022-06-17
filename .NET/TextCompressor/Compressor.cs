@@ -78,8 +78,16 @@ namespace TextCompressor
                 // ファイルを読み込み結合する
                 // ファイルパスは目印を付ける
                 sb.AppendLine(string.Format(Const.FORMAT_PATH, file.Replace(targetDirPath, "")));
-                sb.Append(Utils.ReadFile(file));
-                //sb.AppendLine();
+
+                var allLine = Utils.ReadFile(file);
+
+                if (!allLine.EndsWith("\r\n"))  // メンドイのWinのみww
+                {
+                    // 末尾が改行コードで終わっていない場合は改行を追加する。
+                    allLine += "\r\n";
+                }
+
+                sb.Append(allLine);
             }
 
             if (noEncrypt)
