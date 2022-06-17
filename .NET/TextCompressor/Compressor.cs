@@ -81,7 +81,7 @@ namespace TextCompressor
 
                 var allLine = Utils.ReadFile(file);
 
-                if (!allLine.EndsWith("\r\n"))  // メンドイのWinのみww
+                if (!allLine.EndsWith("\r\n"))  // メンドイのでWinのみに対応するww
                 {
                     // 末尾が改行コードで終わっていない場合は改行を追加する。
                     allLine += "\r\n";
