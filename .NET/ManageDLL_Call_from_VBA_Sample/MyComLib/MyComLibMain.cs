@@ -20,6 +20,7 @@ namespace MyComLib
     public interface IMyComLibMain
     {
         string Func(object obj);
+        void RaiseError();
     }
 
     [ComVisible(true)]
@@ -92,6 +93,11 @@ namespace MyComLib
             {
                 return ex.Message;
             }
+        }
+
+        public void RaiseError()
+        {
+            throw new Exception("Test Error");
         }
     }
 }
