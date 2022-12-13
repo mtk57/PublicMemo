@@ -9,10 +9,22 @@
 ・Windows + Shift + S
   画面キャプチャ（範囲指定）
 
+・Windows + X
+  スタートボタン右クリック
+
 
 ■Edge
 ・CTRL + TAB
   次のタブに切り替え
+
+・CTRL + SHIFT + N
+  新しいシークレットウィンドウ
+
+・CTRL + T
+  新しいタブ
+
+・CTRL + W
+  タブを閉じる
 
 
 ■Excel
