@@ -150,6 +150,62 @@ Ex.
 var health: int = 0
 
 ---------------------------------
+●3項演算子
+
+はないので、以下を使う。(三項if式という)
+(True Value) if (Expression) else (False Value) 
+
+例：
+ C# : (hoge == null) ? true : false
+ GD : true if hoge == null else false
+
+ちなみに、入れ子にできるみたい。
+
+var count = 0
+
+var fruit = (
+        "apple" if count == 2
+        else "pear" if count == 1
+        else "banana" if count == 0
+        else "orange"
+)
+print(fruit)  # banana
+
+
+---------------------------------
+●16進文字列 → 数値 変換
+
+print("0xFF".hex_to_int()) # "255"
+
+→"0x"が必要なので注意。
+
+---------------------------------
+●数値 → 16進文字列 変換
+print("0x%X" % 255)  # "0xFF"
+
+---------------------------------
+●グローバルな定数や関数
+
+# global.gd
+const block_size: int = 10
+static func draw_block(x: int, y:int) -> void:
+
+# game.gd
+const Global = preload("res://global.gd")
+func _process(delta: float) -> void:
+    Global.draw_block(2 * Global.block_size, 3 * Global.block_size)
+
+
+---------------------------------
+●2次元配列
+	var a = []
+	for y in range(8):
+		a.append([])
+		a[y].resize(8)
+		for x in range(8):
+			a[y][x] = 0
+
+---------------------------------
 ●SpriteとAnimatedSprite
 
 ただ一枚の画像をスプライトとして割り当てるなら「Sprite」クラスのノードを使用するが、
