@@ -183,6 +183,11 @@ print("0xFF".hex_to_int()) # "255"
 ●数値 → 16進文字列 変換
 print("0x%X" % 255)  # "0xFF"
 
+# %sと組み合わせ
+var a = "LDA"
+var b = 0xFF
+print("%s" % a, " 0x%X" % b)
+
 ---------------------------------
 ●グローバルな定数や関数
 
@@ -195,6 +200,10 @@ const Global = preload("res://global.gd")
 func _process(delta: float) -> void:
     Global.draw_block(2 * Global.block_size, 3 * Global.block_size)
 
+---------------------------------
+●型変換
+var a = true
+var b = convert(a, TYPE_INT)  # 1
 
 ---------------------------------
 ●2次元配列

@@ -1,0 +1,110 @@
+
+=========================================================
+●Node		https://nodejs.org/ja/
+
+Node.jsのこと。
+JavaScriptを、サーバーサイドで動作させるプラットフォーム
+
+JavaScriptは本来Webブラウザ上のみで動作し、
+それだけではサーバー上で動作させることはできません。
+Node.jsを使うことで、JavaScriptがサーバー上でも動作できるようになるわけです。
+
+
+=========================================================
+●NPM
+
+Nodeに付属するパッケージマネージャー
+→Node.jsをインストールすると一緒に入るのかも。
+
+
+=========================================================
+●Yarn		https://classic.yarnpkg.com/lang/en/
+
+NPMよりも高速なパッケージマネージャ（Facebookが開発したJavaScriptのパッケージマネージャー）
+
+Node.jsとは別途インストールが必要。
+nodeパッケージなので、npm経由でインストールできます。
+npm install -g yarn
+
+yarn.lock
+→ライブラリ等のバージョンを統一する際に必要になるファイルです
+
+<npmと比べて>
+npmと互換性があります。
+キャッシュの有無にもよりますが、インストールがより速いです。
+ネットワーク接続失敗時、自動リトライします。
+yarn.lock によるバージョン固定化が行われます。
+yarn.lock は、yarnでインストールした後に自動生成されます。
+
+<コマンド>
+yarn list					インストール済みのパッケージ一覧を表示
+yarn add [package]			dependenciesにインストール
+yarn add --dev [package]	devDependenciesにインストール
+yarn upgrade				ローカルプロジェクトの全パッケージを更新
+yarn upgrade [package]		ローカルプロジェクトの指定パッケージを更新
+
+参考：https://qiita.com/rubytomato@github/items/1696530bb9fd59aa28d8
+
+=========================================================
+●flowtype
+TypeScriptと同じようにJavaScriptに静的型付を提供するプログラミング言語
+
+=========================================================
+●TypeScript
+
+文字列の扱い
+ バッククォート (`)
+   - 文字列に変数や式を埋め込める
+   - 数行の文字列を改行コードなしに埋め込むことができる
+   例：
+     let x: string = '埋め込み文字列'
+     let msg = `ここからスタート
+                埋め込み文字列 → ${x}
+                ここまで`
+
+=========================================================
+●Babel
+
+次の世代のJavaScriptの標準機能をブラウザのサポートを待たずに使えるようにするNode.js製のツール
+→Node.jsをインストールすると一緒に入るのかも。
+
+簡単に言うと、JavaScriptのコードを新しい書き方から古い書き方に変換するツールである。
+具体的には、JavaScriptの言語仕様であるES2015以上の仕様のJavaScriptで記述すると、
+Internet Explorer11といった古いブラウザでは動作しない。
+そこで、Babelを使ってES2015・ES2016といった仕様で記述したJavaScriptファイルを互換性のあるEXMAScript5に変換する。
+
+=========================================================
+●flownesについて
+
+https://github.com/bokuweb/flownes
+
+*.jsだが、flowtypeを使っている。
+
+Node.jsも使っている。
+
+Yarnも使っている。（なのでnpmを使ってパッケージを追加してはいけない）
+
+yarn startすると、node_modulesフォルダが作成される
+
+-------------------------
+.babelrc			関係なし。Babel用のファイル（手動生成）
+.eslintrc			関係なし。ESLINT用のファイル
+.flowconfig			関係なし。Javascriptのコードに対して静的な型チェックをしてくれる			
+.gitignore			関係なし。
+README.md			関係なし
+index.html			関係なし
+package.json		重要。flownesのプロジェクトファイルみたいなもの。自動生成？
+					devDependenciesが肝かも。★
+					yarn installすると、このファイルが参照され、ライブラリをインストールしてくれる
+					→と思ったけど、yarnは、.lockファイルがあればそれを優先するみたい。
+regconfig.json		関係なし
+server.js			関係なし
+yarn.lock			自動生成
+					lockファイルは 「依存関係まで含めて、実際にどのバージョンがインストールされているか」 を管理します。
+					それぞれのライブラリのversionの項目がそれにあたります。
+					パッケージマネージャーは基本的に、lockファイルがあればそちらの記載に従うので、
+					lockファイルを共有することで 「誰がインストールしても同じバージョンがインストールされる」 ことを担保することができます。
+					参考：https://zenn.dev/nekoniki/articles/ec5bb4d16ef20a
+webpack.config.js	関係なし
+-------------------------
+
