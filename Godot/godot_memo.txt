@@ -150,6 +150,11 @@ Ex.
 var health: int = 0
 
 ---------------------------------
+●for
+for i in range(0, 10, 2):
+    print(i)	# 0,2,4,6,8
+
+---------------------------------
 ●3項演算子
 
 はないので、以下を使う。(三項if式という)
@@ -186,7 +191,7 @@ print("0x%X" % 255)  # "0xFF"
 # %sと組み合わせ
 var a = "LDA"
 var b = 0xFF
-print("%s" % a, " 0x%X" % b)
+print("%s 0x%X" % [a, b])
 
 ---------------------------------
 ●グローバルな定数や関数
@@ -213,6 +218,18 @@ var b = convert(a, TYPE_INT)  # 1
 		a[y].resize(8)
 		for x in range(8):
 			a[y][x] = 0
+
+---------------------------------
+●4byte配列をDWORD(32bit)にする
+
+var ary = []
+ary.resize(4)
+ary[0] = 0x10
+ary[1] = 0x20
+ary[2] = 0x30
+ary[3] = 0xFF
+var rgba = ary[0] << 24 | ary[1] << 16 | ary[2] << 8 | ary[3]
+print("0x%X" %rgba)  # 0x102030FF
 
 ---------------------------------
 ●SpriteとAnimatedSprite
@@ -304,4 +321,15 @@ is_on_wall()もある。
 「Anima	tedSprite」のようなスプライトテクスチャのアニメーション以外にも、他のあらゆるプロパティの値をアニメーションさせながら変化させることができる。
 
 
+---------------------------------
+●ファイルロギング
+
+[プロジェクト] - [プロジェクト設定] - [一般] - [ロギング] - [ファイルロギング]
+の[ファイルロギングを有効化]をONにする。
+
+あとは、print()で出力したデータが、user://logs/godot.log
+に出力される。
+user://logsは、以下のようなパス。（プロジェクト名がNesEmuの場合）
+C:\Users\motok\AppData\Roaming\Godot\app_userdata\NesEmu\logs
+→プロジェクト] - [ユーザデータフォルダを開く]でも辿り着く。
 
