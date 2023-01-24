@@ -390,3 +390,54 @@ user://logsは、以下のようなパス。（プロジェクト名がNesEmuの
 C:\Users\motok\AppData\Roaming\Godot\app_userdata\NesEmu\logs
 →プロジェクト] - [ユーザデータフォルダを開く]でも辿り着く。
 
+
+---------------------------------
+●VSCode + C# でデバッグ
+
+※仕組みとしては、C#スクリプトを実行すると、ビルドされてexeが作成される。
+  そのexeがポートを待ち受けていて、vscodeのmonoデバッガーと通信してデバッグするイメージ。
+  なので、デバッグするときはGodotでF5で開始してexeを待機させておき、vscodeからアタッチする必要がある。
+
+
+<セットアップ>
+1.Godotのmonoバージョンをダウンロードする。
+  →C:\_tools\godot\3.5.1\mono\Godot_v3.5.1-stable_mono_win64.exe
+2.1と合っているmonoをダウンロードしてインストールする。
+  →C:\_tools\mono\mono-6.12.0.182-x64-0.msi
+3.Visual Studio Code（以下、vscode）をダウンロード、インストールする。
+  
+<Godot(mono)>での作業
+1.スクリプトをC#でアタッチする。
+2.[エディター] - [エディター設定] - [テキストエディター] - [外部]を設定する。
+  - 外部エディターを使用：ON
+  - 実行パス：vscodeのexeのパス。
+               →C:\Users\{ユーザ名}\AppData\Local\Programs\Microsoft VS Code\Code.exe
+  - 実行フラグ：{project} --goto {file}:{line}:{col}
+
+  →この設定をすると、godotでスクリプトをクリックするとvscodeが起動する。
+
+3.[プロジェクト] - [プロジェクト設定] - [一般] - [Mono] - [デバッガーエージェント]を設定する。
+  - ポート：23685   ※デフォルトのままでよい。（うまく動かない場合は他アプリに取られているかもなので変えてみる）
+  - デバッガーを待機：ON
+  - 待機のタイムアウト：15000   ※適当に長めにしておく。
+
+<vscode>での作業
+1.以下のExtensionをインストールする。
+  - C#               ※Microsoft
+  - Mono Debug       ※Microsoft
+  - godot-tools      ※Geequlim
+
+2.「実行とデバッグ（Ctrl + Shift + D）」を選択すると、
+  create a launch.json fileみたいなメッセージが表示されるのでクリックする。
+  Select environmentでは「C# mono」を選択する。
+  デフォルトのlaunch.jsonが作成されるので、以下を修正する。
+  - "port": 23685    ※godotで設定した値に合わせること。
+
+
+<デバッグ手順>
+1.vscodeでブレークポイントを張っておく。
+2.godotでF5で開始する。
+  →vscodeからのアタッチ待ち状態となる。
+3.vscodeで、「実行とデバッグ」のAttachの三角マークをクリックする。
+4.ブレークポイントで止まる。
+
