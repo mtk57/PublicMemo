@@ -1,0 +1,664 @@
+Rust memo
+
+引用元：
+https://www.tohoho-web.com/ex/rust.html#as
+
+-----------------------------------------------
+■開発環境構築
+
+1.Microsoft C++ Build Toolsのインストール
+   https://visualstudio.microsoft.com/ja/visual-cpp-build-tools/
+   →C++だけ入れる
+
+2.Rustのインストール
+   https://www.rust-lang.org/tools/install
+   →インストーラ叩いて、1 + Enter
+
+3.Visual Studio Code（VSCode）のインストール
+
+4;拡張機能「rust-analyzer」のインストール
+
+5;拡張機能「CodeLLDB」のインストール
+
+-----------------------------------------------
+■Hello world
+
+1.適当にフォルダを作成してCD
+
+2.以下コマンドを実行
+  >rust new hello
+
+  →src\main.rs
+    などが作成される。
+
+3.VS codeで作成したフォルダを開く
+
+3.F5で実行
+  →初回実行時は、launch.jsonがないのでエラーが出る。
+    Yes/No/CancelのポップアップでYESを押せば作られる
+
+-----------------------------------------------
+■予約語
+
+as          // 型変換
+as          // モジュールの別名
+async       // 非同期処理
+await       // 非同期処理
+break       // ループから抜ける
+const       // 変数・定数
+continue    // 次のループを続ける
+crate       // ルートモジュール
+dyn         // トレイトの直接利用
+else        // 条件分岐
+enum        // 列挙型
+extern      // 外部ライブラリ
+false       // 真偽値の偽
+fn          // 関数
+for         // 繰り返し
+if          // 条件分岐
+impl        // インプリメンテーション
+in          // 繰り返し
+let         // 変数・定数
+loop        // ループ
+match       // マッチ
+mod         // モジュール定義
+move        // クロージャーに所有権を引き渡す
+mut         // 変数・定数
+pub         // モジュール外公開
+ref         // 参照型
+return      // 関数の戻り値
+Self        // 実装における自分の型
+self        // 自オブジェクト
+self        // 自モジュール
+static      // 静的変数
+struct      // 構造体
+super       // 親モジュール
+trait       // トレイト
+true        // 真偽値の真
+type        // 型エイリアス
+union       // 共用体
+unsafe      // 非安全コード
+use         // モジュール使用
+where       // 型を強要する
+while       // 繰り返し
+
+-----------------------------------------------
+■コメント
+
+//ラインコメント
+
+/* 複数行
+   コメント */
+
+/// 3連スラッシュはrustdocによるドキュメンテーションに利用されます
+
+-----------------------------------------------
+■型
+
+bool            // 真偽値(true/false)
+i8              // 符号付き8ビット整数
+u8              // 符号無し8ビット整数
+i16             // 符号付き16ビット整数
+u16             // 符号無し16ビット整数
+i32             // 符号付き32ビット整数
+u32             // 符号無し32ビット整数
+i64             // 符号付き64ビット整数
+u64             // 符号無し64ビット整数
+i128            // 符号付き128ビット整数
+u128            // 符号無し128ビット整数
+isize           // ポインタサイズと同じ符号付き整数
+usize           // ポインタサイズと同じ符号無し整数
+f32             // 32ビット浮動小数点数
+f64             // 64ビット浮動小数点数
+char            // 文字(U+0000～U+D7FF, U+E000～U+10FFFF)
+str             // 文字列(&strとして使用することが多い)
+(type, type, .) // タプル
+[type; len]     // 配列
+Vec<type>       // ベクタ
+&type           // typeへの参照
+&mut type       // typeへのミュータブルな参照
+&[type]         // type型要素を持つスライス
+
+-----------------------------------------------
+■値
+
+true            // 真偽値の真(bool)
+false           // 真偽値の偽(bool)
+12345           // 整数
+12_345_678      // カンマの代わりに_を使用して読みやすく
+12345u32        // u32型の12345
+0xfff           // 16進数
+0o777           // 8進数
+0b11001100      // 2進数
+'あ'            // 文字(char)
+"..."           // 文字列(&str)
+r"..."          // raw文字列
+r#"..."#        // ダブルクォートをそのまま使用できる文字列
+b'a'            // 1バイト文字(u8)
+b"abc"          // バイト配列(&[u8])
+br"..."         // rawバイト配列(&[u8])
+-----------------------------------------------
+■変数・定数(let, mut, const)
+
+let n = 0;      // 変更不可（イミュータブル)変数
+
+let mut n = 0;  // 変更可能な(ミュータブル)変数
+
+const MAX_POINTS: u32 = 100_000;        // 定数
+
+-----------------------------------------------
+■型変換(as)
+
+let x: i32 = 123;
+let y: i64 = x as i64;
+
+-----------------------------------------------
+■演算子(+ - ...)
+
+-expr               // 負数
+expr + expr         // 加算
+expr - expr         // 減算
+expr * expr         // 乗算
+expr / expr         // 除算
+expr % expr         // 剰余
+expr & expr         // 論理積(AND)
+expr | expr         // 論理和(OR)
+expr ^ expr         // 排他的論理和(XOR)
+expr << expr        // ビット左シフト
+expr >> expr        // ビット右シフト
+var = expr          // 代入
+var += expr         // var = var + expr と同義
+var -= expr         // var = var - expr と同義
+var *= expr         // var = var * expr と同義
+var /= expr         // var = var / expr と同義
+var %= expr         // var = var % expr と同義
+var &= expr         // var = var & expr と同義
+var |= expr         // var = var | expr と同義
+var ^= expr         // var = var ^ expr と同義
+var <<= expr        // var = var << expr と同義
+var >>= expr        // var = var >> expr と同義
+expr == expr        // 比較：等しい
+expr != expr        // 比較：等しくない
+expr < expr         // 比較：より大きい
+expr <= expr        // 比較：以上
+expr > expr         // 比較：より小さい
+expr >= expr        // 比較：以下
+expr && expr        // かつ(AND)
+expr || expr        // または(OR)
+!expr               // 否定(NOT)
+
+fn(...) -> type     // 関数の型定義
+expr;               // 行の終わり
+'label              // ラベル
+expr..expr          // 範囲
+macro!(...)         // マクロ呼び出し
+macro![...]         // マクロ呼び出し
+macro!{...}         // マクロ呼び出し
+[type; len]         // 配列
+
+
+pat => expr
+expr?
+&expr
+&type
+*expr
+*type
+trait + trait
+expr , expr
+expr.ident
+expr..=expr
+..expr
+variant(..)
+expr...expr
+ident: expr
+ident @
+pat | pat
+
+-----------------------------------------------
+■構造体(struct)   ※クラスみたいなもの
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+fn main() {
+    let p = Point { x: 100, y: 200 };
+    println!("{} {}", p.x, p.y);
+}
+
+-----------------------------------------------
+■列挙型(enum)
+
+enum Color {
+    Red,
+    Green,
+    Blue,
+}
+let color = Color::Red;
+
+-----------------------------------------------
+■タプル(tup)
+
+let tup = (10, "20", 30);
+println!("{} {} {}", tup.0, tup.1, tup.2);
+
+-----------------------------------------------
+■配列(array)
+
+let arr = [10, 20, 30];
+println!("{} {} {}", arr[0], arr[1], arr[2]);
+
+for v in &arr {
+    println!("{}", v);
+}
+
+-----------------------------------------------
+■ベクタ(vec)
+
+let mut vect = vec![10, 20, 30];
+vect.push(40);
+println!("{} {} {} {}", vect[0], vect[1], vect[2], vect[3]);
+
+for v in &vect {
+    println!("{}", v);
+}
+
+-----------------------------------------------
+■ハッシュマップ(HashMap)
+
+use std::collections::HashMap;
+let mut map = HashMap::new();
+map.insert("x", 10);
+map.insert("y", 20);
+map.insert("z", 30);
+println!("{} {} {}", map["x"], map["y"], map["z"]);
+
+for (k, v) in &map {
+    println!("{} {}", k, v);
+}
+
+-----------------------------------------------
+■文字列(&str, String)
+
+let mut name: &str = "Yamada";
+name = "Tanaka";
+
+
+-----------------------------------------------
+■ヒープ領域(Box)
+
+struct Point {
+    x: i32,
+    y: i32,
+}
+
+fn main() {
+    let p: Box<Point> = Box::new(Point { x: 100, y: 200 });
+    println!("{} {}", p.x, p.y);
+}
+
+-----------------------------------------------
+■スライス(&var[n..m])
+
+let s = String::from("ABCDEFGH");
+let s1 = &s[0..3];              // 0番目から3番目の手前までのスライス("ABC")
+let s2 = &s[3..6];              // 3番目から6番目の手前までのスライス("DEF")
+println!("{} {}", s1, s2);      // => ABC DEF
+
+let a = [10, 20, 30, 40, 50, 60, 70, 80];
+let a1 = &a[0..3];              // 0番目から3番目の手前までのスライス[10, 20, 30]
+let a2 = &a[3..6];              // 0番目から3番目の手前までのスライス[40, 50, 60]
+println!("{:?} {:?}", a1, a2);  // => [10, 20, 30] [40, 50, 60]
+
+-----------------------------------------------
+■関数(fn)
+
+fn add(x: i32, y: i32) -> i32 {
+    return x + y;
+}
+
+// return されない場合は、最後の式が戻り値として返されます。最後のセミコロン ; は記述してはなりません。
+fn add(x: i32, y: i32) -> i32 {
+    x + y   // セミコロン(;)無し
+}
+
+-----------------------------------------------
+■クロージャー(|...|{...})
+
+クロージャー は他の言語で言うところの無名関数やラムダ式に似ています。
+下記の例では x を受け取り、その二乗を返却するクロージャーを square 変数に代入し、使用しています。
+
+let square = | x: i32 | {
+    x * x
+};
+println!("{}", square(9));
+
+
+
+-----------------------------------------------
+■条件分岐(if)
+
+if n == 1 {
+    println!("One");
+} else if n == 2 {
+    println!("Two");
+} else {
+    println!("Other");
+}
+
+-----------------------------------------------
+■繰り返し(while)
+
+let mut n = 0;
+while n < 10 {
+    n += 1;
+}
+
+-----------------------------------------------
+■繰り返し(for)
+
+for i in 0..10 {
+    println!("{}", i);
+}
+
+-----------------------------------------------
+■ループ(loop)
+
+let mut n = 0;
+loop {
+    n += 1;
+    if n == 10 {
+        break;
+    }
+}
+
+-----------------------------------------------
+■ループ制御(break, continue)
+
+let mut n = 0;
+loop {
+    n += 1;
+    if n == 2 {
+        continue;
+    }
+    if n == 8 {
+        break;
+    }
+    println!("{}", n);
+}
+
+-----------------------------------------------
+■マッチ(match)
+
+let x = 2;
+match x {
+    1 => println!("One"),
+    2 => println!("Two"),
+    3 => println!("Three"),
+    _ => println!("More"),
+}
+
+-----------------------------------------------
+■インプリメンテーション(impl)
+
+Rust ではクラスはサポートされていませんが、
+impl によって構造体にメソッドを加えることができます。
+self は自オブジェクトを示します。
+
+struct Rect { width: u32, height: u32 }
+
+impl Rect {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+
+fn main() {
+    let r = Rect { width: 200, height: 300 };
+    println!("{}", r.area());
+}
+
+-----------------------------------------------
+■トレイト(trait)
+
+trait は特質の意味で、構造体が実装すべきメソッドを定義します。
+他言語の インタフェース(interface) に似ています。
+例えば、std::fmt::Display トレイトを実装した構造体は println!() の "{}" で、
+std::fmt::Debug トレイトを実装した構造体は "{:?}" で書き出すことが可能です。
+
+struct Rect { width: u32, height: u32 }
+
+trait Printable { fn print(&self); }
+impl Printable for Rect {
+    fn print(&self) {
+        println!("width:{}, height:{}", self.width, self.height)
+    }
+}
+
+fn main() {
+    let r = Rect { width: 200, height: 300 };
+    r.print();
+}
+
+上記の例では u64 を扱う Rect も用意するには impl Printable for RectU32 { ... } と 
+impl Printable for RectU64 { ... } の二つを実装する必要がありますが、
+下記の様にして、任意の型を持つ実装を行うことができます。
+where はその型が、指定したトレイトを実装している時のみ利用可能であることを示します。
+
+struct Rect<T> { width: T, height: T, }
+
+trait Printable { fn print(&self); }
+impl<T> Printable for Rect<T> where T: std::fmt::Display {
+    fn print(self: &Rect<T>) {
+        println!("{}x{}", self.width, self.height);
+    }
+}
+
+fn main() {
+    let r1: Rect<i32> = Rect{ width: 100, height: 200 };
+    let r2: Rect<i64> = Rect{ width: 100, height: 200 };
+    r1.print();
+    r2.print();
+}
+
+-----------------------------------------------
+■イテレータ(Iterator)
+
+struct Counter {
+    max: u32,
+    count: u32,
+}
+
+impl Counter {
+    fn new(max: u32) -> Counter {
+        Counter { max: max, count: 0 }
+    }
+}
+
+impl Iterator for Counter {
+    type Item = u32;
+    fn next(&mut self) -> Option<Self::Item> {
+        self.count += 1;
+        if self.count < self.max {
+            Some(self.count)
+        } else {
+            None
+        }
+    }
+}
+
+fn main() {
+    let counter = Counter::new(10);
+    for c in counter {
+        println!("{}", c);
+    }
+}
+
+-----------------------------------------------
+■マルチスレッド(thread)
+
+use std::thread;
+use std::time::Duration;
+
+fn main() {
+    // スレッドを起動する
+    // 引数にクロージャー(ラムダ関数)を指定
+    let th = thread::spawn(|| {
+        for _i in 1..10 {
+            println!("A");
+            thread::sleep(Duration::from_millis(100));
+        }
+    });
+    th.join().unwrap();
+    println!("Finished");
+}
+
+スレッドからスレッド外の変数を参照するには、
+move によって変数の所有権をスレッドに引き渡すことを明示する必要があります。
+
+fn main() {
+    let str = String::from("ABC");
+    let th = thread::spawn(move || {    // 所有権を引き渡すことを明示
+        for _i in 1..10 {
+            println!("{}", str);    // strの所有権を得る
+            thread::sleep(Duration::from_millis(100));
+        }
+    });
+    th.join().unwrap();
+    println!("Finished");
+    // println!("{}", str);     // 所有権移動済のためエラー
+}
+
+-----------------------------------------------
+■非同期関数(async, await)
+
+async, await を用いて非同期関数を利用することができます。
+下記は、Rustの説明書 に記載されているサンプルで、歌を歌いながらダンスができるように書かれているのですが、
+どうも、歌い終わってからでないとダンスしないみたいで、もう少し分かりやすいシンプルなサンプルを
+提供できる方はお願いします。
+
+use futures::executor::block_on;
+
+struct Song {
+    lyric: String,
+}
+
+async fn learn_and_sing() {
+    let song = learn_song().await;
+    sing_song(song).await;
+}
+
+async fn learn_song() -> Song {
+    let song = Song { lyric: String::from("La la la...") };
+    println!("Learned song");
+    return song;
+}
+
+async fn sing_song(song: Song) {
+    println!("{}", song.lyric);
+}
+
+async fn dance() {
+    println!("Dance");
+}
+
+async fn async_main() {
+    let f1 = learn_and_sing();  // 歌を習って歌う
+    let f2 = dance();           // ダンスする
+    futures::join!(f1, f2);
+}
+
+fn main() {
+    block_on(async_main());
+}
+
+-----------------------------------------------
+■クレート(crate)
+
+クレート は聞きなれない言葉ですが「木箱」の意味で、
+他言語で言うところのパッケージ、モジュール、ライブラリを意味します
+例えばランダム値を生成する rand クレートを使用するには次のようにします。
+
+use rand::Rng;
+
+fn main() {
+    let mut rng = rand::thread_rng();
+    for _i in 1..10 {
+        println!("{}", rng.gen_range(1, 101));
+    }
+}
+
+上記だけだと E0432(unresolved import) エラーが出てしまいますので、
+Cargo プロジェクトで作成した Cargo.toml に次の1行を追記します。
+追記後、cargo build または cargo run すると必要なクレートが自動的にダウンロードされてコンパイルされます。
+
+[dependencies]
+rand = "0.7"
+
+
+
+
+-----------------------------------------------
+■モジュール(mod, pub, use, as)
+
+プログラムを複数のファイルに分割するにはモジュールを用います。
+mod はモジュールを使用することを宣言します。
+pub はモジュール外からもその名前にアクセスするために必要です。
+
+
+
+-----------------------------------------------
+■参照型(&, *)
+
+& はその変数が指し示す値への参照を示します。
+参照はポインタとも呼ばれます。
+* は参照が指し示す値を示します。
+
+let a = 123;
+let p = &a;         // 123という値が格納された領域への参照をpに代入する
+println!("{}", *p); // pが参照する領域の値(123)を出力する
+
+ref を使用して次のようにも書けます。
+
+let a = 123;
+let ref p = a;
+println!("{}", *p); // => 123
+
+ミュータブルな参照を用いることで、参照先の値を変更することが可能となります。
+
+let mut a = 123;    // ミュータブルな変数aを定義
+let p = &mut a;     // ミュータブルな参照pを定義
+*p = 456;           // 参照先の値を456に書き換える
+println!("{}", a);  // => 456
+
+-----------------------------------------------
+■所有権・移動・参照・借用
+
+Java や JavaScript などでは、ヒープ領域に確保したメモリは、
+誰からも参照されなくなった後にガベージコレクションによって解放されますが、
+Rust では、ただひとつの変数がヒープ上のメモリの 所有権(ownership) を持ち、
+所有者がスコープから消えた時点でヒープ領域も開放されます。
+
+
+
+-----------------------------------------------
+■型エイリアス(type)
+
+type を用いて型に 型エイリアス という別名をつけることができます。
+ただし、異なる別名間の比較や代入でワーニングやエラーを出すことは無いようです。
+
+-----------------------------------------------
+■
+
+-----------------------------------------------
+■
+
+-----------------------------------------------
+■
+
+-----------------------------------------------
+■
+
+-----------------------------------------------
+■
