@@ -1,7 +1,8 @@
 Rust memo
 
-引用元：
+参考：
 https://www.tohoho-web.com/ex/rust.html#as
+https://tourofrust.com/TOC_ja.html
 
 -----------------------------------------------
 ■開発環境構築
@@ -36,6 +37,11 @@ https://www.tohoho-web.com/ex/rust.html#as
 3.F5で実行
   →初回実行時は、launch.jsonがないのでエラーが出る。
     Yes/No/CancelのポップアップでYesを押せば作られる。
+
+-----------------------------------------------
+■学習
+Rustツアーが良くできているので必須！
+https://tourofrust.com/TOC_ja.html
 
 -----------------------------------------------
 ■予約語
