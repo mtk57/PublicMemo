@@ -27,7 +27,7 @@ https://tourofrust.com/TOC_ja.html
 1.適当にフォルダを作成してCD
 
 2.以下コマンドを実行
-  >rust new hello
+  >cargo new hello
 
   →src\main.rs
     などが作成される。
@@ -337,6 +337,15 @@ impl Rectangle {
     }
 }
 
+------
+struct QuitMessage; // ユニット構造体
+struct MoveMessage {
+    x: i32,
+    y: i32,
+}
+struct WriteMessage(String); // タプル構造体
+struct ChangeColorMessage(i32, i32, i32); // タプル構造体
+
 
 
 
@@ -349,6 +358,44 @@ enum Color {
     Blue,
 }
 let color = Color::Red;
+
+----
+データ格納
+
+// 例1
+enum IpAddr {
+    V4(u8, u8, u8, u8),
+    V6(String),
+}
+
+let home = IpAddr::V4(127, 0, 0, 1);
+
+let loopback = IpAddr::V6(String::from("::1"));
+
+// 例2
+enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(String),
+    ChangeColor(i32, i32, i32),
+}
+
+----
+メソッド定義
+
+impl Message {
+    fn call(&self) {
+        // method body would be defined here
+        // メソッド本体はここに定義される
+    }
+}
+
+let m = Message::Write(String::from("hello"));
+m.call();
+
+----
+
+
 
 -----------------------------------------------
 ■タプル(tup)
@@ -584,8 +631,28 @@ match x {
     1 => println!("One"),
     2 => println!("Two"),
     3 => println!("Three"),
-    _ => println!("More"),
+    _ => println!("More"),		// _はswitch文のdefault同じ
 }
+
+-----
+if let
+
+let mut count = 0;
+match coin {
+    // {:?}州のクォーターコイン
+    Coin::Quarter(state) => println!("State quarter from {:?}!", state),
+    _ => count += 1,
+}
+は、if letで以下のように書ける。
+
+let mut count = 0;
+if let Coin::Quarter(state) = coin {
+    println!("State quarter from {:?}!", state);
+} else {
+    count += 1;
+}
+
+
 
 -----------------------------------------------
 ■インプリメンテーション(impl)
@@ -923,6 +990,30 @@ enum Result<T, E> {
     Ok(T),
     Err(E),
 }
+
+-----
+Option<T>はよく使うので明示的にOption::と書かなくてもSomeが使える。
+例えば、
+let x = Some(10);
+は、暗黙的に以下コードと解釈される。
+let x:Option<i32> = Option::Some(10);
+
+-----
+Someから値を取り出す方法
+
+let x = Some(5);
+
+// パターンマッチ
+match x {
+    Some(val) => println!("The value is: {}", val),
+    None => println!("There is no value"),
+}
+
+// unwrap
+let value = x.unwrap();
+let value = x.unwrap_or(0);
+let value = x.unwrap_or_else(|| 10);
+
 
 
 -----
