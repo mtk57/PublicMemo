@@ -211,7 +211,7 @@ pat => expr
 expr?
 &expr
 &type
-*expr
+*expr				// 参照外し演算子
 *type
 trait + trait
 expr , expr
@@ -637,6 +637,8 @@ match x {
 -----
 if let
 
+条件分岐を簡潔に行う
+
 let mut count = 0;
 match coin {
     // {:?}州のクォーターコイン
@@ -718,9 +720,45 @@ fn main() {
 }
 
 -----
+引数
+
+pub trait Summary {
+    fn summarize_author(&self) -> String;
+
+    fn summarize(&self) -> String {
+        // "（{}さんの文章をもっと読む）"
+        format!("(Read more from {}...)", self.summarize_author())
+    }
+}
+
+pub fn notify(item: &impl Summary) {					// キモ
+    println!("Breaking news! {}", item.summarize());
+}
+
+-----
 トレイト境界
 
+pub fn notify(item: &impl Summary) {のimplは、以下構文（トレイト境界構文のシンタックスシュガー）
 
+pub fn notify<T: Summary>(item: &T) {
+
+
+また、以下のように+でトレイトを複数指定することもできる。
+
+pub fn notify<T: Summary + Display>(t: T) {		// pub fn notify(item: &(impl Summary + Display)) {でも同じ。
+    // ...
+}
+
+-----
+where句
+
+fn some_function<T: Display + Clone, U: Clone + Debug>(t: &T, u: &U) -> i32 {
+のような書き方だとわからいずらいので、where句でスッキリさせる。
+
+fn some_function<T, U>(t: &T, u: &U) -> i32
+    where T: Display + Clone,
+          U: Clone + Debug
+{
 
 
 
@@ -859,7 +897,12 @@ Cargo プロジェクトで作成した Cargo.toml に次の1行を追記しま�
 [dependencies]
 rand = "0.7"
 
+-----
+extern crate
 
+外部のRustパッケージを参照するために使用されます。
+
+extern crate <パッケージ名>;
 
 
 -----------------------------------------------
@@ -894,6 +937,85 @@ let mut a = 123;    // ミュータブルな変数aを定義
 let p = &mut a;     // ミュータブルな参照pを定義
 *p = 456;           // 参照先の値を456に書き換える
 println!("{}", a);  // => 456
+
+----
+ライフタイム
+
+参照が有効になるスコープのこと。
+
+{
+    let r;                // ---------+-- 'a
+                          //          |
+    {                     //          |
+        let x = 5;        // -+-- 'b  |
+        r = &x;           //  |       |
+    }                     // -+       |
+                          //          |
+    println!("r: {}", r); //          |
+}                         // ---------+
+上記例の場合、xのライフタイム(b)は、rのライフタイム(a)より短いのに、xの参照を使おうとしているのでエラーになる。
+
+-----
+ライフタイム注釈
+
+fn process_string<'a>(s: &'a str) -> &'a str {		// キモ  'aがライフタイム注釈。引数と戻り値が同じライフタイムであることを指定。
+    if s.len() > 5 {								// aの部分はジェネリックのように基本的には何でもよいが、慣例として小文字1文字の場合が多い。
+        &s[0..5]
+    } else {
+        s
+    }
+}
+
+fn main() {
+    let s = "Hello, World!".to_string();
+    let processed_string = process_string(&s);
+    println!("{}", processed_string);
+}
+この例では、文字列スライス s が関数 process_string に渡されます。
+この関数から返される文字列スライスは、呼び出し元の文字列スライス s に対応するものである必要があります。
+しかし、この関数内では、文字列スライス s の長さが5より大きい場合に、最初の5文字を返すように実装されています。
+この場合、呼び出し元の文字列スライス s とは異なるメモリ領域を参照することになります。
+          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+このような場合、Rust言語では、呼び出し元と返される文字列スライスが同じ生存期を持つことを明示するために、
+ライフタイム注釈を使用する必要があります。
+ライフタイム注釈によって、呼び出し元と返される文字列スライスが同じ生存期を持つことが保証されるため、
+コンパイラは、正確なメモリアクセスを保証することができます。
+
+
+&i32        // ただの参照
+&'a i32     // 明示的なライフタイム付きの参照
+&'a mut i32 // 明示的なライフタイム付きの可変参照
+
+
+関数から参照を返す際、戻り値型のライフタイム引数は、引数のうちどれかのライフタイム引数と一致する必要があります。 
+返される参照が引数のどれかを参照していないならば、この関数内で生成された値を参照しているはずです。
+
+
+----
+文字列スライス
+
+文字列の一部分を表すデータ型です。
+文字列スライスは文字列（String型）から生成されるもので、文字列（String型）を扱うことなく、文字列の一部分を扱います。
+文字列スライスは、文字列（String型）から生成するために、文字列の中から特定の範囲を選択する方法として、
+スライス構文 &s[start..end] を使用します。
+このスライス構文で生成された文字列スライスは、文字列（String型）を扱うことなく、
+選択された範囲の文字列を扱うことができます。
+
+let original_string = "Hello, World!".to_string();
+let slice = &original_string[0..5];
+println!("{}", slice);
+この例では、文字列 "Hello, World!" の最初の5文字を選択し、文字列スライス slice に格納します。
+そして、この文字列スライスを表示します。
+
+
+
+
+
+
+
+
+
+
 
 -----------------------------------------------
 ■所有権・移動・参照・借用
@@ -1075,6 +1197,11 @@ let string_vec = vec![String::from("Hello"), String::from("World")];
 for word in string_vec.iter() {
     println!("{}", word);
 }
+
+// StringのVec
+let a: Vec<String> = vec!["123".to_string(), "ABC".to_string()];
+let b = &a[1];		// String型はCopyトレイトを実装していないのでムーブになってしまう。なので参照にする必要がある。
+println!("{}", b);	// ABC
 
 
 -----------------------------------------------
