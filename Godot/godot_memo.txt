@@ -463,3 +463,108 @@ C:\Users\motok\AppData\Roaming\Godot\app_userdata\NesEmu\logs
 3.vscodeで、「実行とデバッグ」のAttachの三角マークをクリックする。
 4.ブレークポイントで止まる。
 
+
+---------------------------------
+●VSCode + Rust
+
+Godot-Rustなるクレートがあるので、VSCodeでRustでDLLを作成すれば
+それをGodotのGDNativeから利用できる。
+
+-------
+<libclangのインストール>
+RustでCの動的ロードライブラリとしてコンパイルするためには、Clangという
+C/C++のライブラリ(libclang)が必要みたい。
+LLVMというコンパイラ作成基盤をインストールすればlibclangが入る。
+
+1.LLVMのサイトから最新バージョンのGitリポジトリに行く。
+  https://releases.llvm.org/download.html
+2.Gitリポジトリから以下を探してダウンロードする。（バージョンは適宜読み替え）
+  LLVM-15.0.7-win64.exe
+3.インストーラをキックしてインストールする。
+  このとき、Add LLVM to the system PATH for current userをチェックしておくこと。
+
+-------
+<VSCode>での作業
+
+◎環境構築
+1.VSCodeでRustのビルド環境を作成する方法は、rust_memo.txtを参照。
+
+◎RustでDLL作成    ※https://zenn.dev/kawaxumax/articles/e0dedf3f6d4219
+
+<注意>
+Godot3.5.1を使っている場合、参考にしたサイトのgdnative(0.9.1)を使うとエラーになる。
+なので、gdnativeは0.11に変更している。(https://github.com/godot-rust/gdnative)
+さらに0.11にすると、lib.rsの書き方も少し変わるので修正している。（https://godot-rust.github.io/book/gdnative/intro/hello-world.html?highlight=_ready#overriding-a-godot-method）
+
+1.ターミナルから以下コマンドを実行する。
+	cargo new --lib mygame      ※mygameは適宜読み替え
+	→mygameフォルダ等が作成される。
+2.Cargo.tomlを以下のように修正する。
+	-------------------------
+	[package]
+	name = "mygame"
+	version = "0.1.0"
+	edition = "2021"
+
+	[lib]
+	# Cの動的ロードライブラリとしてコンパイルする
+	crate-type = ["cdylib"]
+
+	[dependencies]
+	# godotエンジンのapiをバインディングしたクレートを使う
+	gdnative = "0.11" 
+	-------------------------
+
+3.src/lib.rsを以下のように修正する。
+	-------------------------
+	use gdnative::prelude::*;
+
+	#[derive(NativeClass)]
+	#[inherit(Node)]
+	pub struct HelloWorld;
+
+	#[methods]
+	impl HelloWorld {
+	    fn new(_owner: &Node) -> Self {
+	        HelloWorld
+	    }
+
+	    #[method]
+	    fn _ready(&self, #[base] base: &Node) {
+	        godot_print!("hello, world.")
+	    }
+	}
+
+	fn init(handle: InitHandle) {
+	    handle.add_class::<HelloWorld>();
+	}
+
+	godot_init!(init);
+	-------------------------
+
+4.ターミナルで以下コマンドを実行する。
+	cargo build
+	→libclangが入っていないとここでエラーとなるはず。
+	→成功すれば、target/debug/mygame.dllができるはず。
+
+
+-------
+<Godot(mono)>での作業
+
+1.プロジェクトを作成する。（HelloRustGDとする）
+2.mygame.dllをプロジェクトディレクトリ配下にコピーする。
+3.画面右にある「インスペクター」の新規作成ボタンをクリックする。
+4.GDNativeLibraryを選択する。
+5.画面下に「プラットフォーム：・・」みたいなのが出るので、
+  Windowsの64のダイナミックライブラリのフォルダアイコンをクリックする。
+6.2でコピーしたDLLを選択する。
+7.「インスペクター」の保存ボタンをクリックする。
+  →デフォルトでは、*.tresの保存となるので、*.gdnlibに変更して保存する。
+
+9.Nodeをシーンに追加する。(lib.rsの#[inherit(Node)]と合わせること)
+10.Nodeにスクリプトをアタッチする。
+   →デフォルトではGDScriptになっているので、NativeScriptに変更する。
+   →クラス名は「HelloWorld」にする。(lib.rsのstructと合わせること)
+11.画面右にある「インスペクター」の「Library」で作成した*.gdnlibを読み込む。
+12.F5で実行すれば、hello, worldが出るはず。
+
