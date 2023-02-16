@@ -546,7 +546,7 @@ Godot3.5.1を使っている場合、参考にしたサイトのgdnative(0.9.1)�
 	cargo build
 	→libclangが入っていないとここでエラーとなるはず。
 	→成功すれば、target/debug/mygame.dllができるはず。
-
+	→release版は、cargo build --release
 
 -------
 <Godot(mono)>での作業
