@@ -1,0 +1,31 @@
+WSL memo
+
+
+●インストール
+  ※https://se-abeaver.com/wsl2-guide/
+
+<環境>
+Windows11
+
+<手順>
+1.DOS窓を管理者で開く
+2.wsl --install
+  →Ubuntuが入る
+3.再起動
+4.Ubuntuが立ち上がるので、user/passを決める
+
+
+●Windows環境からLinux環境のファイルにアクセス
+
+ExplorerにLinuxというのがあるので、それで見れる。
+アドレスバーに「\\wsl$」でも良い。
+
+
+
+●Linux環境からWindows環境のファイルにアクセス
+
+cd /mnt/c
+→Cドライブの場合。
+
+
+
