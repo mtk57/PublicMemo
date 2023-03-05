@@ -93,7 +93,9 @@ End Sub
 
 'セルの値を指定したカラム位置のセルに移動する
 Private Sub moveCellValueToColumn(cell As Range, clmNum As Integer)
-    If isRightCellEmpty(cell) = True And isLastColumn(cell) = False Then
+    If isCellEmpty(cell) = False And _
+       isRightCellEmpty(cell) = True And _
+       isLastColumn(cell) = False Then
         cell.Copy Destination:=cell.Offset(0, clmNum - cell.Column)
         cell.ClearContents
     End If
@@ -114,6 +116,15 @@ Private Function isRightCellEmpty(cell As Range) As Boolean
         isRightCellEmpty = True
     Else
         isRightCellEmpty = False
+    End If
+End Function
+
+'空セルかどうかを返す
+Private Function isCellEmpty(cell As Range) As Boolean
+    If cell.Value = "" Then
+        isCellEmpty = True
+    Else
+        isCellEmpty = False
     End If
 End Function
 
