@@ -1,0 +1,87 @@
+git memo
+
+
+
+-----------------------------------------
+■Windows10で、gitサーバとクライアントを作る
+
+参考：
+https://www.tdi.co.jp/miso/windows-server-git-ssh
+https://imamachi-n.hatenablog.com/entry/2018/06/09/170331
+
+<前提>
+・Git for Windowsはインストール済。
+https://gitforwindows.org/
+
+
+<手順>  ※1台のPCでも可能!
+        ※コマンドプロンプトは管理者権限で起動しておくと吉。
+
+【クライアント】
+1.SSHキーを生成する。
+> cd C:\Users\[ユーザ名]\.ssh
+> ssh-keygen -t rsa
+
+→何か聞かれても全てEnterでよい。
+→id_rsa（秘密鍵）とid_rsa.pub（公開鍵）が作成される。
+
+【サーバ】
+1.リポジトリフォルダを作成する。
+  リポジトリ名：test
+  フォルダパス：C:\repos\test.git
+                 →適当でよい。リポジトリ名は末尾に「.git」を付けるのが慣例みたい。
+2.test.gitに移動する。
+> cd C:\repos\test.git
+
+3.test.gitフォルダをリモートリポジトリとして初期化する。
+> git init --bare --shared=true
+
+4.以下のパスを通す。
+C:\Program Files\Git\cmd
+C:\Program Files\Git\usr\bin
+C:\Program Files\Git\bin
+C:\Program Files\Git\mingw64\bin
+C:\Program Files\Git\mingw64\libexec\git-core
+
+5.SSHキーを生成する。
+> cd C:\Program Files\Git\etc\ssh
+> ssh-keygen -t rsa -f ssh_host_rsa_key
+> ssh-keygen -t ecdsa -f ssh_host_ecdsa_key
+> ssh-keygen -t ed25519 -f ssh_host_ed25519_key
+
+→何か聞かれても全てEnterでよい。
+→以下のファイルが作成される。
+ssh_host_rsa_key.pub
+ssh_host_ed25519_key
+ssh_host_ed25519_key.pub
+ssh_host_ecdsa_key
+ssh_host_ecdsa_key.pub
+ssh_host_rsa_key
+
+6.sshデーモンを管理者権限で起動する。（クライアントとの通信用）
+C:\Program Files\Git\usr\bin\sshd.exe
+
+→ファイアウォールうんぬんが聞かれたら「許可」
+→タスクマネージャーで「sshd.exe」が動いているのを確認。
+
+7.クライアントの公開鍵をサーバに保存する
+以下のフォルダ配下に「authorized_keys」という空ファイルを作成する。
+C:\Users\[ユーザ名]\.ssh
+
+クライアントで作成した「id_rsa.pub」の中身を「authorized_keys」にコピペしておく。
+
+
+以上で設定は完了!
+
+
+<動作確認>
+【クライアント】
+1.testリポジトリをクローンしてみる。適当なフォルダにcdして以下コマンドを叩く。
+> git clone ssh://127.0.0.1/c/repos/test.git
+
+→クライアントとサーバが同じPCの場合。異なるならIPアドレスはサーバのを指定する。
+→これでクローンされるはず!!
+
+
+-----------------------------------------
+■
