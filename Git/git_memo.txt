@@ -133,9 +133,65 @@ Are you sure you want to continue connecting (yes/no)?      →yesを入力
 Enter passphrase for key '/c/Users/ユーザ名/.ssh/id_rsa':   →パスフレーズを入力
 
 
+--------
 ※pushもできた! ただpushの度にパスフレーズを聞かれる。。。
 
+→以下サイトを参考にしたら、聞かれなくなった。
+https://www.granfairs.com/blog/staff/ssh-passphrase
 
+<手順>
+1.GitBashを起動して以下コマンドを実行する。
+$ vi ~/.bashrc
+
+2.以下コードを貼り付けて、:wqで保存する。
+SSH_ENV="$HOME/.ssh/environment"
+
+# start the ssh-agent
+function start_agent {
+    echo "Initializing new SSH agent..."
+    # spawn ssh-agent
+    ssh-agent | sed 's/^echo/#echo/' > "$SSH_ENV"
+    echo succeeded
+    chmod 600 "$SSH_ENV"
+    . "$SSH_ENV" > /dev/null
+   ssh-add
+}
+
+# test for identities
+function test_identities {
+    # test whether standard identities have been added to the agent already
+    ssh-add -l | grep "The agent has no identities" > /dev/null
+    if [ $? -eq 0 ]; then
+    ssh-add
+    # $SSH_AUTH_SOCK broken so we start a new proper agent
+        if [ $? -eq 2 ];then
+            start_agent
+        fi
+    fi
+}
+
+# check for running ssh-agent with proper $SSH_AGENT_PID
+if [ -n "$SSH_AGENT_PID" ]; then
+    ps -ef | grep "$SSH_AGENT_PID" | grep ssh-agent > /dev/null
+    if [ $? -eq 0 ]; then
+    test_identities
+    fi
+# if $SSH_AGENT_PID is not properly set, we might be able to load one from
+# $SSH_ENV
+else
+    if [ -f "$SSH_ENV" ]; then
+    . "$SSH_ENV" > /dev/null
+    fi
+    ps -ef | grep "$SSH_AGENT_PID" | grep -v grep | grep ssh-agent > /dev/null
+    if [ $? -eq 0 ]; then
+        test_identities
+    else
+        start_agent
+    fi
+fi
+
+3.GitBashを閉じて、再度起動するとパスフレーズを聞かれるので入力する。
+   →Windowsを終了しない限りはパスフレーズを覚えている。
 
 
 -----------------------------------------
@@ -168,20 +224,44 @@ Enter passphrase for key '/c/Users/ユーザ名/.ssh/id_rsa':   →パスフレ�
 
 <正常系>
 
-#    U  Dir/File                  CRUD  GIT                 BRANCH
----------------------------------------------------------------------------------
-001  A  *                         C     ADD/COMMIT/PUSH     master
-002  B  *                         -     CLONE               master
-003  A  -                         -     CHECKOUT            master→develop
-004  A  -                         -     PUSH                develop
-003  A  -                         -     CHECKOUT            develop→feature_A01
-006  A  -                         -     PUSH                feature_A01
-007  A  002/VB6/prjA/A01.bas      C     -                   feature_A01
-008  A  002/VB6/prjA/A01.bas      -     ADD/COMMIT          feature_A01
-009  A  002/VB6/prjA/A01.frm      C     -                   feature_A01
-010  A  002/VB6/prjA/A01.frm      -     ADD/COMMIT          feature_A01
-011  A  -                         -     PUSH                feature_A01
-
+#    U  Dir/File                  CRUD  GIT                 CURRENT BRANCH
+-----------------------------------------------------------------------------------------------------
+000  A  *                         -     CLONE               master
+$ git clone リポジトリ
+001  A  *                         C     -                   master
+002  A  *                         C     ADD/COMMIT/PUSH     master
+$ git add .
+$ git status
+$ git commit -m "All original source files."
+$ git log --stat
+$ git push
+    001
+      VB6
+        prjA
+          A01.bas
+        prjB
+          B01.frm
+      VB.NET
+        prjX
+          C01.vb
+003  B  *                         -     CLONE               master
+$ git clone リポジトリ
+004  A  -                         -     CHECKOUT            develop
+$ git checkout -b develop master
+005  A  -                         -     PUSH                develop
+$ git push -u origin develop
+006  A  -                         -     CHECKOUT            feature_A01
+$ git checkout -b feature_A01 develop
+007  A  -                         -     PUSH                feature_A01
+$ git push -u origin feature_A01
+008  A  002/VB6/prjA/A01.bas      C     -                   feature_A01
+009  A  002/VB6/prjA/A01.bas      -     ADD/COMMIT          feature_A01
+$ git add 002
+$ git status
+$ git commit -m "VB6 Build Success"
+$ git log --stat
+010  A  -                         -     PUSH                feature_A01
+$ git push
     001
       VB6
         prjA
@@ -195,16 +275,18 @@ Enter passphrase for key '/c/Users/ユーザ名/.ssh/id_rsa':   →パスフレ�
       VB6
         prjA
           A01.bas
-          A01.frm
-        prjB
-    003
-
 020  C  *                         -     CLONE               *
-021  C  -                         -     CHECKOUT            master→feature_A01
+$ git clone リポジトリ
+021  C  -                         -     SWITCH              feature_A01
+$ git switch feature_A01
 022  C  003/VB.NET/prjA/A01.vb    C     -                   feature_A01
 023  C  003/VB.NET/prjA/A01.vb    -     ADD/COMMIT          feature_A01
+$ git add .
+$ git status
+$ git commit -m "VS2019 Upgraded"
+$ git log --stat
 024  C  -                         -     PUSH                feature_A01
-
+$ git push
     001
       VB6
         prjA
@@ -218,20 +300,24 @@ Enter passphrase for key '/c/Users/ユーザ名/.ssh/id_rsa':   →パスフレ�
       VB6
         prjA
           A01.bas
-          A01.frm
         prjB
     003
       VB.NET
         prjA
           A01.vb
-
-030  B  *                         -     CLONE               *
-031  B  -                         -     CHECKOUT            master→develop
+030  B  -                         -     SWITCH              develop
+$ git switch develop
+031  B  *                         -     PULL                develop
+$ git pull
 032  B  -                         -     MERGE               develop←feature_A01
+$ git merge --no-ff origin/feature_A01 -m "A01 migration finish"
+033  B  -                               PUSH                
+$ git push
 
-040  A  *                         -     PULL                *
-041  A  -                         -     CHECKOUT            develop
-
+040  A  -                         -     SWITCH              develop
+$ git switch develop
+041  A  *                         -     PULL                *
+$ git pull
     001
       VB6
         prjA
@@ -245,14 +331,14 @@ Enter passphrase for key '/c/Users/ユーザ名/.ssh/id_rsa':   →パスフレ�
       VB6
         prjA
           A01.bas
-          A01.frm
         prjB
     003
       VB.NET
         prjA
           A01.vb
 
-050  B  -                         -     PUSH -delete        feature_A01
+050  B  -                         -     PUSH -delete        develop
+$ git push origin -d feature_A01
 
 <異常系>
 001  違うブランチにコミットした(PUSHはしていない)
@@ -329,6 +415,7 @@ $ git help
 [プロジェクトの共有と更新]
 ・fetch             リモートリポジトリから最新の変更を取得する
 ・pull              リモートリポジトリから変更を取得し、ローカルブランチにマージする
+                    カレントブランチに対して実施する
 ・push              ローカルリポジトリの変更をリモートリポジトリに反映する
 ・remote			リモートリポジトリを操作する
 ・submodule			リポジトリ内に他のリポジトリをサブモジュールとして追加する
@@ -513,12 +600,14 @@ git config --global -e
 -----------------------------------------
 ■よく使うコマンド
 
-
-・指定ファイルをインデックスに登場する
+・指定ファイルをインデックスに登録する
 git add hoge.txt
 
-・全てのファイルをインデックスに登場する
+・全てのファイルをインデックスに登録する
 git add .
+
+・追跡対象ファイルの一覧
+git ls-files
 
 ・状態確認
 git status
@@ -526,11 +615,22 @@ git status
 ・コミットする
 git commit -m "hello git"
 
+・diff  (HEADとインデックス)
+git diff HEAD
+
 ・ログを見る
 git log
-git reflog
+git log --oneline
+git reflog show master
 
+・ブランチのリネーム
+git branch -m 変更前ブランチ 変更後ブランチ
+git push -u origin 変更後ブランチ
+git push -d origin 変更前ブランチ
 
+※GitHubの場合、mainがデフォルトブランチになっているので、mainを削除するには
+デフォルトブランチに変更する必要がある。
+→https://prograshi.com/general/git/change-and-delete-default-remote-branch/
 
 
 
@@ -555,7 +655,396 @@ Gitの管理下に置かれた、実際に作業をしているディレクト�
 
 
 
+-----------------------------------------
+■clone
+
+usage: git clone [<options>]
+                 [--]
+                 <repo>
+                 [<dir>]
+
+    -v, --verbose         be more verbose
+    -q, --quiet           be more quiet
+    --progress            force progress reporting
+    --reject-shallow      don't clone shallow repository
+    -n, --no-checkout     don't create a checkout
+    --bare                create a bare repository
+    --mirror              create a mirror repository (implies bare)
+    -l, --local           to clone from a local repository
+    --no-hardlinks        don't use local hardlinks, always copy
+    -s, --shared          setup as shared repository
+    --recurse-submodules[=<pathspec>]
+                          initialize submodules in the clone
+    --recursive[=<pathspec>]
+                          alias of --recurse-submodules
+    -j, --jobs <n>        number of submodules cloned in parallel
+    --template <template-directory>
+                          directory from which templates will be used
+    --reference <repo>    reference repository
+    --reference-if-able <repo>
+                          reference repository
+    --dissociate          use --reference only while cloning
+    -o, --origin <name>   use <name> instead of 'origin' to track upstream
+    -b, --branch <branch>
+                          checkout <branch> instead of the remote's HEAD
+    -u, --upload-pack <path>
+                          path to git-upload-pack on the remote
+    --depth <depth>       create a shallow clone of that depth
+    --shallow-since <time>
+                          create a shallow clone since a specific time
+    --shallow-exclude <revision>
+                          deepen history of shallow clone, excluding rev
+    --single-branch       clone only one branch, HEAD or --branch
+    --no-tags             don't clone any tags, and make later fetches not to follow them
+    --shallow-submodules  any cloned submodules will be shallow
+    --separate-git-dir <gitdir>
+                          separate git dir from working tree
+    -c, --config <key=value>
+                          set config inside the new repository
+    --server-option <server-specific>
+                          option to transmit
+    -4, --ipv4            use IPv4 addresses only
+    -6, --ipv6            use IPv6 addresses only
+    --filter <args>       object filtering
+    --also-filter-submodules
+                          apply partial clone filters to submodules
+    --remote-submodules   any cloned submodules will use their remote-tracking branch
+    --sparse              initialize sparse-checkout file to include only files at root
+    --bundle-uri <uri>    a URI for downloading bundles before fetching from origin remote
+
+
+-----------------------------------------
+■add
+
+usage: git add [<options>]
+               [--]
+               <pathspec>...
+
+    -n, --dry-run         dry run
+    -v, --verbose         be verbose
+
+    -i, --interactive     interactive picking
+    -p, --patch           select hunks interactively
+    -e, --edit            edit current diff and apply
+    -f, --force           allow adding otherwise ignored files
+    -u, --update          update tracked files
+    --renormalize         renormalize EOL of tracked files (implies -u)
+    -N, --intent-to-add   record only the fact that the path will be added later
+    -A, --all             add changes from all tracked and untracked files
+    --ignore-removal      ignore paths removed in the working tree (same as --no-all)
+    --refresh             don't add, only refresh the index
+    --ignore-errors       just skip files which cannot be added because of errors
+    --ignore-missing      check if - even missing - files are ignored in dry run
+    --sparse              allow updating entries outside of the sparse-checkout cone
+    --chmod (+|-)x        override the executable bit of the listed files
+    --pathspec-from-file <file>
+                          read pathspec from file
+    --pathspec-file-nul   with --pathspec-from-file, pathspec elements are separated with NUL character
+
+
+-----------------------------------------
+■status
+
+usage: git status [<options>]
+                  [--]
+                  [<pathspec>...]
+
+    -v, --verbose         be verbose
+    -s, --short           show status concisely
+    -b, --branch          show branch information
+    --show-stash          show stash information
+    --ahead-behind        compute full ahead/behind values
+    --porcelain[=<version>]
+                          machine-readable output
+    --long                show status in long format (default)
+    -z, --null            terminate entries with NUL
+    -u, --untracked-files[=<mode>]
+                          show untracked files, optional modes: all, normal, no. (Default: all)
+    --ignored[=<mode>]    show ignored files, optional modes: traditional, matching, no. (Default: traditional)
+    --ignore-submodules[=<when>]
+                          ignore changes to submodules, optional when: all, dirty, untracked. (Default: all)
+    --column[=<style>]    list untracked files in columns
+    --no-renames          do not detect renames
+    -M, --find-renames[=<n>]
+                          detect renames, optionally set similarity index
+
+
+-----------------------------------------
+■commit
+
+usage: git commit [-a | --interactive | --patch]
+                  [-s]
+                  [-v]
+                  [-u<mode>]
+                  [--amend]
+                  [--dry-run]
+                  [(-c | -C | --squash) <commit> | --fixup [(amend|reword):]<commit>)]
+                  [-F <file> | -m <msg>]
+                  [--reset-author]
+                  [--allow-empty]
+                  [--allow-empty-message]
+                  [--no-verify]
+                  [-e]
+                  [--author=<author>]
+                  [--date=<date>]
+                  [--cleanup=<mode>]
+                  [--[no-]status]
+                  [-i | -o]
+                  [--pathspec-from-file=<file> [--pathspec-file-nul]]
+                  [(--trailer <token>[(=|:)<value>])...]
+                  [-S[<keyid>]]
+                  [--]
+                  [<pathspec>...]
+
+    -q, --quiet           suppress summary after successful commit
+    -v, --verbose         show diff in commit message template
+
+Commit message options
+    -F, --file <file>     read message from file
+    --author <author>     override author for commit
+    --date <date>         override date for commit
+    -m, --message <message>
+                          commit message
+    -c, --reedit-message <commit>
+                          reuse and edit message from specified commit
+    -C, --reuse-message <commit>
+                          reuse message from specified commit
+    --fixup [(amend|reword):]commit
+                          use autosquash formatted message to fixup or amend/reword specified commit
+    --squash <commit>     use autosquash formatted message to squash specified commit
+    --reset-author        the commit is authored by me now (used with -C/-c/--amend)
+    --trailer <trailer>   add custom trailer(s)
+    -s, --signoff         add a Signed-off-by trailer
+    -t, --template <file>
+                          use specified template file
+    -e, --edit            force edit of commit
+    --cleanup <mode>      how to strip spaces and #comments from message
+    --status              include status in commit message template
+    -S, --gpg-sign[=<key-id>]
+                          GPG sign commit
+
+Commit contents options
+    -a, --all             commit all changed files
+    -i, --include         add specified files to index for commit
+    --interactive         interactively add files
+    -p, --patch           interactively add changes
+    -o, --only            commit only specified files
+    -n, --no-verify       bypass pre-commit and commit-msg hooks
+    --dry-run             show what would be committed
+    --short               show status concisely
+    --branch              show branch information
+    --ahead-behind        compute full ahead/behind values
+    --porcelain           machine-readable output
+    --long                show status in long format (default)
+    -z, --null            terminate entries with NUL
+    --amend               amend previous commit
+    --no-post-rewrite     bypass post-rewrite hook
+    -u, --untracked-files[=<mode>]
+                          show untracked files, optional modes: all, normal, no. (Default: all)
+    --pathspec-from-file <file>
+                          read pathspec from file
+    --pathspec-file-nul   with --pathspec-from-file, pathspec elements are separated with NUL character
+
+
+-----------------------------------------
+■log
+
+usage: git log [<options>]
+               [<revision-range>]
+               [[--] <path>...]
+   or: git show [<options>] <object>...
+
+    -q, --quiet           suppress diff output
+    --source              show source
+    --use-mailmap         use mail map file
+    --mailmap             alias of --use-mailmap
+    --clear-decorations   clear all previously-defined decoration filters
+    --decorate-refs <pattern>
+                          only decorate refs that match <pattern>
+    --decorate-refs-exclude <pattern>
+                          do not decorate refs that match <pattern>
+    --decorate[=...]      decorate options
+    -L <range:file>       trace the evolution of line range <start>,<end> or function :<funcname> in <file>
+
+
+    --name-only			各コミットで変更されたファイルの一覧を表示
+    --stat				各コミットの詳細な情報が表示
+	[<commit-id>]		指定されたコミットIDのログを表示する。
+
+-----------------------------------------
+■push
+
+usage: git push [<options>]
+                [<repository> [<refspec>...]]
+
+    -v, --verbose         be more verbose
+    -q, --quiet           be more quiet
+    --repo <repository>   repository
+    --all                 push all refs
+    --mirror              mirror all refs
+    -d, --delete          delete refs
+    --tags                push tags (can't be used with --all or --mirror)
+    -n, --dry-run         dry run
+    --porcelain           machine-readable output
+    -f, --force           force updates
+    --force-with-lease[=<refname>:<expect>]
+                          require old value of ref to be at this value
+    --force-if-includes   require remote updates to be integrated locally
+    --recurse-submodules (check|on-demand|no)
+                          control recursive pushing of submodules
+    --thin                use thin pack
+    --receive-pack <receive-pack>
+                          receive pack program
+    --exec <receive-pack>
+                          receive pack program
+    -u, --set-upstream    set upstream for git pull/status
+    --progress            force progress reporting
+    --prune               prune locally removed refs
+    --no-verify           bypass pre-push hook
+    --follow-tags         push missing but relevant tags
+    --signed[=(yes|no|if-asked)]
+                          GPG sign the push
+    --atomic              request atomic transaction on remote side
+    -o, --push-option <server-specific>
+                          option to transmit
+    -4, --ipv4            use IPv4 addresses only
+    -6, --ipv6            use IPv6 addresses only
 
 
 
+-----------------------------------------
+■branch
 
+usage: git branch [<options>] [-r | -a] [--merged] [--no-merged]
+   or: git branch [<options>] [-f] [--recurse-submodules] <branch-name> [<start-point>]
+   or: git branch [<options>] [-l] [<pattern>...]
+   or: git branch [<options>] [-r] (-d | -D) <branch-name>...
+   or: git branch [<options>] (-m | -M) [<old-branch>] <new-branch>
+   or: git branch [<options>] (-c | -C) [<old-branch>] <new-branch>
+   or: git branch [<options>] [-r | -a] [--points-at]
+   or: git branch [<options>] [-r | -a] [--format]
+
+Generic options
+    -v, --verbose         show hash and subject, give twice for upstream branch
+    -q, --quiet           suppress informational messages
+    -t, --track[=(direct|inherit)]
+                          set branch tracking configuration
+    -u, --set-upstream-to <upstream>
+                          change the upstream info
+    --unset-upstream      unset the upstream info
+    --color[=<when>]      use colored output
+    -r, --remotes         act on remote-tracking branches
+    --contains <commit>   print only branches that contain the commit
+    --no-contains <commit>
+                          print only branches that don't contain the commit
+    --abbrev[=<n>]        use <n> digits to display object names
+
+Specific git-branch actions:
+    -a, --all             list both remote-tracking and local branches
+    -d, --delete          delete fully merged branch
+    -D                    delete branch (even if not merged)
+    -m, --move            move/rename a branch and its reflog
+    -M                    move/rename a branch, even if target exists
+    -c, --copy            copy a branch and its reflog
+    -C                    copy a branch, even if target exists
+    -l, --list            list branch names
+    --show-current        show current branch name
+    --create-reflog       create the branch's reflog
+    --edit-description    edit the description for the branch
+    -f, --force           force creation, move/rename, deletion
+    --merged <commit>     print only branches that are merged
+    --no-merged <commit>  print only branches that are not merged
+    --column[=<style>]    list branches in columns
+    --sort <key>          field name to sort on
+    --points-at <object>  print only branches of the object
+    -i, --ignore-case     sorting and filtering are case insensitive
+    --recurse-submodules  recurse through submodules
+    --format <format>     format to use for the output
+
+
+-----------------------------------------
+■merge
+
+usage: git merge [<options>] [<commit>...]
+   or: git merge --abort
+   or: git merge --continue
+
+    -n                    do not show a diffstat at the end of the merge
+    --stat                show a diffstat at the end of the merge
+    --summary             (synonym to --stat)
+    --log[=<n>]           add (at most <n>) entries from shortlog to merge commit message
+    --squash              create a single commit instead of doing a merge
+    --commit              perform a commit if the merge succeeds (default)
+    -e, --edit            edit message before committing
+    --cleanup <mode>      how to strip spaces and #comments from message
+    --ff                  allow fast-forward (default)
+    --ff-only             abort if fast-forward is not possible
+    --rerere-autoupdate   update the index with reused conflict resolution if possible
+    --verify-signatures   verify that the named commit has a valid GPG signature
+    -s, --strategy <strategy>
+                          merge strategy to use
+    -X, --strategy-option <option=value>
+                          option for selected merge strategy
+    -m, --message <message>
+                          merge commit message (for a non-fast-forward merge)
+    -F, --file <path>     read message from file
+    --into-name <name>    use <name> instead of the real target
+    -v, --verbose         be more verbose
+    -q, --quiet           be more quiet
+    --abort               abort the current in-progress merge
+    --quit                --abort but leave index and working tree alone
+    --continue            continue the current in-progress merge
+    --allow-unrelated-histories
+                          allow merging unrelated histories
+    --progress            force progress reporting
+    -S, --gpg-sign[=<key-id>]
+                          GPG sign commit
+    --autostash           automatically stash/stash pop before and after
+    --overwrite-ignore    update ignored files (default)
+    --signoff             add a Signed-off-by trailer
+    --no-verify           bypass pre-merge-commit and commit-msg hooks
+
+
+-----------------------------------------
+■diff
+
+usage: git diff [<options>] [<commit>] [--] [<path>...]
+   or: git diff [<options>] --cached [--merge-base] [<commit>] [--] [<path>...]
+   or: git diff [<options>] [--merge-base] <commit> [<commit>...] <commit> [--] [<path>...]
+   or: git diff [<options>] <commit>...<commit> [--] [<path>...]
+   or: git diff [<options>] <blob> <blob>
+   or: git diff [<options>] --no-index [--] <path> <path>
+
+common diff options:
+  -z            output diff-raw with lines terminated with NUL.
+  -p            output patch format.
+  -u            synonym for -p.
+  --patch-with-raw
+                output both a patch and the diff-raw format.
+  --stat        show diffstat instead of patch.
+  --numstat     show numeric diffstat instead of patch.
+  --patch-with-stat
+                output a patch and prepend its diffstat.
+  --name-only   show only names of changed files.
+  --name-status show names and status of changed files.
+  --full-index  show full object name on index lines.
+  --abbrev=<n>  abbreviate object names in diff-tree header and diff-raw.
+  -R            swap input file pairs.
+  -B            detect complete rewrites.
+  -M            detect renames.
+  -C            detect copies.
+  --find-copies-harder
+                try unchanged files as candidate for copy detection.
+  -l<n>         limit rename attempts up to <n> paths.
+  -O<file>      reorder diffs according to the <file>.
+  -S<string>    find filepair whose only one side contains the string.
+  --pickaxe-all
+                show all files diff when -S is used and hit is found.
+  -a  --text    treat all files as text.
+
+
+-----------------------------------------
+■
+
+-----------------------------------------
+■
