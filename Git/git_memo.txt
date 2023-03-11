@@ -3,7 +3,7 @@ git memo
 
 
 -----------------------------------------
-■Windows10で、gitサーバとクライアントを作る
+■Windows11でgitサーバとクライアントを作る
 
 参考：
 https://www.tdi.co.jp/miso/windows-server-git-ssh
@@ -81,6 +81,61 @@ C:\Users\[ユーザ名]\.ssh
 
 →クライアントとサーバが同じPCの場合。異なるならIPアドレスはサーバのを指定する。
 →これでクローンされるはず!!
+
+→ただ、PUSHしようとしたら失敗した。。。
+
+
+
+-----------------------------------------
+■Windows11でGitBashからGitHubにSSH接続する
+
+参考：
+https://qiita.com/hollyhock0518/items/a3fee20951cd92c87ed9
+
+<前提>
+・Git：2.39.2 は未インストール
+        →念のため再インストールした
+
+<手順>
+
+1.Git 2.39.2をインストールする。（全てデフォルト）
+
+2.GitBashで以下コマンドを実行する。
+$ git config --global user.name "GitHubのユーザ名"
+$ git config --global user.email "GitHubに登録しているメアド"
+$ git config --global core.quotepath false
+
+3.DOS窓を開く。（管理者権限ではなく普通に →デフォルトがユーザフォルダになるので）
+
+4.ユーザフォルダの「.ssh」フォルダをカレントにする。
+
+5.以下コマンドを実行する。
+> ssh-keygen -t rsa -C 'GitHubに登録しているメアド'
+
+#keyを作成するか聞かれるのでEnter
+#パスフレーズを入力
+#パスフレーズを再入力
+
+6.GitHubにログインし、右上のメニューから Settings を選択
+
+7.SSH and GPG keys を選択
+
+8.New SSH Keyを押下
+
+9.Title(自由)、Key(手順5で作成したid_rsa.pubの内容)を入力して Add SSH keyを押下
+
+10.GitBashで、クローンしたいリポジトリを指定してクローンする。
+$ git clone git@github.com:[UserName]/[Repository].git
+            ------------------------------------------
+            →ここの部分はGitHubからコピペする
+
+Are you sure you want to continue connecting (yes/no)?      →yesを入力
+Enter passphrase for key '/c/Users/ユーザ名/.ssh/id_rsa':   →パスフレーズを入力
+
+
+※pushもできた! ただpushの度にパスフレーズを聞かれる。。。
+
+
 
 
 -----------------------------------------
