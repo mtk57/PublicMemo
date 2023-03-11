@@ -84,4 +84,423 @@ C:\Users\[ユーザ名]\.ssh
 
 
 -----------------------------------------
-■
+■test case
+
+<前提>
+●リポジトリ
+  test.git
+    001
+      VB6
+        prjA
+          A01.bas
+        prjB
+          B01.frm
+      VB.NET
+        prjX
+          C01.vb
+    002
+    003
+
+●ユーザ
+  A:Near
+  B:Off(Dev-Leader)
+  C:Off(Dev)
+
+●ブランチ
+  master
+  develop
+  feature_XXX
+
+<正常系>
+
+#    U  Dir/File                  CRUD  GIT                 BRANCH
+---------------------------------------------------------------------------------
+001  A  *                         C     ADD/COMMIT/PUSH     master
+002  B  *                         -     CLONE               master
+003  A  -                         -     CHECKOUT            master→develop
+004  A  -                         -     PUSH                develop
+003  A  -                         -     CHECKOUT            develop→feature_A01
+006  A  -                         -     PUSH                feature_A01
+007  A  002/VB6/prjA/A01.bas      C     -                   feature_A01
+008  A  002/VB6/prjA/A01.bas      -     ADD/COMMIT          feature_A01
+009  A  002/VB6/prjA/A01.frm      C     -                   feature_A01
+010  A  002/VB6/prjA/A01.frm      -     ADD/COMMIT          feature_A01
+011  A  -                         -     PUSH                feature_A01
+
+    001
+      VB6
+        prjA
+          A01.bas
+        prjB
+          B01.frm
+      VB.NET
+        prjX
+          C01.vb
+    002
+      VB6
+        prjA
+          A01.bas
+          A01.frm
+        prjB
+    003
+
+020  C  *                         -     CLONE               *
+021  C  -                         -     CHECKOUT            master→feature_A01
+022  C  003/VB.NET/prjA/A01.vb    C     -                   feature_A01
+023  C  003/VB.NET/prjA/A01.vb    -     ADD/COMMIT          feature_A01
+024  C  -                         -     PUSH                feature_A01
+
+    001
+      VB6
+        prjA
+          A01.bas
+        prjB
+          B01.frm
+      VB.NET
+        prjX
+          C01.vb
+    002
+      VB6
+        prjA
+          A01.bas
+          A01.frm
+        prjB
+    003
+      VB.NET
+        prjA
+          A01.vb
+
+030  B  *                         -     CLONE               *
+031  B  -                         -     CHECKOUT            master→develop
+032  B  -                         -     MERGE               develop←feature_A01
+
+040  A  *                         -     PULL                *
+041  A  -                         -     CHECKOUT            develop
+
+    001
+      VB6
+        prjA
+          A01.bas
+        prjB
+          B01.frm
+      VB.NET
+        prjX
+          C01.vb
+    002
+      VB6
+        prjA
+          A01.bas
+          A01.frm
+        prjB
+    003
+      VB.NET
+        prjA
+          A01.vb
+
+050  B  -                         -     PUSH -delete        feature_A01
+
+<異常系>
+001  違うブランチにコミットした(PUSHはしていない)
+002  違うブランチにPUSHした
+003  ブランチは正しいが間違ったコミットをした(PUSHはしていない)
+004  ブランチは正しいが間違ったコミットをPUSHをした
+005  間違ってreset --hardで戻しすぎた
+006  重要なstashを消しちゃった
+007  間違ったコミットメッセージでコミットした(PUSHはしていない)
+008  間違ったコミットメッセージのコミットをPUSHした
+009  ブランチを移動しようとしたら怒られた
+        error: Your local changes to the following files would be overwritten by checkout:
+                config/deploy.rb
+        Please, commit your changes or stash them before you can switch branches.
+        Aborting
+
+
+-----------------------------------------
+■git
+
+usage     <>：必須, []：任意
+  git
+    [--version]
+    [--help]
+    [-C <path>] [-c <name>=<value>]
+    [--exec-path[=<path>]]
+    [--html-path]
+    [--man-path]
+    [--info-path]
+    [-p | --paginate | -P | --no-pager]
+    [--no-replace-objects]
+    [--bare]
+    [--git-dir=<path>]
+    [--work-tree=<path>]
+    [--namespace=<name>]
+    <command>
+    [<args>]
+
+-----------------------------------------
+■command
+
+$ git help
+
+[設定]
+・config			設定を管理する
+
+[プロジェクトの取得と作成]
+・clone             リポジトリを新しいディレクトリにクローンする
+・init              空の Git リポジトリを作成するか、既存のリポジトリを再初期化します
+
+[基本]
+・add               ファイルをインデックス（ステージ）に追加する
+・status            変更の状態を表示する
+・diff              リポジトリの現在の状態と、以前のコミットまたはブランチの状態との間の差分を表示する
+・commit            変更を確定する。
+                    インデックス（ステージ）の内容をローカルリポジトリに反映する。
+・notes				リポジトリ内に注釈を追加する
+・restore           ファイルを復元する
+・reset             コミットを取り消す
+・rm                ファイルを削除する
+・mv                ファイルやディレクトリの移動やリネームを行う
+
+[ブランチ/マージ]
+・branch            ブランチを作成、表示、削除する
+・checkout			ブランチやコミットを切り替えたり、ファイルを復元したりする
+・switch            ブランチを切り替える
+・merge             ブランチを統合する
+・mergetool			競合したファイルを手動で解決するためのマージツールを起動する
+・log               コミット履歴を表示する
+・stash				まだコミットするには早いが、現在の変更を保存して別のブランチに切り替えたい場合に使用されます。
+・tag               タグを作成、表示、削除する
+・worktree			別の作業ツリーを現在のリポジトリに追加する
+
+[プロジェクトの共有と更新]
+・fetch             リモートリポジトリから最新の変更を取得する
+・pull              リモートリポジトリから変更を取得し、ローカルブランチにマージする
+・push              ローカルリポジトリの変更をリモートリポジトリに反映する
+・remote			リモートリポジトリを操作する
+・submodule			リポジトリ内に他のリポジトリをサブモジュールとして追加する
+
+[検査と比較]
+・show              オブジェクトの詳細を表示する
+・log               コミット履歴を表示する
+・diff              リポジトリの現在の状態と、以前のコミットまたはブランチの状態との間の差分を表示する
+・difftool			ファイルの差分を表示するためのツールを起動する
+・range-diff		2つのコミット間の差分を詳細に比較する
+・shortlog			コミットログを短くまとめて表示する
+・describe			現在のHEADがどのコミットに対応するかを説明する
+
+[パッチ]
+・apply				パッチファイルを適用する
+                    パッチファイルとは、コミットの変更点を含む差分ファイル
+・cherry-pick		特定のコミットを現在のブランチに適用する
+・diff              リポジトリの現在の状態と、以前のコミットまたはブランチの状態との間の差分を表示する
+・rebase            ブランチを再構築する
+・revert			過去のコミットを元に戻す
+
+[デバッグ]
+・bisect            二分探索を使用して、バグを導入したコミットを見つけます
+・blame				ファイルの各行が誰によって変更されたかを表示する
+・grep              指定された文字列や正規表現を検索する
+
+[管理]
+・clean				Gitが追跡していないファイルを削除する
+・gc				リポジトリ内で不要なオブジェクトを削除し、リポジトリのサイズを減らす
+・fsck				リポジトリ内のオブジェクトをチェックし、破損しているオブジェクトを見つける
+・reflog			リポジトリで行われたすべての操作のログを表示する
+・filter-brnach		すべてのコミットに対してフィルターを適用し、リポジトリの履歴を変更する
+・instaweb			簡単にブラウズできるGitのWebインターフェースを提供する
+・archive			特定のコミット、ブランチ、タグなどの状態をアーカイブとして出力する
+・bundle			リモートリポジトリとローカルリポジトリ間でコミットを転送する
+
+[その他]
+・cat-file			Gitオブジェクトを表示する
+・check-ignore		無視するファイルをテストする
+・checkout-index	指定されたコミットから、指定されたファイルを取り出す
+・commit-tree		指定されたコミットオブジェクトを作成する
+・count-objects		リポジトリに存在するオブジェクトのサイズや数を表示する
+・diff-index		現在のワーキングツリーのファイルと、インデックス(ステージングエリア)にあるファイルの差分を比較する
+・for-each-ref		リポジトリ内の参照(ブランチやタグなど)をリストする
+・hash-object		Gitオブジェクトをハッシュ値に変換する
+・ls-files			Gitが管理するファイルのリストを表示する
+・ls-tree			指定されたコミットオブジェクトやツリーオブジェクトの内容を表示する
+・merge-base		2つのブランチの最も新しい共通の祖先コミットを見つける
+・read-tree			指定されたツリーオブジェクトの内容を作業ツリーまたはインデックスに反映する
+・rev-list			コミットのリビジョン範囲を指定して、コミットのリストを表示する
+・rev-parse			Gitのリビジョン識別子（コミット、タグ、ブランチなど）を解析して扱いやすい形式に変換する
+・show-ref			
+・sparse-checkout   Gitリポジトリから一部のファイルやディレクトリをチェックアウトする
+                    特定のプロジェクトやファイルのみをチェックアウトすることで、ディスクスペースやダウンロード時間を節約する
+・symbolic-ref		参照（refs）の一覧を表示する
+・update-indes		リポジトリの index ファイルを更新する
+・verify-pack		オブジェクトストレージ内のpackファイルを検証する
+・write-tree		現在のインデックス内容をオブジェクトデータベースに保存する
+
+-----------------------------------------
+■vim
+
+・モード変更
+  - ノーマルモード（デフォルト）：Esc
+  - 挿入モード                  ：i
+  - コマンドラインモード        ：:
+
+・ノーマルモード
+  以下のコマンドを使用して、テキストを編集します。
+  - カーソル移動   ：h、j、k、l
+  - テキスト削除   ：x
+  - 行全体削除     ：dd
+  - テキストコピー ：yy
+  - ペースト       ：p
+
+・挿入モード
+  テキストを入力することができます。
+
+・コマンドラインモード
+  以下のコマンドを使用して、ファイルを保存、終了します。
+
+  - ファイル保存           ：:w
+  - ファイル保存してVim終了：:wq
+  - Vim終了                ：:q
+  - 強制終了               ：:q!
+
+-----------------------------------------
+■git config
+
+usage: git config [<options>]
+
+Config file location
+    --global              ユーザー全体で使用する設定を変更する
+    --system              use system config file
+    --local               use repository config file
+    --worktree            use per-worktree config file
+    -f, --file <file>     use given config file
+    --blob <blob-id>      read config from given blob object
+
+Action
+    --get                 get value: name [value-regex]
+    --get-all             get all values: key [value-regex]
+    --get-regexp          get values for regexp: name-regex [value-regex]
+    --get-urlmatch        get value specific for the URL: section[.var] URL
+    --replace-all         replace all matching variables: name value [value_regex]
+    --add                 add a new variable: name value
+    --unset               remove a variable: name [value-regex]
+    --unset-all           remove all matches: name [value-regex]
+    --rename-section      rename section: old-name new-name
+    --remove-section      remove a section: name
+    -l, --list            list all
+    -e, --edit            open an editor
+    --get-color           find the color configured: slot [default]
+    --get-colorbool       find the color setting: slot [stdout-is-tty]
+
+Type
+    -t, --type <>         value is given this type
+    --bool                value is "true" or "false"
+    --int                 value is decimal number
+    --bool-or-int         value is --bool or --int
+    --bool-or-str         value is --bool or string
+    --path                value is a path (file or directory name)
+    --expiry-date         value is an expiry date
+
+Other
+    -z, --null            terminate values with NUL byte
+    --name-only           show variable names only
+    --includes            respect include directives on lookup
+    --show-origin         show origin of config (file, standard input, blob, command line)
+    --show-scope          show scope of config (worktree, local, global, system, command)
+    --default <value>     with --get, use default value when missing entry
+
+
+
+$ git config -l
+diff.astextplain.textconv=astextplain
+filter.lfs.clean=git-lfs clean -- %f
+filter.lfs.smudge=git-lfs smudge -- %f
+filter.lfs.process=git-lfs filter-process
+filter.lfs.required=true
+http.sslbackend=openssl
+http.sslcainfo=C:/Program Files/Git/mingw64/ssl/certs/ca-bundle.crt
+core.autocrlf=true
+core.fscache=true
+core.symlinks=false
+pull.rebase=false
+credential.helper=manager-core
+credential.https://dev.azure.com.usehttppath=true
+user.name=mtk57
+user.email=mtk.kawa@gmail.com
+credential.helper=manager-core
+color.ui=auto
+core.editor=vim
+core.repositoryformatversion=0
+core.filemode=false
+core.bare=false
+core.logallrefupdates=true
+core.symlinks=false
+core.ignorecase=true
+remote.origin.url=ssh://127.0.0.1/c/repos/test.git
+remote.origin.fetch=+refs/heads/*:refs/remotes/origin/*
+branch.master.remote=origin
+branch.master.merge=refs/heads/master
+
+
+user.name     : コミットに署名するユーザー名を設定します。
+user.email    : コミットに署名するメールアドレスを設定します。
+core.editor   : コミット時に使用するエディタを設定します。
+alias.<name>  : 短いコマンドのエイリアスを設定します。
+color.ui      : ターミナル上でのGitの出力に色を付けるかどうかを設定します。
+push.default  : git push時のデフォルトの動作を設定します。
+merge.tool    : コンフリクト解決時に使用するツールを設定します。
+diff.tool     : diffを表示する際に使用するツールを設定します。
+core.autocrlf : Windows環境で改行コードを扱う場合の設定です。
+
+
+
+git config --global -e
+→configをエディタで修正できる。
+
+
+-----------------------------------------
+■よく使うコマンド
+
+
+・指定ファイルをインデックスに登場する
+git add hoge.txt
+
+・全てのファイルをインデックスに登場する
+git add .
+
+・状態確認
+git status
+
+・コミットする
+git commit -m "hello git"
+
+・ログを見る
+git log
+git reflog
+
+
+
+
+
+
+-----------------------------------------
+■用語
+
+・リモートリポジトリ
+専用のサーバに配置して複数人で共有するためのリポジトリ
+
+・ローカルリポジトリ
+ユーザ一人ひとりが利用するために、自分の手元のマシン上に配置するリポジトリ
+
+・ワークツリー または作業ツリー
+Gitの管理下に置かれた、実際に作業をしているディレクトリ
+
+・インデックス またはステージ
+ローカルリポジトリにコミットする準備をするための場所
+ローカルリポジトリとワークツリーの間にインデックスを挟むことで、
+ワークツリー内の必要ないファイルを含めずにコミットを行ったり、
+ファイルの一部の変更だけをインデックスに登録してコミットしたりできる。
+
+
+
+
+
+
+
