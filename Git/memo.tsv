@@ -1,0 +1,42 @@
+																										tag																
+																										lo1				lo2									lo1	st1	ph1	pjA
+						offshore									branch											ph1		ph2		ph1		ph2										pjB
+						pjA	pjB	pjC	pjD	pjE	pjF	pjG	pjH		mas	dev	f_pjA	f_pjB	f_pjC	f_pjD	f_pjE	f_pjF	f_pjG	f_pjH	merge	st1	st2	st1	st2	st1	st2	st1	st2								ph2	pjC
+lo1	ph1	st1				A1											A1																									pjD
+						A2											A2																							st2	ph1	pjA
+						A3	B1										A3	B1																								pjB
+							B2									A	×	B2							〇																ph2	pjC
+							B3									↓		B3																								pjD
+		★出揃った														AB		×							〇	★													lo2	st1	ph1	pjE
+		s2	ph2	st1				C1								↓			C1																							pjF
+								C2								↓			C2																						ph2	pjG
+								C3	D1							↓			C3	D1																						pjH
+									D2							ABC			×	D2					〇															st2	ph1	pjE
+									D3							↓				D3																						pjF
+		★テスト完		★出揃った												ABCD				×					〇		★	★													ph2	pjG
+				s2												↓																										pjH
+																↓																										
+																↓																										
+																↓																										
+																↓																										
+				★テスト完												↓													★													
+															ABCD	↓									〇				★													
+lo2	ph1	st1								E1					↓	↓					E1																					
+										E2					↓	↓					E2																					
+										E3	F1				↓	↓					E3	F1																				
+											F2				↓	ABCDE					×	F2			〇					★												
+											F3				↓	↓						F3																				
+		★出揃った													↓	ABCDEF						×			〇																	
+		s2	ph2	st1								G1			↓	↓							G1																			
+												G2			↓	↓							G2																			
+												G3	H1		↓	↓							G3	H1																		
+													H2		↓	ABCDEFG							×	H2	〇						★	★										
+													H3		↓	↓								H3																		
+		★テスト完		★出揃った											↓	ABCDEFGH								×	〇																	
+				s2											↓																											
+															↓																											
+															↓																											
+															↓																											
+															↓																											
+				★テスト完											↓																		★									
+															ABCDEFGH										〇								★									

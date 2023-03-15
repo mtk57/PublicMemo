@@ -608,6 +608,35 @@ git reflog show ブランチ名
 
 ・マージでコンフリクト発生
 
+・チェックアウト（指定されたものを作業ツリーに展開する）
+<HEADは切り離される>
+git checkout <ファイル名|コミットID|ブランチ名|タグ名>
+
+<HEADは切り離されない>
+git checkout -- <ファイル名|コミットID|ブランチ名|タグ名>
+
+・タグ
+git tag -l                  ※タグ一覧
+git tag -l "v1.0*|v2.0*"    ※正規表現でタグを検索
+
+・ローカルブランチをpush (リモートブランチは無い場合）
+git push -u origin <branch>
+
+・リモートブランチ削除
+git push origin :branch_name
+
+・ローカルブランチ削除
+git branch -D branch_name
+
+・初回コミットを削除
+git update-ref -d HEAD
+git reset --hard
+
+・originのURLを取得
+git remote get-url origin
+
+・ブランチを作成
+git checkout -b <child branch> <parent branch>
 
 
 
