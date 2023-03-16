@@ -2,6 +2,158 @@ git memo
 
 
 
+
+-----------------------------------------
+■頻度の高い操作
+
+
+・インデックスに登録する
+git add hoge.txt
+git add .     ※全ファイル
+
+・追跡対象確認
+git ls-files
+
+・状態確認
+git status
+
+・コミット
+git commit -m "コメント"
+
+・diff  (HEADとインデックス)
+git diff HEAD
+
+・ログ
+git log --oneline
+git reflog show ブランチ名
+
+・マージでコンフリクト発生
+
+・チェックアウト（指定されたものを作業ツリーに展開する）
+<HEADは切り離される>
+git checkout <ファイル名|コミットID|ブランチ名|タグ名>
+
+<HEADは切り離されない>
+git checkout -- <ファイル名|コミットID|ブランチ名|タグ名>
+
+・タグ
+git tag -l                  ※タグ一覧
+git tag -l "v1.0*|v2.0*"    ※正規表現でタグを検索
+
+・ローカルブランチをpush (リモートブランチは無い場合）
+git push -u origin <branch>
+
+・リモートブランチ削除
+git push origin :branch_name
+
+・ローカルブランチ削除
+git branch -D branch_name
+
+・初回コミットを削除
+git update-ref -d HEAD
+git reset --hard
+
+・originのURLを取得
+git remote get-url origin
+
+・ブランチを作成
+git checkout -b <child branch> <parent branch>
+
+・空フォルダをaddできるようにする
+.gitkeepファイルを入れておく（中身は空でよい）
+
+
+
+-----------------------------------------
+■頻度は低いが、いざというときに役立つ操作
+
+
+＜開発者＞
+・ブランチ名を間違えた
+git branch -m 変更前ブランチ 変更後ブランチ
+git push -u origin 変更後ブランチ
+git push -d origin 変更前ブランチ
+※GitHubの場合、mainがデフォルトブランチになっているので、mainを削除するには
+デフォルトブランチに変更する必要がある。
+→https://prograshi.com/general/git/change-and-delete-default-remote-branch/
+
+・派生元ブランチを間違えた
+
+・間違ってインデックスに登録した
+　→登録漏れ、スペルミス、不要ファイル/ディレクトリなど
+
+・登録後にワークツリーからファイル/ディレクトリを削除してしまった
+
+・間違ってコミットした
+　→インデックスと同じ
+
+・コミットするブランチを間違えた
+
+・コミットコメントを間違えた
+
+・プッシュするブランチを間違えた
+
+・ローカルとリモートの状態が一致しない
+
+・コンフリクトを解決しないでプッシュした
+
+
+
+＜レビュー/マージ担当者＞
+・コンフリクトの解消を怠った
+  マージ時にコンフリクトが発生した場合、コンフリクトを解消しないでマージを完了させると、
+  後で修正するのが困難になる可能性があります。
+
+・マージコミットのコメントを怠った
+  マージコミットには、マージがなぜ行われたのかを説明するコメントを書くことが重要です。
+  コメントを書かずにマージすると、後でコードを理解するのが困難になる可能性があります。
+
+・リモートブランチをマージする前に、ローカルブランチを最新の状態に更新しなかった
+  リモートブランチをマージする前に、ローカルブランチを最新の状態に更新することが重要です。
+  そうしないと、マージ後にコンフリクトが発生する可能性があります。
+
+・マージ先を間違えた
+
+・マージ元を間違えた
+
+・fast-forwardでマージした
+
+・間違ったブランチを削除した
+
+・ブランチを削除したあとで、新しいコミットが発生した。
+
+
+
+＜その他＞
+
+・タグ
+git tag タグ名 コミットID
+git push origin タグ名
+
+・指定タグを新規ブランチで取得
+git checkout タグ名
+git checkout -b 新しいブランチ名
+
+・削除したリモートブランチが表示される
+git remote prune origin    ※クリーンアップされる
+
+
+・違うブランチにコミットした(PUSHはしていない)
+・違うブランチにPUSHした
+・ブランチは正しいが間違ったコミットをした(PUSHはしていない)
+・ブランチは正しいが間違ったコミットをPUSHをした
+・間違ってreset --hardで戻しすぎた
+・重要なstashを消しちゃった
+・間違ったコミットメッセージでコミットした(PUSHはしていない)
+・間違ったコミットメッセージのコミットをPUSHした
+・ブランチを移動しようとしたら怒られた
+        error: Your local changes to the following files would be overwritten by checkout:
+                config/deploy.rb
+        Please, commit your changes or stash them before you can switch branches.
+        Aborting
+
+
+
 -----------------------------------------
 ■Windows11でgitサーバとクライアントを作る
 
@@ -581,153 +733,6 @@ core.autocrlf : Windows環境で改行コードを扱う場合の設定です。
 git config --global -e
 →configをエディタで修正できる。
 
-
------------------------------------------
-■頻度の高い操作
-
-
-・インデックスに登録する
-git add hoge.txt
-git add .     ※全ファイル
-
-・追跡対象確認
-git ls-files
-
-・状態確認
-git status
-
-・コミット
-git commit -m "コメント"
-
-・diff  (HEADとインデックス)
-git diff HEAD
-
-・ログ
-git log --oneline
-git reflog show ブランチ名
-
-・マージでコンフリクト発生
-
-・チェックアウト（指定されたものを作業ツリーに展開する）
-<HEADは切り離される>
-git checkout <ファイル名|コミットID|ブランチ名|タグ名>
-
-<HEADは切り離されない>
-git checkout -- <ファイル名|コミットID|ブランチ名|タグ名>
-
-・タグ
-git tag -l                  ※タグ一覧
-git tag -l "v1.0*|v2.0*"    ※正規表現でタグを検索
-
-・ローカルブランチをpush (リモートブランチは無い場合）
-git push -u origin <branch>
-
-・リモートブランチ削除
-git push origin :branch_name
-
-・ローカルブランチ削除
-git branch -D branch_name
-
-・初回コミットを削除
-git update-ref -d HEAD
-git reset --hard
-
-・originのURLを取得
-git remote get-url origin
-
-・ブランチを作成
-git checkout -b <child branch> <parent branch>
-
-
-
-
------------------------------------------
-■頻度は低いが、いざというときに役立つ操作
-
-
-＜開発者＞
-・ブランチ名を間違えた
-git branch -m 変更前ブランチ 変更後ブランチ
-git push -u origin 変更後ブランチ
-git push -d origin 変更前ブランチ
-※GitHubの場合、mainがデフォルトブランチになっているので、mainを削除するには
-デフォルトブランチに変更する必要がある。
-→https://prograshi.com/general/git/change-and-delete-default-remote-branch/
-
-・派生元ブランチを間違えた
-
-・間違ってインデックスに登録した
-　→登録漏れ、スペルミス、不要ファイル/ディレクトリなど
-
-・登録後にワークツリーからファイル/ディレクトリを削除してしまった
-
-・間違ってコミットした
-　→インデックスと同じ
-
-・コミットするブランチを間違えた
-
-・コミットコメントを間違えた
-
-・プッシュするブランチを間違えた
-
-・ローカルとリモートの状態が一致しない
-
-・コンフリクトを解決しないでプッシュした
-
-
-
-＜レビュー/マージ担当者＞
-・コンフリクトの解消を怠った
-  マージ時にコンフリクトが発生した場合、コンフリクトを解消しないでマージを完了させると、
-  後で修正するのが困難になる可能性があります。
-
-・マージコミットのコメントを怠った
-  マージコミットには、マージがなぜ行われたのかを説明するコメントを書くことが重要です。
-  コメントを書かずにマージすると、後でコードを理解するのが困難になる可能性があります。
-
-・リモートブランチをマージする前に、ローカルブランチを最新の状態に更新しなかった
-  リモートブランチをマージする前に、ローカルブランチを最新の状態に更新することが重要です。
-  そうしないと、マージ後にコンフリクトが発生する可能性があります。
-
-・マージ先を間違えた
-
-・マージ元を間違えた
-
-・fast-forwardでマージした
-
-・間違ったブランチを削除した
-
-・ブランチを削除したあとで、新しいコミットが発生した。
-
-
-
-＜その他＞
-
-・タグ
-git tag タグ名 コミットID
-git push origin タグ名
-
-・指定タグを新規ブランチで取得
-git checkout タグ名
-git checkout -b 新しいブランチ名
-
-・削除したリモートブランチが表示される
-git remote prune origin    ※クリーンアップされる
-
-
-・違うブランチにコミットした(PUSHはしていない)
-・違うブランチにPUSHした
-・ブランチは正しいが間違ったコミットをした(PUSHはしていない)
-・ブランチは正しいが間違ったコミットをPUSHをした
-・間違ってreset --hardで戻しすぎた
-・重要なstashを消しちゃった
-・間違ったコミットメッセージでコミットした(PUSHはしていない)
-・間違ったコミットメッセージのコミットをPUSHした
-・ブランチを移動しようとしたら怒られた
-        error: Your local changes to the following files would be overwritten by checkout:
-                config/deploy.rb
-        Please, commit your changes or stash them before you can switch branches.
-        Aborting
 
 
 -----------------------------------------
