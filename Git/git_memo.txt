@@ -8,59 +8,80 @@ git memo
 
 
 ・インデックスに登録する
-git add hoge.txt
-git add .     ※全ファイル
+$ git add hoge.txt
+$ git add .     ※全ファイル
 
 ・追跡対象確認
-git ls-files
+$ git ls-files
 
 ・状態確認
-git status
+$ git status
 
 ・コミット
-git commit -m "コメント"
+$ git commit -m "コメント"
 
 ・diff  (HEADとインデックス)
-git diff HEAD
+$ git diff HEAD
 
 ・ログ
-git log --oneline
-git reflog show ブランチ名
+$ git log --oneline
+$ git reflog show ブランチ名
 
 ・マージでコンフリクト発生
 
 ・チェックアウト（指定されたものを作業ツリーに展開する）
 <HEADは切り離される>
-git checkout <ファイル名|コミットID|ブランチ名|タグ名>
+$ git checkout <ファイル名|コミットID|ブランチ名|タグ名>
 
 <HEADは切り離されない>
-git checkout -- <ファイル名|コミットID|ブランチ名|タグ名>
+$ git checkout -- <ファイル名|コミットID|ブランチ名|タグ名>
 
 ・タグ
-git tag -l                  ※タグ一覧
-git tag -l "v1.0*|v2.0*"    ※正規表現でタグを検索
+$ git tag -l                  ※タグ一覧
+$ git tag -l "v1.0*|v2.0*"    ※正規表現でタグを検索
 
 ・ローカルブランチをpush (リモートブランチは無い場合）
-git push -u origin <branch>
+$ git push -u origin <branch>
 
 ・リモートブランチ削除
-git push origin :branch_name
+$ git push origin :branch_name
 
 ・ローカルブランチ削除
-git branch -D branch_name
+$ git branch -D branch_name
 
 ・初回コミットを削除
-git update-ref -d HEAD
-git reset --hard
+$ git update-ref -d HEAD
+$ git reset --hard
 
 ・originのURLを取得
-git remote get-url origin
+$ git remote get-url origin
 
 ・ブランチを作成
-git checkout -b <child branch> <parent branch>
+$ git checkout -b <child branch> <parent branch>
 
 ・空フォルダをaddできるようにする
 .gitkeepファイルを入れておく（中身は空でよい）
+
+・コミットをまとめる (TortoiseGitが簡単!)
+1.コンテキストメニューの[ログを表示]
+2.まとめたいコミットを複数選択。（必ず連続で選択すること）
+3.コンテキストメニューの[一つのコミットに集約]
+
+・他のブランチの変更を取り込む  ※masterの変更をdevelopに取り込む場合
+(TortoiseGit)  ※競合なしの場合
+1.developに切り替え
+2.コンテキストメニューの[マージ]
+3.Fromの[ブランチ]に「remotes/origin/master」 を選択して[OK]
+
+(TortoiseGit)  ※競合ありの場合
+1.developに切り替え
+2.コンテキストメニューの[マージ]
+3.Fromの[ブランチ]に「remotes/origin/master」 を選択して[OK]
+
+
+(bash)
+
+
 
 
 
