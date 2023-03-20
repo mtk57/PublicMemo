@@ -4,31 +4,148 @@ git memo
 
 
 -----------------------------------------
-■頻度の高い操作
+■■頻度の高い操作
 
 
+------------
+■クローン
+$ git clone <リポジトリURI>
+
+(TortoiseGit)
+1.クローンしたい空フォルダで、コンテキストメニューの[Git クローン]クリック。
+2.リポジトリのURLを入力して[OK]クリック。
+
+------------
+■ブランチ作成
+$ git checkout -b <子ブランチ名> <親ブランチ名>
+
+(TortoiseGit)
+1.コンテキストメニューの[切り替え/チェックアウト]クリック。
+2.切り替え先の[ブランチ]を<親ブランチ名>を入れる。
+3.オプションの[新しいブランチを作成」にチェックを入れる。
+4.<子ブランチ名>を入力して「OK」クリック。
+5.コンテキストメニューの[Gitコミット -> ブランチ名]を確認する。
+
+------------
+■ブランチ切り替え
+$ git switch <ブランチ名>
+
+(TortoiseGit)
+1.コンテキストメニューの[切り替え/チェックアウト]クリック。
+2.切り替え先の[ブランチ]に<ブランチ名>を入れて[OK]クリック。
+3.コンテキストメニューの[Gitコミット -> ブランチ名]を確認する。
+
+------------
+■インデックス追加
+$ git add .
+
+(TortoiseGit)
+1.新規追加したいファイルで、コンテキストメニューの[追加]クリック。
+  →フォルダを追加した場合は再帰的に追加される。
+
+------------
+■コミット
+$ git commit -m <コメント>
+
+(TortoiseGit)
+1.コンテキストメニューの[Gitコミット -> ブランチ名]クリック。
+2.コミットのダイアログが表示されるので、[メッセージ]に<コメント>を記載して、[コミット]クリック。
+
+------------
+■コミットにタグをつける
+$ git log --oneline                        ※ログからコミットハッシュを確認
+$ git tag <タグ名> <コミットハッシュ>
+
+(TortoiseGit)
+1.コンテキストメニューの[タグを作成]クリック。
+2.タグ作成のダイアログが表示されるので、<タグ名>を入力して、「OK」クリック。
+
+------------
+■カレントブランチにマージ元ブランチをマージ
+$ git merge --no-ff <マージ元ブランチ> -m <コメント>
+
+(TortoiseGit)
+1.コンテキストメニューの[マージ]クリック。
+2.<マージ元ブランチ>を指定し、オプションの[ファストフォワードしない]にチェックを入れる。
+3.メッセージに<コメント>を記載して、「OK」クリック。
+
+------------
+■コミットをプッシュ   ※リモートブランチが存在しない場合
+$ git push -u oring <ブランチ名>
+
+(TortoiseGit)
+1.コンテキストメニューの[Gitプッシュ]クリック。
+2.プッシュのダイアログが表示されるので、<ブランチ名>を確認して[OK]クリック。
+
+------------
+■コミットをプッシュ
+$ git push
+
+(TortoiseGit)
+1.コンテキストメニューの[Gitプッシュ]クリック。
+2.プッシュのダイアログが表示されるので、<ブランチ名>を確認して[OK]クリック。
+
+------------
+■タグをプッシュ
+$ git push origin <タグ名>
+
+(TortoiseGit)
+1.コンテキストメニューの[Gitプッシュ]クリック。
+2.プッシュのダイアログが表示されるので、<ブランチ名>を確認する。
+3.オプションの「タグを含める」にチェックをつけて、[OK]クリック。
+
+------------
+■リモートブランチを削除
+$ git push -d origin <ブランチ名>
+
+(TortoiseGit)
+1.コンテキストメニューの[refブラウザ]クリック。
+2.refブラウザのダイアログが表示されるので、左側のツリーで「remotes」を選択する。
+3.右側のリモートブランチの一覧で「origin/<ブランチ名>」を右クリックで選択する。
+4.コンテキストメニューの[リモートブランチを削除]クリック
+
+------------
+■プル
+$ git pull
+
+(TortoiseGit)
+1.コンテキストメニューの[プル]クリック。
+2.プルのダイアログが表示されるので、[OK]クリック。
+
+
+
+
+
+------------
 ・インデックスに登録する
 $ git add hoge.txt
 $ git add .     ※全ファイル
 
+------------
 ・追跡対象確認
 $ git ls-files
 
+------------
 ・状態確認
 $ git status
 
+------------
 ・コミット
 $ git commit -m "コメント"
 
+------------
 ・diff  (HEADとインデックス)
 $ git diff HEAD
 
+------------
 ・ログ
 $ git log --oneline
 $ git reflog show ブランチ名
 
+------------
 ・マージでコンフリクト発生
 
+------------
 ・チェックアウト（指定されたものを作業ツリーに展開する）
 <HEADは切り離される>
 $ git checkout <ファイル名|コミットID|ブランチ名|タグ名>
@@ -36,57 +153,70 @@ $ git checkout <ファイル名|コミットID|ブランチ名|タグ名>
 <HEADは切り離されない>
 $ git checkout -- <ファイル名|コミットID|ブランチ名|タグ名>
 
+------------
 ・タグ
 $ git tag -l                  ※タグ一覧
 $ git tag -l "v1.0*|v2.0*"    ※正規表現でタグを検索
 
+------------
 ・ローカルブランチをpush (リモートブランチは無い場合）
 $ git push -u origin <branch>
 
+------------
 ・リモートブランチ削除
 $ git push origin :branch_name
 
+------------
 ・ローカルブランチ削除
 $ git branch -D branch_name
 
+------------
 ・初回コミットを削除
 $ git update-ref -d HEAD
 $ git reset --hard
 
+------------
 ・originのURLを取得
 $ git remote get-url origin
 
+------------
 ・ブランチを作成
 $ git checkout -b <child branch> <parent branch>
 
+------------
 ・空フォルダをaddできるようにする
 .gitkeepファイルを入れておく（中身は空でよい）
 
-・コミットをまとめる (TortoiseGitが簡単!)
+------------
+・コミットをまとめる
+(TortoiseGit)
 1.コンテキストメニューの[ログを表示]
 2.まとめたいコミットを複数選択。（必ず連続で選択すること）
 3.コンテキストメニューの[一つのコミットに集約]
 
+(bash)
+メンドイので省略
+
+------------
 ・他のブランチの変更を取り込む  ※masterの変更をdevelopに取り込む場合
-(TortoiseGit)  ※競合なしの場合
+(TortoiseGit)
 1.developに切り替え
 2.コンテキストメニューの[マージ]
 3.Fromの[ブランチ]に「remotes/origin/master」 を選択して[OK]
-
-(TortoiseGit)  ※競合ありの場合
-1.developに切り替え
-2.コンテキストメニューの[マージ]
-3.Fromの[ブランチ]に「remotes/origin/master」 を選択して[OK]
-
+  →競合が発生しない場合はここで終了。
+  →競合が発生した場合は次に進む。
+4.競合したファイルを修正する。（コミットはまだしない）
+5.[競合の解決]
+6.[OK]
+7.[コミット]
+8.メッセージを修正して[コミット]
+9.[プッシュ]
 
 (bash)
-
-
-
-
+メンドイので省略
 
 -----------------------------------------
-■頻度は低いが、いざというときに役立つ操作
+■■頻度は低いが、いざというときに役立つ操作
 
 
 ＜開発者＞
@@ -176,7 +306,7 @@ git remote prune origin    ※クリーンアップされる
 
 
 -----------------------------------------
-■Windows11でgitサーバとクライアントを作る
+■■Windows11でgitサーバとクライアントを作る
 
 参考：
 https://www.tdi.co.jp/miso/windows-server-git-ssh
@@ -260,7 +390,7 @@ C:\Users\[ユーザ名]\.ssh
 
 
 -----------------------------------------
-■Windows11でGitBashからGitHubにSSH接続する
+■■Windows11でGitBashからGitHubにSSH接続する
 
 参考：
 https://qiita.com/hollyhock0518/items/a3fee20951cd92c87ed9
@@ -368,7 +498,7 @@ fi
 
 
 -----------------------------------------
-■test case
+■■test case
 
 <前提>
 ●リポジトリ
@@ -514,40 +644,21 @@ $ git pull
 $ git push origin -d feature_A01
 
 
------------------------------------------
-■git
 
-usage     <>：必須, []：任意
-  git
-    [--version]
-    [--help]
-    [-C <path>] [-c <name>=<value>]
-    [--exec-path[=<path>]]
-    [--html-path]
-    [--man-path]
-    [--info-path]
-    [-p | --paginate | -P | --no-pager]
-    [--no-replace-objects]
-    [--bare]
-    [--git-dir=<path>]
-    [--work-tree=<path>]
-    [--namespace=<name>]
-    <command>
-    [<args>]
 
 -----------------------------------------
-■command
+■■command
 
 $ git help
 
-[設定]
+■設定
 ・config			設定を管理する
 
-[プロジェクトの取得と作成]
+■プロジェクトの取得と作成
 ・clone             リポジトリを新しいディレクトリにクローンする
 ・init              空のGitリポジトリを作成するか、既存のリポジトリを再初期化します
 
-[基本]
+■基本■
 ・add               ファイルをインデックス（ステージ）に追加する
 ・status            変更の状態を表示する
 ・diff              リポジトリの現在の状態と、以前のコミットまたはブランチの状態との間の差分を表示する
@@ -559,7 +670,7 @@ $ git help
 ・rm                ファイルを削除する
 ・mv                ファイルやディレクトリの移動やリネームを行う
 
-[ブランチ/マージ]
+■ブランチ/マージ
 ・branch            ブランチを作成、表示、削除する
 ・checkout			ブランチやコミットを切り替えたり、ファイルを復元したりする
 ・switch            ブランチを切り替える
@@ -570,7 +681,7 @@ $ git help
 ・tag               タグを作成、表示、削除する
 ・worktree			別の作業ツリーを現在のリポジトリに追加する
 
-[プロジェクトの共有と更新]
+■プロジェクトの共有と更新
 ・fetch             リモートリポジトリから最新の変更を取得する
 ・pull              リモートリポジトリから変更を取得し、ローカルブランチにマージする
                     カレントブランチに対して実施する
@@ -578,7 +689,7 @@ $ git help
 ・remote			リモートリポジトリを操作する
 ・submodule			リポジトリ内に他のリポジトリをサブモジュールとして追加する
 
-[検査と比較]
+■検査と比較
 ・show              オブジェクトの詳細を表示する
 ・log               コミット履歴を表示する
 ・diff              リポジトリの現在の状態と、以前のコミットまたはブランチの状態との間の差分を表示する
@@ -587,7 +698,7 @@ $ git help
 ・shortlog			コミットログを短くまとめて表示する
 ・describe			現在のHEADがどのコミットに対応するかを説明する
 
-[パッチ]
+■パッチ
 ・apply				パッチファイルを適用する
                     パッチファイルとは、コミットの変更点を含む差分ファイル
 ・cherry-pick		特定のコミットを現在のブランチに適用する
@@ -595,12 +706,12 @@ $ git help
 ・rebase            ブランチを再構築する
 ・revert			過去のコミットを元に戻す
 
-[デバッグ]
+■デバッグ
 ・bisect            二分探索を使用して、バグを導入したコミットを見つけます
 ・blame				ファイルの各行が誰によって変更されたかを表示する
 ・grep              指定された文字列や正規表現を検索する
 
-[管理]
+■管理
 ・clean				Gitが追跡していないファイルを削除する
 ・gc				リポジトリ内で不要なオブジェクトを削除し、リポジトリのサイズを減らす
 ・fsck				リポジトリ内のオブジェクトをチェックし、破損しているオブジェクトを見つける
@@ -610,7 +721,7 @@ $ git help
 ・archive			特定のコミット、ブランチ、タグなどの状態をアーカイブとして出力する
 ・bundle			リモートリポジトリとローカルリポジトリ間でコミットを転送する
 
-[その他]
+■その他
 ・cat-file			Gitオブジェクトを表示する
 ・check-ignore		無視するファイルをテストする
 ・checkout-index	指定されたコミットから、指定されたファイルを取り出す
@@ -634,7 +745,7 @@ $ git help
 ・write-tree		現在のインデックス内容をオブジェクトデータベースに保存する
 
 -----------------------------------------
-■vim
+■■vim
 
 ・モード変更
   - ノーマルモード（デフォルト）：Esc
@@ -661,7 +772,7 @@ $ git help
   - 強制終了               ：:q!
 
 -----------------------------------------
-■git config
+■■git config
 
 usage: git config [<options>]
 
@@ -757,7 +868,7 @@ git config --global -e
 
 
 -----------------------------------------
-■用語
+■■用語
 
 ・リモートリポジトリ
 専用のサーバに配置して複数人で共有するためのリポジトリ
@@ -775,397 +886,3 @@ Gitの管理下に置かれた、実際に作業をしているディレクト�
 ファイルの一部の変更だけをインデックスに登録してコミットしたりできる。
 
 
-
------------------------------------------
-■clone
-
-usage: git clone [<options>]
-                 [--]
-                 <repo>
-                 [<dir>]
-
-    -v, --verbose         be more verbose
-    -q, --quiet           be more quiet
-    --progress            force progress reporting
-    --reject-shallow      don't clone shallow repository
-    -n, --no-checkout     don't create a checkout
-    --bare                create a bare repository
-    --mirror              create a mirror repository (implies bare)
-    -l, --local           to clone from a local repository
-    --no-hardlinks        don't use local hardlinks, always copy
-    -s, --shared          setup as shared repository
-    --recurse-submodules[=<pathspec>]
-                          initialize submodules in the clone
-    --recursive[=<pathspec>]
-                          alias of --recurse-submodules
-    -j, --jobs <n>        number of submodules cloned in parallel
-    --template <template-directory>
-                          directory from which templates will be used
-    --reference <repo>    reference repository
-    --reference-if-able <repo>
-                          reference repository
-    --dissociate          use --reference only while cloning
-    -o, --origin <name>   use <name> instead of 'origin' to track upstream
-    -b, --branch <branch>
-                          checkout <branch> instead of the remote's HEAD
-    -u, --upload-pack <path>
-                          path to git-upload-pack on the remote
-    --depth <depth>       create a shallow clone of that depth
-    --shallow-since <time>
-                          create a shallow clone since a specific time
-    --shallow-exclude <revision>
-                          deepen history of shallow clone, excluding rev
-    --single-branch       clone only one branch, HEAD or --branch
-    --no-tags             don't clone any tags, and make later fetches not to follow them
-    --shallow-submodules  any cloned submodules will be shallow
-    --separate-git-dir <gitdir>
-                          separate git dir from working tree
-    -c, --config <key=value>
-                          set config inside the new repository
-    --server-option <server-specific>
-                          option to transmit
-    -4, --ipv4            use IPv4 addresses only
-    -6, --ipv6            use IPv6 addresses only
-    --filter <args>       object filtering
-    --also-filter-submodules
-                          apply partial clone filters to submodules
-    --remote-submodules   any cloned submodules will use their remote-tracking branch
-    --sparse              initialize sparse-checkout file to include only files at root
-    --bundle-uri <uri>    a URI for downloading bundles before fetching from origin remote
-
-
------------------------------------------
-■add
-
-usage: git add [<options>]
-               [--]
-               <pathspec>...
-
-    -n, --dry-run         dry run
-    -v, --verbose         be verbose
-
-    -i, --interactive     interactive picking
-    -p, --patch           select hunks interactively
-    -e, --edit            edit current diff and apply
-    -f, --force           allow adding otherwise ignored files
-    -u, --update          update tracked files
-    --renormalize         renormalize EOL of tracked files (implies -u)
-    -N, --intent-to-add   record only the fact that the path will be added later
-    -A, --all             add changes from all tracked and untracked files
-    --ignore-removal      ignore paths removed in the working tree (same as --no-all)
-    --refresh             don't add, only refresh the index
-    --ignore-errors       just skip files which cannot be added because of errors
-    --ignore-missing      check if - even missing - files are ignored in dry run
-    --sparse              allow updating entries outside of the sparse-checkout cone
-    --chmod (+|-)x        override the executable bit of the listed files
-    --pathspec-from-file <file>
-                          read pathspec from file
-    --pathspec-file-nul   with --pathspec-from-file, pathspec elements are separated with NUL character
-
-
------------------------------------------
-■status
-
-usage: git status [<options>]
-                  [--]
-                  [<pathspec>...]
-
-    -v, --verbose         be verbose
-    -s, --short           show status concisely
-    -b, --branch          show branch information
-    --show-stash          show stash information
-    --ahead-behind        compute full ahead/behind values
-    --porcelain[=<version>]
-                          machine-readable output
-    --long                show status in long format (default)
-    -z, --null            terminate entries with NUL
-    -u, --untracked-files[=<mode>]
-                          show untracked files, optional modes: all, normal, no. (Default: all)
-    --ignored[=<mode>]    show ignored files, optional modes: traditional, matching, no. (Default: traditional)
-    --ignore-submodules[=<when>]
-                          ignore changes to submodules, optional when: all, dirty, untracked. (Default: all)
-    --column[=<style>]    list untracked files in columns
-    --no-renames          do not detect renames
-    -M, --find-renames[=<n>]
-                          detect renames, optionally set similarity index
-
-
------------------------------------------
-■commit
-
-usage: git commit [-a | --interactive | --patch]
-                  [-s]
-                  [-v]
-                  [-u<mode>]
-                  [--amend]
-                  [--dry-run]
-                  [(-c | -C | --squash) <commit> | --fixup [(amend|reword):]<commit>)]
-                  [-F <file> | -m <msg>]
-                  [--reset-author]
-                  [--allow-empty]
-                  [--allow-empty-message]
-                  [--no-verify]
-                  [-e]
-                  [--author=<author>]
-                  [--date=<date>]
-                  [--cleanup=<mode>]
-                  [--[no-]status]
-                  [-i | -o]
-                  [--pathspec-from-file=<file> [--pathspec-file-nul]]
-                  [(--trailer <token>[(=|:)<value>])...]
-                  [-S[<keyid>]]
-                  [--]
-                  [<pathspec>...]
-
-    -q, --quiet           suppress summary after successful commit
-    -v, --verbose         show diff in commit message template
-
-Commit message options
-    -F, --file <file>     read message from file
-    --author <author>     override author for commit
-    --date <date>         override date for commit
-    -m, --message <message>
-                          commit message
-    -c, --reedit-message <commit>
-                          reuse and edit message from specified commit
-    -C, --reuse-message <commit>
-                          reuse message from specified commit
-    --fixup [(amend|reword):]commit
-                          use autosquash formatted message to fixup or amend/reword specified commit
-    --squash <commit>     use autosquash formatted message to squash specified commit
-    --reset-author        the commit is authored by me now (used with -C/-c/--amend)
-    --trailer <trailer>   add custom trailer(s)
-    -s, --signoff         add a Signed-off-by trailer
-    -t, --template <file>
-                          use specified template file
-    -e, --edit            force edit of commit
-    --cleanup <mode>      how to strip spaces and #comments from message
-    --status              include status in commit message template
-    -S, --gpg-sign[=<key-id>]
-                          GPG sign commit
-
-Commit contents options
-    -a, --all             commit all changed files
-    -i, --include         add specified files to index for commit
-    --interactive         interactively add files
-    -p, --patch           interactively add changes
-    -o, --only            commit only specified files
-    -n, --no-verify       bypass pre-commit and commit-msg hooks
-    --dry-run             show what would be committed
-    --short               show status concisely
-    --branch              show branch information
-    --ahead-behind        compute full ahead/behind values
-    --porcelain           machine-readable output
-    --long                show status in long format (default)
-    -z, --null            terminate entries with NUL
-    --amend               amend previous commit
-    --no-post-rewrite     bypass post-rewrite hook
-    -u, --untracked-files[=<mode>]
-                          show untracked files, optional modes: all, normal, no. (Default: all)
-    --pathspec-from-file <file>
-                          read pathspec from file
-    --pathspec-file-nul   with --pathspec-from-file, pathspec elements are separated with NUL character
-
-
------------------------------------------
-■log
-
-usage: git log [<options>]
-               [<revision-range>]
-               [[--] <path>...]
-   or: git show [<options>] <object>...
-
-    -q, --quiet           suppress diff output
-    --source              show source
-    --use-mailmap         use mail map file
-    --mailmap             alias of --use-mailmap
-    --clear-decorations   clear all previously-defined decoration filters
-    --decorate-refs <pattern>
-                          only decorate refs that match <pattern>
-    --decorate-refs-exclude <pattern>
-                          do not decorate refs that match <pattern>
-    --decorate[=...]      decorate options
-    -L <range:file>       trace the evolution of line range <start>,<end> or function :<funcname> in <file>
-
-
-    --name-only			各コミットで変更されたファイルの一覧を表示
-    --stat				各コミットの詳細な情報が表示
-	[<commit-id>]		指定されたコミットIDのログを表示する。
-
------------------------------------------
-■push
-
-usage: git push [<options>]
-                [<repository> [<refspec>...]]
-
-    -v, --verbose         be more verbose
-    -q, --quiet           be more quiet
-    --repo <repository>   repository
-    --all                 push all refs
-    --mirror              mirror all refs
-    -d, --delete          delete refs
-    --tags                push tags (can't be used with --all or --mirror)
-    -n, --dry-run         dry run
-    --porcelain           machine-readable output
-    -f, --force           force updates
-    --force-with-lease[=<refname>:<expect>]
-                          require old value of ref to be at this value
-    --force-if-includes   require remote updates to be integrated locally
-    --recurse-submodules (check|on-demand|no)
-                          control recursive pushing of submodules
-    --thin                use thin pack
-    --receive-pack <receive-pack>
-                          receive pack program
-    --exec <receive-pack>
-                          receive pack program
-    -u, --set-upstream    set upstream for git pull/status
-    --progress            force progress reporting
-    --prune               prune locally removed refs
-    --no-verify           bypass pre-push hook
-    --follow-tags         push missing but relevant tags
-    --signed[=(yes|no|if-asked)]
-                          GPG sign the push
-    --atomic              request atomic transaction on remote side
-    -o, --push-option <server-specific>
-                          option to transmit
-    -4, --ipv4            use IPv4 addresses only
-    -6, --ipv6            use IPv6 addresses only
-
-
-
------------------------------------------
-■branch
-
-usage: git branch [<options>] [-r | -a] [--merged] [--no-merged]
-   or: git branch [<options>] [-f] [--recurse-submodules] <branch-name> [<start-point>]
-   or: git branch [<options>] [-l] [<pattern>...]
-   or: git branch [<options>] [-r] (-d | -D) <branch-name>...
-   or: git branch [<options>] (-m | -M) [<old-branch>] <new-branch>
-   or: git branch [<options>] (-c | -C) [<old-branch>] <new-branch>
-   or: git branch [<options>] [-r | -a] [--points-at]
-   or: git branch [<options>] [-r | -a] [--format]
-
-Generic options
-    -v, --verbose         show hash and subject, give twice for upstream branch
-    -q, --quiet           suppress informational messages
-    -t, --track[=(direct|inherit)]
-                          set branch tracking configuration
-    -u, --set-upstream-to <upstream>
-                          change the upstream info
-    --unset-upstream      unset the upstream info
-    --color[=<when>]      use colored output
-    -r, --remotes         act on remote-tracking branches
-    --contains <commit>   print only branches that contain the commit
-    --no-contains <commit>
-                          print only branches that don't contain the commit
-    --abbrev[=<n>]        use <n> digits to display object names
-
-Specific git-branch actions:
-    -a, --all             list both remote-tracking and local branches
-    -d, --delete          delete fully merged branch
-    -D                    delete branch (even if not merged)
-    -m, --move            move/rename a branch and its reflog
-    -M                    move/rename a branch, even if target exists
-    -c, --copy            copy a branch and its reflog
-    -C                    copy a branch, even if target exists
-    -l, --list            list branch names
-    --show-current        show current branch name
-    --create-reflog       create the branch's reflog
-    --edit-description    edit the description for the branch
-    -f, --force           force creation, move/rename, deletion
-    --merged <commit>     print only branches that are merged
-    --no-merged <commit>  print only branches that are not merged
-    --column[=<style>]    list branches in columns
-    --sort <key>          field name to sort on
-    --points-at <object>  print only branches of the object
-    -i, --ignore-case     sorting and filtering are case insensitive
-    --recurse-submodules  recurse through submodules
-    --format <format>     format to use for the output
-
-
------------------------------------------
-■merge
-
-usage: git merge [<options>] [<commit>...]
-   or: git merge --abort
-   or: git merge --continue
-
-    -n                    do not show a diffstat at the end of the merge
-    --stat                show a diffstat at the end of the merge
-    --summary             (synonym to --stat)
-    --log[=<n>]           add (at most <n>) entries from shortlog to merge commit message
-    --squash              create a single commit instead of doing a merge
-    --commit              perform a commit if the merge succeeds (default)
-    -e, --edit            edit message before committing
-    --cleanup <mode>      how to strip spaces and #comments from message
-    --ff                  allow fast-forward (default)
-    --ff-only             abort if fast-forward is not possible
-    --rerere-autoupdate   update the index with reused conflict resolution if possible
-    --verify-signatures   verify that the named commit has a valid GPG signature
-    -s, --strategy <strategy>
-                          merge strategy to use
-    -X, --strategy-option <option=value>
-                          option for selected merge strategy
-    -m, --message <message>
-                          merge commit message (for a non-fast-forward merge)
-    -F, --file <path>     read message from file
-    --into-name <name>    use <name> instead of the real target
-    -v, --verbose         be more verbose
-    -q, --quiet           be more quiet
-    --abort               abort the current in-progress merge
-    --quit                --abort but leave index and working tree alone
-    --continue            continue the current in-progress merge
-    --allow-unrelated-histories
-                          allow merging unrelated histories
-    --progress            force progress reporting
-    -S, --gpg-sign[=<key-id>]
-                          GPG sign commit
-    --autostash           automatically stash/stash pop before and after
-    --overwrite-ignore    update ignored files (default)
-    --signoff             add a Signed-off-by trailer
-    --no-verify           bypass pre-merge-commit and commit-msg hooks
-
-
------------------------------------------
-■diff
-
-usage: git diff [<options>] [<commit>] [--] [<path>...]
-   or: git diff [<options>] --cached [--merge-base] [<commit>] [--] [<path>...]
-   or: git diff [<options>] [--merge-base] <commit> [<commit>...] <commit> [--] [<path>...]
-   or: git diff [<options>] <commit>...<commit> [--] [<path>...]
-   or: git diff [<options>] <blob> <blob>
-   or: git diff [<options>] --no-index [--] <path> <path>
-
-common diff options:
-  -z            output diff-raw with lines terminated with NUL.
-  -p            output patch format.
-  -u            synonym for -p.
-  --patch-with-raw
-                output both a patch and the diff-raw format.
-  --stat        show diffstat instead of patch.
-  --numstat     show numeric diffstat instead of patch.
-  --patch-with-stat
-                output a patch and prepend its diffstat.
-  --name-only   show only names of changed files.
-  --name-status show names and status of changed files.
-  --full-index  show full object name on index lines.
-  --abbrev=<n>  abbreviate object names in diff-tree header and diff-raw.
-  -R            swap input file pairs.
-  -B            detect complete rewrites.
-  -M            detect renames.
-  -C            detect copies.
-  --find-copies-harder
-                try unchanged files as candidate for copy detection.
-  -l<n>         limit rename attempts up to <n> paths.
-  -O<file>      reorder diffs according to the <file>.
-  -S<string>    find filepair whose only one side contains the string.
-  --pickaxe-all
-                show all files diff when -S is used and hit is found.
-  -a  --text    treat all files as text.
-
-
------------------------------------------
-■
-
------------------------------------------
-■
