@@ -246,6 +246,16 @@ $ git cherry-pick <コミットID>
 ■派生元ブランチを確認する
 $ git show-branch | grep '*' | grep -v "$(git rev-parse --abbrev-ref HEAD)" | head -1 | awk -F'[]~^[]' '{print $2}'
 
+------------
+■タグを削除する
+$ git tag -d <タグ名>
+$ git push origin :refs/tags/<タグ名>
+
+------------
+■文字化けを直す
+$ git config --global core.quotepath false
+
+
 
 =======================================================================================
 ■■頻度は低いが、いざというときに役立つ操作
