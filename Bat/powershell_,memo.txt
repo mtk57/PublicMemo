@@ -1,0 +1,53 @@
+powershell memo
+
+
+
+---------------------------
+■ヘルプ
+
+Get-Help <コマンドレット名>
+
+---------------------------
+■長いコマンドを改行で見やすく
+
+`
+---------------------------
+■$_
+
+特殊変数の1つで、パイプ経由で渡されたオブジェクト
+例えば、Get-ChildItemの場合は、.NETのFileInfoとなるので、
+$_.プロパティのように.NETのオブジェクトとしてアクセスできる。
+
+---------------------------
+■キーワードを含まないファイルを検索
+
+Get-ChildItem -Path <検索フォルダパス> -File -Recurse | `
+Where-Object { `
+	! (Select-String -InputObject $_ -Pattern <キーワード> -List) `
+}
+
+---------------------------
+■キーワードを含むファイルを検索
+
+Get-ChildItem -Recurse -File <検索フォルダパス> | Select-String -Pattern <キーワード>
+
+---------------------------
+■キーワードを含まないファイルを検索した結果から、キーワードを含むファイルを検索
+
+Get-ChildItem -Path "." -File -Recurse | `
+Where-Object { `
+	! (Select-String -InputObject $_ -Pattern ".frm" -List) `
+} | `
+Select-String -Pattern ".res"
+
+
+■「C:\Windows」フォルダの配下から「KB」で始まるファイルを除く、すべての「.log」「.dat」ファイルを取得する
+
+Get-ChildItem C:\Windows\*.* `
+  -include *.log,*.dat `
+  -exclude KB*
+
+
+
+
+
