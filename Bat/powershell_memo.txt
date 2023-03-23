@@ -1,6 +1,10 @@
 powershell memo
 
 
+---------------------------
+■コメント
+
+#のみ
 
 ---------------------------
 ■ヘルプ
@@ -17,6 +21,39 @@ Get-Help <コマンドレット名>
 特殊変数の1つで、パイプ経由で渡されたオブジェクト
 例えば、Get-ChildItemの場合は、.NETのFileInfoとなるので、
 $_.プロパティのように.NETのオブジェクトとしてアクセスできる。
+
+---------------------------
+■性能
+
+コマンドレットをパイプで繋げていくのが基本的な書き方だが遅いらしい。
+最も高速なのは、C#のコードを書いて、それを実行する方法。→https://qiita.com/acuo/items/9928e1fbb31b238d9705
+----
+例：
+$src = @"
+using System;
+
+public class Calculator
+{
+    public static int Add(int a, int b)
+    {
+        return a + b;
+    }
+}
+"@
+
+Add-Type -TypeDefinition $src -Language CSharp
+
+Write-Host ([Calculator]::Add(2, 3))  # 結果: 5
+
+Read-Host -Prompt "Press Enter to exit"
+
+
+---------------------------
+■管理者権限で実行されていなければ、スクリプトを管理者権限で実行し直す
+If (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] 'Administrator')){
+    Start-Process -FilePath PowerShell.exe -ArgumentList "-NoLogo -ExecutionPolicy Bypass -File $($MyInvocation.MyCommand.Path)" -Verb RunAs
+    Exit
+}
 
 ---------------------------
 ■キーワードを含まないファイルを検索
