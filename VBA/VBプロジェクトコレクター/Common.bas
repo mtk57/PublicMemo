@@ -1,7 +1,7 @@
-Attribute VB_Name = "CommonModule"
+Attribute VB_Name = "Common"
 Option Explicit
 
-'ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€ã‚’ã¾ã¨ã‚ã¦ä½œæˆã™ã‚‹
+'ƒTƒuƒtƒHƒ‹ƒ_‚ğ‚Ü‚Æ‚ß‚Äì¬‚·‚é
 Public Sub CreateFolder(ByVal path As String)
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
@@ -22,7 +22,7 @@ Public Sub CreateFolder(ByVal path As String)
     Set fso = Nothing
 End Sub
 
-'æ–‡å­—åˆ—é…åˆ—ã®å…±é€šæ–‡å­—åˆ—ã‚’è¿”ã™
+'•¶š—ñ”z—ñ‚Ì‹¤’Ê•¶š—ñ‚ğ•Ô‚·
 'Ex.
 '  list = ["hogeAbcdef", "hogeXyz", "hogeApple"]
 '  Ret = "hoge"
@@ -31,13 +31,13 @@ Function GetCommonString(ByRef list() As String) As String
     Dim i, j As Integer
     Dim flag As Boolean
     
-    'æœ€åˆã®æ–‡å­—åˆ—ã‚’å…±é€šæ–‡å­—åˆ—ã®åˆæœŸå€¤ã¨ã™ã‚‹
+    'Å‰‚Ì•¶š—ñ‚ğ‹¤’Ê•¶š—ñ‚Ì‰Šú’l‚Æ‚·‚é
     common_string = list(0)
     
-    'å„æ–‡å­—åˆ—ã‚’æ¯”è¼ƒã™ã‚‹
+    'Še•¶š—ñ‚ğ”äŠr‚·‚é
     For i = 1 To UBound(list)
         flag = False
-        'å…±é€šéƒ¨åˆ†ã‚’å–å¾—ã™ã‚‹
+        '‹¤’Ê•”•ª‚ğæ“¾‚·‚é
         For j = 1 To Len(common_string)
             If Mid(common_string, j, 1) <> Mid(list(i), j, 1) Then
                 common_string = Left(common_string, j - 1)
@@ -46,17 +46,17 @@ Function GetCommonString(ByRef list() As String) As String
             End If
         Next j
         
-        'å…±é€šéƒ¨åˆ†ãŒãªã„å ´åˆã¯ãƒ«ãƒ¼ãƒ—ã‚’çµ‚äº†ã™ã‚‹
+        '‹¤’Ê•”•ª‚ª‚È‚¢ê‡‚Íƒ‹[ƒv‚ğI—¹‚·‚é
         If flag = False Then
             Exit For
         End If
     Next i
     
-    'çµæœã‚’å‡ºåŠ›ã™ã‚‹
+    'Œ‹‰Ê‚ğo—Í‚·‚é
     GetCommonString = common_string
 End Function
 
-'çµ¶å¯¾ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹ã®è¦ªãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹ã‚’å–å¾—ã™ã‚‹
+'â‘Îƒtƒ@ƒCƒ‹ƒpƒX‚ÌeƒtƒHƒ‹ƒ_ƒpƒX‚ğæ“¾‚·‚é
 'Ex.  path=C:\tmp\abc.txt
 '     Ret=C:\tmp
 Public Function GetFolderNameFromPath(ByVal path As String) As String
@@ -71,7 +71,7 @@ Public Function GetFolderNameFromPath(ByVal path As String) As String
     End If
 End Function
 
-'ç›¸å¯¾ãƒ‘ã‚¹ã‚’çµ¶å¯¾ãƒ‘ã‚¹ã«å¤‰æ›ã™ã‚‹
+'‘Š‘ÎƒpƒX‚ğâ‘ÎƒpƒX‚É•ÏŠ·‚·‚é
 'Ex.  base_path=C:\tmp\abc
 '     ref_path=..\cdf\xyz.txt
 '     Ret=C:\tmp\cdf\xyz.txt
@@ -84,8 +84,8 @@ Public Function GetAbsolutePathName(ByVal base_path As String, ByVal ref_path As
      Set fso = Nothing
 End Function
 
-'ãƒ•ã‚©ãƒ«ãƒ€ã®å­˜åœ¨ãƒã‚§ãƒƒã‚¯ã‚’è¡Œã†
-'pathã¯çµ¶å¯¾ãƒ‘ã‚¹ã¨ã™ã‚‹
+'ƒtƒHƒ‹ƒ_‚Ì‘¶İƒ`ƒFƒbƒN‚ğs‚¤
+'path‚Íâ‘ÎƒpƒX‚Æ‚·‚é
 Public Function IsExistsFolder(path As String) As Boolean
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
@@ -99,16 +99,16 @@ Public Function IsExistsFolder(path As String) As Boolean
     Set fso = Nothing
 End Function
 
-'ãƒ•ã‚¡ã‚¤ãƒ«åã‹ã‚‰æ‹¡å¼µå­ã‚’è¿”ã™
-'Ex. "abc.txt"ã®å ´åˆã€"txt"ãŒè¿”ã‚‹
-'"."ãŒå«ã¾ã‚Œã¦ã„ãªã„å ´åˆã¯""ãŒè¿”ã‚‹
+'ƒtƒ@ƒCƒ‹–¼‚©‚çŠg’£q‚ğ•Ô‚·
+'Ex. "abc.txt"‚Ìê‡A"txt"‚ª•Ô‚é
+'"."‚ªŠÜ‚Ü‚ê‚Ä‚¢‚È‚¢ê‡‚Í""‚ª•Ô‚é
 Public Function GetFileExtension(filename As String) As String
     Dim dot_pos As Integer
     
-    ' "."ã®ä½ç½®ã‚’å–å¾—
+    ' "."‚ÌˆÊ’u‚ğæ“¾
     dot_pos = InStrRev(filename, ".")
     
-    ' æ‹¡å¼µå­ã‚’å–å¾—
+    ' Šg’£q‚ğæ“¾
     If dot_pos > 0 Then
         GetFileExtension = Right(filename, Len(filename) - dot_pos)
     Else
@@ -117,9 +117,9 @@ Public Function GetFileExtension(filename As String) As String
 End Function
 
 
-'æŒ‡å®šãƒ•ã‚©ãƒ«ãƒ€é…ä¸‹ã‚’æŒ‡å®šãƒ•ã‚¡ã‚¤ãƒ«åã§æ¤œç´¢ã—ã¦ãã®å†…å®¹ã‚’è¿”ã™
-'èª­ã¿è¾¼ã‚“ã ãƒ•ã‚¡ã‚¤ãƒ«ã®å†…å®¹ã¯1è¡Œæ¯ã®Stringé…åˆ—ã¨ãªã‚‹ãŒã€
-'é…åˆ—ã®æœ«å°¾ã«ã¯ãƒ•ã‚¡ã‚¤ãƒ«ã®çµ¶å¯¾ãƒ‘ã‚¹ã‚’æ ¼ç´ã™ã‚‹ã®ã§æ³¨æ„ã€‚
+'w’èƒtƒHƒ‹ƒ_”z‰º‚ğw’èƒtƒ@ƒCƒ‹–¼‚ÅŒŸõ‚µ‚Ä‚»‚Ì“à—e‚ğ•Ô‚·
+'“Ç‚İ‚ñ‚¾ƒtƒ@ƒCƒ‹‚Ì“à—e‚Í1s–ˆ‚ÌString”z—ñ‚Æ‚È‚é‚ªA
+'”z—ñ‚Ì––”ö‚É‚Íƒtƒ@ƒCƒ‹‚Ìâ‘ÎƒpƒX‚ğŠi”[‚·‚é‚Ì‚Å’ˆÓB
 Public Function SearchAndReadFiles(target_folder As String, target_file As String, is_sjis As Boolean) As String()
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
@@ -130,7 +130,7 @@ Public Function SearchAndReadFiles(target_folder As String, target_file As Strin
     Dim file As Object
     For Each file In folder.Files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like target_file Then
-            'æ¤œç´¢å¯¾è±¡ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚€
+            'ŒŸõ‘ÎÛ‚Ìƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚Ş
             Dim ts As Object
             If is_sjis = True Then
                 Set ts = fso.OpenTextFile(file.path, 1, False, 0)
@@ -141,11 +141,11 @@ Public Function SearchAndReadFiles(target_folder As String, target_file As Strin
             fileContent = ts.ReadAll
             ts.Close
             
-            'ãƒ•ã‚¡ã‚¤ãƒ«ã®å†…å®¹ã‚’é…åˆ—ã«æ ¼ç´ã—ã¦è¿”ã™
+            'ƒtƒ@ƒCƒ‹‚Ì“à—e‚ğ”z—ñ‚ÉŠi”[‚µ‚Ä•Ô‚·
             Dim lines() As String
             lines = Split(fileContent, vbCrLf)
             
-            'æœ«å°¾ã«ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹ã‚’è¿½åŠ ã™ã‚‹
+            '––”ö‚Éƒtƒ@ƒCƒ‹ƒpƒX‚ğ’Ç‰Á‚·‚é
             Dim lines_cnt As Integer: lines_cnt = UBound(lines)
             ReDim Preserve lines(lines_cnt + 1)
             lines(lines_cnt + 1) = file.path
@@ -156,26 +156,26 @@ Public Function SearchAndReadFiles(target_folder As String, target_file As Strin
         End If
     Next file
     
-    'ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€ã‚‚æ¤œç´¢ã™ã‚‹
+    'ƒTƒuƒtƒHƒ‹ƒ_‚àŒŸõ‚·‚é
     Dim subFolder As Object
     For Each subFolder In folder.SubFolders
         Dim result() As String
         result = SearchAndReadFiles(subFolder.path, target_file, is_sjis)
         If Not IsEmpty(result) Then
-            'ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€ã‹ã‚‰çµæœãŒè¿”ã£ã¦ããŸå ´åˆã¯ã€ãã®çµæœã‚’è¿”ã™
+            'ƒTƒuƒtƒHƒ‹ƒ_‚©‚çŒ‹‰Ê‚ª•Ô‚Á‚Ä‚«‚½ê‡‚ÍA‚»‚ÌŒ‹‰Ê‚ğ•Ô‚·
             SearchAndReadFiles = result
             Set fso = Nothing
             Exit Function
         End If
     Next subFolder
     
-    'æ¤œç´¢å¯¾è±¡ã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒè¦‹ã¤ã‹ã‚‰ãªã‹ã£ãŸå ´åˆã¯ã€ç©ºã®é…åˆ—ã‚’è¿”ã™
+    'ŒŸõ‘ÎÛ‚Ìƒtƒ@ƒCƒ‹‚ªŒ©‚Â‚©‚ç‚È‚©‚Á‚½ê‡‚ÍA‹ó‚Ì”z—ñ‚ğ•Ô‚·
     SearchAndReadFiles = Split("", vbCrLf)
     Set fso = Nothing
 End Function
 
 
-'ç¾åœ¨æ—¥æ™‚ã‚’æ–‡å­—åˆ—ã§è¿”ã™
+'Œ»İ“ú‚ğ•¶š—ñ‚Å•Ô‚·
 Public Function GetNowTimeString() As String
     Dim str_date As String
     Dim str_time As String
@@ -186,7 +186,7 @@ Public Function GetNowTimeString() As String
     GetNowTimeString = str_date & str_time
 End Function
 
-'ã‚·ãƒ¼ãƒˆã®å­˜åœ¨ãƒã‚§ãƒƒã‚¯
+'ƒV[ƒg‚Ì‘¶İƒ`ƒFƒbƒN
 Public Function IsExistSheet(ByVal sheet_name As String) As Boolean
     Dim ws As Worksheet
     
@@ -200,7 +200,7 @@ Public Function IsExistSheet(ByVal sheet_name As String) As Boolean
     IsExistSheet = False
 End Function
 
-'ã‚·ãƒ¼ãƒˆã‚’è¿½åŠ ã™ã‚‹
+'ƒV[ƒg‚ğ’Ç‰Á‚·‚é
 Public Sub AddSheet(ByVal sheet_name As String)
     If IsExistSheet(sheet_name) = True Then
         Application.DisplayAlerts = False
