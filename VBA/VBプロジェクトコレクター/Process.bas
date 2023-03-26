@@ -148,7 +148,7 @@ End Function
 '[11] :"C:\tmp\base\sub\resfile323.RES"
 '[12] :"C:\tmp\base\test.vbp"
 Private Function ParseVB6Project(ByRef contents() As String) As String()
-    Dim i As Integer
+    Dim i, cnt As Integer
     Dim filelist() As String
     Dim datas() As String
     Dim key As String
@@ -156,6 +156,8 @@ Private Function ParseVB6Project(ByRef contents() As String) As String()
     
     Dim vbp_path As String: vbp_path = contents(UBound(contents))
     Dim base_path As String: base_path = Common.GetFolderNameFromPath(vbp_path)
+
+    cnt = 0
 
     For i = LBound(contents) To UBound(contents)
         If InStr(contents(i), "=") = 0 Then
@@ -188,7 +190,8 @@ Private Function ParseVB6Project(ByRef contents() As String) As String()
         End If
         
         'ê‚ëŒÉpÉXÇ…ïœä∑Ç∑ÇÈ
-        filelist(i) = Common.GetAbsolutePathName(base_path, path)
+        filelist(cnt) = Common.GetAbsolutePathName(base_path, path)
+        cnt = cnt + 1
         
 CONTINUE:
     Next i
