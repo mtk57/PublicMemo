@@ -119,11 +119,6 @@ Function GetCommonString(ByRef list() As String) As String
                 Exit For
             End If
         Next j
-        
-        '共通部分がない場合はループを終了する
-        If flag = False Then
-            Exit For
-        End If
     Next i
     
     '結果を出力する
