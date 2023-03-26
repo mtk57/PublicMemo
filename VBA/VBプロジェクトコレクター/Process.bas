@@ -62,8 +62,13 @@ Public Sub Run()
     CreateBatFile search_path, out_path, out_bat, filelist
     
     'シート名が指定されていればシートにVBプロジェクトファイルを出力する
-    'TODO
-
+    err_msg = CreateVbProjectSheet(contents, out_sheet)
+    If err_msg <> "" Then
+        MsgBox err_msg
+        Exit Sub
+    End If
+    
+    MsgBox "終わりました"
 End Sub
 
 '収集した情報を検証する
@@ -200,10 +205,10 @@ End Function
 '
 'vbprojファイルのパース対象と内容の例は以下の通り。
 '-----------------------------------------
-'TBD
+'TODO
 '-----------------------------------------
 Private Function ParseVBNETProject(ByRef contents() As String) As String()
-    'TBD
+    'TODO
     ParseVBNETProject = Nothing
 End Function
 
@@ -299,4 +304,35 @@ Private Sub CreateBatFile(ByVal src_path As String, ByVal dst_path As String, By
 
 End Sub
 
-
+'シート名が指定されていればシートにVBプロジェクトファイルを出力する
+Private Function CreateVbProjectSheet(ByRef contents() As String, ByVal sheet_name As String) As String
+    If sheet_name = "" Then
+        CreateVbProjectSheet = ""
+        Exit Function
+    End If
+    
+    Dim prj_path As String: prj_path = contents(UBound(contents))
+    
+    If Common.IsExistSheet(sheet_name) = True Then
+        CreateVbProjectSheet = "すでに同名のシートが存在します"
+        Exit Function
+    End If
+    
+    'ファイルエンコード
+    Dim is_sjis As Boolean: is_sjis = True
+    If encode = "UTF-8" Then
+        is_sjis = False
+    End If
+    
+    Dim before_sheet_name As String: before_sheet_name = ActiveSheet.Name
+    
+    'シートを追加
+    Common.AddSheet sheet_name
+    
+    'ファイルの内容を指定されたシートに出力する
+    Common.OutputTextFileToSheet prj_path, sheet_name, is_sjis
+    
+    ThisWorkbook.Sheets(before_sheet_name).Select
+    
+    CreateVbProjectSheet = ""
+End Function

@@ -7,7 +7,6 @@ Sub Run_Click()
 
     Process.Run
 
-    MsgBox "èIóπ!"
     Application.DisplayAlerts = True
     Exit Sub
     
