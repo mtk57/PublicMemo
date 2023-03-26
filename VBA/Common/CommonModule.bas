@@ -1,7 +1,36 @@
 Attribute VB_Name = "CommonModule"
 Option Explicit
 
+'-------------------------------------------------------------
+'SJISでテキストファイルを作成する
+' contents : IN : 内容
+' path : IN : ファイルパス (絶対パス)
+'-------------------------------------------------------------
+Public Sub CreateSJISTextFile(ByRef contents() As String, ByVal path As String)
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    Dim txt As Object
+    Dim i As Integer
+    
+    Dim IS_OVERWRITE As Boolean: IS_OVERWRITE = True
+    Dim IS_UNICODE As Boolean: IS_UNICODE = False
+    
+    Set txt = fso.CreateTextFile(path, IS_OVERWRITE, IS_UNICODE)
+    
+    For i = LBound(contents) To UBound(contents)
+        txt.WriteLine contents(i)
+    Next i
+    
+    txt.Close
+    Set fso = Nothing
+End Sub
+
+
+'-------------------------------------------------------------
 'サブフォルダをまとめて作成する
+' path : IN : フォルダパス (絶対パス)
+'-------------------------------------------------------------
 Public Sub CreateFolder(ByVal path As String)
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
@@ -22,10 +51,13 @@ Public Sub CreateFolder(ByVal path As String)
     Set fso = Nothing
 End Sub
 
+'-------------------------------------------------------------
 '文字列配列の共通文字列を返す
-'Ex.
-'  list = ["hogeAbcdef", "hogeXyz", "hogeApple"]
-'  Ret = "hoge"
+' list : IN : 文字列配列
+' Ret : 共通文字列
+'       Ex. list = ["hogeAbcdef", "hogeXyz", "hogeApple"]
+'           Ret = "hoge"
+'-------------------------------------------------------------
 Function GetCommonString(ByRef list() As String) As String
     Dim common_string As String
     Dim i, j As Integer
@@ -56,9 +88,13 @@ Function GetCommonString(ByRef list() As String) As String
     GetCommonString = common_string
 End Function
 
+'-------------------------------------------------------------
 '絶対ファイルパスの親フォルダパスを取得する
-'Ex.  path=C:\tmp\abc.txt
-'     Ret=C:\tmp
+' path : IN : ファイルパス (絶対パス)
+' Ret : 親フォルダパス (絶対パス)
+'       Ex. path = "C:\tmp\abc.txt"
+'           Ret = "C:\tmp"
+'-------------------------------------------------------------
 Public Function GetFolderNameFromPath(ByVal path As String) As String
     Dim last_separator As Long
     
@@ -71,10 +107,15 @@ Public Function GetFolderNameFromPath(ByVal path As String) As String
     End If
 End Function
 
+'-------------------------------------------------------------
 '相対パスを絶対パスに変換する
-'Ex.  base_path=C:\tmp\abc
-'     ref_path=..\cdf\xyz.txt
-'     Ret=C:\tmp\cdf\xyz.txt
+' base_path : IN : 基準となるフォルダパス(絶対パス)
+' ref_path : IN : ファイルパス（相対パス)
+' Ret : 絶対パス
+'       Ex. base_path = "C:\tmp\abc"
+'           ref_path = "..\cdf\xyz.txt"
+'           Ret = "C:\tmp\cdf\xyz.txt"
+'-------------------------------------------------------------
 Public Function GetAbsolutePathName(ByVal base_path As String, ByVal ref_path As String) As String
      Dim fso As Object
      Set fso = CreateObject("Scripting.FileSystemObject")
@@ -84,9 +125,12 @@ Public Function GetAbsolutePathName(ByVal base_path As String, ByVal ref_path As
      Set fso = Nothing
 End Function
 
+'-------------------------------------------------------------
 'フォルダの存在チェックを行う
-'pathは絶対パスとする
-Public Function IsExistsFolder(path As String) As Boolean
+' path : IN : フォルダパス(絶対パス)
+' Ret : True/False (True=存在する)
+'-------------------------------------------------------------
+Public Function IsExistsFolder(ByVal path As String) As Boolean
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -99,10 +143,14 @@ Public Function IsExistsFolder(path As String) As Boolean
     Set fso = Nothing
 End Function
 
+'-------------------------------------------------------------
 'ファイル名から拡張子を返す
-'Ex. "abc.txt"の場合、"txt"が返る
-'"."が含まれていない場合は""が返る
-Public Function GetFileExtension(filename As String) As String
+' filename : IN : ファイル名
+' Ret : ファイル名の拡張子
+'        Ex. "abc.txt"の場合、"txt"が返る
+'            "."が含まれていない場合は""が返る
+'-------------------------------------------------------------
+Public Function GetFileExtension(ByVal filename As String) As String
     Dim dot_pos As Integer
     
     ' "."の位置を取得
@@ -116,11 +164,15 @@ Public Function GetFileExtension(filename As String) As String
     End If
 End Function
 
-
+'-------------------------------------------------------------
 '指定フォルダ配下を指定ファイル名で検索してその内容を返す
-'読み込んだファイルの内容は1行毎のString配列となるが、
-'配列の末尾にはファイルの絶対パスを格納するので注意。
-Public Function SearchAndReadFiles(target_folder As String, target_file As String, is_sjis As Boolean) As String()
+' target_folder : IN :検索フォルダパス(絶対パス)
+' target_file : IN :検索ファイル名
+' is_sjis : IN :検索ファイルのエンコード指定。True/False (True=Shift-JIS, False=UTF-16)  TODO:いずれ自動判別したいが。。。
+' Ret : 読み込んだファイルの内容
+'       配列の末尾には検索ファイルの絶対パスを格納する
+'-------------------------------------------------------------
+Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_file As String, ByVal is_sjis As Boolean) As String()
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -131,12 +183,23 @@ Public Function SearchAndReadFiles(target_folder As String, target_file As Strin
     For Each file In folder.Files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like target_file Then
             '検索対象のファイルを読み込む
-            Dim ts As Object
+            
+            Dim file_format As Integer
+            Dim FORMAT_ASCII As Integer: FORMAT_ASCII = 0
+            Dim FORMAT_UNICODE As Integer: FORMAT_UNICODE = 1
+            
             If is_sjis = True Then
-                Set ts = fso.OpenTextFile(file.path, 1, False, 0)
+                file_format = FORMAT_ASCII
             Else
-                Set ts = fso.OpenTextFile(file.path, 1, False, 1)
+                file_format = FORMAT_UNICODE
             End If
+            
+            Dim ts As Object
+            Dim READ_ONLY As Integer: READ_ONLY = 1
+            Dim IS_CREATE_FILE As Boolean: IS_CREATE_FILE = False
+            
+            Set ts = fso.OpenTextFile(file.path, READ_ONLY, IS_CREATE_FILE, file_format)
+            
             Dim fileContent As String
             fileContent = ts.ReadAll
             ts.Close
@@ -174,8 +237,10 @@ Public Function SearchAndReadFiles(target_folder As String, target_file As Strin
     Set fso = Nothing
 End Function
 
-
+'-------------------------------------------------------------
 '現在日時を文字列で返す
+' Ret :Ex."20230326123456"
+'-------------------------------------------------------------
 Public Function GetNowTimeString() As String
     Dim str_date As String
     Dim str_time As String
@@ -186,7 +251,11 @@ Public Function GetNowTimeString() As String
     GetNowTimeString = str_date & str_time
 End Function
 
+'-------------------------------------------------------------
 'シートの存在チェック
+' sheet_name : IN : シート名
+' Ret : True/False (True=存在する)
+'-------------------------------------------------------------
 Public Function IsExistSheet(ByVal sheet_name As String) As Boolean
     Dim ws As Worksheet
     
@@ -200,7 +269,10 @@ Public Function IsExistSheet(ByVal sheet_name As String) As Boolean
     IsExistSheet = False
 End Function
 
+'-------------------------------------------------------------
 'シートを追加する
+' sheet_name : IN : シート名
+'-------------------------------------------------------------
 Public Sub AddSheet(ByVal sheet_name As String)
     If IsExistSheet(sheet_name) = True Then
         Application.DisplayAlerts = False
