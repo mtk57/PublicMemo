@@ -47,14 +47,22 @@ Public Sub Run()
     'VBプロジェクトファイルを検索して読み込む
     Dim contents() As String: contents = Common.SearchAndReadFiles(search_path, search_file, is_sjis)
     
+    If UBound(contents) = -1 Then
+        MsgBox "VBプロジェクトファイルが見つかりませんでした"
+        Exit Sub
+    End If
+    
     'VBプロジェクトファイルのパースを行う
     Dim filelist() As String: filelist = ParseContents(contents, search_file)
     
     'VBプロジェクトファイルが参照しているファイルを同じフォルダ構成のままコピーする
     CopyProjectFiles out_path, filelist
     
+    'BATファイルを作成する
+    CreateBatFile search_path, out_path, out_bat, filelist
+    
     'シート名が指定されていればシートにVBプロジェクトファイルを出力する
-    'TBD
+    'TODO
 
 End Sub
 
@@ -78,6 +86,14 @@ Private Function Validate() As String
     If Common.IsExistsFolder(search_path) = False Then
         Validate = "検索フォルダが存在しません"
         Exit Function
+    End If
+    
+    If out_bat <> "" Then
+        ext = Common.GetFileExtension(out_bat)
+        If ext <> "bat" Then
+            Validate = "BATファイル名が未対応の拡張子です"
+            Exit Function
+        End If
     End If
 
     Validate = ""
@@ -216,5 +232,71 @@ Private Sub CopyProjectFiles(ByVal dest_path As String, ByRef filelist() As Stri
     Set fso = Nothing
 End Sub
 
+'BATファイルを作成する
+'作成イメージ (SJISで作成すること)
+'-------------------
+'@echo off
+'set SRC_DIR=C:\src
+'set DST_DIR=C:\dst
+'
+'echo SRC_DIR=%SRC_DIR%
+'echo DST_DIR=%DST_DIR%
+'
+'REM フォルダ階層だけコピー
+'xcopy /E /I /Y /T "%SRC_DIR%" "%DST_DIR%"
+'
+'REM 各ファイルをコピー
+'xcopy /Y /F "%SRC_DIR%\base\module1.bas"        "%DST_DIR%\base"
+'xcopy /Y /F "%SRC_DIR%\cmn\module2.bas"         "%DST_DIR%\cmn"
+'xcopy /Y /F "%SRC_DIR%\base\sub\module3.bas"    "%DST_DIR%\base\sub"
+'xcopy /Y /F "%SRC_DIR%\base\form1.frm"          "%DST_DIR%\base"
+'xcopy /Y /F "%SRC_DIR%\cmn\form2.frm"           "%DST_DIR%\cmn"
+'xcopy /Y /F "%SRC_DIR%\base\sub\form3.frm"      "%DST_DIR%\base\sub"
+'xcopy /Y /F "%SRC_DIR%\base\class1.cls"         "%DST_DIR%\base"
+'xcopy /Y /F "%SRC_DIR%\cmn\class2.cls"          "%DST_DIR%\cmn"
+'xcopy /Y /F "%SRC_DIR%\base\sub\class3.cls"     "%DST_DIR%\base\sub"
+'xcopy /Y /F "%SRC_DIR%\base\resfile321.RES"     "%DST_DIR%\base"
+'xcopy /Y /F "%SRC_DIR%\cmn\resfile322.RES"      "%DST_DIR%\cmn"
+'xcopy /Y /F "%SRC_DIR%\base\sub\resfile323.RES" "%DST_DIR%\base\sub"
+'xcopy /Y /F "%SRC_DIR%\base\test.vbp"           "%DST_DIR%\base"
+'
+'pause
+'-------------------
+Private Sub CreateBatFile(ByVal src_path As String, ByVal dst_path As String, ByVal bat_path As String, ByRef filelist() As String)
+    Dim i As Integer
+    Dim contents() As String
+    Dim filelist_cnt As Integer: filelist_cnt = UBound(filelist)
+    Dim file, src, dst As String
+    
+    Const OFFSET = 13
+    ReDim Preserve contents(filelist_cnt + OFFSET)
+    
+    'コマンド作成開始
+    contents(0) = "@echo off"
+    contents(1) = "set SRC_DIR=" & src_path
+    contents(2) = "set DST_DIR=" & dst_path
+    contents(3) = ""
+    contents(4) = "echo SRC_DIR=%SRC_DIR%"
+    contents(5) = "echo DST_DIR=%DST_DIR%"
+    contents(6) = ""
+    contents(7) = "REM フォルダ階層だけコピー"
+    contents(8) = "xcopy /E /I /Y /T ""%SRC_DIR%"" ""%DST_DIR%"""
+    contents(9) = ""
+    contents(10) = "REM 各ファイルをコピー"
+
+    For i = LBound(filelist) To UBound(filelist)
+        file = filelist(i)
+        src = "%SRC_DIR%" & Replace(file, src_path, "")
+        dst = "%DST_DIR%" & Replace(Common.GetFolderNameFromPath(file), src_path, "")
+        contents(i + OFFSET - 2) = "xcopy /Y /F " & """" & src & """" & " " & """" & dst & """"
+    Next i
+    
+    contents(filelist_cnt + OFFSET - 1) = ""
+    contents(filelist_cnt + OFFSET) = "pause"
+    
+    'ファイルに出力する
+    Common.CreateSJISTextFile contents, bat_path
+
+End Sub
 
 
