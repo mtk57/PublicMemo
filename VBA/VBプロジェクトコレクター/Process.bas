@@ -271,6 +271,10 @@ End Sub
 'pause
 '-------------------
 Private Sub CreateBatFile(ByVal src_path As String, ByVal dst_path As String, ByVal bat_path As String, ByRef filelist() As String)
+    If bat_path = "" Then
+        Exit Sub
+    End If
+    
     Dim i As Integer
     Dim contents() As String
     Dim filelist_cnt As Integer: filelist_cnt = UBound(filelist)
