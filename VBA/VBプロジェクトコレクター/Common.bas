@@ -266,7 +266,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     For Each subFolder In folder.SubFolders
         Dim result() As String
         result = SearchAndReadFiles(subFolder.path, target_file, is_sjis)
-        If Not IsEmpty(result) Then
+        If IsEmptyArray(result) = False Then
             'サブフォルダから結果が返ってきた場合は、その結果を返す
             SearchAndReadFiles = result
             Set fso = Nothing
@@ -275,8 +275,20 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Next subFolder
     
     '検索対象のファイルが見つからなかった場合は、空の配列を返す
-    SearchAndReadFiles = Split("", vbCrLf)
+    Dim ret_empty() As String
+    SearchAndReadFiles = ret_empty
     Set fso = Nothing
+End Function
+
+'-------------------------------------------------------------
+'配列が空かをチェックする
+' arg : IN : 配列
+' Ret : True/False (True=空)
+'-------------------------------------------------------------
+Public Function IsEmptyArray(arg As Variant) As Boolean
+    On Error Resume Next
+    IsEmptyArray = Not (UBound(arg) > 0)
+    IsEmptyArray = CBool(Err.Number <> 0)
 End Function
 
 '-------------------------------------------------------------
