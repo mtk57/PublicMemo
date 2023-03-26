@@ -180,7 +180,7 @@ Private Function ParseVB6Project(ByRef contents() As String) As String()
         '’l‚ðŽæ“¾
         value = Replace(datas(1), """", "")
         
-        ReDim Preserve filelist(i)
+        ReDim Preserve filelist(cnt)
         Dim path As String
         
         If InStr(value, ";") > 0 Then
