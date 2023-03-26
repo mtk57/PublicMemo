@@ -250,22 +250,32 @@ End Sub
 'echo SRC_DIR=%SRC_DIR%
 'echo DST_DIR=%DST_DIR%
 '
-'REM フォルダ階層だけコピー
-'xcopy /E /I /Y /T "%SRC_DIR%" "%DST_DIR%"
-'
 'REM 各ファイルをコピー
+'md "%DST_DIR%\base"
 'xcopy /Y /F "%SRC_DIR%\base\module1.bas"        "%DST_DIR%\base"
+'md "%DST_DIR%\cmn"
 'xcopy /Y /F "%SRC_DIR%\cmn\module2.bas"         "%DST_DIR%\cmn"
+'md "%DST_DIR%\base\sub"
 'xcopy /Y /F "%SRC_DIR%\base\sub\module3.bas"    "%DST_DIR%\base\sub"
+'md "%DST_DIR%\base"
 'xcopy /Y /F "%SRC_DIR%\base\form1.frm"          "%DST_DIR%\base"
+'md "%DST_DIR%\cmn"
 'xcopy /Y /F "%SRC_DIR%\cmn\form2.frm"           "%DST_DIR%\cmn"
+'md "%DST_DIR%\base\sub"
 'xcopy /Y /F "%SRC_DIR%\base\sub\form3.frm"      "%DST_DIR%\base\sub"
+'md "%DST_DIR%\base"
 'xcopy /Y /F "%SRC_DIR%\base\class1.cls"         "%DST_DIR%\base"
+'md "%DST_DIR%\cmn"
 'xcopy /Y /F "%SRC_DIR%\cmn\class2.cls"          "%DST_DIR%\cmn"
+'md "%DST_DIR%\base\sub"
 'xcopy /Y /F "%SRC_DIR%\base\sub\class3.cls"     "%DST_DIR%\base\sub"
+'md "%DST_DIR%\base"
 'xcopy /Y /F "%SRC_DIR%\base\resfile321.RES"     "%DST_DIR%\base"
+'md "%DST_DIR%\cmn"
 'xcopy /Y /F "%SRC_DIR%\cmn\resfile322.RES"      "%DST_DIR%\cmn"
+'md "%DST_DIR%\base\sub"
 'xcopy /Y /F "%SRC_DIR%\base\sub\resfile323.RES" "%DST_DIR%\base\sub"
+'md "%DST_DIR%\base"
 'xcopy /Y /F "%SRC_DIR%\base\test.vbp"           "%DST_DIR%\base"
 '
 'pause
@@ -278,10 +288,14 @@ Private Sub CreateBatFile(ByVal src_path As String, ByVal dst_path As String, By
     Dim i As Integer
     Dim contents() As String
     Dim filelist_cnt As Integer: filelist_cnt = UBound(filelist)
-    Dim file, src, dst As String
+    Dim contents_cnt As Integer
+    Dim file, src, dst, md As String
     
-    Const OFFSET = 13
-    ReDim Preserve contents(filelist_cnt + OFFSET)
+    Const FIRST_ROW_CNT = 7
+    Const ROW_CNT = 2
+    Const SECOND_ROW_CNT = 2
+    
+    ReDim Preserve contents(FIRST_ROW_CNT)
     
     'コマンド作成開始
     contents(0) = "@echo off"
@@ -291,20 +305,28 @@ Private Sub CreateBatFile(ByVal src_path As String, ByVal dst_path As String, By
     contents(4) = "echo SRC_DIR=%SRC_DIR%"
     contents(5) = "echo DST_DIR=%DST_DIR%"
     contents(6) = ""
-    contents(7) = "REM フォルダ階層だけコピー"
-    contents(8) = "xcopy /E /I /Y /T ""%SRC_DIR%"" ""%DST_DIR%"""
-    contents(9) = ""
-    contents(10) = "REM 各ファイルをコピー"
+    contents(7) = "REM 各ファイルをコピー"
+    
+    Dim OFFSET As Integer: OFFSET = UBound(contents) + 1
 
     For i = LBound(filelist) To UBound(filelist)
+        contents_cnt = UBound(contents)
+        ReDim Preserve contents(contents_cnt + ROW_CNT)
+    
         file = filelist(i)
+        
+        md = "%DST_DIR%" & Replace(Common.GetFolderNameFromPath(file), src_path, "")
+        contents(i * ROW_CNT + OFFSET) = "md " & """" & md & """"
+        
         src = "%SRC_DIR%" & Replace(file, src_path, "")
         dst = "%DST_DIR%" & Replace(Common.GetFolderNameFromPath(file), src_path, "")
-        contents(i + OFFSET - 2) = "xcopy /Y /F " & """" & src & """" & " " & """" & dst & """"
+        contents(i * ROW_CNT + OFFSET + 1) = "xcopy /Y /F " & """" & src & """" & " " & """" & dst & """"
     Next i
     
-    contents(filelist_cnt + OFFSET - 1) = ""
-    contents(filelist_cnt + OFFSET) = "pause"
+    contents_cnt = UBound(contents)
+    ReDim Preserve contents(contents_cnt + SECOND_ROW_CNT)
+    contents(contents_cnt + SECOND_ROW_CNT - 1) = ""
+    contents(contents_cnt + SECOND_ROW_CNT) = "pause"
     
     'ファイルに出力する
     Common.CreateSJISTextFile contents, bat_path

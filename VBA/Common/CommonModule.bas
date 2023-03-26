@@ -2,6 +2,48 @@ Attribute VB_Name = "CommonModule"
 Option Explicit
 
 '-------------------------------------------------------------
+'ファイルの内容を指定されたシートに出力する
+' file_path : IN : ファイルパス (絶対パス)
+' sheet_name : IN : シート名
+' is_sjis : IN :検索ファイルのエンコード指定。True/False (True=Shift-JIS, False=UTF-16)  TODO:いずれ自動判別したいが。。。
+'-------------------------------------------------------------
+Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As String, ByVal is_sjis As Boolean)
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    'ファイルを開く
+    Dim file_format As Integer
+    Dim FORMAT_ASCII As Integer: FORMAT_ASCII = 0
+    Dim FORMAT_UNICODE As Integer: FORMAT_UNICODE = -1
+    
+    If is_sjis = True Then
+        file_format = FORMAT_ASCII
+    Else
+        file_format = FORMAT_UNICODE
+    End If
+    
+    Dim ts As Object
+    Dim READ_ONLY As Integer: READ_ONLY = 1
+    Dim IS_CREATE_FILE As Boolean: IS_CREATE_FILE = False
+    
+    Set ts = fso.OpenTextFile(file_path, READ_ONLY, IS_CREATE_FILE, file_format)
+    
+    Dim ws As Worksheet
+    Set ws = ThisWorkbook.Sheets(sheet_name)
+    
+    'ファイルの内容をシートに出力
+    Dim row As Integer: row = 1
+    
+    Do While Not ts.AtEndOfStream
+        ws.Cells(row, 1).value = ts.ReadLine
+        row = row + 1
+    Loop
+    
+    ts.Close
+    Set fso = Nothing
+End Sub
+
+'-------------------------------------------------------------
 'SJISでテキストファイルを作成する
 ' contents : IN : 内容
 ' path : IN : ファイルパス (絶対パス)
@@ -77,11 +119,6 @@ Function GetCommonString(ByRef list() As String) As String
                 Exit For
             End If
         Next j
-        
-        '共通部分がない場合はループを終了する
-        If flag = False Then
-            Exit For
-        End If
     Next i
     
     '結果を出力する
@@ -186,7 +223,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
             
             Dim file_format As Integer
             Dim FORMAT_ASCII As Integer: FORMAT_ASCII = 0
-            Dim FORMAT_UNICODE As Integer: FORMAT_UNICODE = 1
+            Dim FORMAT_UNICODE As Integer: FORMAT_UNICODE = -1
             
             If is_sjis = True Then
                 file_format = FORMAT_ASCII
@@ -224,7 +261,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     For Each subFolder In folder.SubFolders
         Dim result() As String
         result = SearchAndReadFiles(subFolder.path, target_file, is_sjis)
-        If Not IsEmpty(result) Then
+        If IsEmptyArray(result) = False Then
             'サブフォルダから結果が返ってきた場合は、その結果を返す
             SearchAndReadFiles = result
             Set fso = Nothing
@@ -233,8 +270,20 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Next subFolder
     
     '検索対象のファイルが見つからなかった場合は、空の配列を返す
-    SearchAndReadFiles = Split("", vbCrLf)
+    Dim ret_empty() As String
+    SearchAndReadFiles = ret_empty
     Set fso = Nothing
+End Function
+
+'-------------------------------------------------------------
+'配列が空かをチェックする
+' arg : IN : 配列
+' Ret : True/False (True=空)
+'-------------------------------------------------------------
+Public Function IsEmptyArray(arg As Variant) As Boolean
+    On Error Resume Next
+    IsEmptyArray = Not (UBound(arg) > 0)
+    IsEmptyArray = CBool(Err.Number <> 0)
 End Function
 
 '-------------------------------------------------------------
@@ -282,4 +331,5 @@ Public Sub AddSheet(ByVal sheet_name As String)
 
     Worksheets.Add.Name = sheet_name
 End Sub
+
 
