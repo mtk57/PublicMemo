@@ -205,7 +205,7 @@ End Function
 '指定フォルダ配下を指定ファイル名で検索してその内容を返す
 ' target_folder : IN :検索フォルダパス(絶対パス)
 ' target_file : IN :検索ファイル名
-' is_sjis : IN :検索ファイルのエンコード指定。True/False (True=Shift-JIS, False=UTF-16)  TODO:いずれ自動判別したいが。。。
+' is_sjis : IN :検索ファイルのエンコード指定。True/False (True=Shift-JIS, False=UTF-8)  TODO:いずれ自動判別したいが。。。
 ' Ret : 読み込んだファイルの内容
 '       配列の末尾には検索ファイルの絶対パスを格納する
 '-------------------------------------------------------------
@@ -220,37 +220,24 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     For Each file In folder.Files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like target_file Then
             '検索対象のファイルを読み込む
-            
-            Dim file_format As Integer
-            Dim FORMAT_ASCII As Integer: FORMAT_ASCII = 0
-            Dim FORMAT_UNICODE As Integer: FORMAT_UNICODE = -1
+            Dim contents As String
             
             If is_sjis = True Then
-                file_format = FORMAT_ASCII
+                'S-JIS
+                contents = ReadTextFileBySJIS(file.path)
             Else
-                file_format = FORMAT_UNICODE
+                'UTF-8
+                contents = ReadTextFileByUTF8(file.path)
             End If
             
-            Dim ts As Object
-            Dim READ_ONLY As Integer: READ_ONLY = 1
-            Dim IS_CREATE_FILE As Boolean: IS_CREATE_FILE = False
-            
-            Set ts = fso.OpenTextFile(file.path, READ_ONLY, IS_CREATE_FILE, file_format)
-            
-            Dim fileContent As String
-            fileContent = ts.ReadAll
-            ts.Close
-            
-            'ファイルの内容を配列に格納して返す
-            Dim lines() As String
-            lines = Split(fileContent, vbCrLf)
+            'ファイルの内容を配列に格納する
+            Dim lines() As String: lines = Split(contents, vbCrLf)
             
             '末尾にファイルパスを追加する
             Dim lines_cnt As Integer: lines_cnt = UBound(lines)
             ReDim Preserve lines(lines_cnt + 1)
             lines(lines_cnt + 1) = file.path
             SearchAndReadFiles = lines
-            
             Set fso = Nothing
             Exit Function
         End If
@@ -273,6 +260,53 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Dim ret_empty() As String
     SearchAndReadFiles = ret_empty
     Set fso = Nothing
+End Function
+
+'-------------------------------------------------------------
+'SJIS形式のテキストファイルを読み込む
+' file_path : IN : ファイルパス (絶対パス)
+' Ret : 読み込んだ内容
+'-------------------------------------------------------------
+Public Function ReadTextFileBySJIS(ByVal file_path) As String
+    'TODO:引数チェック
+    
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    Const FORMAT_ASCII = 0
+    Const READ_ONLY = 1
+    Const IS_CREATE_FILE = False
+    Dim contents As String
+    
+    Dim ts As Object
+    Set ts = fso.OpenTextFile(file_path, READ_ONLY, IS_CREATE_FILE, FORMAT_ASCII)
+    contents = ts.ReadAll
+    ts.Close
+    Set ts = Nothing
+    Set fso = Nothing
+    
+    ReadTextFileBySJIS = contents
+End Function
+
+'-------------------------------------------------------------
+'UTF-8形式のテキストファイルを読み込む
+' file_path : IN : ファイルパス (絶対パス)
+' Ret : 読み込んだ内容
+'-------------------------------------------------------------
+Public Function ReadTextFileByUTF8(ByVal file_path) As String
+    'TODO:引数チェック
+    
+    Dim contents As String
+    
+    With CreateObject("ADODB.Stream")
+        .Charset = "UTF-8"
+        .Open
+        .LoadFromFile file_path
+        contents = .ReadText
+        .Close
+    End With
+    
+    ReadTextFileByUTF8 = contents
 End Function
 
 '-------------------------------------------------------------
