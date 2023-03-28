@@ -196,7 +196,7 @@ Private Function ParseVB6Project(ByRef contents() As String) As String()
 CONTINUE:
     Next i
     
-    '最後にvbpファイルコピーも追加する
+    '最後にvbpファイルも追加する
     Dim filelist_cnt As Integer: filelist_cnt = UBound(filelist)
     ReDim Preserve filelist(filelist_cnt + 1)
     filelist(filelist_cnt + 1) = vbp_path
@@ -208,11 +208,44 @@ End Function
 '
 'vbprojファイルのパース対象と内容の例は以下の通り。
 '-----------------------------------------
-'TODO
+'<?xml version="1.0" encoding="utf-8"?>
+'<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+'  <ItemGroup>
+'    <Compile Include="..\cmn\cmn.vb" />
+'    <Compile Include="base.vb" />
+'    <Compile Include="sub\sub.vb" />
+'  </ItemGroup>
+'</Project>
 '-----------------------------------------
+'上記例の場合、以下の配列が返る (base_pathがC:\tmp\baseの場合)
+'[0] : "C:\tmp\base\base.vb"
+'[1] : "C:\tmp\cmn\cmn.vb"
+'[2] : "C:\tmp\base\sub\sub.vb"
+'[3] : "C:\tmp\base\test.vbproj"
 Private Function ParseVBNETProject(ByRef contents() As String) As String()
-    'TODO
-    ParseVBNETProject = Nothing
+    Dim i, cnt As Integer
+    Dim filelist() As String
+    Dim datas() As String
+    Dim key As String
+    Dim value As String
+    
+    Dim vbproj_path As String: vbproj_path = contents(UBound(contents))
+    Dim base_path As String: base_path = Common.GetFolderNameFromPath(vbproj_path)
+
+    cnt = 0
+
+    For i = LBound(contents) To UBound(contents)
+        'TODO:
+        
+CONTINUE:
+    Next i
+    
+    '最後にvbprojファイルも追加する
+    Dim filelist_cnt As Integer: filelist_cnt = UBound(filelist)
+    ReDim Preserve filelist(filelist_cnt + 1)
+    filelist(filelist_cnt + 1) = vbproj_path
+    
+    ParseVBNETProject = filelist
 End Function
 
 'VBプロジェクトファイルが参照しているファイルを同じフォルダ構成のままコピーする
@@ -220,12 +253,11 @@ Private Sub CopyProjectFiles(ByVal dest_path As String, ByRef filelist() As Stri
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
-    Dim src_base_path As String: src_base_path = Common.GetCommonString(filelist)
     Dim i As Integer
     
     For i = LBound(filelist) To UBound(filelist)
         Dim src_path As String: src_path = filelist(i)
-        Dim dst_path As String: dst_path = Replace(src_path, src_base_path, dest_path & Application.PathSeparator)
+        Dim dst_path As String: dst_path = dest_path + Application.PathSeparator + Replace(src_path, ":", "")
         Dim path As String: path = Common.GetFolderNameFromPath(dst_path)
         
         'フォルダが存在しない場合は作成する
@@ -297,10 +329,12 @@ Private Sub CreateBatFile(ByVal src_path As String, ByVal dst_path As String, By
     
     ReDim Preserve contents(FIRST_ROW_CNT)
     
+    Dim dest_path As String: dest_path = dst_path + Application.PathSeparator + Replace(src_path, ":", "")
+    
     'コマンド作成開始
     contents(0) = "@echo off"
     contents(1) = "set SRC_DIR=" & src_path
-    contents(2) = "set DST_DIR=" & dst_path
+    contents(2) = "set DST_DIR=" & dest_path
     contents(3) = ""
     contents(4) = "echo SRC_DIR=%SRC_DIR%"
     contents(5) = "echo DST_DIR=%DST_DIR%"
