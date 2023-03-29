@@ -253,11 +253,12 @@ Private Sub CopyProjectFiles(ByVal dest_path As String, ByRef filelist() As Stri
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
+    Dim src_base_path As String: src_base_path = Common.GetCommonString(filelist)
     Dim i As Integer
     
     For i = LBound(filelist) To UBound(filelist)
         Dim src_path As String: src_path = filelist(i)
-        Dim dst_path As String: dst_path = dest_path + Application.PathSeparator + Replace(src_path, ":", "")
+        Dim dst_path As String: dst_path = Replace(src_path, src_base_path, Replace(src_base_path, "C:", dest_path) & Application.PathSeparator)
         Dim path As String: path = Common.GetFolderNameFromPath(dst_path)
         
         'ÉtÉHÉãÉ_Ç™ë∂ç›ÇµÇ»Ç¢èÍçáÇÕçÏê¨Ç∑ÇÈ
