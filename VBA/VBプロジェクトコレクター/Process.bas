@@ -59,7 +59,7 @@ Public Sub Run()
     CopyProjectFiles out_path, filelist
     
     'BATファイルを作成する
-    CreateBatFile search_path, out_path, out_bat, filelist
+    CreateBatFile out_path, out_bat, filelist
     
     'シート名が指定されていればシートにVBプロジェクトファイルを出力する
     err_msg = CreateVbProjectSheet(contents, out_sheet)
@@ -249,17 +249,18 @@ CONTINUE:
 End Function
 
 'VBプロジェクトファイルが参照しているファイルを同じフォルダ構成のままコピーする
-Private Sub CopyProjectFiles(ByVal dest_path As String, ByRef filelist() As String)
+Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As String)
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
-    Dim src_base_path As String: src_base_path = Common.GetCommonString(filelist)
+    Dim SEP As String: SEP = Application.PathSeparator
+    Dim base_path As String: base_path = Common.GetCommonString(filelist)
     Dim i As Integer
     
     For i = LBound(filelist) To UBound(filelist)
-        Dim src_path As String: src_path = filelist(i)
-        Dim dst_path As String: dst_path = Replace(src_path, src_base_path, Replace(src_base_path, "C:", dest_path) & Application.PathSeparator)
-        Dim path As String: path = Common.GetFolderNameFromPath(dst_path)
+        Dim src As String: src = filelist(i)
+        Dim dst As String: dst = in_dest_path & SEP & Replace(src, base_path, "")
+        Dim path As String: path = Common.GetFolderNameFromPath(dst)
         
         'フォルダが存在しない場合は作成する
         If Not fso.FolderExists(path) Then
@@ -267,7 +268,7 @@ Private Sub CopyProjectFiles(ByVal dest_path As String, ByRef filelist() As Stri
         End If
         
         'ファイルをコピーする
-        fso.CopyFile src_path, dst_path
+        fso.CopyFile src, dst
     Next i
     
     Set fso = Nothing
@@ -313,29 +314,27 @@ End Sub
 '
 'pause
 '-------------------
-Private Sub CreateBatFile(ByVal src_path As String, ByVal dst_path As String, ByVal bat_path As String, ByRef filelist() As String)
+Private Sub CreateBatFile(ByVal dst_path As String, ByVal bat_path As String, ByRef filelist() As String)
     If bat_path = "" Then
         Exit Sub
     End If
     
     Dim i As Integer
     Dim contents() As String
-    Dim filelist_cnt As Integer: filelist_cnt = UBound(filelist)
     Dim contents_cnt As Integer
-    Dim file, src, dst, md As String
-    
+    Dim base_path As String: base_path = Common.GetCommonString(filelist)
+
+    Dim SEP As String: SEP = Application.PathSeparator
     Const FIRST_ROW_CNT = 7
-    Const ROW_CNT = 2
+    Const ROW_CNT = 3
     Const SECOND_ROW_CNT = 2
     
     ReDim Preserve contents(FIRST_ROW_CNT)
     
-    Dim dest_path As String: dest_path = dst_path + Application.PathSeparator + Replace(src_path, ":", "")
-    
     'コマンド作成開始
     contents(0) = "@echo off"
-    contents(1) = "set SRC_DIR=" & src_path
-    contents(2) = "set DST_DIR=" & dest_path
+    contents(1) = "set SRC_DIR=" & Common.RemoveTrailingBackslash(base_path)
+    contents(2) = "set DST_DIR=" & dst_path
     contents(3) = ""
     contents(4) = "echo SRC_DIR=%SRC_DIR%"
     contents(5) = "echo DST_DIR=%DST_DIR%"
@@ -348,14 +347,14 @@ Private Sub CreateBatFile(ByVal src_path As String, ByVal dst_path As String, By
         contents_cnt = UBound(contents)
         ReDim Preserve contents(contents_cnt + ROW_CNT)
     
-        file = filelist(i)
+        Dim file As String: file = filelist(i)
         
-        md = "%DST_DIR%" & Replace(Common.GetFolderNameFromPath(file), src_path, "")
-        contents(i * ROW_CNT + OFFSET) = "md " & """" & md & """"
+        Dim src As String: src = "%SRC_DIR%" & SEP & Replace(file, base_path, "")
+        Dim dst As String: dst = "%DST_DIR%" & SEP & Replace(Common.GetFolderNameFromPath(file), base_path, "")
         
-        src = "%SRC_DIR%" & Replace(file, src_path, "")
-        dst = "%DST_DIR%" & Replace(Common.GetFolderNameFromPath(file), src_path, "")
+        contents(i * ROW_CNT + OFFSET) = "md " & """" & dst & """"
         contents(i * ROW_CNT + OFFSET + 1) = "xcopy /Y /F " & """" & src & """" & " " & """" & dst & """"
+        contents(i * ROW_CNT + OFFSET + 2) = ""
     Next i
     
     contents_cnt = UBound(contents)

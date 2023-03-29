@@ -2,6 +2,18 @@ Attribute VB_Name = "Common"
 Option Explicit
 
 '-------------------------------------------------------------
+'パス文字列の末尾の\を除去して返す
+' path : IN :パス文字列
+' Ret : パス文字列
+'-------------------------------------------------------------
+Public Function RemoveTrailingBackslash(ByVal path As String) As String
+    If Right(path, 1) = "\" Then
+        path = Left(path, Len(path) - 1)
+    End If
+    RemoveTrailingBackslash = path
+End Function
+
+'-------------------------------------------------------------
 'ファイルの内容を指定されたシートに出力する
 ' file_path : IN : ファイルパス (絶対パス)
 ' sheet_name : IN : シート名
