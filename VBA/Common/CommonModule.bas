@@ -260,7 +260,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     For Each subFolder In folder.SubFolders
         Dim result() As String
         result = SearchAndReadFiles(subFolder.path, target_file, is_sjis)
-        If IsEmptyArray(result) = False Then
+        If UBound(result) >= 1 Then
             'サブフォルダから結果が返ってきた場合は、その結果を返す
             SearchAndReadFiles = result
             Set fso = Nothing
@@ -269,7 +269,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Next subFolder
     
     '検索対象のファイルが見つからなかった場合は、空の配列を返す
-    Dim ret_empty() As String
+    Dim ret_empty(0) As String
     SearchAndReadFiles = ret_empty
     Set fso = Nothing
 End Function
