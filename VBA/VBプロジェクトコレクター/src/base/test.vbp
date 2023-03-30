@@ -10,3 +10,6 @@ Class=class3; sub\class3.cls
 ResFile32="resfile321.RES"
 ResFile32="..\cmn\resfile322.RES"
 ResFile32="sub\resfile323.RES"
+UserControl=usercontrol1.ctl
+UserControl=..\cmn\usercontrol2.ctl
+UserControl=sub\usercontrol3.ctl

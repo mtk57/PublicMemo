@@ -132,6 +132,9 @@ End Function
 'ResFile32="resfile321.RES"
 'ResFile32="..\cmn\resfile322.RES"
 'ResFile32="sub\resfile323.RES"
+'UserControl = usercontrol1.ctl
+'UserControl=..\cmn\usercontrol2.ctl
+'UserControl=sub\usercontrol3.ctl
 '-----------------------------------------
 '上記例の場合、以下の配列が返る (base_pathがC:\tmp\baseの場合)
 '[0] : "C:\tmp\base\module1.bas"
@@ -146,7 +149,10 @@ End Function
 '[9] : "C:\tmp\base\resfile321.RES"
 '[10] :"C:\tmp\cmn\resfile322.RES"
 '[11] :"C:\tmp\base\sub\resfile323.RES"
-'[12] :"C:\tmp\base\test.vbp"
+'[12] :"C:\tmp\base\usercontrol1.ctl
+'[13] :"C:\tmp\cmn\usercontrol2.ctl
+'[14] :"C:\tmp\base\sub\usercontrol3.ctl
+'[15] :"C:\tmp\base\test.vbp"
 Private Function ParseVB6Project(ByRef contents() As String) As String()
     Dim i, cnt As Integer
     Dim filelist() As String
@@ -172,7 +178,7 @@ Private Function ParseVB6Project(ByRef contents() As String) As String()
         key = datas(0)
         
         '対象キーか?
-        If key <> "Module" And key <> "Form" And key <> "Class" And key <> "ResFile32" Then
+        If key <> "Module" And key <> "Form" And key <> "Class" And key <> "ResFile32" And key <> "UserControl" Then
             '対象外なので無視
             GoTo CONTINUE
         End If
@@ -279,38 +285,60 @@ End Sub
 '-------------------
 '@echo off
 'set SRC_DIR=C:\src
-'set DST_DIR=C:\dst
+'set DST_DIR=C:\_tmp
 '
 'echo SRC_DIR=%SRC_DIR%
 'echo DST_DIR=%DST_DIR%
 '
 'REM 各ファイルをコピー
 'md "%DST_DIR%\base"
-'xcopy /Y /F "%SRC_DIR%\base\module1.bas"        "%DST_DIR%\base"
+'xcopy /Y /F "%SRC_DIR%\base\module1.bas" "%DST_DIR%\base"
+'
 'md "%DST_DIR%\cmn"
-'xcopy /Y /F "%SRC_DIR%\cmn\module2.bas"         "%DST_DIR%\cmn"
+'xcopy /Y /F "%SRC_DIR%\cmn\module2.bas" "%DST_DIR%\cmn"
+'
 'md "%DST_DIR%\base\sub"
-'xcopy /Y /F "%SRC_DIR%\base\sub\module3.bas"    "%DST_DIR%\base\sub"
+'xcopy /Y /F "%SRC_DIR%\base\sub\module3.bas" "%DST_DIR%\base\sub"
+'
 'md "%DST_DIR%\base"
-'xcopy /Y /F "%SRC_DIR%\base\form1.frm"          "%DST_DIR%\base"
+'xcopy /Y /F "%SRC_DIR%\base\form1.frm" "%DST_DIR%\base"
+'
 'md "%DST_DIR%\cmn"
-'xcopy /Y /F "%SRC_DIR%\cmn\form2.frm"           "%DST_DIR%\cmn"
+'xcopy /Y /F "%SRC_DIR%\cmn\form2.frm" "%DST_DIR%\cmn"
+'
 'md "%DST_DIR%\base\sub"
-'xcopy /Y /F "%SRC_DIR%\base\sub\form3.frm"      "%DST_DIR%\base\sub"
+'xcopy /Y /F "%SRC_DIR%\base\sub\form3.frm" "%DST_DIR%\base\sub"
+'
 'md "%DST_DIR%\base"
-'xcopy /Y /F "%SRC_DIR%\base\class1.cls"         "%DST_DIR%\base"
+'xcopy /Y /F "%SRC_DIR%\base\class1.cls" "%DST_DIR%\base"
+'
 'md "%DST_DIR%\cmn"
-'xcopy /Y /F "%SRC_DIR%\cmn\class2.cls"          "%DST_DIR%\cmn"
+'xcopy /Y /F "%SRC_DIR%\cmn\class2.cls" "%DST_DIR%\cmn"
+'
 'md "%DST_DIR%\base\sub"
-'xcopy /Y /F "%SRC_DIR%\base\sub\class3.cls"     "%DST_DIR%\base\sub"
+'xcopy /Y /F "%SRC_DIR%\base\sub\class3.cls" "%DST_DIR%\base\sub"
+'
 'md "%DST_DIR%\base"
-'xcopy /Y /F "%SRC_DIR%\base\resfile321.RES"     "%DST_DIR%\base"
+'xcopy /Y /F "%SRC_DIR%\base\resfile321.RES" "%DST_DIR%\base"
+'
 'md "%DST_DIR%\cmn"
-'xcopy /Y /F "%SRC_DIR%\cmn\resfile322.RES"      "%DST_DIR%\cmn"
+'xcopy /Y /F "%SRC_DIR%\cmn\resfile322.RES" "%DST_DIR%\cmn"
+'
 'md "%DST_DIR%\base\sub"
 'xcopy /Y /F "%SRC_DIR%\base\sub\resfile323.RES" "%DST_DIR%\base\sub"
+'
 'md "%DST_DIR%\base"
-'xcopy /Y /F "%SRC_DIR%\base\test.vbp"           "%DST_DIR%\base"
+'xcopy /Y /F "%SRC_DIR%\base\usercontrol1.ctl" "%DST_DIR%\base"
+'
+'md "%DST_DIR%\cmn"
+'xcopy /Y /F "%SRC_DIR%\cmn\usercontrol2.ctl" "%DST_DIR%\cmn"
+'
+'md "%DST_DIR%\base\sub"
+'xcopy /Y /F "%SRC_DIR%\base\sub\usercontrol3.ctl" "%DST_DIR%\base\sub"
+'
+'md "%DST_DIR%\base"
+'xcopy /Y /F "%SRC_DIR%\base\test.vbp" "%DST_DIR%\base"
+'
 '
 'pause
 '-------------------
