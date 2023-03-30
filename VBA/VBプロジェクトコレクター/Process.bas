@@ -47,7 +47,7 @@ Public Sub Run()
     'VBプロジェクトファイルを検索して読み込む
     Dim contents() As String: contents = Common.SearchAndReadFiles(search_path, search_file, is_sjis)
     
-    If UBound(contents) = -1 Then
+    If UBound(contents) = 0 Then
         MsgBox "VBプロジェクトファイルが見つかりませんでした"
         Exit Sub
     End If
@@ -231,9 +231,6 @@ End Function
 Private Function ParseVBNETProject(ByRef contents() As String) As String()
     Dim i, cnt As Integer
     Dim filelist() As String
-    Dim datas() As String
-    Dim key As String
-    Dim value As String
     
     Dim vbproj_path As String: vbproj_path = contents(UBound(contents))
     Dim base_path As String: base_path = Common.GetFolderNameFromPath(vbproj_path)
@@ -241,7 +238,19 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
     cnt = 0
 
     For i = LBound(contents) To UBound(contents)
-        'TODO:
+        Dim find_word As String: find_word = ".vb" & """ />"
+        If InStr(contents(i), find_word) = 0 Then
+            '".vb" />"を含まないので無視
+            GoTo CONTINUE
+        End If
+        
+        ReDim Preserve filelist(cnt)
+        
+        Dim path As String: path = Trim(Replace(Replace(contents(i), "<Compile Include=""", ""), """ />", ""))
+        
+        '絶対パスに変換する
+        filelist(cnt) = Common.GetAbsolutePathName(base_path, path)
+        cnt = cnt + 1
         
 CONTINUE:
     Next i
