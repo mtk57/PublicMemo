@@ -270,11 +270,12 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
     
     Dim SEP As String: SEP = Application.PathSeparator
     Dim base_path As String: base_path = Common.GetCommonString(filelist)
+    Dim dst_base_path As String: dst_base_path = Replace(base_path, ":", "")
     Dim i As Integer
     
     For i = LBound(filelist) To UBound(filelist)
         Dim src As String: src = filelist(i)
-        Dim dst As String: dst = in_dest_path & SEP & Replace(src, base_path, "")
+        Dim dst As String: dst = in_dest_path & SEP & dst_base_path & Replace(src, base_path, "")
         Dim path As String: path = Common.GetFolderNameFromPath(dst)
         
         'フォルダが存在しない場合は作成する
@@ -300,58 +301,58 @@ End Sub
 'echo DST_DIR=%DST_DIR%
 '
 'REM 各ファイルをコピー
-'md "%DST_DIR%\base"
-'xcopy /Y /F "%SRC_DIR%\base\module1.bas" "%DST_DIR%\base"
+'md "%DST_DIR%\C\src\base"
+'xcopy /Y /F "%SRC_DIR%\base\module1.bas" "%DST_DIR%\C\src\base"
 '
-'md "%DST_DIR%\cmn"
-'xcopy /Y /F "%SRC_DIR%\cmn\module2.bas" "%DST_DIR%\cmn"
+'md "%DST_DIR%\C\src\cmn"
+'xcopy /Y /F "%SRC_DIR%\cmn\module2.bas" "%DST_DIR%\C\src\cmn"
 '
-'md "%DST_DIR%\base\sub"
-'xcopy /Y /F "%SRC_DIR%\base\sub\module3.bas" "%DST_DIR%\base\sub"
+'md "%DST_DIR%\C\src\base\sub"
+'xcopy /Y /F "%SRC_DIR%\base\sub\module3.bas" "%DST_DIR%\C\src\base\sub"
 '
-'md "%DST_DIR%\base"
-'xcopy /Y /F "%SRC_DIR%\base\form1.frm" "%DST_DIR%\base"
+'md "%DST_DIR%\C\src\base"
+'xcopy /Y /F "%SRC_DIR%\base\form1.frm" "%DST_DIR%\C\src\base"
 '
-'md "%DST_DIR%\cmn"
-'xcopy /Y /F "%SRC_DIR%\cmn\form2.frm" "%DST_DIR%\cmn"
+'md "%DST_DIR%\C\src\cmn"
+'xcopy /Y /F "%SRC_DIR%\cmn\form2.frm" "%DST_DIR%\C\src\cmn"
 '
-'md "%DST_DIR%\base\sub"
-'xcopy /Y /F "%SRC_DIR%\base\sub\form3.frm" "%DST_DIR%\base\sub"
+'md "%DST_DIR%\C\src\base\sub"
+'xcopy /Y /F "%SRC_DIR%\base\sub\form3.frm" "%DST_DIR%\C\src\base\sub"
 '
-'md "%DST_DIR%\base"
-'xcopy /Y /F "%SRC_DIR%\base\class1.cls" "%DST_DIR%\base"
+'md "%DST_DIR%\C\src\base"
+'xcopy /Y /F "%SRC_DIR%\base\class1.cls" "%DST_DIR%\C\src\base"
 '
-'md "%DST_DIR%\cmn"
-'xcopy /Y /F "%SRC_DIR%\cmn\class2.cls" "%DST_DIR%\cmn"
+'md "%DST_DIR%\C\src\cmn"
+'xcopy /Y /F "%SRC_DIR%\cmn\class2.cls" "%DST_DIR%\C\src\cmn"
 '
-'md "%DST_DIR%\base\sub"
-'xcopy /Y /F "%SRC_DIR%\base\sub\class3.cls" "%DST_DIR%\base\sub"
+'md "%DST_DIR%\C\src\base\sub"
+'xcopy /Y /F "%SRC_DIR%\base\sub\class3.cls" "%DST_DIR%\C\src\base\sub"
 '
-'md "%DST_DIR%\base"
-'xcopy /Y /F "%SRC_DIR%\base\resfile321.RES" "%DST_DIR%\base"
+'md "%DST_DIR%\C\src\base"
+'xcopy /Y /F "%SRC_DIR%\base\resfile321.RES" "%DST_DIR%\C\src\base"
 '
-'md "%DST_DIR%\cmn"
-'xcopy /Y /F "%SRC_DIR%\cmn\resfile322.RES" "%DST_DIR%\cmn"
+'md "%DST_DIR%\C\src\cmn"
+'xcopy /Y /F "%SRC_DIR%\cmn\resfile322.RES" "%DST_DIR%\C\src\cmn"
 '
-'md "%DST_DIR%\base\sub"
-'xcopy /Y /F "%SRC_DIR%\base\sub\resfile323.RES" "%DST_DIR%\base\sub"
+'md "%DST_DIR%\C\src\base\sub"
+'xcopy /Y /F "%SRC_DIR%\base\sub\resfile323.RES" "%DST_DIR%\C\src\base\sub"
 '
-'md "%DST_DIR%\base"
-'xcopy /Y /F "%SRC_DIR%\base\usercontrol1.ctl" "%DST_DIR%\base"
+'md "%DST_DIR%\C\src\base"
+'xcopy /Y /F "%SRC_DIR%\base\usercontrol1.ctl" "%DST_DIR%\C\src\base"
 '
-'md "%DST_DIR%\cmn"
-'xcopy /Y /F "%SRC_DIR%\cmn\usercontrol2.ctl" "%DST_DIR%\cmn"
+'md "%DST_DIR%\C\src\cmn"
+'xcopy /Y /F "%SRC_DIR%\cmn\usercontrol2.ctl" "%DST_DIR%\C\src\cmn"
 '
-'md "%DST_DIR%\base\sub"
-'xcopy /Y /F "%SRC_DIR%\base\sub\usercontrol3.ctl" "%DST_DIR%\base\sub"
+'md "%DST_DIR%\C\src\base\sub"
+'xcopy /Y /F "%SRC_DIR%\base\sub\usercontrol3.ctl" "%DST_DIR%\C\src\base\sub"
 '
-'md "%DST_DIR%\base"
-'xcopy /Y /F "%SRC_DIR%\base\test.vbp" "%DST_DIR%\base"
+'md "%DST_DIR%\C\src\base"
+'xcopy /Y /F "%SRC_DIR%\base\test.vbp" "%DST_DIR%\C\src\base"
 '
 '
 'pause
 '-------------------
-Private Sub CreateBatFile(ByVal dst_path As String, ByVal bat_path As String, ByRef filelist() As String)
+Private Sub CreateBatFile(ByVal in_dest_path As String, ByVal bat_path As String, ByRef filelist() As String)
     If bat_path = "" Then
         Exit Sub
     End If
@@ -360,6 +361,7 @@ Private Sub CreateBatFile(ByVal dst_path As String, ByVal bat_path As String, By
     Dim contents() As String
     Dim contents_cnt As Integer
     Dim base_path As String: base_path = Common.GetCommonString(filelist)
+    Dim dst_base_path As String: dst_base_path = Replace(base_path, ":", "")
 
     Dim SEP As String: SEP = Application.PathSeparator
     Const FIRST_ROW_CNT = 7
@@ -371,7 +373,7 @@ Private Sub CreateBatFile(ByVal dst_path As String, ByVal bat_path As String, By
     'コマンド作成開始
     contents(0) = "@echo off"
     contents(1) = "set SRC_DIR=" & Common.RemoveTrailingBackslash(base_path)
-    contents(2) = "set DST_DIR=" & dst_path
+    contents(2) = "set DST_DIR=" & in_dest_path
     contents(3) = ""
     contents(4) = "echo SRC_DIR=%SRC_DIR%"
     contents(5) = "echo DST_DIR=%DST_DIR%"
@@ -387,7 +389,8 @@ Private Sub CreateBatFile(ByVal dst_path As String, ByVal bat_path As String, By
         Dim file As String: file = filelist(i)
         
         Dim src As String: src = "%SRC_DIR%" & SEP & Replace(file, base_path, "")
-        Dim dst As String: dst = "%DST_DIR%" & SEP & Replace(Common.GetFolderNameFromPath(file), base_path, "")
+        Dim dst_tmp As String: dst_tmp = "%DST_DIR%" & SEP & dst_base_path & Replace(file, base_path, "")
+        Dim dst As String: dst = Common.GetFolderNameFromPath(dst_tmp)
         
         contents(i * ROW_CNT + OFFSET) = "md " & """" & dst & """"
         contents(i * ROW_CNT + OFFSET + 1) = "xcopy /Y /F " & """" & src & """" & " " & """" & dst & """"
