@@ -238,15 +238,32 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
     cnt = 0
 
     For i = LBound(contents) To UBound(contents)
-        Dim find_word As String: find_word = ".vb" & """ />"
-        If InStr(contents(i), find_word) = 0 Then
-            '".vb" />"を含まないので無視
+        'Dim find_word As String: find_word = ".vb" & """ />"
+        'If InStr(contents(i), find_word) = 0 Then
+        '    '".vb" />"を含まないので無視
+        '    GoTo CONTINUE
+        'End If
+        
+        If InStr(contents(i), "<Compile Include=") = 0 And _
+           InStr(contents(i), "<EmbeddedResource Include=") = 0 And _
+           InStr(contents(i), "<None Include=") = 0 Then
+            'ビルドに必要なファイルを含まないので無視
             GoTo CONTINUE
         End If
         
         ReDim Preserve filelist(cnt)
         
-        Dim path As String: path = Trim(Replace(Replace(contents(i), "<Compile Include=""", ""), """ />", ""))
+        Dim path As String
+        
+        If InStr(contents(i), "<Compile Include=") > 0 Then
+            path = Trim(Replace(Replace(contents(i), "<Compile Include=""", ""), """ />", ""))
+        ElseIf InStr(contents(i), "<EmbeddedResource Include=") > 0 Then
+            path = Trim(Replace(Replace(contents(i), "<EmbeddedResource Include=""", ""), """ />", ""))
+        Else
+            path = Trim(Replace(Replace(contents(i), "<None Include=""", ""), """ />", ""))
+        End If
+        
+        path = Replace(path, """>", "")
         
         '絶対パスに変換する
         filelist(cnt) = Common.GetAbsolutePathName(base_path, path)
