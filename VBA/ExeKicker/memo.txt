@@ -1,0 +1,57 @@
+Exe Kicker						ver.	0.2																																																		
+												パスは全て絶対パスで指定すること									Sub paramはいくらでも追加してよいが、以下のルールを守ること。																																				
+												★=MUST										・1行間を空けること。																																			
+													=ComboBox									・既存のSub paramと同じ行の構成にすること。（順序性を守ること）																																			
+	Main Param																																			memo																					
+			①exeファイルパス									★	C:\_git\PublicMemo\VBA\ExeKicker\test\exe\cs.exe																																Ex.	C:\exe\cs.exe											
+			②SRCフォルダパス									★	C:\_git\PublicMemo\VBA\ExeKicker\test\target\src																																Ex.	C:\target\src											
+			③DSTフォルダパス									★	C:\_git\PublicMemo\VBA\ExeKicker\test\target\dst																							※空フォルダでOK									Ex.	C:\target\dst											
+			④拡張子									★	*.vb																																												
+			⑤アドインファイルパス									★	C:\_git\PublicMemo\VBA\ExeKicker\test\exe\addin\addin.dll																																Ex.	C:\exe\addin\testaddin.dll											
+			⑥ExeIniファイルパス									★	C:\_git\PublicMemo\VBA\ExeKicker\test\exe\cs.ini																																Ex.	C:\exe\cs.ini											
+			⑦WinMergeファイルパス									★	C:\Program Files\WinMerge\WinMergeU.exe																																Ex.	C:\Program Files\WinMerge\WinMergeU.exe											
+			⑧サブフォルダ含むか?										YES																							※未指定の場合、含まない																					
+			⑨除外ファイル(カンマ区切りで指定)										ignore.vb,ignore2.vb																																Ex.	ignore.vb,ignore2.vb											
+			⑩ツール作業用フォルダパス										C:\_git\PublicMemo\VBA\ExeKicker\test\wk																							※未指定の場合、C:\tmpを作る									Ex.	C:\wk											
+			⑪作業用フォルダに途中経過を残すか?										YES																							※未指定の場合、残さない																					
+			⑫実行後に⑨を削除するか?										NO																							※未指定の場合、削除																					
+			⑬最大実行回数(MAX=10まで)										2																							※未指定の場合、1回																					
+																																																									
+	Sub Params																																																								
+		1																																																							
+			①有効無効									★	DISABLE																							※未指定の場合、STOPPER																					
+			②変換定義Iniファイルパス									★																																	Ex.	C:\exe\define.ini											
+			③アドインを有効化するか?																																	※未指定の場合、無効化																					
+			④コメント行はスキップするか?																																	※未指定の場合、スキップ																					
+			⑤差分が無くなるまで実行するか?																																	※未指定の場合、実行しない																					
+		2																																																							
+			①有効無効									★	ENABLE																							※未指定の場合、STOPPER																					
+			②変換定義Iniファイルパス									★	C:\_git\PublicMemo\VBA\ExeKicker\test\exe\define.ini																																												
+			③アドインを有効化するか?										NO																							※未指定の場合、無効化																					
+			④コメント行はスキップするか?										YES																							※未指定の場合、スキップ																					
+			⑤差分が無くなるまで実行するか?										YES																							※未指定の場合、実行しない																					
+		3																																																							
+			①有効無効									★	DISABLE																							※未指定の場合、STOPPER																					
+			②変換定義Iniファイルパス									★	C:\_git\PublicMemo\VBA\ExeKicker\test\exe\define.ini																																												
+			③アドインを有効化するか?										NO																							※未指定の場合、無効化																					
+			④コメント行はスキップするか?										YES																							※未指定の場合、スキップ																					
+			⑤差分が無くなるまで実行するか?										YES																							※未指定の場合、実行しない																					
+		4																																																							
+			①有効無効									★	DISABLE																							※未指定の場合、STOPPER																					
+			②変換定義Iniファイルパス									★																																													
+			③アドインを有効化するか?																																	※未指定の場合、無効化																					
+			④コメント行はスキップするか?																																	※未指定の場合、スキップ																					
+			⑤差分が無くなるまで実行するか?																																	※未指定の場合、実行しない																					
+		5																																																							
+			①有効無効									★	DISABLE																							※未指定の場合、STOPPER																					
+			②変換定義Iniファイルパス									★																																													
+			③アドインを有効化するか?																																	※未指定の場合、無効化																					
+			④コメント行はスキップするか?																																	※未指定の場合、スキップ																					
+			⑤差分が無くなるまで実行するか?																																	※未指定の場合、実行しない																					
+		6																																																							
+			①有効無効									★	DISABLE																							※未指定の場合、STOPPER																					
+			②変換定義Iniファイルパス									★																																													
+			③アドインを有効化するか?																																	※未指定の場合、無効化																					
+			④コメント行はスキップするか?																																	※未指定の場合、スキップ																					
+			⑤差分が無くなるまで実行するか?																																	※未指定の場合、実行しない																					
+																																																									
