@@ -353,7 +353,7 @@ End Sub
 ' path : IN : フォルダパス (絶対パス)
 '-------------------------------------------------------------
 Public Sub DeleteFolder(ByVal path As String)
-    If IsExistFolder(path) = False Then
+    If IsExistsFolder(path) = False Then
         Exit Sub
     End If
 

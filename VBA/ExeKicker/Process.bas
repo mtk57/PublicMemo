@@ -32,6 +32,22 @@ Public Sub Run()
     MsgBox "終わりました"
 End Sub
 
+'作業用フォルダ削除
+Public Sub DelWkDir()
+    Worksheets("main").Activate
+    
+    SEP = Application.PathSeparator
+
+    'パラメータのチェックと収集を行う
+    If CheckAndCollectParam() = False Then
+        Exit Sub
+    End If
+    
+    DeleteWorkFolder True
+    
+    MsgBox "終わりました"
+End Sub
+
 'パラメータのチェックと収集を行う
 Private Function CheckAndCollectParam() As Boolean
     Dim err_msg As String
@@ -122,6 +138,8 @@ Private Function ExecSubParam() As Boolean
             'exeを実行する
             RunExe exe_params
             
+            'TODO:除外ファイルフォーマット不明のままの場合、ここでsrc→dstに除外ファイルをコピーする
+            
             '差分があるかチェックする
             is_diff = CheckDiff()
             If is_diff = False Then
@@ -151,7 +169,7 @@ Private Function ExecSubParam() As Boolean
     Common.CopyFolder current_wk_dst_dir_path, main_param.GetDestDirPath
     
     '作業用フォルダを削除する
-    DeleteWorkFolder
+    DeleteWorkFolder main_param.IsDeleteWorkDir()
 
     ExecSubParam = True
 End Function
@@ -376,8 +394,8 @@ Private Sub SwapWorkSubFolder()
 End Sub
 
 '作業用フォルダを削除する
-Private Sub DeleteWorkFolder()
-    If main_param.IsDeleteWorkDir = False Then
+Private Sub DeleteWorkFolder(ByVal is_del_wk_dir As Boolean)
+    If is_del_wk_dir = False Then
         Exit Sub
     End If
 

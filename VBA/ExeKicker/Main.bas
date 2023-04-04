@@ -1,7 +1,7 @@
 Attribute VB_Name = "Main"
 Option Explicit
 
-Sub Run_Click()
+Public Sub Run_Click()
     On Error GoTo ErrorHandler
     Application.DisplayAlerts = False
 
@@ -16,6 +16,18 @@ ErrorHandler:
 End Sub
 
 
+Public Sub DeleteWorkDir_Click()
+    On Error GoTo ErrorHandler
+    Application.DisplayAlerts = False
 
+    process.DelWkDir
+
+    Application.DisplayAlerts = True
+    Exit Sub
+    
+ErrorHandler:
+    MsgBox "エラーが発生しました：" & Err.Description, vbCritical, "エラー"
+    Application.DisplayAlerts = True
+End Sub
 
 
