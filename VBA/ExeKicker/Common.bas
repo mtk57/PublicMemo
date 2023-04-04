@@ -85,22 +85,46 @@ End Function
 ' file2 : IN : ファイル2パス(絶対パス)
 ' Ret : 比較結果 : True/False (True=一致)
 '-------------------------------------------------------------
-Public Function DiffTextFiles(ByVal file1 As String, ByVal file2 As String) As Boolean
-    Dim fso1 As Object, fso2 As Object
+Public Function IsMatchTextFiles(ByVal file1 As String, ByVal file2 As String) As Boolean
+    Dim filesize1 As Long: filesize1 = FileLen(file1)
+    Dim filesize2 As Long: filesize2 = FileLen(file2)
+    
+    'まずファイルサイズでチェック
+    If filesize1 = 0 And filesize2 = 0 Then
+        'どちらも0byteなので一致
+        IsMatchTextFiles = True
+        Exit Function
+    ElseIf filesize1 <> filesize2 Then
+        'ファイルサイズが異なるので不一致
+        IsMatchTextFiles = False
+        Exit Function
+    ElseIf filesize1 = 0 Or filesize2 = 0 Then
+        'どちらかが0byteなので不一致
+        IsMatchTextFiles = False
+        Exit Function
+    End If
+
+    Dim fso1, fso2 As Object
+    Dim ts1, ts2 As Object
     
     Set fso1 = CreateObject("Scripting.FileSystemObject")
     Set fso2 = CreateObject("Scripting.FileSystemObject")
     
     Const READ_ONLY = 1
-    Dim contents1 As String: contents1 = fso1.OpenTextFile(file1, READ_ONLY).ReadAll
-    Dim contents2 As String: contents2 = fso2.OpenTextFile(file2, READ_ONLY).ReadAll
+    Set ts1 = fso1.OpenTextFile(file1, READ_ONLY)
+    Set ts2 = fso2.OpenTextFile(file2, READ_ONLY)
     
-    fso1.Close
-    fso2.Close
-    fso1 = Nothing
-    fso2 = Nothing
+    Dim contents1 As String: contents1 = ts1.ReadAll
+    Dim contents2 As String: contents2 = ts2.ReadAll
     
-    DiffTextFiles = (contents1 = contents2)
+    ts1.Close
+    ts2.Close
+    Set ts1 = Nothing
+    Set ts2 = Nothing
+    Set fso1 = Nothing
+    Set fso2 = Nothing
+    
+    IsMatchTextFiles = (contents1 = contents2)
 End Function
 
 '-------------------------------------------------------------

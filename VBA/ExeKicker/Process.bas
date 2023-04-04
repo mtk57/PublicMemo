@@ -106,7 +106,7 @@ Private Function ExecSubParam() As Boolean
 
     Dim i, j As Integer
     Dim exe_params() As String
-    Dim is_diff As Boolean
+    Dim is_match As Boolean
     Dim is_exit_for As Boolean
     
     '作業用フォルダを作成する
@@ -124,7 +124,7 @@ Private Function ExecSubParam() As Boolean
         'exeiniを更新する
         UpdateExeIniContents sub_param
         
-        For j = 0 To main_param.GetMaxExecCount()
+        For j = 0 To main_param.GetMaxExecCount() - 1
         
             '連番の作業用サブフォルダを作成する
             CreateSeqWorkFolder i, j
@@ -141,12 +141,12 @@ Private Function ExecSubParam() As Boolean
             'TODO:除外ファイルフォーマット不明のままの場合、ここでsrc→dstに除外ファイルをコピーする
             
             '差分があるかチェックする
-            is_diff = CheckDiff()
-            If is_diff = False Then
-                '差分なし
+            is_match = IsMatch()
+            If is_match = True Then
+                '全て一致
                 is_exit_for = True
             Else
-                '差分あり
+                '1つ以上の不一致あり
                 If sub_param.IsExecNotDiff() = False Then
                     is_exit_for = True
                 End If
@@ -361,9 +361,9 @@ Private Sub RunExe(ByRef param_list() As String)
 End Sub
 
 '差分があるかチェックする
-Private Function CheckDiff() As Boolean
+Private Function IsMatch() As Boolean
     Dim i As Integer
-    Dim is_diff As Boolean: is_diff = False
+    Dim is_match As Boolean: is_match = True
 
     'ファイルリストを作成
     Dim src_file_list() As String: src_file_list = Common.CreateFileList(current_wk_src_dir_path, main_param.GetInExtension())
@@ -371,15 +371,15 @@ Private Function CheckDiff() As Boolean
 
     'ファイルを比較
     For i = LBound(src_file_list) To UBound(src_file_list)
-        is_diff = Common.DiffTextFiles(src_file_list(i), dst_file_list(i))
-        If is_diff = True Then
+        is_match = Common.IsMatchTextFiles(src_file_list(i), dst_file_list(i))
+        If is_match = False Then
             '1つでも差異があれば終了
-            CheckDiff = is_diff
+            IsMatch = is_match
             Exit Function
         End If
     Next i
     
-    CheckDiff = is_diff
+    IsMatch = is_match
 End Function
 
 '作業用サブフォルダを入れ替える

@@ -188,7 +188,7 @@ End Function
 'DSTフォルダパス
 '-----------------------------------------
 Public Function GetDestDirPath() As String
-    GetDstDirPath = dst_dir_path
+    GetDestDirPath = dst_dir_path
 End Function
 
 '-----------------------------------------
