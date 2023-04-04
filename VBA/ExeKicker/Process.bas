@@ -166,6 +166,10 @@ Private Function ExecSubParam() As Boolean
     Next i
     
     'dstにコピーする
+    If main_param.IsStepWorkDir() = False Then
+        current_wk_dst_dir_path = before_wk_dst_dir_path
+    End If
+    
     Common.CopyFolder current_wk_dst_dir_path, main_param.GetDestDirPath
     
     '作業用フォルダを削除する
