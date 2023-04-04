@@ -20,7 +20,103 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
 ) As Long
 
 '-------------------------------------------------------------
+'ファイルリストを作成する
+' path : IN : フォルダパス(絶対パス)
+' ext : IN : 拡張子(Ex."*.vb")
+' Ret : ファイルリスト
+'-------------------------------------------------------------
+Public Function CreateFileList(ByVal path As String, ByVal ext As String) As String()
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    Dim filelist() As String
+    Dim cnt As Integer
+
+    Dim file As String, f As Object
+    file = Dir(path & "\" & ext)
+    
+    If file <> "" Then
+        If Common.IsEmptyArray(filelist) = True Then
+            cnt = 0
+        Else
+            cnt = UBound(filelist) + 1
+        End If
+        
+        ReDim Preserve filelist(cnt)
+        filelist(cnt) = path & "\" & file
+    End If
+    
+    Do While file <> ""
+        file = Dir()
+        If file <> "" Then
+            cnt = UBound(filelist) + 1
+            ReDim Preserve filelist(cnt)
+            filelist(cnt) = path & "\" & file
+        End If
+    Loop
+    
+    Dim filelist_sub() As String
+    Dim filelist_merge() As String
+    
+    For Each f In fso.GetFolder(path).SubFolders
+        filelist_sub = CreateFileList(f.path, ext)
+        filelist = Common.MergeArray(filelist_sub, filelist)
+    Next f
+    
+    Set fso = Nothing
+    CreateFileList = filelist
+End Function
+
+'-------------------------------------------------------------
+'2つの配列を結合して返す
+' array1 : IN : 配列1
+' array2 : IN : 配列2
+' Ret : 結合した配列
+'-------------------------------------------------------------
+Public Function MergeArray(ByRef array1 As Variant, ByRef array2 As Variant) As Variant
+    Dim merged As Variant
+    merged = Split(Join(array1, vbCrLf) & vbCrLf & Join(array2, vbCrLf), vbCrLf)
+    MergeArray = merged
+End Function
+
+'-------------------------------------------------------------
+'2つのテキストファイルを比較して一致しているかを返す
+' file1 : IN : ファイル1パス(絶対パス)
+' file2 : IN : ファイル2パス(絶対パス)
+' Ret : 比較結果 : True/False (True=一致)
+'-------------------------------------------------------------
+Public Function DiffTextFiles(ByVal file1 As String, ByVal file2 As String) As Boolean
+    Dim fso1 As Object, fso2 As Object
+    
+    Set fso1 = CreateObject("Scripting.FileSystemObject")
+    Set fso2 = CreateObject("Scripting.FileSystemObject")
+    
+    Const READ_ONLY = 1
+    Dim contents1 As String: contents1 = fso1.OpenTextFile(file1, READ_ONLY).ReadAll
+    Dim contents2 As String: contents2 = fso2.OpenTextFile(file2, READ_ONLY).ReadAll
+    
+    fso1.Close
+    fso2.Close
+    fso1 = Nothing
+    fso2 = Nothing
+    
+    DiffTextFiles = (contents1 = contents2)
+End Function
+
+'-------------------------------------------------------------
+'文字列の配列の末尾に文字列を追加する
+' ary : IN/OUT : 文字列の配列
+' value : IN : 追加する文字列
+'-------------------------------------------------------------
+Public Sub AppendArray(ByRef ary() As String, ByVal value As String)
+    Dim cnt As Integer: cnt = UBound(ary) + 1
+    ReDim Preserve ary(cnt)
+    ary(cnt) = value
+End Sub
+
+'-------------------------------------------------------------
 'フォルダパスを列挙する。（サブフォルダ含む）
+' 注意：pathは戻り値には含まない
 ' path : IN : フォルダパス（絶対パス）
 ' Ret : フォルダパスリスト
 '-------------------------------------------------------------
@@ -34,7 +130,7 @@ Public Function GetFolderPathList(ByVal path As String) As String()
     
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set top_dir = fso.GetFolder(path)
-    
+
     dir_cnt = top_dir.SubFolders.count
     If dir_cnt > 0 Then
         ReDim path_list(dir_cnt - 1)
@@ -44,7 +140,7 @@ Public Function GetFolderPathList(ByVal path As String) As String()
             i = i + 1
             
             Dim sub_path_list() As String
-            sub_path_list = EnumerateFolderPaths(sub_dir.path)
+            sub_path_list = GetFolderPathList(sub_dir.path)
             
             'サブフォルダ内のパスを配列に追加する
             If sub_path_list(0) <> "" Then
@@ -172,8 +268,8 @@ Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As 
     
     'ファイルを開く
     Dim file_format As Integer
-    Dim FORMAT_ASCII As Integer: FORMAT_ASCII = 0
-    Dim FORMAT_UNICODE As Integer: FORMAT_UNICODE = -1
+    Const FORMAT_ASCII = 0
+    Const FORMAT_UNICODE = -1
     
     If is_sjis = True Then
         file_format = FORMAT_ASCII
@@ -181,11 +277,11 @@ Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As 
         file_format = FORMAT_UNICODE
     End If
     
-    Dim ts As Object
-    Dim READ_ONLY As Integer: READ_ONLY = 1
-    Dim IS_CREATE_FILE As Boolean: IS_CREATE_FILE = False
+    Dim file As Object
+    Const READ_ONLY = 1
+    Const IS_CREATE_FILE = False
     
-    Set ts = fso.OpenTextFile(file_path, READ_ONLY, IS_CREATE_FILE, file_format)
+    Set file = fso.OpenTextFile(file_path, READ_ONLY, IS_CREATE_FILE, file_format)
     
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Sheets(sheet_name)
@@ -193,12 +289,12 @@ Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As 
     'ファイルの内容をシートに出力
     Dim row As Integer: row = 1
     
-    Do While Not ts.AtEndOfStream
-        ws.Cells(row, 1).value = ts.ReadLine
+    Do While Not file.AtEndOfStream
+        ws.Cells(row, 1).value = file.ReadLine
         row = row + 1
     Loop
     
-    ts.Close
+    file.Close
     Set fso = Nothing
 End Sub
 
@@ -472,11 +568,12 @@ Public Function ReadTextFileBySJIS(ByVal file_path) As String
     Const IS_CREATE_FILE = False
     Dim contents As String
     
-    Dim ts As Object
-    Set ts = fso.OpenTextFile(file_path, READ_ONLY, IS_CREATE_FILE, FORMAT_ASCII)
-    contents = ts.ReadAll
-    ts.Close
-    Set ts = Nothing
+    Dim file As Object
+    Set file = fso.OpenTextFile(file_path, READ_ONLY, IS_CREATE_FILE, FORMAT_ASCII)
+    contents = file.ReadAll
+    
+    file.Close
+    Set file = Nothing
     Set fso = Nothing
     
     ReadTextFileBySJIS = contents

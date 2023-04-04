@@ -47,7 +47,7 @@ Private Function CheckAndCollectParam() As Boolean
 
     
     'Sub Params
-    Const START_ROW = 22
+    Const START_ROW = 21
     Const SUB_ROWS = 5
     Dim row As Integer: row = START_ROW
     Dim cnt As Integer: cnt = 0
@@ -295,19 +295,23 @@ Private Function CreateExeParamList(ByRef sub_param As SubParam) As String()
     If main_param.IsContainSubDir() = False Then
         ReDim src_path_list(0)
         ReDim dst_path_list(0)
-        src_path_list(0) = current_wk_src_path
-        dst_path_list(0) = current_wk_dst_path
+        src_path_list(0) = current_wk_src_dir_path
+        dst_path_list(0) = current_wk_dst_dir_path
     Else
-        src_path_list = Common.GetFolderPathList(current_wk_src_path)
-        dst_path_list = Common.GetFolderPathList(current_wk_dst_path)
+        src_path_list = Common.GetFolderPathList(current_wk_src_dir_path)
+        dst_path_list = Common.GetFolderPathList(current_wk_dst_dir_path)
+        
+        Common.AppendArray src_path_list, current_wk_src_dir_path
+        Common.AppendArray dst_path_list, current_wk_dst_dir_path
     End If
     
     For i = LBound(src_path_list) To UBound(src_path_list)
         ReDim Preserve param_list(i)
-        '"srcdirpath" "dstdirpath" "inipath" "ignorefilelistpath" ""
+        '"srcdirpath" "dstdirpath" "*.vb" "inipath" "ignorefilelistpath" ""
         param_list(i) = _
             Chr(34) & src_path_list(i) & Chr(34) & " " & _
             Chr(34) & dst_path_list(i) & Chr(34) & " " & _
+            Chr(34) & main_param.GetInExtension() & Chr(34) & " " & _
             Chr(34) & sub_param.GetIniFilePath() & Chr(34) & " " & _
             Chr(34) & main_param.GetIgnoreFilePath() & Chr(34) & " " & _
             Chr(34) & Chr(34)
@@ -340,22 +344,23 @@ End Sub
 
 '差分があるかチェックする
 Private Function CheckDiff() As Boolean
+    Dim i As Integer
     Dim is_diff As Boolean: is_diff = False
 
-    '/r : サブディレクトリを再帰的に比較する
-    Dim exe_param As String: exe_param = _
-        Chr(34) & main_param.GetWinMergeFilePath() & Chr(34) & " " & _
-        "/r" & " " & _
-        Chr(34) & current_wk_src_path & Chr(34) & " " & _
-        Chr(34) & current_wk_dst_path & Chr(34)
+    'ファイルリストを作成
+    Dim src_file_list() As String: src_file_list = Common.CreateFileList(current_wk_src_dir_path, main_param.GetInExtension())
+    Dim dst_file_list() As String: dst_file_list = Common.CreateFileList(current_wk_dst_dir_path, main_param.GetInExtension())
 
-    ret = Common.RunProcessWait(exe_param)
+    'ファイルを比較
+    For i = LBound(src_file_list) To UBound(src_file_list)
+        is_diff = Common.DiffTextFiles(src_file_list(i), dst_file_list(i))
+        If is_diff = True Then
+            '1つでも差異があれば終了
+            CheckDiff = is_diff
+            Exit Function
+        End If
+    Next i
     
-    If ret <> 0 Then
-        '差異あり
-        is_diff = True
-    End If
-
     CheckDiff = is_diff
 End Function
 

@@ -18,7 +18,6 @@ Private dst_dir_path As String
 Private in_ext As String
 Private addin_file_path As String
 Private exe_ini_file_path As String
-Private winmerge_file_path As String
 
 'WANT
 Private is_contain_sub_dir As Boolean
@@ -44,7 +43,6 @@ Private Sub Class_Initialize()
     in_ext = ""
     addin_file_path = ""
     exe_ini_file_path = ""
-    winmerge_file_path = ""
     
     'WANT
     is_contain_sub_dir = False
@@ -69,15 +67,14 @@ Public Function Init() As String
     in_ext = main_sheet.Range(CLM & i + 3).value
     addin_file_path = main_sheet.Range(CLM & i + 4).value
     exe_ini_file_path = main_sheet.Range(CLM & i + 5).value
-    winmerge_file_path = main_sheet.Range(CLM & i + 6).value
     
     'WANT
-    is_contain_sub_dir_s = main_sheet.Range(CLM & i + 7).value
-    ignore_files = main_sheet.Range(CLM & i + 8).value
-    tool_wk_dir_path = main_sheet.Range(CLM & i + 9).value
-    is_step_wk_dir_s = main_sheet.Range(CLM & i + 10).value
-    is_del_wk_dir_s = main_sheet.Range(CLM & i + 11).value
-    max_exec_cnt_s = main_sheet.Range(CLM & i + 12).value
+    is_contain_sub_dir_s = main_sheet.Range(CLM & i + 6).value
+    ignore_files = main_sheet.Range(CLM & i + 7).value
+    tool_wk_dir_path = main_sheet.Range(CLM & i + 8).value
+    is_step_wk_dir_s = main_sheet.Range(CLM & i + 9).value
+    is_del_wk_dir_s = main_sheet.Range(CLM & i + 10).value
+    max_exec_cnt_s = main_sheet.Range(CLM & i + 11).value
     
     Init = Validate()
 End Function
@@ -124,14 +121,6 @@ Private Function Validate() As String
         Exit Function
     ElseIf Common.IsExistsFile(exe_ini_file_path) = False Then
         Validate = "指定されたExeIniファイルが存在しません"
-        Exit Function
-    End If
-
-    If winmerge_file_path = "" Then
-        Validate = "WinMergeファイルパスが指定されていません"
-        Exit Function
-    ElseIf Common.IsExistsFile(winmerge_file_path) = False Then
-        Validate = "指定されたWinMergeファイルが存在しません"
         Exit Function
     End If
 
@@ -223,12 +212,6 @@ Public Function GetExeIniFilePath() As String
     GetExeIniFilePath = exe_ini_file_path
 End Function
 
-'-----------------------------------------
-'WinMergeファイルパス
-'-----------------------------------------
-Public Function GetWinMergeFilePath() As String
-    GetWinMergeFilePath = winmerge_file_path
-End Function
 
 
 'WANT
