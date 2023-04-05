@@ -208,13 +208,21 @@ Private Sub CreateIgnoreListFile()
     End If
     
     '除外リストファイルパス
-    Dim path As String: path = main_param.GetToolWorkDirPath() + SEP + Common.GetNowTimeString() + ".txt"
+    Const IGNORE_FILE_NAME = "TODO.ini"
+    Dim path As String: path = main_param.GetToolWorkDirPath() & SEP & IGNORE_FILE_NAME
     
     main_param.SetIgnoreFilePath (path)
     
     '除外リストファイルを作成
-    'TODO:除外リストファイルのフォーマット不明!
-    Common.CreateSJISTextFile main_param.GetIgnoreFiles(), path
+    Dim filelist() As String: filelist = main_param.GetIgnoreFiles()
+    Dim i As Integer
+    For i = LBound(filelist) To UBound(filelist)
+        Dim num As Integer: num = i + 1
+        Dim ret As Integer: ret = Common.WritePrivateProfileString("TODO", "Name" & num, filelist(i), path)
+        If ret = 0 Then
+            Err.Raise 53, , "除外リストファイルの更新に失敗しました"
+        End If
+    Next i
 End Sub
 
 'exeiniを更新
