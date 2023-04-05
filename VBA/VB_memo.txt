@@ -1,0 +1,101 @@
+VB memo
+
+VB6, VBA, VB.NETのmemo
+
+---------------------------------------
+■
+
+<VB6>
+                                // [Ret]        [理由]
+Len("あ")                       // 1            文字数
+LenB("あ")                      // 2            SJIS変換後のバイト数
+
+Asc("あ")                       // -32096       0x82A0 → "あ"のSJISコード
+AscB("あ")                      // 66           0x42 → "あ"のUTF16コードである3042の下位コード
+AscW("あ")                      // 12354        Unicodeのコードポイント
+
+InStr("アイウエオ", "ウ")       // 3            "ウ"は3文字目
+InStrB("アイウエオ", "ウ")      // 5            "ウ"はSJIS変換後のバイト数で5バイト目(1始まり)
+
+Mid("アイウエオ", 3, 2)         // ウエ         3文字目から2文字を抜き出す
+MidB("アイウエオ", 3, 2)        // イ           3バイト目から2バイトを抜き出す
+
+Left("アイウエオ", 2)           // アイ         左から2文字を抜き出す
+LeftB("アイウエオ", 2)          // ア           左から2バイトを抜き出す
+
+Right("アイウエオ", 2)          // エオ         右から2文字を抜き出す
+RightB("アイウエオ", 2)         // オ           右から2バイトを抜き出す
+
+String(10, "A")                 // AAAAAAAAAA   
+
+VB 6の文字列は内部的にはUnicode（UTF-16）で管理されており、
+文字列の長さや位置は、Unicodeを基準に扱われている。
+→なので以下コードのようにS-JISに変換してもイミディエイトウィンドウには表示できない。
+StrConv("ABC", vbFromUnicode)
+
+しかし、Asc関数やChr関数は例外的にS-JISを基準としており、
+Unicodeで処理するにはWの付いた関数を使わねばならない。
+
+
+<VB.NET>  ※B系はないのでコメントアウト
+
+Len("あ")                                       // 1
+'LenB("あ")                                     // 
+
+Asc("あ")                                       // -32096
+'AscB("あ")                                     // 
+AscW("あ")                                      // 12354
+
+InStr("アイウエオ", "ウ")                       // 3
+'InStrB("アイウエオ", "ウ")                     // 
+
+Mid("アイウエオ", 3, 2)                         // ウエ
+'MidB("アイウエオ", 3, 2)                       // 
+
+Microsoft.VisualBasic.Left("アイウエオ", 2)     // アイ
+'LeftB("アイウエオ", 2)                         // 
+
+Microsoft.VisualBasic.Right("アイウエオ", 2)    // エオ
+'RightB("アイウエオ", 2)                        // 
+
+New String("A", 10)                             // AAAAAAAAAA
+
+
+---------------------------------------
+■StrConv
+
+文字列の文字種を変換する関数
+
+引数には (文字列, 文字種) を指定します。
+
+<文字種>
+vbUpperCase   ：大文字に変換します。
+vbLowerCase   ：小文字に変換します。
+vbProperCase  ：各単語の先頭の文字を大文字に変換します。
+vbWide        ：半角文字を全角文字に変換します。
+vbNarrow      ：全角文字を半角文字に変換します。
+vbKatakana    ：ひらがなをカタカナに変換します。
+vbHiragana    ：カタカナをひらがなに変換します。
+vbUnicode     ：システムの既定のコード ページを使って Unicode に変換します。
+vbFromUnicode ：Unicode からシステムの既定のコード ページ (S-JIS) に変換します。
+
+---------------------------------------
+■文字コードを変換する
+LenB("ABC")                 // 6  →半角も全角もUTF-16なので。
+i = LenB("ＡＢＣ")          // 6  →半角も全角もUTF-16なので。
+
+s = StrConv("ABC", vbFromUnicode)       // UTF-16 を Shift_JIS に変換
+LenB(s)                                 // 3
+s = StrConv("ＡＢＣ", vbFromUnicode)    // UTF-16 を Shift_JIS に変換
+LenB(s)                                 // 6
+
+s = StrConv("ABC", vbFromUnicode)       // UTF-16 を Shift_JIS に変換
+s = StrConv(s, vbUnicode)               // Shift_JIS を UTF-16 に変換
+LenB(s)                                 // 6
+
+s = StrConv("ＡＢＣ", vbFromUnicode)    // UTF-16 を Shift_JIS に変換
+s = StrConv(s, vbUnicode)               // Shift_JIS を UTF-16 に変換
+LenB(s)                                 // 6
+
+
+
