@@ -175,6 +175,24 @@ Public Function GetAbsolutePathName(ByVal base_path As String, ByVal ref_path As
 End Function
 
 '-------------------------------------------------------------
+'ファイルの存在チェックを行う
+' path : IN : ファイルパス(絶対パス)
+' Ret : True/False (True=存在する)
+'-------------------------------------------------------------
+Public Function IsExistsFile(ByVal path As String) As Boolean
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    If fso.FileExists(path) Then
+        IsExistsFile = True
+    Else
+        IsExistsFile = False
+    End If
+    
+    Set fso = Nothing
+End Function
+
+'-------------------------------------------------------------
 'フォルダの存在チェックを行う
 ' path : IN : フォルダパス(絶対パス)
 ' Ret : True/False (True=存在する)

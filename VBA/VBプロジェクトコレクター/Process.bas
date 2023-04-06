@@ -272,10 +272,11 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
 CONTINUE:
     Next i
     
-    '最後にvbprojファイルも追加する
+    '最後にvbproj, slnファイルも追加する
     Dim filelist_cnt As Integer: filelist_cnt = UBound(filelist)
-    ReDim Preserve filelist(filelist_cnt + 1)
+    ReDim Preserve filelist(filelist_cnt + 2)
     filelist(filelist_cnt + 1) = vbproj_path
+    filelist(filelist_cnt + 2) = Replace(vbproj_path, ".vbproj", ".sln")
     
     ParseVBNETProject = filelist
 End Function
@@ -300,8 +301,17 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
             Common.CreateFolder (path)
         End If
         
+        If Right(src, 4) = ".sln" And _
+           Common.IsExistsFile(src) = False Then
+           'slnの場合、コピー元に存在しない場合
+           GoTo CONTINUE
+        End If
+        
         'ファイルをコピーする
         fso.CopyFile src, dst
+        
+CONTINUE:
+        
     Next i
     
     Set fso = Nothing
