@@ -97,5 +97,199 @@ s = StrConv("ＡＢＣ", vbFromUnicode)    // UTF-16 を Shift_JIS に変換
 s = StrConv(s, vbUnicode)               // Shift_JIS を UTF-16 に変換
 LenB(s)                                 // 6
 
+---------------------------------------
+■VB6にあって、VB.NETにないもの。
 
+・固定長文字列
+	Ex.Dim s As String * 4
 
+・Option Base
+
+・末尾に記号($, %)が付く関数
+	Ex.Left$()  →文字列を返すLeft関数のこと。$がないとVariantを返す。
+
+---------------------------------------
+■チェック観点（ビルドエラーで検知できない系）
+・配列添え字の下限
+・配列のサイズ変更
+・配列の次元数の変更
+・固定長文字列
+・日付と時刻の相違
+・日付時刻の書式化
+
+---------------------------------------
+■VB6予約語
+
+VB6											VB.NET
+------------------------------------------------------------
+Abs											ない
+AddressOf									ある
+And											ある
+Any											ない
+Array										ない
+As											ある
+Attribute									ない
+Boolean										ある
+ByRef										ある
+Byte										ある
+ByVal										ある
+Call										ある
+Case										ある
+Cbool										ある
+Cbyte										ある
+Ccur										ない
+Cdate										ある
+CDbl										ある
+Cdec										ある
+Cdecl										ある
+Cint										ある
+Circle										ない
+CLng										ある
+CLngLng										ない
+CLngPtr										ない
+Close										ない
+Const										ある
+CSng										ある
+CStr										ある
+Currency									ない
+CVar										ない
+CVErr										ない
+Date										ある
+Debug										ない
+Decimal										ある
+Declare										ある
+DefBool										ない
+DefByte										ない
+DefCur										ない
+DefDate										ない
+DefDbl										ない
+DefDec										ない
+DefInt										ない
+DefLng										ない
+DefLngLng									ない
+DefLngPtr									ない
+DefObj										ない
+DefSng										ない
+DefStr										ない
+DefVar										ない
+Dim											ある
+Do											ある
+DoEvents									ない
+Double										ある
+Each										
+Else										ある
+ElseIf										ある
+empty										
+End											ある
+EndIf										ある
+Enum										
+Eqv											
+Erase										
+Event										
+Exit										
+false										ある
+Fix											
+For											ある
+Friend										
+Function									ある
+Get											
+Global										
+GoSub										
+GoTo										ある
+If											ある
+Imp											
+Implements									
+In											
+Input										
+InputB										
+Int											
+Integer										
+Is											
+Lbound										
+Len											
+LenB										
+Let											
+Like										
+LINEINPUT									
+Lock										
+Long										
+LongLong									
+LongPtr										
+Loop										ある
+Lset										
+Me											
+Mod											
+New											
+Next										
+Not											
+nothing										
+null										Nothing
+On											
+Open										
+Option										ある
+Optional									
+Or											ある
+ParamArray									
+Preserve									
+Print										
+Private										
+PSet										
+Public										ある
+Put											
+RaiseEvent									
+ReDim										ある
+Rem											ある
+Resume										
+Return										ある
+Rset										
+Scale										
+Seek										
+Select										
+Set											
+Sgn											
+Shared										
+Single										
+Spc											
+Static										
+Stop										
+String										
+Sub											
+Tab											
+Then										
+To											
+true										
+Type										なし
+TypeOf										
+Ubound										
+Unlock										
+Until										
+Variant										Object
+VB_Base										なし
+VB_Control									なし
+VB_Creatable								なし
+VB_Customizable								なし
+VB_Description								なし
+VB_Exposed									なし
+VB_Ext_KEY									なし
+VB_GlobalNameSpace							なし
+VB_HelpID									なし
+VB_Invoke_Func								なし
+VB_Invoke_Property							なし
+VB_Invoke_PropertyPut						なし
+VB_Invoke_PropertyPutRefVB_MemberFlags		なし
+VB_Name										なし
+VB_PredeclaredId							なし
+VB_ProcData									なし
+VB_TemplateDerived							なし
+VB_UserMemId								なし
+VB_VarDescription							なし
+VB_VarHelpID								なし
+VB_VarMemberFlags							なし
+VB_VarProcData								なし
+VB_VarUserMemId								なし
+Wend										
+While										
+With										
+WithEvents									
+Write										
+Xor											
