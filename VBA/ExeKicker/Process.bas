@@ -208,7 +208,7 @@ Private Sub CreateIgnoreListFile()
     End If
     
     '除外リストファイルパス
-    Const IGNORE_FILE_NAME = "TODO.ini"
+    Const IGNORE_FILE_NAME = "ExclusionList.ini"
     Dim path As String: path = main_param.GetToolWorkDirPath() & SEP & IGNORE_FILE_NAME
     
     main_param.SetIgnoreFilePath (path)
@@ -218,7 +218,7 @@ Private Sub CreateIgnoreListFile()
     Dim i As Integer
     For i = LBound(filelist) To UBound(filelist)
         Dim num As Integer: num = i + 1
-        Dim ret As Integer: ret = Common.WritePrivateProfileString("TODO", "Name" & num, filelist(i), path)
+        Dim ret As Integer: ret = Common.WritePrivateProfileString("SkipFile", "File" & num, filelist(i), path)
         If ret = 0 Then
             Err.Raise 53, , "除外リストファイルの更新に失敗しました"
         End If
@@ -337,11 +337,11 @@ Private Function CreateExeParamList(ByRef sub_param As SubParam) As String()
     
     For i = LBound(src_path_list) To UBound(src_path_list)
         ReDim Preserve param_list(i)
-        '"srcdirpath" "dstdirpath" "*.vb" "inipath" "ignorefilelistpath" ""
+        '"srcdirpath" "*.vb" "dstdirpath" "inipath" "ignorefilelistpath" ""
         param_list(i) = _
             Chr(34) & src_path_list(i) & Chr(34) & " " & _
-            Chr(34) & dst_path_list(i) & Chr(34) & " " & _
             Chr(34) & main_param.GetInExtension() & Chr(34) & " " & _
+            Chr(34) & dst_path_list(i) & Chr(34) & " " & _
             Chr(34) & sub_param.GetIniFilePath() & Chr(34) & " " & _
             Chr(34) & main_param.GetIgnoreFilePath() & Chr(34) & " " & _
             Chr(34) & Chr(34)
@@ -361,6 +361,8 @@ Private Sub RunExe(ByRef param_list() As String)
         exe_param = _
             Chr(34) & main_param.GetExeFilePath() & Chr(34) & " " & _
             param_list(i)
+            
+        ChDir Common.GetFolderNameFromPath(main_param.GetExeFilePath())
         
         ret = Common.RunProcessWait(exe_param)
         
