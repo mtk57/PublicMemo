@@ -19,6 +19,40 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
     ByVal lpFileName As String _
 ) As Long
 
+Private logfile As Integer
+
+'-------------------------------------------------------------
+'-------------------------------------------------------------
+Public Sub OpenLog(ByVal logfile_path As String)
+    If logfile > 0 Then
+        'すでにオープンしているので無視
+        Exit Sub
+    End If
+    logfile = FreeFile()
+    Open logfile_path For Append As logfile
+End Sub
+
+'-------------------------------------------------------------
+'-------------------------------------------------------------
+Public Sub WriteLog(ByVal contents As String)
+    If logfile = 0 Then
+        'オープンされていないので無視
+        Exit Sub
+    End If
+    Print #logfile, Format(Date, "yyyy/mm/dd") & " " & Format(Now, "hh:mm:ss") & ":" & contents
+End Sub
+
+'-------------------------------------------------------------
+'-------------------------------------------------------------
+Public Sub CloseLog()
+    If logfile = 0 Then
+        'オープンされていないので無視
+        Exit Sub
+    End If
+    Close logfile
+    logfile = 0
+End Sub
+
 '-------------------------------------------------------------
 'ファイルリストを作成する
 ' path : IN : フォルダパス(絶対パス)

@@ -15,41 +15,50 @@ Private before_wk_dst_dir_path As String
 
 'メイン処理
 Public Sub Run()
+    Common.WriteLog "Run S"
+
     Worksheets("main").Activate
     
     SEP = Application.PathSeparator
 
     'パラメータのチェックと収集を行う
     If CheckAndCollectParam() = False Then
+        Common.WriteLog "Run E1"
         Exit Sub
     End If
     
     'Sub Paramを順に実行していく
     If ExecSubParam() = False Then
+        Common.WriteLog "Run E2"
         Exit Sub
     End If
     
+    Common.WriteLog "Run E"
     MsgBox "終わりました"
 End Sub
 
 '作業用フォルダ削除
 Public Sub DelWkDir()
+    Common.WriteLog "DelWkDir S"
     Worksheets("main").Activate
     
     SEP = Application.PathSeparator
 
     'パラメータのチェックと収集を行う
     If CheckAndCollectParam() = False Then
+        Common.WriteLog "DelWkDir E1"
         Exit Sub
     End If
     
     DeleteWorkFolder True
     
+    Common.WriteLog "DelWkDir E"
     MsgBox "終わりました"
 End Sub
 
 'パラメータのチェックと収集を行う
 Private Function CheckAndCollectParam() As Boolean
+    Common.WriteLog "CheckAndCollectParam S"
     Dim err_msg As String
 
     'Main Params
@@ -58,6 +67,7 @@ Private Function CheckAndCollectParam() As Boolean
     If err_msg <> "" Then
         MsgBox err_msg
         CheckAndCollectParam = False
+        Common.WriteLog "CheckAndCollectParam E1 (" & err_msg & ")"
         Exit Function
     End If
 
@@ -76,6 +86,7 @@ Private Function CheckAndCollectParam() As Boolean
         If err_msg <> "" Then
             MsgBox err_msg
             CheckAndCollectParam = False
+            Common.WriteLog "CheckAndCollectParam E2 (" & err_msg & ")"
             Exit Function
         End If
         
@@ -94,13 +105,18 @@ CONTINUE:
     Loop
 
     CheckAndCollectParam = True
+    Common.WriteLog "CheckAndCollectParam E"
 End Function
 
 'Sub Paramを順に実行していく
 Private Function ExecSubParam() As Boolean
+    Common.WriteLog "ExecSubParam S"
+    
     If UBound(sub_params) < 0 Then
-        MsgBox "有効なSub paramがありません"
+        Dim errmsg As String: errmsg = "有効なSub paramがありません"
+        MsgBox errmsg
         ExecSubParam = True
+        Common.WriteLog "ExecSubParam E1 (" & errmsg & ")"
         Exit Function
     End If
 
@@ -176,10 +192,13 @@ Private Function ExecSubParam() As Boolean
     DeleteWorkFolder main_param.IsDeleteWorkDir()
 
     ExecSubParam = True
+    Common.WriteLog "ExecSubParam E"
 End Function
 
 '作業用フォルダを作成する
 Private Sub CreateWorkFolder()
+    Common.WriteLog "CreateWorkFolder S"
+
     Dim path As String: path = main_param.GetToolWorkDirPath()
 
     If path = "" Then
@@ -197,13 +216,19 @@ Private Sub CreateWorkFolder()
         Common.CreateFolder (current_wk_src_dir_path)
         Common.CreateFolder (current_wk_dst_dir_path)
     End If
+    
+    Common.WriteLog "CreateWorkFolder E"
 End Sub
 
 '除外リストファイルを作成する
 Private Sub CreateIgnoreListFile()
+    Common.WriteLog "CreateIgnoreListFile S"
+
     If UBound(main_param.GetIgnoreFiles()) < 0 Then
         '除外ファイルなし
         main_param.SetIgnoreFilePath ("")
+        
+        Common.WriteLog "CreateIgnoreListFile E1"
         Exit Sub
     End If
     
@@ -223,10 +248,14 @@ Private Sub CreateIgnoreListFile()
             Err.Raise 53, , "除外リストファイルの更新に失敗しました"
         End If
     Next i
+    
+    Common.WriteLog "CreateIgnoreListFile E"
 End Sub
 
 'exeiniを更新
 Private Sub UpdateExeIniContents(ByRef sub_param As SubParam)
+    Common.WriteLog "UpdateExeIniContents S"
+
     Dim ret As Long
     Dim path As String: path = main_param.GetExeIniFilePath()
     
@@ -257,11 +286,16 @@ Private Sub UpdateExeIniContents(ByRef sub_param As SubParam)
     If ret = 0 Then
         Err.Raise 53, , "Iniファイルの更新に失敗しました(2)"
     End If
+    
+    Common.WriteLog "UpdateExeIniContents E"
 End Sub
 
 '連番の作業用サブフォルダを作成する
 Private Sub CreateSeqWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer)
+    Common.WriteLog "CreateSeqWorkFolder S"
+
     If main_param.IsStepWorkDir() = False Then
+        Common.WriteLog "CreateSeqWorkFolder E1"
         Exit Sub
     End If
 
@@ -270,10 +304,14 @@ Private Sub CreateSeqWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer)
     current_wk_dst_dir_path = path & SEP & num1 & num2 & "_1"
     Common.CreateFolder (current_wk_src_dir_path)
     Common.CreateFolder (current_wk_dst_dir_path)
+    
+    Common.WriteLog "CreateSeqWorkFolder E"
 End Sub
 
 '作業用サブフォルダのsrc→dstにコピーする
 Private Sub CopySrcToDstWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer)
+    Common.WriteLog "CopySrcToDstWorkFolder S"
+
     Dim src_path As String
     Dim dst_path_0 As String
     Dim dst_path_1 As String
@@ -312,10 +350,13 @@ Private Sub CopySrcToDstWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer)
         
     End If
         
+    Common.WriteLog "CopySrcToDstWorkFolder E"
 End Sub
 
 'exeに渡すパラメータリスト作成する
 Private Function CreateExeParamList(ByRef sub_param As SubParam) As String()
+    Common.WriteLog "CreateExeParamList S"
+
     Dim i As Integer
     Dim param_list() As String
     
@@ -348,10 +389,14 @@ Private Function CreateExeParamList(ByRef sub_param As SubParam) As String()
     Next i
     
     CreateExeParamList = param_list
+    
+    Common.WriteLog "CreateExeParamList E"
 End Function
 
 'exeを実行する
 Private Sub RunExe(ByRef param_list() As String)
+    Common.WriteLog "RunExe S"
+
     Dim i As Integer
     Dim ret As Long
     Dim exe_param As String
@@ -372,10 +417,13 @@ Private Sub RunExe(ByRef param_list() As String)
     
     Next i
 
+    Common.WriteLog "RunExe E"
 End Sub
 
 '差分があるかチェックする
 Private Function IsMatch() As Boolean
+    Common.WriteLog "IsMatch S"
+
     Dim i As Integer
     Dim is_match As Boolean: is_match = True
 
@@ -389,39 +437,52 @@ Private Function IsMatch() As Boolean
         If is_match = False Then
             '1つでも差異があれば終了
             IsMatch = is_match
+            Common.WriteLog "IsMatch E1"
             Exit Function
         End If
     Next i
     
     IsMatch = is_match
+    Common.WriteLog "IsMatch E"
 End Function
 
 '作業用サブフォルダを入れ替える
 Private Sub SwapWorkSubFolder()
+    Common.WriteLog "SwapWorkSubFolder S"
+    
     If main_param.IsStepWorkDir() = True Then
+        Common.WriteLog "SwapWorkSubFolder E1"
         Exit Sub
     End If
     
     Dim tmp As String: tmp = current_wk_src_dir_path
     current_wk_src_dir_path = current_wk_dst_dir_path
     current_wk_dst_dir_path = tmp
+    
+    Common.WriteLog "SwapWorkSubFolder E"
 End Sub
 
 '作業用フォルダを削除する
 Private Sub DeleteWorkFolder(ByVal is_del_wk_dir As Boolean)
+    Common.WriteLog "DeleteWorkFolder S"
+
     If is_del_wk_dir = False Then
+        Common.WriteLog "DeleteWorkFolder E1"
         Exit Sub
     End If
 
     Dim path As String: path = main_param.GetToolWorkDirPath()
     
     If Common.IsExistsFolder(path) = False Then
+        Common.WriteLog "DeleteWorkFolder E2"
         Exit Sub
     End If
     
     If Common.ShowYesNoMessageBox("作業用フォルダを削除しますか?") = False Then
+        Common.WriteLog "DeleteWorkFolder E3"
         Exit Sub
     End If
     
     Common.DeleteFolder path
+    Common.WriteLog "DeleteWorkFolder E"
 End Sub
