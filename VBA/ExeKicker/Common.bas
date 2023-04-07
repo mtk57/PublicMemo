@@ -60,6 +60,25 @@ End Sub
 ' Ret : ファイルリスト
 '-------------------------------------------------------------
 Public Function CreateFileList(ByVal path As String, ByVal ext As String) As String()
+
+    Dim list() As String: list = CreateFileListMain(path, ext)
+    
+    Dim i As Long
+    For i = LBound(list) To UBound(list)
+        If Len(list(i)) = 0 Then
+            '空の要素を削除
+            If i < UBound(list) Then
+                list(i) = list(UBound(list))
+            End If
+            ReDim Preserve list(UBound(list) - 1)
+        End If
+    Next i
+    
+    CreateFileList = list
+
+End Function
+
+Private Function CreateFileListMain(ByVal path As String, ByVal ext As String) As String()
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -93,12 +112,12 @@ Public Function CreateFileList(ByVal path As String, ByVal ext As String) As Str
     Dim filelist_merge() As String
     
     For Each f In fso.GetFolder(path).SubFolders
-        filelist_sub = CreateFileList(f.path, ext)
+        filelist_sub = CreateFileListMain(f.path, ext)
         filelist = Common.MergeArray(filelist_sub, filelist)
     Next f
     
     Set fso = Nothing
-    CreateFileList = filelist
+    CreateFileListMain = filelist
 End Function
 
 '-------------------------------------------------------------
@@ -287,18 +306,18 @@ Public Function RunProcessWait(ByVal exe_path As String) As Long
   Const WAIT = True
   Const NO_WAIT = False
   
-  Dim process As Object
-  Set process = wsh.Exec(exe_path)
+  Dim Process As Object
+  Set Process = wsh.Exec(exe_path)
 
   'プロセス完了時に通知を受け取る
-  Do While process.Status = 0
+  Do While Process.Status = 0
     DoEvents
   Loop
 
   'プロセスの戻り値を取得する
-  RunProcessWait = process.ExitCode
+  RunProcessWait = Process.ExitCode
 
-  Set process = Nothing
+  Set Process = Nothing
   Set wsh = Nothing
 End Function
 

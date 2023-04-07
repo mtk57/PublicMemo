@@ -5,11 +5,11 @@ Public Sub Run_Click()
     On Error GoTo ErrorHandler
     Application.DisplayAlerts = False
     
-    Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "ExeKicker.log"
+    'Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "ExeKicker.log"
     
     Common.WriteLog "Start"
 
-    process.Run
+    Process.Run
 
     Common.WriteLog "End"
 
@@ -30,7 +30,7 @@ Public Sub DeleteWorkDir_Click()
     On Error GoTo ErrorHandler
     Application.DisplayAlerts = False
 
-    process.DelWkDir
+    Process.DelWkDir
 
     Application.DisplayAlerts = True
     Exit Sub
