@@ -23,6 +23,47 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
 Private logfile As Integer
 
 '-------------------------------------------------------------
+'指定フォルダ配下に指定拡張子のファイルが存在するか
+' path : IN : フォルダパス(絶対パス)
+' ext : IN : 拡張子(Ex. ".vb")
+' Ret : True/False (True=存在する, False=存在しない)
+'-------------------------------------------------------------
+Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String) As Boolean
+    Dim fso As Object
+    Dim folder As Object
+    Dim subfolder As Object
+    Dim file As Object
+    
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set folder = fso.GetFolder(path)
+    
+    For Each subfolder In folder.subfolders
+        If IsExistsExtensionFile(subfolder.path, ext) Then
+            Set fso = Nothing
+            Set folder = Nothing
+            
+            IsExistsExtensionFile = True
+            Exit Function
+        End If
+    Next subfolder
+    
+    For Each file In folder.Files
+        If Right(file.Name, Len(ext)) = ext Then
+            Set fso = Nothing
+            Set folder = Nothing
+        
+            IsExistsExtensionFile = True
+            Exit Function
+        End If
+    Next file
+    
+    Set fso = Nothing
+    Set folder = Nothing
+
+    IsExistsExtensionFile = False
+End Function
+
+'-------------------------------------------------------------
 'ログファイルをオープンする
 ' logfile_path : ログファイルパス(絶対パス)
 '-------------------------------------------------------------
@@ -129,7 +170,7 @@ Private Function CreateFileListMain(ByVal path As String, ByVal ext As String) A
     Dim filelist_sub() As String
     Dim filelist_merge() As String
     
-    For Each f In fso.GetFolder(path).SubFolders
+    For Each f In fso.GetFolder(path).subfolders
         filelist_sub = CreateFileListMain(f.path, ext)
         filelist = Common.MergeArray(filelist_sub, filelist)
     Next f
@@ -226,11 +267,11 @@ Public Function GetFolderPathList(ByVal path As String) As String()
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set top_dir = fso.GetFolder(path)
 
-    dir_cnt = top_dir.SubFolders.count
+    dir_cnt = top_dir.subfolders.count
     If dir_cnt > 0 Then
         ReDim path_list(dir_cnt - 1)
         i = 0
-        For Each sub_dir In top_dir.SubFolders
+        For Each sub_dir In top_dir.subfolders
             path_list(i) = sub_dir.path
             i = i + 1
             
@@ -285,9 +326,9 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     Next
     
     'コピー元のフォルダ内のサブフォルダをコピーする
-    Dim subFolder As Object
-    For Each subFolder In fso.GetFolder(src_path).SubFolders
-        CopyFolder subFolder.path, fso.BuildPath(dest_path, subFolder.Name)
+    Dim subfolder As Object
+    For Each subfolder In fso.GetFolder(src_path).subfolders
+        CopyFolder subfolder.path, fso.BuildPath(dest_path, subfolder.Name)
     Next
     
     Set fso = Nothing
@@ -629,17 +670,17 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Next file
     
     'サブフォルダも検索する
-    Dim subFolder As Object
-    For Each subFolder In folder.SubFolders
+    Dim subfolder As Object
+    For Each subfolder In folder.subfolders
         Dim result() As String
-        result = SearchAndReadFiles(subFolder.path, target_file, is_sjis)
+        result = SearchAndReadFiles(subfolder.path, target_file, is_sjis)
         If UBound(result) >= 1 Then
             'サブフォルダから結果が返ってきた場合は、その結果を返す
             SearchAndReadFiles = result
             Set fso = Nothing
             Exit Function
         End If
-    Next subFolder
+    Next subfolder
     
     '検索対象のファイルが見つからなかった場合は、空の配列を返す
     Dim ret_empty(0) As String

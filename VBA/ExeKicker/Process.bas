@@ -111,8 +111,10 @@ End Function
 Private Function ExecSubParam() As Boolean
     Common.WriteLog "ExecSubParam S"
     
+    Dim errmsg As String
+    
     If UBound(sub_params) < 0 Then
-        Dim errmsg As String: errmsg = "有効なSub paramがありません"
+        errmsg = "有効なSub paramがありません"
         MsgBox errmsg
         ExecSubParam = True
         Common.WriteLog "ExecSubParam E1 (" & errmsg & ")"
@@ -123,6 +125,16 @@ Private Function ExecSubParam() As Boolean
     Dim exe_params() As String
     Dim is_match As Boolean
     Dim is_exit_for As Boolean
+    
+    '対象拡張子のファイルが存在するか確認する
+    Dim ext As String: ext = Replace(main_param.GetInExtension(), "*", "")
+    If Common.IsExistsExtensionFile(main_param.GetSrcDirPath(), ext) = False Then
+        errmsg = "処理対象の拡張子のファイルが存在しません"
+        MsgBox errmsg
+        ExecSubParam = True
+        Common.WriteLog "ExecSubParam E2 (" & errmsg & ")"
+        Exit Function
+    End If
     
     '作業用フォルダを作成する
     CreateWorkFolder
