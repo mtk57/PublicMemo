@@ -19,9 +19,12 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
     ByVal lpFileName As String _
 ) As Long
 
+'ログファイル番号
 Private logfile As Integer
 
 '-------------------------------------------------------------
+'ログファイルをオープンする
+' logfile_path : ログファイルパス(絶対パス)
 '-------------------------------------------------------------
 Public Sub OpenLog(ByVal logfile_path As String)
     If logfile > 0 Then
@@ -33,6 +36,7 @@ Public Sub OpenLog(ByVal logfile_path As String)
 End Sub
 
 '-------------------------------------------------------------
+'ログファイルに書き込む
 '-------------------------------------------------------------
 Public Sub WriteLog(ByVal contents As String)
     If logfile = 0 Then
@@ -43,6 +47,7 @@ Public Sub WriteLog(ByVal contents As String)
 End Sub
 
 '-------------------------------------------------------------
+'ログファイルをクローズする
 '-------------------------------------------------------------
 Public Sub CloseLog()
     If logfile = 0 Then
@@ -54,28 +59,41 @@ Public Sub CloseLog()
 End Sub
 
 '-------------------------------------------------------------
+'配列の空行を削除する
+' in_array : IN : 文字列配列
+' Ret : 空行を削除した配列
+'-------------------------------------------------------------
+Public Function DeleteEmptyArray(ByRef in_array() As String) As String()
+    Dim ret_array() As String
+    Dim i, cnt As Long
+    Dim row As String
+    
+    ReDim ret_array(UBound(in_array))
+    
+    For i = LBound(in_array) To UBound(in_array)
+        row = in_array(i)
+        If Not IsEmpty(row) Then
+            If row <> "" Then
+                ret_array(cnt) = row
+                cnt = cnt + 1
+            End If
+        End If
+    Next
+    
+    ReDim Preserve ret_array(cnt - 1)
+    
+    DeleteEmptyArray = ret_array
+End Function
+
+'-------------------------------------------------------------
 'ファイルリストを作成する
 ' path : IN : フォルダパス(絶対パス)
 ' ext : IN : 拡張子(Ex."*.vb")
 ' Ret : ファイルリスト
 '-------------------------------------------------------------
 Public Function CreateFileList(ByVal path As String, ByVal ext As String) As String()
-
     Dim list() As String: list = CreateFileListMain(path, ext)
-    
-    Dim i As Long
-    For i = LBound(list) To UBound(list)
-        If Len(list(i)) = 0 Then
-            '空の要素を削除
-            If i < UBound(list) Then
-                list(i) = list(UBound(list))
-            End If
-            ReDim Preserve list(UBound(list) - 1)
-        End If
-    Next i
-    
-    CreateFileList = list
-
+    CreateFileList = DeleteEmptyArray(list)
 End Function
 
 Private Function CreateFileListMain(ByVal path As String, ByVal ext As String) As String()

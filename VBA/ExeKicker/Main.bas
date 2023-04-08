@@ -4,9 +4,8 @@ Option Explicit
 Public Sub Run_Click()
     On Error GoTo ErrorHandler
     Application.DisplayAlerts = False
-    
+        
     'Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "ExeKicker.log"
-    
     Common.WriteLog "Start"
 
     Process.Run
