@@ -71,7 +71,6 @@ Private Function CheckAndCollectParam() As Boolean
         Exit Function
     End If
 
-    
     'Sub Params
     Const START_ROW = 21
     Const SUB_ROWS = 5
@@ -186,7 +185,8 @@ Private Function ExecSubParam() As Boolean
         current_wk_dst_dir_path = before_wk_dst_dir_path
     End If
     
-    Common.CopyFolder current_wk_dst_dir_path, main_param.GetDestDirPath
+    Common.DeleteFolder (main_param.GetDestDirPath())
+    Common.CopyFolder current_wk_dst_dir_path, main_param.GetDestDirPath()
     
     '作業用フォルダを削除する
     DeleteWorkFolder main_param.IsDeleteWorkDir()
@@ -206,6 +206,8 @@ Private Sub CreateWorkFolder()
         path = "C:\tmp"
         main_param.SetToolWorkDirPath (path)
     End If
+    
+    Common.DeleteFolder (path)
 
     Common.CreateFolder (path)
     
