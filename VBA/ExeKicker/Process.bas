@@ -40,6 +40,7 @@ End Sub
 '作業用フォルダ削除
 Public Sub DelWkDir()
     Common.WriteLog "DelWkDir S"
+    
     Worksheets("main").Activate
     
     SEP = Application.PathSeparator
@@ -59,6 +60,7 @@ End Sub
 'パラメータのチェックと収集を行う
 Private Function CheckAndCollectParam() As Boolean
     Common.WriteLog "CheckAndCollectParam S"
+    
     Dim err_msg As String
 
     'Main Params
@@ -70,9 +72,11 @@ Private Function CheckAndCollectParam() As Boolean
         Common.WriteLog "CheckAndCollectParam E1 (" & err_msg & ")"
         Exit Function
     End If
+    
+    Common.WriteLog main_param.GetAllValue()
 
     'Sub Params
-    Const START_ROW = 21
+    Const START_ROW = 22
     Const SUB_ROWS = 5
     Dim row As Integer: row = START_ROW
     Dim cnt As Integer: cnt = 0
@@ -85,9 +89,11 @@ Private Function CheckAndCollectParam() As Boolean
         If err_msg <> "" Then
             MsgBox err_msg
             CheckAndCollectParam = False
-            Common.WriteLog "CheckAndCollectParam E2 (" & err_msg & ")"
+            Common.WriteLog "CheckAndCollectParam E2 (row=" & row & ", msg=" & err_msg & ")"
             Exit Function
         End If
+        
+        Common.WriteLog sub_param.GetAllValue()
         
         If sub_param.GetEnable() = "STOPPER" Then
             Exit Do
@@ -129,7 +135,7 @@ Private Function ExecSubParam() As Boolean
     '対象拡張子のファイルが存在するか確認する
     Dim ext As String: ext = Replace(main_param.GetInExtension(), "*", "")
     If Common.IsExistsExtensionFile(main_param.GetSrcDirPath(), ext) = False Then
-        errmsg = "処理対象の拡張子のファイルが存在しません"
+        errmsg = "処理対象の拡張子のファイルが存在しません (" & ext & ")"
         MsgBox errmsg
         ExecSubParam = True
         Common.WriteLog "ExecSubParam E2 (" & errmsg & ")"
@@ -152,6 +158,7 @@ Private Function ExecSubParam() As Boolean
         UpdateExeIniContents sub_param
         
         For j = 0 To main_param.GetMaxExecCount() - 1
+            Common.WriteLog "Main Loop i=" & i & ", j=" & j
         
             '連番の作業用サブフォルダを作成する
             CreateSeqWorkFolder i, j
@@ -164,8 +171,6 @@ Private Function ExecSubParam() As Boolean
             
             'exeを実行する
             RunExe exe_params
-            
-            'TODO:除外ファイルフォーマット不明のままの場合、ここでsrc→dstに除外ファイルをコピーする
             
             '差分があるかチェックする
             is_match = IsMatch()

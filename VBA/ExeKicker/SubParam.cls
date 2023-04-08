@@ -76,7 +76,7 @@ Private Function Validate() As String
         Validate = "変換定義Iniファイルパスが指定されていません"
         Exit Function
     ElseIf Common.IsExistsFile(ini_file_path) = False Then
-        Validate = "指定された変換定義Iniファイルが存在しません"
+        Validate = "指定された変換定義Iniファイルが存在しません (" & ini_file_path & ")"
         Exit Function
     End If
 
@@ -149,5 +149,21 @@ End Function
 '-----------------------------------------
 Public Function IsExecNotDiff() As Boolean
     IsExecNotDiff = is_exec_not_diff
+End Function
+
+
+
+
+Public Function GetAllValue() As String
+    Dim ret As String
+    
+    ret = "[Sub Param] " & _
+          "is_enable=(" & is_enable & "), " & _
+          "ini_file_path=(" & ini_file_path & "), " & _
+          "is_enable_addin=(" & is_enable_addin_s & "), " & _
+          "is_skip_comment=(" & is_skip_comment_s & "), " & _
+          "is_exec_not_diff=(" & is_exec_not_diff_s & ")"
+
+    GetAllValue = ret
 End Function
 

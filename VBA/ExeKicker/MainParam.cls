@@ -86,7 +86,7 @@ Private Function Validate() As String
         Validate = "exeファイルパスが指定されていません"
         Exit Function
     ElseIf Common.IsExistsFile(exe_file_path) = False Then
-        Validate = "指定されたexeファイルが存在しません"
+        Validate = "指定されたexeファイルが存在しません (" & exe_file_path & ")"
         Exit Function
     End If
 
@@ -94,7 +94,7 @@ Private Function Validate() As String
         Validate = "SRCフォルダパスが指定されていません"
         Exit Function
     ElseIf Common.IsExistsFolder(src_dir_path) = False Then
-        Validate = "指定されたSRCフォルダが存在しません"
+        Validate = "指定されたSRCフォルダが存在しません (" & src_dir_path & ")"
         Exit Function
     End If
 
@@ -112,7 +112,7 @@ Private Function Validate() As String
         Validate = "アドインファイルパスが指定されていません"
         Exit Function
     ElseIf Common.IsExistsFile(addin_file_path) = False Then
-        Validate = "指定されたアドインファイルが存在しません"
+        Validate = "指定されたアドインファイルが存在しません (" & addin_file_path & ")"
         Exit Function
     End If
 
@@ -120,7 +120,7 @@ Private Function Validate() As String
         Validate = "ExeIniファイルパスが指定されていません"
         Exit Function
     ElseIf Common.IsExistsFile(exe_ini_file_path) = False Then
-        Validate = "指定されたExeIniファイルが存在しません"
+        Validate = "指定されたExeIniファイルが存在しません (" & exe_ini_file_path & ")"
         Exit Function
     End If
 
@@ -157,7 +157,7 @@ Private Function Validate() As String
             max_exec_cnt = 1
         End If
     Else
-        Validate = "最大実行回数が数字ではありません"
+        Validate = "最大実行回数が数字ではありません (" & max_exec_cnt_s & ")"
         Exit Function
     End If
 
@@ -280,3 +280,25 @@ End Sub
 Public Sub SetToolWorkDirPath(ByVal path As String)
     tool_wk_dir_path = path
 End Sub
+
+
+
+Public Function GetAllValue() As String
+    Dim ret As String
+    
+    ret = "[Main Param] " & _
+          "exe_file_path=(" & exe_file_path & "), " & _
+          "src_dir_path=(" & src_dir_path & "), " & _
+          "dst_dir_path=(" & dst_dir_path & "), " & _
+          "in_ext=(" & in_ext & "), " & _
+          "addin_file_path=(" & addin_file_path & "), " & _
+          "exe_ini_file_path=(" & exe_ini_file_path & "), " & _
+          "is_contain_sub_dir=(" & is_contain_sub_dir_s & "), " & _
+          "ignore_files=(" & ignore_files & "), " & _
+          "tool_wk_dir_path=(" & tool_wk_dir_path & "), " & _
+          "is_step_wk_dir=(" & is_step_wk_dir_s & "), " & _
+          "is_del_wk_dir=(" & is_del_wk_dir_s & "), " & _
+          "max_exec_cnt=(" & max_exec_cnt_s & ")"
+
+    GetAllValue = ret
+End Function
