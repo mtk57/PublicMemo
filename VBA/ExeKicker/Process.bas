@@ -382,7 +382,7 @@ Private Function CreateExeParamList(ByRef sub_param As SubParam) As String()
     Dim src_path_list() As String
     Dim dst_path_list() As String
     
-    If main_param.IsContainSubDir() = False Then
+    If main_param.IsStepWorkDir() = False Then
         ReDim src_path_list(0)
         ReDim dst_path_list(0)
         src_path_list(0) = current_wk_src_dir_path
