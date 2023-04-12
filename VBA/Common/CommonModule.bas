@@ -23,6 +23,59 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
 Private logfile As Integer
 
 '-------------------------------------------------------------
+'ファイルがUTF8(BOMあり)かを判定する
+' path : IN : ファイルパス(絶対パス)
+' Ret : True/False (True=UTF8(BOMあり), False=左記以外)
+'-------------------------------------------------------------
+Public Function IsUTF8(ByVal path As String) As Boolean
+    If Common.IsExistsFile(path) = False Then
+        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+    End If
+
+    Dim bytedata() As Byte: bytedata = ReadBinary(path, 3)
+    Dim length As Integer: length = UBound(bytedata) + 1
+    
+    If length < 3 Then
+        IsUTF8 = False
+        Exit Function
+    End If
+    
+    If bytedata(0) = &HEF And bytedata(1) = &HBB And bytedata(2) = &HBF Then
+        IsUTF8 = True
+    Else
+        IsUTF8 = False
+    End If
+    
+End Function
+
+'-------------------------------------------------------------
+'ファイルをバイナリとして指定サイズ読み込む
+' path : IN : ファイルパス(絶対パス)
+' readsize : IN : 読み込むサイズ
+' Ret : 読み込んだバイナリ配列
+'-------------------------------------------------------------
+Public Function ReadBinary(ByVal path As String, ByVal readsize As Integer) As Byte()
+    Dim readdata() As Byte
+    
+    If readsize <= 0 Then
+        ReadBinary = readdata()
+        Exit Function
+    End If
+    
+    Dim filenum As Integer: filenum = FreeFile
+    
+    Open path For Binary Access Read As #filenum
+    
+    ReDim readdata(readsize - 1)
+    
+    Get #filenum, , readdata
+    
+    Close #filenum
+    
+    ReadBinary = readdata
+End Function
+
+'-------------------------------------------------------------
 '指定フォルダ配下に指定拡張子のファイルが存在するか
 ' path : IN : フォルダパス(絶対パス)
 ' ext : IN : 拡張子(Ex. ".vb")
@@ -32,7 +85,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String)
     Dim fso As Object
     Dim folder As Object
     Dim subfolder As Object
-    Dim file As Object
+    Dim File As Object
     
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set folder = fso.GetFolder(path)
@@ -47,15 +100,15 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String)
         End If
     Next subfolder
     
-    For Each file In folder.Files
-        If Right(file.Name, Len(ext)) = ext Then
+    For Each File In folder.Files
+        If Right(File.Name, Len(ext)) = ext Then
             Set fso = Nothing
             Set folder = Nothing
         
             IsExistsExtensionFile = True
             Exit Function
         End If
-    Next file
+    Next File
     
     Set fso = Nothing
     Set folder = Nothing
@@ -144,10 +197,10 @@ Private Function CreateFileListMain(ByVal path As String, ByVal ext As String) A
     Dim filelist() As String
     Dim cnt As Integer
 
-    Dim file As String, f As Object
-    file = Dir(path & "\" & ext)
+    Dim File As String, f As Object
+    File = Dir(path & "\" & ext)
     
-    If file <> "" Then
+    If File <> "" Then
         If Common.IsEmptyArray(filelist) = True Then
             cnt = 0
         Else
@@ -155,15 +208,15 @@ Private Function CreateFileListMain(ByVal path As String, ByVal ext As String) A
         End If
         
         ReDim Preserve filelist(cnt)
-        filelist(cnt) = path & "\" & file
+        filelist(cnt) = path & "\" & File
     End If
     
-    Do While file <> ""
-        file = Dir()
-        If file <> "" Then
+    Do While File <> ""
+        File = Dir()
+        If File <> "" Then
             cnt = UBound(filelist) + 1
             ReDim Preserve filelist(cnt)
-            filelist(cnt) = path & "\" & file
+            filelist(cnt) = path & "\" & File
         End If
     Loop
     
@@ -320,9 +373,9 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     End If
     
     'コピー元のフォルダ内のファイルをコピーする
-    Dim file As Object
-    For Each file In fso.GetFolder(src_path).Files
-        fso.CopyFile file.path, fso.BuildPath(dest_path, file.Name), True
+    Dim File As Object
+    For Each File In fso.GetFolder(src_path).Files
+        fso.CopyFile File.path, fso.BuildPath(dest_path, File.Name), True
     Next
     
     'コピー元のフォルダ内のサブフォルダをコピーする
@@ -413,11 +466,11 @@ Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As 
         file_format = FORMAT_UNICODE
     End If
     
-    Dim file As Object
+    Dim File As Object
     Const READ_ONLY = 1
     Const IS_CREATE_FILE = False
     
-    Set file = fso.OpenTextFile(file_path, READ_ONLY, IS_CREATE_FILE, file_format)
+    Set File = fso.OpenTextFile(file_path, READ_ONLY, IS_CREATE_FILE, file_format)
     
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Sheets(sheet_name)
@@ -425,12 +478,12 @@ Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As 
     'ファイルの内容をシートに出力
     Dim row As Integer: row = 1
     
-    Do While Not file.AtEndOfStream
-        ws.Cells(row, 1).value = file.ReadLine
+    Do While Not File.AtEndOfStream
+        ws.Cells(row, 1).value = File.ReadLine
         row = row + 1
     Loop
     
-    file.Close
+    File.Close
     Set fso = Nothing
 End Sub
 
@@ -642,18 +695,18 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Dim folder As Object
     Set folder = fso.GetFolder(target_folder)
     
-    Dim file As Object
-    For Each file In folder.Files
-        If fso.FileExists(file.path) And fso.GetFileName(file.path) Like target_file Then
+    Dim File As Object
+    For Each File In folder.Files
+        If fso.FileExists(File.path) And fso.GetFileName(File.path) Like target_file Then
             '検索対象のファイルを読み込む
             Dim contents As String
             
             If is_sjis = True Then
                 'S-JIS
-                contents = ReadTextFileBySJIS(file.path)
+                contents = ReadTextFileBySJIS(File.path)
             Else
                 'UTF-8
-                contents = ReadTextFileByUTF8(file.path)
+                contents = ReadTextFileByUTF8(File.path)
             End If
             
             'ファイルの内容を配列に格納する
@@ -662,12 +715,12 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
             '末尾にファイルパスを追加する
             Dim lines_cnt As Integer: lines_cnt = UBound(lines)
             ReDim Preserve lines(lines_cnt + 1)
-            lines(lines_cnt + 1) = file.path
+            lines(lines_cnt + 1) = File.path
             SearchAndReadFiles = lines
             Set fso = Nothing
             Exit Function
         End If
-    Next file
+    Next File
     
     'サブフォルダも検索する
     Dim subfolder As Object
@@ -704,12 +757,12 @@ Public Function ReadTextFileBySJIS(ByVal file_path) As String
     Const IS_CREATE_FILE = False
     Dim contents As String
     
-    Dim file As Object
-    Set file = fso.OpenTextFile(file_path, READ_ONLY, IS_CREATE_FILE, FORMAT_ASCII)
-    contents = file.ReadAll
+    Dim File As Object
+    Set File = fso.OpenTextFile(file_path, READ_ONLY, IS_CREATE_FILE, FORMAT_ASCII)
+    contents = File.ReadAll
     
-    file.Close
-    Set file = Nothing
+    File.Close
+    Set File = Nothing
     Set fso = Nothing
     
     ReadTextFileBySJIS = contents
@@ -792,3 +845,4 @@ Public Sub AddSheet(ByVal sheet_name As String)
 
     Worksheets.Add.Name = sheet_name
 End Sub
+
