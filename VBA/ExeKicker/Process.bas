@@ -382,7 +382,7 @@ Private Function CreateExeParamList(ByRef sub_param As SubParam) As String()
     Dim src_path_list() As String
     Dim dst_path_list() As String
     
-    If main_param.IsStepWorkDir() = False Then
+    If main_param.IsContainSubDir() = False Then
         ReDim src_path_list(0)
         ReDim dst_path_list(0)
         src_path_list(0) = current_wk_src_dir_path
@@ -393,6 +393,9 @@ Private Function CreateExeParamList(ByRef sub_param As SubParam) As String()
         
         Common.AppendArray src_path_list, current_wk_src_dir_path
         Common.AppendArray dst_path_list, current_wk_dst_dir_path
+        
+        src_path_list = Common.DeleteEmptyArray(src_path_list)
+        dst_path_list = Common.DeleteEmptyArray(dst_path_list)
     End If
     
     For i = LBound(src_path_list) To UBound(src_path_list)
@@ -428,9 +431,12 @@ Private Sub RunExe(ByRef param_list() As String)
             
         ChDir Common.GetFolderNameFromPath(main_param.GetExeFilePath())
         
+        Common.WriteLog exe_param
+        
         ret = Common.RunProcessWait(exe_param)
         
         If ret <> 0 Then
+            Common.WriteLog "exe ret=" & ret
             Err.Raise 53, , "ExeÇÃé¿çsÇ…é∏îsÇµÇ‹ÇµÇΩ(ret=" & ret & ")"
         End If
     
