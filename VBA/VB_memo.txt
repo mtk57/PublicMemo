@@ -108,6 +108,9 @@ LenB(s)                                 // 6
 ・末尾に記号($, %)が付く関数
 	Ex.Left$()  →文字列を返すLeft関数のこと。$がないとVariantを返す。
 
+・デフォルト・プロパティ
+    Ex. TextBox1 = "hoge"   →TextBox1.Textが省略出来る
+
 ---------------------------------------
 ■チェック観点（ビルドエラーで検知できない系）
 ・配列添え字の下限
@@ -116,6 +119,11 @@ LenB(s)                                 // 6
 ・固定長文字列
 ・日付と時刻の相違
 ・日付時刻の書式化
+・ByVal/ByRef未指定時の違い
+  VB6：ByRef, VB.NET：ByVal
+・可変長引数の違い (ParamArray)
+  VB6：参照渡し、VB.NET：値渡し
+
 
 ---------------------------------------
 ■予約語
@@ -186,7 +194,7 @@ Enum
 Eqv											
 Erase										
 Event										
-Exit										
+Exit										ある
 false										ある
 Fix											
 For											ある
@@ -194,7 +202,7 @@ Friend
 Function									ある
 Get											
 Global										
-GoSub										
+GoSub										なし
 GoTo										ある
 If											ある
 Imp											
@@ -205,7 +213,7 @@ InputB
 Int											
 Integer										
 Is											
-Lbound										
+Lbound										ある
 Len											
 LenB										
 Let											
@@ -227,12 +235,12 @@ null										Nothing
 On											
 Open										
 Option										ある
-Optional									
+Optional									ある
 Or											ある
-ParamArray									
-Preserve									
+ParamArray									ある
+Preserve									ある
 Print										
-Private										
+Private										ある
 PSet										
 Public										ある
 Put											
@@ -250,20 +258,20 @@ Sgn
 Shared										
 Single										
 Spc											
-Static										
+Static										ある
 Stop										
-String										
-Sub											
+String										ある
+Sub											ある
 Tab											
-Then										
-To											
-true										
+Then										ある
+To											ある
+true										ある
 Type										なし
 TypeOf										
-Ubound										
+Ubound										ある
 Unlock										
 Until										
-Variant										Object
+Variant										なし
 VB_Base										なし
 VB_Control									なし
 VB_Creatable								なし
@@ -323,5 +331,8 @@ Shadows
 
 MustOverride
 	C#のabstractと同じ。
+
+Static
+	C#に該当機能なし。VBではローカル変数を静的に出来る。
 
 ---------------------------------------
