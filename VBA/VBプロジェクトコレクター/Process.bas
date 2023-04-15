@@ -2,119 +2,185 @@ Attribute VB_Name = "Process"
 Option Explicit
 
 '定数
-Private Const MAIN_SHEET = "main"
-Private Const SEARCH_FILE_NAME = "O5"
-Private Const SEARCH_DIR_PATH = "O6"
-Private Const FILE_ENCODE = "O7"
-Private Const OUT_DIR_PATH = "O11"
-Private Const OUT_SHEET_NAME = "O12"
-Private Const OUT_BAT_PATH = "O13"
+Private SEP As String
+Private DQ As String
 
-'シートから収集した情報
-Private search_file As String
-Private search_path As String
-Private encode As String
-Private out_path As String
-Private out_sheet As String
-Private out_bat As String
+'パラメータ
+Private main_param As MainParam
+Private sub_param As SubParam
+
+Private vbprj_files() As String
+
 
 'メイン処理
 Public Sub Run()
-    Worksheets(MAIN_SHEET).Activate
-    Dim err_msg As String
+    Common.WriteLog "Run S"
 
-    'mainシートの情報を収集
-    search_file = Range(SEARCH_FILE_NAME).value
-    search_path = Range(SEARCH_DIR_PATH).value
-    encode = Range(FILE_ENCODE).value
-    out_path = Range(OUT_DIR_PATH).value
-    out_sheet = Range(OUT_SHEET_NAME).value
-    out_bat = Range(OUT_BAT_PATH).value
+    Worksheets("main").Activate
     
-    '収集した情報を検証する
-    err_msg = Validate()
-    If err_msg <> "" Then
-        MsgBox err_msg
+    SEP = Application.PathSeparator
+    DQ = Chr(34)
+
+    'パラメータのチェックと収集を行う
+    If CheckAndCollectParam() = False Then
+        Common.WriteLog "Run E1"
         Exit Sub
     End If
     
-    'ファイルエンコード
-    Dim is_sjis As Boolean: is_sjis = True
-    If encode = "UTF-8" Then
-        is_sjis = False
-    End If
-    
-    'VBプロジェクトファイルを検索して読み込む
-    Dim contents() As String: contents = Common.SearchAndReadFiles(search_path, search_file, is_sjis)
-    
-    If UBound(contents) = 0 Then
-        MsgBox "VBプロジェクトファイルが見つかりませんでした"
+    'VBプロジェクトファイルを検索する
+    If SearchVBProjFile() = False Then
+        Common.WriteLog "Run E2"
         Exit Sub
     End If
     
-    'VBプロジェクトファイルのパースを行う
-    Dim filelist() As String: filelist = ParseContents(contents, search_file)
+    Dim i As Integer
+    Dim copy_files() As String
     
-    'VBプロジェクトファイルが参照しているファイルを同じフォルダ構成のままコピーする
-    CopyProjectFiles out_path, filelist
+    'メインループ
+    For i = LBound(vbprj_files) To UBound(vbprj_files)
+        Dim vbproj_path As String: vbproj_path = vbprj_files(i)
+        Common.WriteLog "i=" & i & ":[" & vbproj_path & "]"
     
-    'BATファイルを作成する
-    CreateBatFile out_path, out_bat, filelist
+        'VBプロジェクトファイルのパースを行い、コピーするファイルリストを作成する
+        copy_files = CreateCopyFileList(vbproj_path)
+        
+        'VBプロジェクトファイルが参照しているファイルを同じフォルダ構成のままコピーする
+        Dim dst_path As String: dst_path = main_param.GetDestDirPath() & SEP & GetProjectName(vbproj_path)
+        CopyProjectFiles dst_path, copy_files
+        
+        'BATファイルを作成する
+        CreateBatFile vbproj_path, dst_path, copy_files
     
-    'シート名が指定されていればシートにVBプロジェクトファイルを出力する
-    err_msg = CreateVbProjectSheet(contents, out_sheet)
-    If err_msg <> "" Then
-        MsgBox err_msg
-        Exit Sub
-    End If
-    
+        'VBプロジェクトファイルをシート出力する
+        OutputSheet vbproj_path
+    Next i
+
+    Common.WriteLog "Run E"
     MsgBox "終わりました"
 End Sub
 
-'収集した情報を検証する
-Private Function Validate() As String
-    If search_file = "" Or _
-       search_path = "" Or _
-       encode = "" Or _
-       out_path = "" Then
-        Validate = "未入力の情報があります"
-        Exit Function
-    End If
-
-    Dim ext As String: ext = Common.GetFileExtension(search_file)
+'パラメータのチェックと収集を行う
+Private Function CheckAndCollectParam() As Boolean
+    Common.WriteLog "CheckAndCollectParam S"
     
-    If ext <> "vbp" And ext <> "vbproj" Then
-        Validate = "VBプロジェクトファイル名が未対応の拡張子です"
-        Exit Function
-    End If
+    Dim err_msg As String
 
-    If Common.IsExistsFolder(search_path) = False Then
-        Validate = "検索フォルダが存在しません"
+    'Main Params
+    Set main_param = New MainParam
+    err_msg = main_param.Init()
+    If err_msg <> "" Then
+        MsgBox err_msg
+        Common.WriteLog "CheckAndCollectParam E1 (" & err_msg & ")"
+        CheckAndCollectParam = False
         Exit Function
     End If
     
-    If out_bat <> "" Then
-        ext = Common.GetFileExtension(out_bat)
-        If ext <> "bat" Then
-            Validate = "BATファイル名が未対応の拡張子です"
-            Exit Function
-        End If
+    Common.WriteLog main_param.GetAllValue()
+
+    'Sub Params
+    Set sub_param = New SubParam
+    err_msg = sub_param.Init()
+    If err_msg <> "" Then
+        MsgBox err_msg
+        Common.WriteLog "CheckAndCollectParam E2 (" & err_msg & ")"
+        CheckAndCollectParam = False
+        Exit Function
+    End If
+    
+    'Main Param、Sub ParamのどちらにもVBプロジェクトファイルが指定されていない場合はNG
+    If main_param.GetVBPrjFileName() = "" And _
+       sub_param.GetVBProjFilePathListCount() <= 0 Then
+       err_msg = "VBプロジェクトファイルが指定されていません。"
+        MsgBox err_msg
+        Common.WriteLog "CheckAndCollectParam E3 (" & err_msg & ")"
+        CheckAndCollectParam = False
+        Exit Function
     End If
 
-    Validate = ""
+    CheckAndCollectParam = True
+    Common.WriteLog "CheckAndCollectParam E"
+End Function
+
+'VBプロジェクトファイルを検索する
+Private Function SearchVBProjFile() As Boolean
+    Common.WriteLog "SearchVBProjFile S"
+    
+    Dim err_msg As String
+    Dim path As String
+    Dim i As Integer: i = 0
+    
+    'VBプロジェクトファイルを検索する
+    If main_param.GetVBPrjFileName() <> "" Then
+        path = Common.SearchFile(main_param.GetSrcDirPath(), main_param.GetVBPrjFileName())
+        ReDim Preserve vbprj_files(i)
+        vbprj_files(i) = path
+    End If
+    
+    'Sub Paramに指定されたパスをマージ
+    If sub_param.GetVBProjFilePathListCount() > 0 Then
+        vbprj_files = Common.MergeArray(vbprj_files, sub_param.GetVBProjFilePathList())
+    End If
+    
+    vbprj_files = Common.DeleteEmptyArray(vbprj_files)
+    
+    If Common.IsEmptyArray(vbprj_files) = True Then
+        err_msg = "VBプロジェクトファイルが見つかりませんでした"
+        MsgBox err_msg
+        Common.WriteLog "SearchVBProjFile E1 (" & err_msg & ")"
+        SearchVBProjFile = False
+        Exit Function
+    End If
+    
+    SearchVBProjFile = True
+    Common.WriteLog "SearchVBProjFile E"
+End Function
+
+'VBプロジェクトファイルのパースを行い、コピーするファイルリストを取得する
+Private Function CreateCopyFileList(ByVal vbproj_path As String) As String()
+    Common.WriteLog "CreateCopyFileList S"
+    
+    'VBプロジェクトファイルのパースを行う
+    CreateCopyFileList = ParseContents(vbproj_path)
+    
+    Common.WriteLog "CreateCopyFileList E"
 End Function
 
 'VBプロジェクトファイルのパースを行う
-Private Function ParseContents(ByRef contents() As String, ByVal filename As String) As String()
-    Dim ext As String: ext = Common.GetFileExtension(filename)
+Private Function ParseContents(ByVal vbproj_path As String) As String()
+    Common.WriteLog "ParseContents S"
     
-    If ext = "vbp" Then
+    'VBプロジェクトファイルの内容を読み込む
+    Dim contents() As String: contents = GetVBPrjContents(vbproj_path)
+    
+    '末尾にファイルパスを追加する
+    Dim cnt As Integer: cnt = UBound(contents)
+    ReDim Preserve contents(cnt + 1)
+    contents(cnt + 1) = vbproj_path
+    
+    If Common.GetFileExtension(vbproj_path) = "vbp" Then
         ParseContents = ParseVB6Project(contents)
     Else
         ParseContents = ParseVBNETProject(contents)
     End If
 
+    Common.WriteLog "ParseContents E"
 End Function
+
+'VBプロジェクトファイルの内容を読み込む
+Private Function GetVBPrjContents(ByVal vbproj_path As String) As String()
+    Common.WriteLog "GetVBPrjContents S"
+    
+    'VBプロジェクトファイルの内容を読み込む
+    Dim raw_contents As String: raw_contents = Common.ReadTextFileBySJIS(vbproj_path)
+    
+    'ファイルの内容を配列に格納する
+    Dim contents() As String: contents = Split(raw_contents, vbCrLf)
+    
+    GetVBPrjContents = Common.DeleteEmptyArray(contents)
+    
+    Common.WriteLog "GetVBPrjContents E"
+End Function
+
 
 'vbpファイルのパースを行う
 '
@@ -154,6 +220,8 @@ End Function
 '[14] :"C:\tmp\base\sub\usercontrol3.ctl
 '[15] :"C:\tmp\base\test.vbp"
 Private Function ParseVB6Project(ByRef contents() As String) As String()
+    Common.WriteLog "ParseVB6Project S"
+
     Dim i, cnt As Integer
     Dim filelist() As String
     Dim datas() As String
@@ -208,6 +276,7 @@ CONTINUE:
     filelist(filelist_cnt + 1) = vbp_path
     
     ParseVB6Project = filelist
+    Common.WriteLog "ParseVB6Project E"
 End Function
 
 'vbprojファイルのパースを行う
@@ -229,6 +298,8 @@ End Function
 '[2] : "C:\tmp\base\sub\sub.vb"
 '[3] : "C:\tmp\base\test.vbproj"
 Private Function ParseVBNETProject(ByRef contents() As String) As String()
+    Common.WriteLog "ParseVBNETProject S"
+
     Dim i, cnt As Integer
     Dim filelist() As String
     
@@ -279,10 +350,13 @@ CONTINUE:
     filelist(filelist_cnt + 2) = Replace(vbproj_path, ".vbproj", ".sln")
     
     ParseVBNETProject = filelist
+    Common.WriteLog "ParseVBNETProject E"
 End Function
 
 'VBプロジェクトファイルが参照しているファイルを同じフォルダ構成のままコピーする
 Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As String)
+    Common.WriteLog "CopyProjectFiles S"
+    
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -315,7 +389,16 @@ CONTINUE:
     Next i
     
     Set fso = Nothing
+    Common.WriteLog "CopyProjectFiles E"
 End Sub
+
+Private Function GetProjectName(ByVal vbprj_file_path As String) As String
+    Common.WriteLog "GetProjectName S"
+    Dim vbprj_file_name As String: vbprj_file_name = Common.GetFileName(vbprj_file_path)
+    Dim ext As String: ext = Common.GetFileExtension(vbprj_file_name)
+    GetProjectName = Replace(vbprj_file_name, "." & ext, "")
+    Common.WriteLog "GetProjectName E"
+End Function
 
 'BATファイルを作成する
 '作成イメージ (SJISで作成すること)
@@ -379,18 +462,21 @@ End Sub
 '
 'pause
 '-------------------
-Private Sub CreateBatFile(ByVal in_dest_path As String, ByVal bat_path As String, ByRef filelist() As String)
-    If bat_path = "" Then
+Private Sub CreateBatFile(ByVal vbproj_path As String, ByVal dst_path As String, ByRef copy_files() As String)
+    Common.WriteLog "CreateBatFile S"
+
+    If main_param.IsCreateBat() = False Then
+        Common.WriteLog "CreateBatFile E1"
         Exit Sub
     End If
     
     Dim i As Integer
     Dim contents() As String
     Dim contents_cnt As Integer
-    Dim base_path As String: base_path = Common.GetCommonString(filelist)
+    Dim base_path As String: base_path = Common.GetCommonString(copy_files)
     Dim dst_base_path As String: dst_base_path = Replace(base_path, ":", "")
+    Dim bat_name As String: bat_name = GetProjectName(vbproj_path) & ".bat"
 
-    Dim SEP As String: SEP = Application.PathSeparator
     Const FIRST_ROW_CNT = 7
     Const ROW_CNT = 3
     Const SECOND_ROW_CNT = 2
@@ -400,7 +486,7 @@ Private Sub CreateBatFile(ByVal in_dest_path As String, ByVal bat_path As String
     'コマンド作成開始
     contents(0) = "@echo off"
     contents(1) = "set SRC_DIR=" & Common.RemoveTrailingBackslash(base_path)
-    contents(2) = "set DST_DIR=" & in_dest_path
+    contents(2) = "set DST_DIR=" & dst_path
     contents(3) = ""
     contents(4) = "echo SRC_DIR=%SRC_DIR%"
     contents(5) = "echo DST_DIR=%DST_DIR%"
@@ -409,18 +495,18 @@ Private Sub CreateBatFile(ByVal in_dest_path As String, ByVal bat_path As String
     
     Dim OFFSET As Integer: OFFSET = UBound(contents) + 1
 
-    For i = LBound(filelist) To UBound(filelist)
+    For i = LBound(copy_files) To UBound(copy_files)
         contents_cnt = UBound(contents)
         ReDim Preserve contents(contents_cnt + ROW_CNT)
     
-        Dim file As String: file = filelist(i)
+        Dim file As String: file = copy_files(i)
         
         Dim src As String: src = "%SRC_DIR%" & SEP & Replace(file, base_path, "")
         Dim dst_tmp As String: dst_tmp = "%DST_DIR%" & SEP & dst_base_path & Replace(file, base_path, "")
         Dim dst As String: dst = Common.GetFolderNameFromPath(dst_tmp)
         
-        contents(i * ROW_CNT + OFFSET) = "md " & """" & dst & """"
-        contents(i * ROW_CNT + OFFSET + 1) = "xcopy /Y /F " & """" & src & """" & " " & """" & dst & """"
+        contents(i * ROW_CNT + OFFSET) = "md " & DQ & dst & DQ
+        contents(i * ROW_CNT + OFFSET + 1) = "xcopy /Y /F " & DQ & src & DQ & " " & DQ & dst & DQ
         contents(i * ROW_CNT + OFFSET + 2) = ""
     Next i
     
@@ -430,39 +516,35 @@ Private Sub CreateBatFile(ByVal in_dest_path As String, ByVal bat_path As String
     contents(contents_cnt + SECOND_ROW_CNT) = "pause"
     
     'ファイルに出力する
-    Common.CreateSJISTextFile contents, bat_path
-
+    Common.CreateSJISTextFile contents, dst_path & SEP & bat_name
+    
+    Common.WriteLog "CreateBatFile E"
 End Sub
 
-'シート名が指定されていればシートにVBプロジェクトファイルを出力する
-Private Function CreateVbProjectSheet(ByRef contents() As String, ByVal sheet_name As String) As String
-    If sheet_name = "" Then
-        CreateVbProjectSheet = ""
-        Exit Function
+'VBプロジェクトファイルをシート出力する
+Private Sub OutputSheet(ByVal vbproj_path As String)
+    Common.WriteLog "OutputSheet S"
+
+    If main_param.IsOutSheet() = False Then
+        Common.WriteLog "OutputSheet E1"
+        Exit Sub
     End If
+    
+    Dim sheet_name As String: sheet_name = GetProjectName(vbproj_path)
+    
+    'VBプロジェクトファイルの内容を読み込む
+    Dim contents() As String: contents = GetVBPrjContents(vbproj_path)
     
     Dim prj_path As String: prj_path = contents(UBound(contents))
     
-    If Common.IsExistSheet(sheet_name) = True Then
-        CreateVbProjectSheet = "すでに同名のシートが存在します"
-        Exit Function
-    End If
-    
-    'ファイルエンコード
-    Dim is_sjis As Boolean: is_sjis = True
-    If encode = "UTF-8" Then
-        is_sjis = False
-    End If
-    
     Dim before_sheet_name As String: before_sheet_name = ActiveSheet.Name
     
-    'シートを追加
     Common.AddSheet sheet_name
     
     'ファイルの内容を指定されたシートに出力する
-    Common.OutputTextFileToSheet prj_path, sheet_name, is_sjis
+    Common.OutputTextFileToSheet vbproj_path, sheet_name
     
     ThisWorkbook.Sheets(before_sheet_name).Select
     
-    CreateVbProjectSheet = ""
-End Function
+    Common.WriteLog "OutputSheet E"
+End Sub

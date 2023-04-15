@@ -24,6 +24,107 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 '-------------------------------------------------------------
+'ファイルを削除する
+' path : IN : ファイルパス(絶対パス)
+'-------------------------------------------------------------
+Public Sub DeleteFile(ByVal path As String)
+    If Common.IsExistsFile(path) = False Then
+        Exit Sub
+    End If
+    
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    Const DELETE_READONLY = True
+    fso.DeleteFile path, DELETE_READONLY
+    
+    Set fso = Nothing
+End Sub
+
+'-------------------------------------------------------------
+'ファイル名をユニークな名称にリネームしてコピーする
+' src_file_path : IN : コピー元ファイルパス(絶対パス)
+' dst_dir_path : IN : コピー先フォルダパス(絶対パス)
+'                     末尾の\は不要
+'                     空の場合はコピー元と同じフォルダとする
+' Ret : リネームコピー後のファイルパス
+'-------------------------------------------------------------
+Public Function CopyUniqueFile(ByVal src_file_path As String, ByVal dst_dir_path As String) As String
+    If Common.IsExistsFile(src_file_path) = False Then
+        CopyUniqueFile = ""
+        Exit Function
+    End If
+    
+    Dim SEP As String: SEP = Application.PathSeparator
+    Dim dst_file_path As String
+    
+    Dim unique_filename As String: unique_filename = Common.GetFileName(src_file_path) & ".bak_" & GetNowTimeString()
+    
+    If dst_dir_path = "" Then
+        dst_file_path = Common.GetFolderNameFromPath(src_file_path) & SEP & unique_filename
+    Else
+        dst_file_path = dst_dir_path & SEP & unique_filename
+    End If
+
+    FileCopy src_file_path, dst_file_path
+    
+    CopyUniqueFile = dst_file_path
+End Function
+
+'-------------------------------------------------------------
+'ファイル名を返す
+' path : IN : ファイルパス(絶対パス)
+' Ret : ファイル名
+'-------------------------------------------------------------
+Public Function GetFileName(ByVal path As String) As String
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    GetFileName = fso.GetFileName(path)
+    Set fso = Nothing
+End Function
+
+'-------------------------------------------------------------
+'指定フォルダ配下を指定ファイル名で検索してファイルパスを返す
+' search_path : IN : 検索フォルダパス(絶対パス)
+' search_name : IN : 検索ファイル名
+' Ret : ファイルパス
+'-------------------------------------------------------------
+Public Function SearchFile(ByVal search_path As String, ByVal search_name As String) As String
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    Dim folder As Object
+    Set folder = fso.GetFolder(search_path)
+    
+    Dim file As Object
+    For Each file In folder.Files
+        If fso.FileExists(file.path) And fso.GetFileName(file.path) Like search_name Then
+            '発見
+            SearchFile = file.path
+            Set fso = Nothing
+            Exit Function
+        End If
+    Next file
+    
+    'サブフォルダも検索する
+    Dim subfolder As Object
+    For Each subfolder In folder.subfolders
+        Dim result As String
+        result = SearchFile(subfolder.path, search_name)
+        If result <> "" Then
+            'サブフォルダから結果が返ってきた場合は、その結果を返す
+            SearchFile = result
+            Set fso = Nothing
+            Exit Function
+        End If
+    Next subfolder
+    
+    '検索対象のファイルが見つからなかった場合
+    SearchFile = ""
+    Set fso = Nothing
+End Function
+
+'-------------------------------------------------------------
 '指定されたファイルをSJIS→UTF8(BOMあり)変換する
 ' path : IN : ファイルパス(絶対パス)
 ' is_backup : IN : True/False (True=バックアップする)
@@ -42,7 +143,7 @@ Public Sub SJIStoUTF8(ByVal path As String, ByVal is_backup As Boolean)
         'テキストをすべて取得する
         Do Until EOF(filenum)
             Line Input #filenum, buf
-            in_str = in_str & buf & vbLf
+            in_str = in_str & buf & vbCrLf
         Loop
     Close #filenum
         
@@ -97,7 +198,7 @@ Public Sub UTF8toSJIS(ByVal path As String, ByVal is_backup As Boolean)
     Next
     
     '改行毎にデータを分ける
-    out_str = Split(in_str, vbLf)
+    out_str = Split(in_str, vbCrLf)
     
     'バックアップ
     If is_backup = True Then
@@ -178,7 +279,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String)
     Dim fso As Object
     Dim folder As Object
     Dim subfolder As Object
-    Dim File As Object
+    Dim file As Object
     
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set folder = fso.GetFolder(path)
@@ -193,15 +294,15 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String)
         End If
     Next subfolder
     
-    For Each File In folder.Files
-        If Right(File.Name, Len(ext)) = ext Then
+    For Each file In folder.Files
+        If Right(file.Name, Len(ext)) = ext Then
             Set fso = Nothing
             Set folder = Nothing
         
             IsExistsExtensionFile = True
             Exit Function
         End If
-    Next File
+    Next file
     
     Set fso = Nothing
     Set folder = Nothing
@@ -294,10 +395,10 @@ Private Function CreateFileListMain(ByVal path As String, ByVal ext As String, B
     Dim filelist() As String
     Dim cnt As Integer
 
-    Dim File As String, f As Object
-    File = Dir(path & "\" & ext)
+    Dim file As String, f As Object
+    file = Dir(path & "\" & ext)
     
-    If File <> "" Then
+    If file <> "" Then
         If Common.IsEmptyArray(filelist) = True Then
             cnt = 0
         Else
@@ -305,15 +406,15 @@ Private Function CreateFileListMain(ByVal path As String, ByVal ext As String, B
         End If
         
         ReDim Preserve filelist(cnt)
-        filelist(cnt) = path & "\" & File
+        filelist(cnt) = path & "\" & file
     End If
     
-    Do While File <> ""
-        File = Dir()
-        If File <> "" Then
+    Do While file <> ""
+        file = Dir()
+        If file <> "" Then
             cnt = UBound(filelist) + 1
             ReDim Preserve filelist(cnt)
-            filelist(cnt) = path & "\" & File
+            filelist(cnt) = path & "\" & file
         End If
     Loop
     
@@ -476,9 +577,9 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     End If
     
     'コピー元のフォルダ内のファイルをコピーする
-    Dim File As Object
-    For Each File In fso.GetFolder(src_path).Files
-        fso.CopyFile File.path, fso.BuildPath(dest_path, File.Name), True
+    Dim file As Object
+    For Each file In fso.GetFolder(src_path).Files
+        fso.CopyFile file.path, fso.BuildPath(dest_path, file.Name), True
     Next
     
     'コピー元のフォルダ内のサブフォルダをコピーする
@@ -552,28 +653,28 @@ End Function
 'ファイルの内容を指定されたシートに出力する
 ' file_path : IN : ファイルパス (絶対パス)
 ' sheet_name : IN : シート名
-' is_sjis : IN :検索ファイルのエンコード指定。True/False (True=Shift-JIS, False=UTF-16)  TODO:いずれ自動判別したいが。。。
 '-------------------------------------------------------------
-Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As String, ByVal is_sjis As Boolean)
+Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As String)
+    If Common.IsExistsFile(file_path) = False Or sheet_name = "" Then
+        Err.Raise 53, , "指定されたファイルが存在しません (" & file_path & ")"
+    End If
+
+    'ワーク用にコピーする
+    Dim wk As String: wk = Common.CopyUniqueFile(file_path, "")
+    
+    'ワークファイルをSJISに変換する
+    Common.UTF8toSJIS wk, False
+
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
     'ファイルを開く
-    Dim file_format As Integer
     Const FORMAT_ASCII = 0
     Const FORMAT_UNICODE = -1
-    
-    If is_sjis = True Then
-        file_format = FORMAT_ASCII
-    Else
-        file_format = FORMAT_UNICODE
-    End If
-    
-    Dim File As Object
     Const READ_ONLY = 1
     Const IS_CREATE_FILE = False
-    
-    Set File = fso.OpenTextFile(file_path, READ_ONLY, IS_CREATE_FILE, file_format)
+    Dim fileobj As Object
+    Set fileobj = fso.OpenTextFile(wk, READ_ONLY, IS_CREATE_FILE, FORMAT_ASCII)
     
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Sheets(sheet_name)
@@ -581,13 +682,17 @@ Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As 
     'ファイルの内容をシートに出力
     Dim row As Integer: row = 1
     
-    Do While Not File.AtEndOfStream
-        ws.Cells(row, 1).value = File.ReadLine
+    Do While Not fileobj.AtEndOfStream
+        ws.Cells(row, 1).value = fileobj.ReadLine
         row = row + 1
     Loop
     
-    File.Close
+    fileobj.Close
+    Set fileobj = Nothing
     Set fso = Nothing
+    
+    'ワークファイルを削除する
+    DeleteFile wk
 End Sub
 
 '-------------------------------------------------------------
@@ -787,43 +892,35 @@ End Function
 '指定フォルダ配下を指定ファイル名で検索してその内容を返す
 ' target_folder : IN :検索フォルダパス(絶対パス)
 ' target_file : IN :検索ファイル名
-' is_sjis : IN :検索ファイルのエンコード指定。True/False (True=Shift-JIS, False=UTF-8)  TODO:いずれ自動判別したいが。。。
 ' Ret : 読み込んだファイルの内容
 '       配列の末尾には検索ファイルの絶対パスを格納する
 '-------------------------------------------------------------
-Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_file As String, ByVal is_sjis As Boolean) As String()
+Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_file As String) As String()
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
     Dim folder As Object
     Set folder = fso.GetFolder(target_folder)
     
-    Dim File As Object
-    For Each File In folder.Files
-        If fso.FileExists(File.path) And fso.GetFileName(File.path) Like target_file Then
+    Dim fileobj As Object
+    For Each fileobj In folder.Files
+        If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
             '検索対象のファイルを読み込む
-            Dim contents As String
-            
-            If is_sjis = True Then
-                'S-JIS
-                contents = ReadTextFileBySJIS(File.path)
-            Else
-                'UTF-8
-                contents = ReadTextFileByUTF8(File.path)
-            End If
-            
+            Dim contents As String: contents = ReadTextFileBySJIS(fileobj.path)
+
             'ファイルの内容を配列に格納する
             Dim lines() As String: lines = Split(contents, vbCrLf)
             
             '末尾にファイルパスを追加する
             Dim lines_cnt As Integer: lines_cnt = UBound(lines)
             ReDim Preserve lines(lines_cnt + 1)
-            lines(lines_cnt + 1) = File.path
+            lines(lines_cnt + 1) = file.path
             SearchAndReadFiles = lines
+            Set fileobj = Nothing
             Set fso = Nothing
             Exit Function
         End If
-    Next File
+    Next file
     
     'サブフォルダも検索する
     Dim subfolder As Object
@@ -845,12 +942,21 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
 End Function
 
 '-------------------------------------------------------------
-'SJIS形式のテキストファイルを読み込む
-' file_path : IN : ファイルパス (絶対パス)
+'SJISでテキストファイルを読み込む
+'※UTF8のファイルもSJISに変換して読み込む!
+' path : IN : ファイルパス (絶対パス)
 ' Ret : 読み込んだ内容
 '-------------------------------------------------------------
-Public Function ReadTextFileBySJIS(ByVal file_path) As String
-    'TODO:引数チェック
+Public Function ReadTextFileBySJIS(ByVal path As String) As String
+    If Common.IsExistsFile(path) = False Then
+        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+    End If
+    
+    'ワーク用にコピーする
+    Dim wk As String: wk = Common.CopyUniqueFile(path, "")
+    
+    'ワークファイルをSJISに変換する
+    Common.UTF8toSJIS wk, False
     
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
@@ -858,15 +964,17 @@ Public Function ReadTextFileBySJIS(ByVal file_path) As String
     Const FORMAT_ASCII = 0
     Const READ_ONLY = 1
     Const IS_CREATE_FILE = False
-    Dim contents As String
     
-    Dim File As Object
-    Set File = fso.OpenTextFile(file_path, READ_ONLY, IS_CREATE_FILE, FORMAT_ASCII)
-    contents = File.ReadAll
+    Dim fileobj As Object
+    Set fileobj = fso.OpenTextFile(wk, READ_ONLY, IS_CREATE_FILE, FORMAT_ASCII)
+    Dim contents As String: contents = fileobj.ReadAll
     
-    File.Close
-    Set File = Nothing
+    fileobj.Close
+    Set fileobj = Nothing
     Set fso = Nothing
+    
+    'ワークファイルを削除する
+    DeleteFile wk
     
     ReadTextFileBySJIS = contents
 End Function
@@ -936,16 +1044,25 @@ Public Function IsExistSheet(ByVal sheet_name As String) As Boolean
 End Function
 
 '-------------------------------------------------------------
+'シートを削除する
+' sheet_name : IN : シート名
+'-------------------------------------------------------------
+Public Sub DeleteSheet(ByVal sheet_name As String)
+    If IsExistSheet(sheet_name) = False Then
+        Exit Sub
+    End If
+
+    Application.DisplayAlerts = False
+    Sheets(sheet_name).Delete
+    Application.DisplayAlerts = True
+End Sub
+
+'-------------------------------------------------------------
 'シートを追加する
 ' sheet_name : IN : シート名
 '-------------------------------------------------------------
 Public Sub AddSheet(ByVal sheet_name As String)
-    If IsExistSheet(sheet_name) = True Then
-        Application.DisplayAlerts = False
-        Sheets(sheet_name).Delete
-        Application.DisplayAlerts = True
-    End If
-
+    DeleteSheet sheet_name
     Worksheets.Add.Name = sheet_name
 End Sub
 
