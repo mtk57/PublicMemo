@@ -1,20 +1,24 @@
-Attribute VB_Name = "Main"
+Attribute VB_Name = "Process_Work01_001"
 Option Explicit
 
-Private prm001 As Param001
+Private prm001 As Param_Work01_001
 
-Public Sub Run001_Click()
-On Error GoTo ErrorHandler
-    Application.DisplayAlerts = False
+Public Sub Run()
+    Common.WriteLog "Run S"
     
     Dim msg As String: msg = ""
+
+    Set prm001 = New Param_Work01_001
     
-    Set prm001 = New Param001
     prm001.Init
+    
     msg = prm001.Validate()
     If msg <> "" Then
-        GoTo FINISH
+        Common.WriteLog "Run E1"
+        Err.Raise 53, , msg
     End If
+    
+    Common.WriteLog prm001.GetAllValue()
     
     '外部ツール実行
     Const MACRO_NAME As String = "Main.Run"
@@ -32,16 +36,11 @@ On Error GoTo ErrorHandler
     
     If ret = False Then
         msg = "外部ツールの実行に失敗しました!"
-        GoTo FINISH
+        Common.WriteLog "Run E2"
+        Err.Raise 53, , msg
     End If
-
-    msg = "正常に終了しました"
-    GoTo FINISH
-
-ErrorHandler:
-    msg = "エラーが発生しました(" & Err.Description & ")"
-
-FINISH:
-    MsgBox msg
-    Application.DisplayAlerts = True
+    
+    Common.WriteLog "Run E"
 End Sub
+
+

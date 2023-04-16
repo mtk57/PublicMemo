@@ -2,15 +2,14 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "Param001"
+Attribute VB_Name = "Param_Work01_001"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Private Const SHEET = "001"
-Private Const HEADER = "[Param " & SHEET & "] "
+Private HEADER As String
 
 'メンバー変数
 Private external_path As String
@@ -21,6 +20,8 @@ Private is_debug_log_s As String
 
 'コンストラクタ
 Private Sub Class_Initialize()
+    HEADER = "[Param " & Define.SHEET_01 & "] "
+
     external_path = ""
     dst_dir_path = ""
     is_debug_log = False
@@ -29,9 +30,9 @@ End Sub
 '初期化
 Public Sub Init()
     Dim main_sheet As Worksheet
-    Set main_sheet = ThisWorkbook.Sheets(SHEET)
-    Const CLM = "O"
-    Const i = 8
+    Set main_sheet = ThisWorkbook.Sheets(Define.SHEET_01)
+    Const CLM = "D"
+    Const i = 12
     
     external_path = main_sheet.Range(CLM & i).value
     dst_dir_path = main_sheet.Range(CLM & i + 1).value
@@ -42,10 +43,10 @@ End Sub
 
 Private Sub CollectParam()
     Dim main_sheet As Worksheet
-    Set main_sheet = ThisWorkbook.Sheets(SHEET)
+    Set main_sheet = ThisWorkbook.Sheets(Define.SHEET_01)
 
     Const CLM = "C"
-    Dim row As Integer: row = 13
+    Dim row As Integer: row = 19
     Dim i As Integer: i = 0
     Dim path As String
     
@@ -69,6 +70,12 @@ Public Function Validate() As String
         Validate = HEADER & "外部ツールファイルパスが指定されていません"
         Exit Function
     End If
+    
+    If Common.IsExistsFile(external_path) = False Then
+        Validate = HEADER & "外部ツールファイルパスが見つかりません (" & external_path & ")"
+        Exit Function
+    End If
+    
 
     If dst_dir_path = "" Then
         Validate = HEADER & "コピー先フォルダパスが指定されていません"
