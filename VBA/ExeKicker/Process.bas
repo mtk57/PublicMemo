@@ -3,6 +3,7 @@ Option Explicit
 
 '定数
 Private SEP As String
+Private DQ As String
 
 'パラメータ
 Private main_param As MainParam
@@ -20,6 +21,7 @@ Public Sub Run()
     Worksheets("main").Activate
     
     SEP = Application.PathSeparator
+    DQ = Chr(34)
 
     'パラメータのチェックと収集を行う
     If CheckAndCollectParam() = False Then
@@ -343,14 +345,17 @@ Private Sub CopySrcToDstWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer)
             src_path = main_param.GetSrcDirPath()
             dst_path_0 = current_wk_src_dir_path
             dst_path_1 = current_wk_dst_dir_path
+        
+            Common.CopyFolder src_path, dst_path_0
+            Common.CopyFolder src_path, dst_path_1
         Else
             src_path = before_wk_dst_dir_path
             dst_path_0 = current_wk_src_dir_path
             dst_path_1 = current_wk_dst_dir_path
+            
+            Common.CopyFolder src_path, dst_path_0
+            Common.CopyFolder src_path, dst_path_1
         End If
-        
-        Common.CopyFolder src_path, dst_path_0
-        Common.CopyFolder src_path, dst_path_1
     
     Else
         '途中経過を残さない
@@ -367,6 +372,11 @@ Private Sub CopySrcToDstWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer)
             Common.CopyFolder current_wk_src_dir_path, current_wk_dst_dir_path
         End If
         
+    End If
+    
+    If num1 = 0 And num2 = 0 Then
+        'コピー後は全ファイルSJISにする!
+        Common.UTF8toSJIS_AllFile current_wk_src_dir_path, main_param.GetInExtension(), main_param.IsContainSubDir()
     End If
         
     Common.WriteLog "CopySrcToDstWorkFolder E"
@@ -402,12 +412,12 @@ Private Function CreateExeParamList(ByRef sub_param As SubParam) As String()
         ReDim Preserve param_list(i)
         '"srcdirpath" "*.vb" "dstdirpath" "inipath" "ignorefilelistpath" ""
         param_list(i) = _
-            Chr(34) & src_path_list(i) & Chr(34) & " " & _
-            Chr(34) & main_param.GetInExtension() & Chr(34) & " " & _
-            Chr(34) & dst_path_list(i) & Chr(34) & " " & _
-            Chr(34) & sub_param.GetIniFilePath() & Chr(34) & " " & _
-            Chr(34) & main_param.GetIgnoreFilePath() & Chr(34) & " " & _
-            Chr(34) & Chr(34)
+            DQ & src_path_list(i) & DQ & " " & _
+            DQ & main_param.GetInExtension() & DQ & " " & _
+            DQ & dst_path_list(i) & DQ & " " & _
+            DQ & sub_param.GetIniFilePath() & DQ & " " & _
+            DQ & main_param.GetIgnoreFilePath() & DQ & " " & _
+            DQ & DQ
     Next i
     
     CreateExeParamList = param_list
@@ -426,7 +436,7 @@ Private Sub RunExe(ByRef param_list() As String)
     For i = LBound(param_list) To UBound(param_list)
         
         exe_param = _
-            Chr(34) & main_param.GetExeFilePath() & Chr(34) & " " & _
+            DQ & main_param.GetExeFilePath() & DQ & " " & _
             param_list(i)
             
         ChDir Common.GetFolderNameFromPath(main_param.GetExeFilePath())
@@ -453,8 +463,8 @@ Private Function IsMatch() As Boolean
     Dim is_match As Boolean: is_match = True
 
     'ファイルリストを作成
-    Dim src_file_list() As String: src_file_list = Common.CreateFileList(current_wk_src_dir_path, main_param.GetInExtension())
-    Dim dst_file_list() As String: dst_file_list = Common.CreateFileList(current_wk_dst_dir_path, main_param.GetInExtension())
+    Dim src_file_list() As String: src_file_list = Common.CreateFileList(current_wk_src_dir_path, main_param.GetInExtension(), True)
+    Dim dst_file_list() As String: dst_file_list = Common.CreateFileList(current_wk_dst_dir_path, main_param.GetInExtension(), True)
 
     'ファイルを比較
     For i = LBound(src_file_list) To UBound(src_file_list)

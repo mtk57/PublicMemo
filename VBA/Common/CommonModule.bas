@@ -125,6 +125,54 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
 End Function
 
 '-------------------------------------------------------------
+'指定フォルダのUTF8を全てSJISにする
+' path : IN : フォルダパス(絶対パス)
+' ext : IN : 拡張子(Ex."*.vb")
+' is_subdir : IN : サブフォルダ含むか (True=含む)
+' Ret : ファイルリスト
+'-------------------------------------------------------------
+Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
+    If Common.IsExistsFolder(path) = False Then
+        Err.Raise 53, , "指定されたフォルダが存在しません (" & path & ")"
+    End If
+    
+    If ext = "" Then
+        Err.Raise 53, , "拡張子が指定されていません"
+    End If
+
+    Dim i As Integer
+    Dim src_file_list() As String: src_file_list = Common.CreateFileList(path, ext, is_subdir)
+
+    For i = LBound(src_file_list) To UBound(src_file_list)
+        Common.UTF8toSJIS src_file_list(i), False
+    Next i
+End Sub
+
+'-------------------------------------------------------------
+'指定フォルダのSJISを全てUTF8にする
+' path : IN : フォルダパス(絶対パス)
+' ext : IN : 拡張子(Ex."*.vb")
+' is_subdir : IN : サブフォルダ含むか (True=含む)
+' Ret : ファイルリスト
+'-------------------------------------------------------------
+Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
+    If Common.IsExistsFolder(path) = False Then
+        Err.Raise 53, , "指定されたフォルダが存在しません (" & path & ")"
+    End If
+    
+    If ext = "" Then
+        Err.Raise 53, , "拡張子が指定されていません"
+    End If
+
+    Dim i As Integer
+    Dim src_file_list() As String: src_file_list = Common.CreateFileList(path, ext, is_subdir)
+
+    For i = LBound(src_file_list) To UBound(src_file_list)
+        Common.SJIStoUTF8 src_file_list(i), False
+    Next i
+End Sub
+
+'-------------------------------------------------------------
 '指定されたファイルをSJIS→UTF8(BOMあり)変換する
 ' path : IN : ファイルパス(絶対パス)
 ' is_backup : IN : True/False (True=バックアップする)
@@ -1065,4 +1113,5 @@ Public Sub AddSheet(ByVal sheet_name As String)
     DeleteSheet sheet_name
     Worksheets.Add.Name = sheet_name
 End Sub
+
 
