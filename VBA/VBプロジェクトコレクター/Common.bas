@@ -97,7 +97,7 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     Set folder = fso.GetFolder(search_path)
     
     Dim file As Object
-    For Each file In folder.Files
+    For Each file In folder.files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like search_name Then
             '発見
             SearchFile = file.path
@@ -294,7 +294,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String)
         End If
     Next subfolder
     
-    For Each file In folder.Files
+    For Each file In folder.files
         If Right(file.Name, Len(ext)) = ext Then
             Set fso = Nothing
             Set folder = Nothing
@@ -578,7 +578,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     
     'コピー元のフォルダ内のファイルをコピーする
     Dim file As Object
-    For Each file In fso.GetFolder(src_path).Files
+    For Each file In fso.GetFolder(src_path).files
         fso.CopyFile file.path, fso.BuildPath(dest_path, file.Name), True
     Next
     
@@ -903,7 +903,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Set folder = fso.GetFolder(target_folder)
     
     Dim fileobj As Object
-    For Each fileobj In folder.Files
+    For Each fileobj In folder.files
         If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
             '検索対象のファイルを読み込む
             Dim contents As String: contents = ReadTextFileBySJIS(fileobj.path)

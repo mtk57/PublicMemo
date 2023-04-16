@@ -18,10 +18,14 @@ Private Sub Class_Initialize()
 End Sub
 
 '‰Šú‰»
-Public Function Init() As String
+Public Sub Init()
     CollectParam
-    Init = Validate()
-End Function
+End Sub
+
+'‰Šú‰»(ŠO•”Às—p)
+Public Sub InitForExternal(ByRef files() As String)
+    vbprj_file_paths = files
+End Sub
 
 Private Sub CollectParam()
     Dim main_sheet As Worksheet
@@ -47,7 +51,7 @@ Private Sub CollectParam()
 End Sub
 
 'ŒŸØ
-Private Function Validate() As String
+Public Function Validate() As String
     Dim errmsg As String: errmsg = ""
     Dim i As Integer
     Dim path As String

@@ -35,7 +35,7 @@ Private Sub Class_Initialize()
 End Sub
 
 '‰Šú‰»
-Public Function Init() As String
+Public Sub Init()
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
     Const CLM = "O"
@@ -47,12 +47,15 @@ Public Function Init() As String
     dst_dir_path = main_sheet.Range(CLM & i + 5).value
     is_out_sheet_s = main_sheet.Range(CLM & i + 6).value
     is_create_bat_s = main_sheet.Range(CLM & i + 7).value
-    
-    Init = Validate()
-End Function
+End Sub
+
+'‰Šú‰»(ŠO•”Às—p)
+Public Sub InitForExternal(ByVal path As String)
+    dst_dir_path = path
+End Sub
 
 'ŒŸØ
-Private Function Validate() As String
+Public Function Validate() As String
     Dim ext As String
 
     If vbprj_file_name <> "" Then

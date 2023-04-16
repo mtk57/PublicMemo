@@ -5,33 +5,29 @@ Option Explicit
 Private SEP As String
 Private DQ As String
 
+'外部実行有無 (True=外部実行)
+Public IS_EXTERNAL As Boolean
+
 'パラメータ
-Private main_param As MainParam
-Private sub_param As SubParam
+Public main_param As MainParam
+Public sub_param As SubParam
 
 Private vbprj_files() As String
 
-
+'--------------------------------------------------------
 'メイン処理
+'--------------------------------------------------------
 Public Sub Run()
     Common.WriteLog "Run S"
-
-    Worksheets("main").Activate
     
     SEP = Application.PathSeparator
     DQ = Chr(34)
 
     'パラメータのチェックと収集を行う
-    If CheckAndCollectParam() = False Then
-        Common.WriteLog "Run E1"
-        Exit Sub
-    End If
+    CheckAndCollectParam
     
     'VBプロジェクトファイルを検索する
-    If SearchVBProjFile() = False Then
-        Common.WriteLog "Run E2"
-        Exit Sub
-    End If
+    SearchVBProjFile
     
     Dim i As Integer
     Dim copy_files() As String
@@ -56,53 +52,50 @@ Public Sub Run()
     Next i
 
     Common.WriteLog "Run E"
-    MsgBox "終わりました"
 End Sub
 
 'パラメータのチェックと収集を行う
-Private Function CheckAndCollectParam() As Boolean
+Private Sub CheckAndCollectParam()
     Common.WriteLog "CheckAndCollectParam S"
     
     Dim err_msg As String
 
+    If IS_EXTERNAL = False Then
+        Set main_param = New MainParam
+        Set sub_param = New SubParam
+        main_param.Init
+        sub_param.Init
+    End If
+    
     'Main Params
-    Set main_param = New MainParam
-    err_msg = main_param.Init()
+    err_msg = main_param.Validate()
     If err_msg <> "" Then
-        MsgBox err_msg
         Common.WriteLog "CheckAndCollectParam E1 (" & err_msg & ")"
-        CheckAndCollectParam = False
-        Exit Function
+        Err.Raise 53, , err_msg
+    End If
+    
+    'Sub Params
+    err_msg = sub_param.Validate()
+    If err_msg <> "" Then
+        Common.WriteLog "CheckAndCollectParam E2 (" & err_msg & ")"
+        Err.Raise 53, , err_msg
     End If
     
     Common.WriteLog main_param.GetAllValue()
-
-    'Sub Params
-    Set sub_param = New SubParam
-    err_msg = sub_param.Init()
-    If err_msg <> "" Then
-        MsgBox err_msg
-        Common.WriteLog "CheckAndCollectParam E2 (" & err_msg & ")"
-        CheckAndCollectParam = False
-        Exit Function
-    End If
     
     'Main Param、Sub ParamのどちらにもVBプロジェクトファイルが指定されていない場合はNG
     If main_param.GetVBPrjFileName() = "" And _
        sub_param.GetVBProjFilePathListCount() <= 0 Then
-       err_msg = "VBプロジェクトファイルが指定されていません。"
-        MsgBox err_msg
+        err_msg = "VBプロジェクトファイルが指定されていません。"
         Common.WriteLog "CheckAndCollectParam E3 (" & err_msg & ")"
-        CheckAndCollectParam = False
-        Exit Function
+        Err.Raise 53, , err_msg
     End If
 
-    CheckAndCollectParam = True
     Common.WriteLog "CheckAndCollectParam E"
-End Function
+End Sub
 
 'VBプロジェクトファイルを検索する
-Private Function SearchVBProjFile() As Boolean
+Private Sub SearchVBProjFile()
     Common.WriteLog "SearchVBProjFile S"
     
     Dim err_msg As String
@@ -125,15 +118,12 @@ Private Function SearchVBProjFile() As Boolean
     
     If Common.IsEmptyArray(vbprj_files) = True Then
         err_msg = "VBプロジェクトファイルが見つかりませんでした"
-        MsgBox err_msg
         Common.WriteLog "SearchVBProjFile E1 (" & err_msg & ")"
-        SearchVBProjFile = False
-        Exit Function
+        Err.Raise 53, , err_msg
     End If
     
-    SearchVBProjFile = True
     Common.WriteLog "SearchVBProjFile E"
-End Function
+End Sub
 
 'VBプロジェクトファイルのパースを行い、コピーするファイルリストを取得する
 Private Function CreateCopyFileList(ByVal vbproj_path As String) As String()
@@ -463,6 +453,10 @@ End Function
 'pause
 '-------------------
 Private Sub CreateBatFile(ByVal vbproj_path As String, ByVal dst_path As String, ByRef copy_files() As String)
+    If IS_EXTERNAL = True Then
+        Exit Sub
+    End If
+    
     Common.WriteLog "CreateBatFile S"
 
     If main_param.IsCreateBat() = False Then
@@ -523,6 +517,10 @@ End Sub
 
 'VBプロジェクトファイルをシート出力する
 Private Sub OutputSheet(ByVal vbproj_path As String)
+    If IS_EXTERNAL = True Then
+        Exit Sub
+    End If
+
     Common.WriteLog "OutputSheet S"
 
     If main_param.IsOutSheet() = False Then
