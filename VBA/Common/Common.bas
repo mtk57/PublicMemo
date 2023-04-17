@@ -1,6 +1,8 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
+Public Const VERSION = "1.0.0"
+
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
     ByVal lpApplicationName As String, _
