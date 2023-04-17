@@ -140,7 +140,7 @@ Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal i
         Err.Raise 53, , "拡張子が指定されていません"
     End If
 
-    Dim i As Integer
+    Dim i As Long
     Dim src_file_list() As String: src_file_list = Common.CreateFileList(path, ext, is_subdir)
 
     For i = LBound(src_file_list) To UBound(src_file_list)
@@ -164,7 +164,7 @@ Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal i
         Err.Raise 53, , "拡張子が指定されていません"
     End If
 
-    Dim i As Integer
+    Dim i As Long
     Dim src_file_list() As String: src_file_list = Common.CreateFileList(path, ext, is_subdir)
 
     For i = LBound(src_file_list) To UBound(src_file_list)
@@ -181,7 +181,7 @@ End Sub
 Public Sub SJIStoUTF8(ByVal path As String, ByVal is_backup As Boolean)
     Dim in_str As String
     Dim buf As String
-    Dim i As Integer
+    Dim i As Long
     
     Dim filenum As Integer: filenum = FreeFile
     
@@ -225,7 +225,7 @@ End Sub
 Public Sub UTF8toSJIS(ByVal path As String, ByVal is_backup As Boolean)
     Dim in_str As String
     Dim out_str() As String
-    Dim i As Integer
+    Dim i As Long
     
     'UTF-8もしくはUTF-8（BOM付き）のテキストファイルを読み込み
     With CreateObject("ADODB.Stream")
@@ -753,7 +753,7 @@ Public Sub CreateSJISTextFile(ByRef contents() As String, ByVal path As String)
     Set fso = CreateObject("Scripting.FileSystemObject")
     
     Dim txt As Object
-    Dim i As Integer
+    Dim i As Long
     
     Dim IS_OVERWRITE As Boolean: IS_OVERWRITE = True
     Dim IS_UNICODE As Boolean: IS_UNICODE = False
@@ -819,7 +819,7 @@ End Sub
 '-------------------------------------------------------------
 Function GetCommonString(ByRef list() As String) As String
     Dim common_string As String
-    Dim i, j As Integer
+    Dim i, j As Long
     Dim flag As Boolean
     
     '最初の文字列を共通文字列の初期値とする

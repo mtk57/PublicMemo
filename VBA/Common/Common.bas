@@ -1,4 +1,4 @@
-Attribute VB_Name = "CommonModule"
+Attribute VB_Name = "Common"
 Option Explicit
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
@@ -19,13 +19,13 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
     ByVal lpFileName As String _
 ) As Long
 
-'ãƒ­ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ç•ªå·
+'ƒƒOƒtƒ@ƒCƒ‹”Ô†
 Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 '-------------------------------------------------------------
-'ãƒ•ã‚¡ã‚¤ãƒ«ã‚’å‰Šé™¤ã™ã‚‹
-' path : IN : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
+'ƒtƒ@ƒCƒ‹‚ğíœ‚·‚é
+' path : IN : ƒtƒ@ƒCƒ‹ƒpƒX(â‘ÎƒpƒX)
 '-------------------------------------------------------------
 Public Sub DeleteFile(ByVal path As String)
     If Common.IsExistsFile(path) = False Then
@@ -42,12 +42,12 @@ Public Sub DeleteFile(ByVal path As String)
 End Sub
 
 '-------------------------------------------------------------
-'ãƒ•ã‚¡ã‚¤ãƒ«åã‚’ãƒ¦ãƒ‹ãƒ¼ã‚¯ãªåç§°ã«ãƒªãƒãƒ¼ãƒ ã—ã¦ã‚³ãƒ”ãƒ¼ã™ã‚‹
-' src_file_path : IN : ã‚³ãƒ”ãƒ¼å…ƒãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' dst_dir_path : IN : ã‚³ãƒ”ãƒ¼å…ˆãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-'                     æœ«å°¾ã®\ã¯ä¸è¦
-'                     ç©ºã®å ´åˆã¯ã‚³ãƒ”ãƒ¼å…ƒã¨åŒã˜ãƒ•ã‚©ãƒ«ãƒ€ã¨ã™ã‚‹
-' Ret : ãƒªãƒãƒ¼ãƒ ã‚³ãƒ”ãƒ¼å¾Œã®ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹
+'ƒtƒ@ƒCƒ‹–¼‚ğƒ†ƒj[ƒN‚È–¼Ì‚ÉƒŠƒl[ƒ€‚µ‚ÄƒRƒs[‚·‚é
+' src_file_path : IN : ƒRƒs[Œ³ƒtƒ@ƒCƒ‹ƒpƒX(â‘ÎƒpƒX)
+' dst_dir_path : IN : ƒRƒs[æƒtƒHƒ‹ƒ_ƒpƒX(â‘ÎƒpƒX)
+'                     ––”ö‚Ì\‚Í•s—v
+'                     ‹ó‚Ìê‡‚ÍƒRƒs[Œ³‚Æ“¯‚¶ƒtƒHƒ‹ƒ_‚Æ‚·‚é
+' Ret : ƒŠƒl[ƒ€ƒRƒs[Œã‚Ìƒtƒ@ƒCƒ‹ƒpƒX
 '-------------------------------------------------------------
 Public Function CopyUniqueFile(ByVal src_file_path As String, ByVal dst_dir_path As String) As String
     If Common.IsExistsFile(src_file_path) = False Then
@@ -72,9 +72,9 @@ Public Function CopyUniqueFile(ByVal src_file_path As String, ByVal dst_dir_path
 End Function
 
 '-------------------------------------------------------------
-'ãƒ•ã‚¡ã‚¤ãƒ«åã‚’è¿”ã™
-' path : IN : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' Ret : ãƒ•ã‚¡ã‚¤ãƒ«å
+'ƒtƒ@ƒCƒ‹–¼‚ğ•Ô‚·
+' path : IN : ƒtƒ@ƒCƒ‹ƒpƒX(â‘ÎƒpƒX)
+' Ret : ƒtƒ@ƒCƒ‹–¼
 '-------------------------------------------------------------
 Public Function GetFileName(ByVal path As String) As String
     Dim fso As Object
@@ -84,10 +84,10 @@ Public Function GetFileName(ByVal path As String) As String
 End Function
 
 '-------------------------------------------------------------
-'æŒ‡å®šãƒ•ã‚©ãƒ«ãƒ€é…ä¸‹ã‚’æŒ‡å®šãƒ•ã‚¡ã‚¤ãƒ«åã§æ¤œç´¢ã—ã¦ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹ã‚’è¿”ã™
-' search_path : IN : æ¤œç´¢ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' search_name : IN : æ¤œç´¢ãƒ•ã‚¡ã‚¤ãƒ«å
-' Ret : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹
+'w’èƒtƒHƒ‹ƒ_”z‰º‚ğw’èƒtƒ@ƒCƒ‹–¼‚ÅŒŸõ‚µ‚Äƒtƒ@ƒCƒ‹ƒpƒX‚ğ•Ô‚·
+' search_path : IN : ŒŸõƒtƒHƒ‹ƒ_ƒpƒX(â‘ÎƒpƒX)
+' search_name : IN : ŒŸõƒtƒ@ƒCƒ‹–¼
+' Ret : ƒtƒ@ƒCƒ‹ƒpƒX
 '-------------------------------------------------------------
 Public Function SearchFile(ByVal search_path As String, ByVal search_name As String) As String
     Dim fso As Object
@@ -99,48 +99,48 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     Dim file As Object
     For Each file In folder.Files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like search_name Then
-            'ç™ºè¦‹
+            '”­Œ©
             SearchFile = file.path
             Set fso = Nothing
             Exit Function
         End If
     Next file
     
-    'ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€ã‚‚æ¤œç´¢ã™ã‚‹
+    'ƒTƒuƒtƒHƒ‹ƒ_‚àŒŸõ‚·‚é
     Dim subfolder As Object
     For Each subfolder In folder.subfolders
         Dim result As String
         result = SearchFile(subfolder.path, search_name)
         If result <> "" Then
-            'ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€ã‹ã‚‰çµæœãŒè¿”ã£ã¦ããŸå ´åˆã¯ã€ãã®çµæœã‚’è¿”ã™
+            'ƒTƒuƒtƒHƒ‹ƒ_‚©‚çŒ‹‰Ê‚ª•Ô‚Á‚Ä‚«‚½ê‡‚ÍA‚»‚ÌŒ‹‰Ê‚ğ•Ô‚·
             SearchFile = result
             Set fso = Nothing
             Exit Function
         End If
     Next subfolder
     
-    'æ¤œç´¢å¯¾è±¡ã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒè¦‹ã¤ã‹ã‚‰ãªã‹ã£ãŸå ´åˆ
+    'ŒŸõ‘ÎÛ‚Ìƒtƒ@ƒCƒ‹‚ªŒ©‚Â‚©‚ç‚È‚©‚Á‚½ê‡
     SearchFile = ""
     Set fso = Nothing
 End Function
 
 '-------------------------------------------------------------
-'æŒ‡å®šãƒ•ã‚©ãƒ«ãƒ€ã®UTF8ã‚’å…¨ã¦SJISã«ã™ã‚‹
-' path : IN : ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' ext : IN : æ‹¡å¼µå­(Ex."*.vb")
-' is_subdir : IN : ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€å«ã‚€ã‹ (True=å«ã‚€)
-' Ret : ãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆ
+'w’èƒtƒHƒ‹ƒ_‚ÌUTF8‚ğ‘S‚ÄSJIS‚É‚·‚é
+' path : IN : ƒtƒHƒ‹ƒ_ƒpƒX(â‘ÎƒpƒX)
+' ext : IN : Šg’£q(Ex."*.vb")
+' is_subdir : IN : ƒTƒuƒtƒHƒ‹ƒ_ŠÜ‚Ş‚© (True=ŠÜ‚Ş)
+' Ret : ƒtƒ@ƒCƒ‹ƒŠƒXƒg
 '-------------------------------------------------------------
 Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
     If Common.IsExistsFolder(path) = False Then
-        Err.Raise 53, , "æŒ‡å®šã•ã‚ŒãŸãƒ•ã‚©ãƒ«ãƒ€ãŒå­˜åœ¨ã—ã¾ã›ã‚“ (" & path & ")"
+        Err.Raise 53, , "w’è‚³‚ê‚½ƒtƒHƒ‹ƒ_‚ª‘¶İ‚µ‚Ü‚¹‚ñ (" & path & ")"
     End If
     
     If ext = "" Then
-        Err.Raise 53, , "æ‹¡å¼µå­ãŒæŒ‡å®šã•ã‚Œã¦ã„ã¾ã›ã‚“"
+        Err.Raise 53, , "Šg’£q‚ªw’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ"
     End If
 
-    Dim i As Integer
+    Dim i As Long
     Dim src_file_list() As String: src_file_list = Common.CreateFileList(path, ext, is_subdir)
 
     For i = LBound(src_file_list) To UBound(src_file_list)
@@ -149,22 +149,22 @@ Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal i
 End Sub
 
 '-------------------------------------------------------------
-'æŒ‡å®šãƒ•ã‚©ãƒ«ãƒ€ã®SJISã‚’å…¨ã¦UTF8ã«ã™ã‚‹
-' path : IN : ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' ext : IN : æ‹¡å¼µå­(Ex."*.vb")
-' is_subdir : IN : ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€å«ã‚€ã‹ (True=å«ã‚€)
-' Ret : ãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆ
+'w’èƒtƒHƒ‹ƒ_‚ÌSJIS‚ğ‘S‚ÄUTF8‚É‚·‚é
+' path : IN : ƒtƒHƒ‹ƒ_ƒpƒX(â‘ÎƒpƒX)
+' ext : IN : Šg’£q(Ex."*.vb")
+' is_subdir : IN : ƒTƒuƒtƒHƒ‹ƒ_ŠÜ‚Ş‚© (True=ŠÜ‚Ş)
+' Ret : ƒtƒ@ƒCƒ‹ƒŠƒXƒg
 '-------------------------------------------------------------
 Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
     If Common.IsExistsFolder(path) = False Then
-        Err.Raise 53, , "æŒ‡å®šã•ã‚ŒãŸãƒ•ã‚©ãƒ«ãƒ€ãŒå­˜åœ¨ã—ã¾ã›ã‚“ (" & path & ")"
+        Err.Raise 53, , "w’è‚³‚ê‚½ƒtƒHƒ‹ƒ_‚ª‘¶İ‚µ‚Ü‚¹‚ñ (" & path & ")"
     End If
     
     If ext = "" Then
-        Err.Raise 53, , "æ‹¡å¼µå­ãŒæŒ‡å®šã•ã‚Œã¦ã„ã¾ã›ã‚“"
+        Err.Raise 53, , "Šg’£q‚ªw’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ"
     End If
 
-    Dim i As Integer
+    Dim i As Long
     Dim src_file_list() As String: src_file_list = Common.CreateFileList(path, ext, is_subdir)
 
     For i = LBound(src_file_list) To UBound(src_file_list)
@@ -173,39 +173,39 @@ Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal i
 End Sub
 
 '-------------------------------------------------------------
-'æŒ‡å®šã•ã‚ŒãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’SJISâ†’UTF8(BOMã‚ã‚Š)å¤‰æ›ã™ã‚‹
-' path : IN : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' is_backup : IN : True/False (True=ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ã™ã‚‹)
-'                  â†’æœ«å°¾ã«".bak_ç¾åœ¨æ—¥æ™‚"ã‚’ä»˜ä¸
+'w’è‚³‚ê‚½ƒtƒ@ƒCƒ‹‚ğSJIS¨UTF8(BOM‚ ‚è)•ÏŠ·‚·‚é
+' path : IN : ƒtƒ@ƒCƒ‹ƒpƒX(â‘ÎƒpƒX)
+' is_backup : IN : True/False (True=ƒoƒbƒNƒAƒbƒv‚·‚é)
+'                  ¨––”ö‚É".bak_Œ»İ“ú"‚ğ•t—^
 '-------------------------------------------------------------
 Public Sub SJIStoUTF8(ByVal path As String, ByVal is_backup As Boolean)
     Dim in_str As String
     Dim buf As String
-    Dim i As Integer
+    Dim i As Long
     
     Dim filenum As Integer: filenum = FreeFile
     
-    'Shift-JISå½¢å¼ã®ãƒ†ã‚­ã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã¿
+    'Shift-JISŒ`®‚ÌƒeƒLƒXƒgƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚İ
     in_str = ""
     Open path For Input As #filenum
-        'ãƒ†ã‚­ã‚¹ãƒˆã‚’ã™ã¹ã¦å–å¾—ã™ã‚‹
+        'ƒeƒLƒXƒg‚ğ‚·‚×‚Äæ“¾‚·‚é
         Do Until EOF(filenum)
             Line Input #filenum, buf
             in_str = in_str & buf & vbCrLf
         Loop
     Close #filenum
         
-    'Shift-JISä»¥å¤–ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚“ã§ã—ã¾ã£ãŸå ´åˆã¯çµ‚äº†
+    'Shift-JISˆÈŠO‚Ìƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚ñ‚Å‚µ‚Ü‚Á‚½ê‡‚ÍI—¹
     For i = 1 To Len(in_str)
         If Asc(Mid(in_str, i, 1)) = -7295 Then Exit Sub
     Next
     
-    'ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—
+    'ƒoƒbƒNƒAƒbƒv
     If is_backup = True Then
         FileCopy path, path & ".bak_" & GetNowTimeString()
     End If
     
-    'UTF-8ï¼ˆBOMä»˜ãï¼‰ã§ãƒ†ã‚­ã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã¸å‡ºåŠ›
+    'UTF-8iBOM•t‚«j‚ÅƒeƒLƒXƒgƒtƒ@ƒCƒ‹‚Öo—Í
     With CreateObject("ADODB.Stream")
         .Charset = "UTF-8"
         .Open
@@ -217,17 +217,17 @@ Public Sub SJIStoUTF8(ByVal path As String, ByVal is_backup As Boolean)
 End Sub
 
 '-------------------------------------------------------------
-'æŒ‡å®šã•ã‚ŒãŸãƒ•ã‚¡ã‚¤ãƒ«ã‚’UTF8(BOMã‚ã‚Š/ãªã—) â†’ SJISå¤‰æ›ã™ã‚‹
-' path : IN : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' is_backup : IN : True/False (True=ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ã™ã‚‹)
-'                  â†’æœ«å°¾ã«".bak_ç¾åœ¨æ—¥æ™‚"ã‚’ä»˜ä¸
+'w’è‚³‚ê‚½ƒtƒ@ƒCƒ‹‚ğUTF8(BOM‚ ‚è/‚È‚µ) ¨ SJIS•ÏŠ·‚·‚é
+' path : IN : ƒtƒ@ƒCƒ‹ƒpƒX(â‘ÎƒpƒX)
+' is_backup : IN : True/False (True=ƒoƒbƒNƒAƒbƒv‚·‚é)
+'                  ¨––”ö‚É".bak_Œ»İ“ú"‚ğ•t—^
 '-------------------------------------------------------------
 Public Sub UTF8toSJIS(ByVal path As String, ByVal is_backup As Boolean)
     Dim in_str As String
     Dim out_str() As String
-    Dim i As Integer
+    Dim i As Long
     
-    'UTF-8ã‚‚ã—ãã¯UTF-8ï¼ˆBOMä»˜ãï¼‰ã®ãƒ†ã‚­ã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã¿
+    'UTF-8‚à‚µ‚­‚ÍUTF-8iBOM•t‚«j‚ÌƒeƒLƒXƒgƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚İ
     With CreateObject("ADODB.Stream")
         .Charset = "UTF-8"
         .Open
@@ -236,7 +236,7 @@ Public Sub UTF8toSJIS(ByVal path As String, ByVal is_backup As Boolean)
         .Close
     End With
     
-    'UTF-8ã‚‚ã—ãã¯UTF-8ï¼ˆBOMä»˜ãï¼‰ä»¥å¤–ã‚’èª­ã¿è¾¼ã‚“ã§ã—ã¾ã£ãŸå ´åˆã¯çµ‚äº†
+    'UTF-8‚à‚µ‚­‚ÍUTF-8iBOM•t‚«jˆÈŠO‚ğ“Ç‚İ‚ñ‚Å‚µ‚Ü‚Á‚½ê‡‚ÍI—¹
     For i = 1 To Len(in_str)
         If Mid(in_str, i, 1) <> Chr(63) Then
             If Asc(Mid(in_str, i, 1)) = 63 Then
@@ -245,17 +245,17 @@ Public Sub UTF8toSJIS(ByVal path As String, ByVal is_backup As Boolean)
         End If
     Next
     
-    'æ”¹è¡Œæ¯ã«ãƒ‡ãƒ¼ã‚¿ã‚’åˆ†ã‘ã‚‹
+    '‰üs–ˆ‚Éƒf[ƒ^‚ğ•ª‚¯‚é
     out_str = Split(in_str, vbCrLf)
     
-    'ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—
+    'ƒoƒbƒNƒAƒbƒv
     If is_backup = True Then
         FileCopy path, path & ".bak_" & GetNowTimeString()
     End If
     
     Dim filenum As Integer: filenum = FreeFile
     
-    'Shift-JISå½¢å¼ã§ãƒ†ã‚­ã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã¸å‡ºåŠ›
+    'Shift-JISŒ`®‚ÅƒeƒLƒXƒgƒtƒ@ƒCƒ‹‚Öo—Í
     Open path For Output As #filenum
         For i = 0 To UBound(out_str)
             Print #filenum, out_str(i)
@@ -265,13 +265,13 @@ Public Sub UTF8toSJIS(ByVal path As String, ByVal is_backup As Boolean)
 End Sub
 
 '-------------------------------------------------------------
-'ãƒ•ã‚¡ã‚¤ãƒ«ãŒUTF8(BOMã‚ã‚Š)ã‹ã‚’åˆ¤å®šã™ã‚‹
-' path : IN : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' Ret : True/False (True=UTF8(BOMã‚ã‚Š), False=å·¦è¨˜ä»¥å¤–)
+'ƒtƒ@ƒCƒ‹‚ªUTF8(BOM‚ ‚è)‚©‚ğ”»’è‚·‚é
+' path : IN : ƒtƒ@ƒCƒ‹ƒpƒX(â‘ÎƒpƒX)
+' Ret : True/False (True=UTF8(BOM‚ ‚è), False=¶‹LˆÈŠO)
 '-------------------------------------------------------------
 Public Function IsUTF8(ByVal path As String) As Boolean
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "æŒ‡å®šã•ã‚ŒãŸãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ã¾ã›ã‚“ (" & path & ")"
+        Err.Raise 53, , "w’è‚³‚ê‚½ƒtƒ@ƒCƒ‹‚ª‘¶İ‚µ‚Ü‚¹‚ñ (" & path & ")"
     End If
 
     Dim bytedata() As Byte: bytedata = ReadBinary(path, 3)
@@ -291,10 +291,10 @@ Public Function IsUTF8(ByVal path As String) As Boolean
 End Function
 
 '-------------------------------------------------------------
-'ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ãƒã‚¤ãƒŠãƒªã¨ã—ã¦æŒ‡å®šã‚µã‚¤ã‚ºèª­ã¿è¾¼ã‚€
-' path : IN : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' readsize : IN : èª­ã¿è¾¼ã‚€ã‚µã‚¤ã‚º
-' Ret : èª­ã¿è¾¼ã‚“ã ãƒã‚¤ãƒŠãƒªé…åˆ—
+'ƒtƒ@ƒCƒ‹‚ğƒoƒCƒiƒŠ‚Æ‚µ‚Äw’èƒTƒCƒY“Ç‚İ‚Ş
+' path : IN : ƒtƒ@ƒCƒ‹ƒpƒX(â‘ÎƒpƒX)
+' readsize : IN : “Ç‚İ‚ŞƒTƒCƒY
+' Ret : “Ç‚İ‚ñ‚¾ƒoƒCƒiƒŠ”z—ñ
 '-------------------------------------------------------------
 Public Function ReadBinary(ByVal path As String, ByVal readsize As Integer) As Byte()
     Dim readdata() As Byte
@@ -318,10 +318,10 @@ Public Function ReadBinary(ByVal path As String, ByVal readsize As Integer) As B
 End Function
 
 '-------------------------------------------------------------
-'æŒ‡å®šãƒ•ã‚©ãƒ«ãƒ€é…ä¸‹ã«æŒ‡å®šæ‹¡å¼µå­ã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã™ã‚‹ã‹
-' path : IN : ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' ext : IN : æ‹¡å¼µå­(Ex. ".vb")
-' Ret : True/False (True=å­˜åœ¨ã™ã‚‹, False=å­˜åœ¨ã—ãªã„)
+'w’èƒtƒHƒ‹ƒ_”z‰º‚Éw’èŠg’£q‚Ìƒtƒ@ƒCƒ‹‚ª‘¶İ‚·‚é‚©
+' path : IN : ƒtƒHƒ‹ƒ_ƒpƒX(â‘ÎƒpƒX)
+' ext : IN : Šg’£q(Ex. ".vb")
+' Ret : True/False (True=‘¶İ‚·‚é, False=‘¶İ‚µ‚È‚¢)
 '-------------------------------------------------------------
 Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String) As Boolean
     Dim fso As Object
@@ -359,12 +359,12 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String)
 End Function
 
 '-------------------------------------------------------------
-'ãƒ­ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚ªãƒ¼ãƒ—ãƒ³ã™ã‚‹
-' logfile_path : IN : ãƒ­ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
+'ƒƒOƒtƒ@ƒCƒ‹‚ğƒI[ƒvƒ“‚·‚é
+' logfile_path : IN : ƒƒOƒtƒ@ƒCƒ‹ƒpƒX(â‘ÎƒpƒX)
 '-------------------------------------------------------------
 Public Sub OpenLog(ByVal logfile_path As String)
     If is_log_opened = True Then
-        'ã™ã§ã«ã‚ªãƒ¼ãƒ—ãƒ³ã—ã¦ã„ã‚‹ã®ã§ç„¡è¦–
+        '‚·‚Å‚ÉƒI[ƒvƒ“‚µ‚Ä‚¢‚é‚Ì‚Å–³‹
         Exit Sub
     End If
     logfile_num = FreeFile()
@@ -373,23 +373,23 @@ Public Sub OpenLog(ByVal logfile_path As String)
 End Sub
 
 '-------------------------------------------------------------
-'ãƒ­ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã«æ›¸ãè¾¼ã‚€
-' contents : IN : æ›¸ãè¾¼ã‚€å†…å®¹
+'ƒƒOƒtƒ@ƒCƒ‹‚É‘‚«‚Ş
+' contents : IN : ‘‚«‚Ş“à—e
 '-------------------------------------------------------------
 Public Sub WriteLog(ByVal contents As String)
     If is_log_opened = False Then
-        'ã‚ªãƒ¼ãƒ—ãƒ³ã•ã‚Œã¦ã„ãªã„ã®ã§ç„¡è¦–
+        'ƒI[ƒvƒ“‚³‚ê‚Ä‚¢‚È‚¢‚Ì‚Å–³‹
         Exit Sub
     End If
     Print #logfile_num, Format(Date, "yyyy/mm/dd") & " " & Format(Now, "hh:mm:ss") & ":" & contents
 End Sub
 
 '-------------------------------------------------------------
-'ãƒ­ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚¯ãƒ­ãƒ¼ã‚ºã™ã‚‹
+'ƒƒOƒtƒ@ƒCƒ‹‚ğƒNƒ[ƒY‚·‚é
 '-------------------------------------------------------------
 Public Sub CloseLog()
     If is_log_opened = False Then
-        'ã‚ªãƒ¼ãƒ—ãƒ³ã•ã‚Œã¦ã„ãªã„ã®ã§ç„¡è¦–
+        'ƒI[ƒvƒ“‚³‚ê‚Ä‚¢‚È‚¢‚Ì‚Å–³‹
         Exit Sub
     End If
     Close logfile_num
@@ -398,9 +398,9 @@ Public Sub CloseLog()
 End Sub
 
 '-------------------------------------------------------------
-'é…åˆ—ã®ç©ºè¡Œã‚’å‰Šé™¤ã™ã‚‹
-' in_array : IN : æ–‡å­—åˆ—é…åˆ—
-' Ret : ç©ºè¡Œã‚’å‰Šé™¤ã—ãŸé…åˆ—
+'”z—ñ‚Ì‹ós‚ğíœ‚·‚é
+' in_array : IN : •¶š—ñ”z—ñ
+' Ret : ‹ós‚ğíœ‚µ‚½”z—ñ
 '-------------------------------------------------------------
 Public Function DeleteEmptyArray(ByRef in_array() As String) As String()
     Dim ret_array() As String
@@ -425,11 +425,11 @@ Public Function DeleteEmptyArray(ByRef in_array() As String) As String()
 End Function
 
 '-------------------------------------------------------------
-'ãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆã‚’ä½œæˆã™ã‚‹
-' path : IN : ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' ext : IN : æ‹¡å¼µå­(Ex."*.vb")
-' is_subdir : IN : ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€å«ã‚€ã‹ (True=å«ã‚€)
-' Ret : ãƒ•ã‚¡ã‚¤ãƒ«ãƒªã‚¹ãƒˆ
+'ƒtƒ@ƒCƒ‹ƒŠƒXƒg‚ğì¬‚·‚é
+' path : IN : ƒtƒHƒ‹ƒ_ƒpƒX(â‘ÎƒpƒX)
+' ext : IN : Šg’£q(Ex."*.vb")
+' is_subdir : IN : ƒTƒuƒtƒHƒ‹ƒ_ŠÜ‚Ş‚© (True=ŠÜ‚Ş)
+' Ret : ƒtƒ@ƒCƒ‹ƒŠƒXƒg
 '-------------------------------------------------------------
 Public Function CreateFileList(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean) As String()
     Dim list() As String: list = CreateFileListMain(path, ext, is_subdir)
@@ -485,10 +485,10 @@ Private Function CreateFileListMain(ByVal path As String, ByVal ext As String, B
 End Function
 
 '-------------------------------------------------------------
-'2ã¤ã®é…åˆ—ã‚’çµåˆã—ã¦è¿”ã™
-' array1 : IN : é…åˆ—1
-' array2 : IN : é…åˆ—2
-' Ret : çµåˆã—ãŸé…åˆ—
+'2‚Â‚Ì”z—ñ‚ğŒ‹‡‚µ‚Ä•Ô‚·
+' array1 : IN : ”z—ñ1
+' array2 : IN : ”z—ñ2
+' Ret : Œ‹‡‚µ‚½”z—ñ
 '-------------------------------------------------------------
 Public Function MergeArray(ByRef array1 As Variant, ByRef array2 As Variant) As Variant
     Dim merged As Variant
@@ -497,26 +497,26 @@ Public Function MergeArray(ByRef array1 As Variant, ByRef array2 As Variant) As 
 End Function
 
 '-------------------------------------------------------------
-'2ã¤ã®ãƒ†ã‚­ã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã‚’æ¯”è¼ƒã—ã¦ä¸€è‡´ã—ã¦ã„ã‚‹ã‹ã‚’è¿”ã™
-' file1 : IN : ãƒ•ã‚¡ã‚¤ãƒ«1ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' file2 : IN : ãƒ•ã‚¡ã‚¤ãƒ«2ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' Ret : æ¯”è¼ƒçµæœ : True/False (True=ä¸€è‡´)
+'2‚Â‚ÌƒeƒLƒXƒgƒtƒ@ƒCƒ‹‚ğ”äŠr‚µ‚Äˆê’v‚µ‚Ä‚¢‚é‚©‚ğ•Ô‚·
+' file1 : IN : ƒtƒ@ƒCƒ‹1ƒpƒX(â‘ÎƒpƒX)
+' file2 : IN : ƒtƒ@ƒCƒ‹2ƒpƒX(â‘ÎƒpƒX)
+' Ret : ”äŠrŒ‹‰Ê : True/False (True=ˆê’v)
 '-------------------------------------------------------------
 Public Function IsMatchTextFiles(ByVal file1 As String, ByVal file2 As String) As Boolean
     Dim filesize1 As Long: filesize1 = FileLen(file1)
     Dim filesize2 As Long: filesize2 = FileLen(file2)
     
-    'ã¾ãšãƒ•ã‚¡ã‚¤ãƒ«ã‚µã‚¤ã‚ºã§ãƒã‚§ãƒƒã‚¯
+    '‚Ü‚¸ƒtƒ@ƒCƒ‹ƒTƒCƒY‚Åƒ`ƒFƒbƒN
     If filesize1 = 0 And filesize2 = 0 Then
-        'ã©ã¡ã‚‰ã‚‚0byteãªã®ã§ä¸€è‡´
+        '‚Ç‚¿‚ç‚à0byte‚È‚Ì‚Åˆê’v
         IsMatchTextFiles = True
         Exit Function
     ElseIf filesize1 <> filesize2 Then
-        'ãƒ•ã‚¡ã‚¤ãƒ«ã‚µã‚¤ã‚ºãŒç•°ãªã‚‹ã®ã§ä¸ä¸€è‡´
+        'ƒtƒ@ƒCƒ‹ƒTƒCƒY‚ªˆÙ‚È‚é‚Ì‚Å•sˆê’v
         IsMatchTextFiles = False
         Exit Function
     ElseIf filesize1 = 0 Or filesize2 = 0 Then
-        'ã©ã¡ã‚‰ã‹ãŒ0byteãªã®ã§ä¸ä¸€è‡´
+        '‚Ç‚¿‚ç‚©‚ª0byte‚È‚Ì‚Å•sˆê’v
         IsMatchTextFiles = False
         Exit Function
     End If
@@ -545,9 +545,9 @@ Public Function IsMatchTextFiles(ByVal file1 As String, ByVal file2 As String) A
 End Function
 
 '-------------------------------------------------------------
-'æ–‡å­—åˆ—ã®é…åˆ—ã®æœ«å°¾ã«æ–‡å­—åˆ—ã‚’è¿½åŠ ã™ã‚‹
-' ary : IN/OUT : æ–‡å­—åˆ—ã®é…åˆ—
-' value : IN : è¿½åŠ ã™ã‚‹æ–‡å­—åˆ—
+'•¶š—ñ‚Ì”z—ñ‚Ì––”ö‚É•¶š—ñ‚ğ’Ç‰Á‚·‚é
+' ary : IN/OUT : •¶š—ñ‚Ì”z—ñ
+' value : IN : ’Ç‰Á‚·‚é•¶š—ñ
 '-------------------------------------------------------------
 Public Sub AppendArray(ByRef ary() As String, ByVal value As String)
     Dim cnt As Integer: cnt = UBound(ary) + 1
@@ -556,10 +556,10 @@ Public Sub AppendArray(ByRef ary() As String, ByVal value As String)
 End Sub
 
 '-------------------------------------------------------------
-'ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹ã‚’åˆ—æŒ™ã™ã‚‹ã€‚ï¼ˆã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€å«ã‚€ï¼‰
-' æ³¨æ„ï¼špathã¯æˆ»ã‚Šå€¤ã«ã¯å«ã¾ãªã„
-' path : IN : ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹ï¼ˆçµ¶å¯¾ãƒ‘ã‚¹ï¼‰
-' Ret : ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹ãƒªã‚¹ãƒˆ
+'ƒtƒHƒ‹ƒ_ƒpƒX‚ğ—ñ‹“‚·‚éBiƒTƒuƒtƒHƒ‹ƒ_ŠÜ‚Şj
+' ’ˆÓFpath‚Í–ß‚è’l‚É‚ÍŠÜ‚Ü‚È‚¢
+' path : IN : ƒtƒHƒ‹ƒ_ƒpƒXiâ‘ÎƒpƒXj
+' Ret : ƒtƒHƒ‹ƒ_ƒpƒXƒŠƒXƒg
 '-------------------------------------------------------------
 Public Function GetFolderPathList(ByVal path As String) As String()
     Dim fso As Object
@@ -583,7 +583,7 @@ Public Function GetFolderPathList(ByVal path As String) As String()
             Dim sub_path_list() As String
             sub_path_list = GetFolderPathList(sub_dir.path)
             
-            'ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€å†…ã®ãƒ‘ã‚¹ã‚’é…åˆ—ã«è¿½åŠ ã™ã‚‹
+            'ƒTƒuƒtƒHƒ‹ƒ_“à‚ÌƒpƒX‚ğ”z—ñ‚É’Ç‰Á‚·‚é
             If sub_path_list(0) <> "" Then
                 Dim cnt As Integer: cnt = UBound(path_list) + UBound(sub_path_list) + 1
                 ReDim Preserve path_list(cnt)
@@ -606,31 +606,31 @@ Public Function GetFolderPathList(ByVal path As String) As String()
 End Function
 
 '-------------------------------------------------------------
-'ãƒ•ã‚©ãƒ«ãƒ€ã‚’ã‚³ãƒ”ãƒ¼ã™ã‚‹(ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€å«ã‚€)
-' src_path : IN : ã‚³ãƒ”ãƒ¼å…ƒãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' dst_path : IN : ã‚³ãƒ”ãƒ¼å…ˆãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
+'ƒtƒHƒ‹ƒ_‚ğƒRƒs[‚·‚é(ƒTƒuƒtƒHƒ‹ƒ_ŠÜ‚Ş)
+' src_path : IN : ƒRƒs[Œ³ƒtƒHƒ‹ƒ_ƒpƒX(â‘ÎƒpƒX)
+' dst_path : IN : ƒRƒs[æƒtƒHƒ‹ƒ_ƒpƒX(â‘ÎƒpƒX)
 '-------------------------------------------------------------
 Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
-    'ã‚³ãƒ”ãƒ¼å…ƒã®ãƒ•ã‚©ãƒ«ãƒ€ãŒå­˜åœ¨ã—ãªã„å ´åˆã€ã‚¨ãƒ©ãƒ¼ã‚’ç™ºç”Ÿã•ã›ã‚‹
+    'ƒRƒs[Œ³‚ÌƒtƒHƒ‹ƒ_‚ª‘¶İ‚µ‚È‚¢ê‡AƒGƒ‰[‚ğ”­¶‚³‚¹‚é
     If Not fso.FolderExists(src_path) Then
-        Err.Raise 53, , "æŒ‡å®šã•ã‚ŒãŸãƒ•ã‚©ãƒ«ãƒ€ãŒå­˜åœ¨ã—ã¾ã›ã‚“"
+        Err.Raise 53, , "w’è‚³‚ê‚½ƒtƒHƒ‹ƒ_‚ª‘¶İ‚µ‚Ü‚¹‚ñ"
     End If
     
-    'ã‚³ãƒ”ãƒ¼å…ˆã®ãƒ•ã‚©ãƒ«ãƒ€ãŒå­˜åœ¨ã—ãªã„å ´åˆã€ä½œæˆã™ã‚‹
+    'ƒRƒs[æ‚ÌƒtƒHƒ‹ƒ_‚ª‘¶İ‚µ‚È‚¢ê‡Aì¬‚·‚é
     If Not fso.FolderExists(dest_path) Then
         fso.CreateFolder dest_path
     End If
     
-    'ã‚³ãƒ”ãƒ¼å…ƒã®ãƒ•ã‚©ãƒ«ãƒ€å†…ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚³ãƒ”ãƒ¼ã™ã‚‹
+    'ƒRƒs[Œ³‚ÌƒtƒHƒ‹ƒ_“à‚Ìƒtƒ@ƒCƒ‹‚ğƒRƒs[‚·‚é
     Dim file As Object
     For Each file In fso.GetFolder(src_path).Files
         fso.CopyFile file.path, fso.BuildPath(dest_path, file.Name), True
     Next
     
-    'ã‚³ãƒ”ãƒ¼å…ƒã®ãƒ•ã‚©ãƒ«ãƒ€å†…ã®ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€ã‚’ã‚³ãƒ”ãƒ¼ã™ã‚‹
+    'ƒRƒs[Œ³‚ÌƒtƒHƒ‹ƒ_“à‚ÌƒTƒuƒtƒHƒ‹ƒ_‚ğƒRƒs[‚·‚é
     Dim subfolder As Object
     For Each subfolder In fso.GetFolder(src_path).subfolders
         CopyFolder subfolder.path, fso.BuildPath(dest_path, subfolder.Name)
@@ -640,8 +640,8 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
 End Sub
 
 '-------------------------------------------------------------
-'Yes/Noãƒ¡ãƒƒã‚»ãƒ¼ã‚¸ãƒœãƒƒã‚¯ã‚¹ã‚’è¡¨ç¤ºã™ã‚‹
-' msg : IN : ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
+'Yes/NoƒƒbƒZ[ƒWƒ{ƒbƒNƒX‚ğ•\¦‚·‚é
+' msg : IN : ƒƒbƒZ[ƒW
 ' Ret : True/False (True=Yes, False=No)
 '-------------------------------------------------------------
 Public Function ShowYesNoMessageBox(ByVal msg As String) As Boolean
@@ -655,10 +655,10 @@ Public Function ShowYesNoMessageBox(ByVal msg As String) As Boolean
 End Function
 
 '-------------------------------------------------------------
-'å¤–éƒ¨ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã‚’å®Ÿè¡Œã—ã€çµ‚äº†ã™ã‚‹ã¾ã§å¾…æ©Ÿã™ã‚‹
-' exe_path : IN : å¤–éƒ¨ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³(exe)ã®çµ¶å¯¾ãƒ‘ã‚¹
-'                 exeã«æ¸¡ã™ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãŒã‚ã‚‹å ´åˆã‚‚ä¸€ç·’ã«æ›¸ãã“ã¨
-' Ret : ãƒ—ãƒ­ã‚»ã‚¹ã®æˆ»ã‚Šå€¤
+'ŠO•”ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ğÀs‚µAI—¹‚·‚é‚Ü‚Å‘Ò‹@‚·‚é
+' exe_path : IN : ŠO•”ƒAƒvƒŠƒP[ƒVƒ‡ƒ“(exe)‚Ìâ‘ÎƒpƒX
+'                 exe‚É“n‚·ƒpƒ‰ƒ[ƒ^‚ª‚ ‚éê‡‚àˆê‚É‘‚­‚±‚Æ
+' Ret : ƒvƒƒZƒX‚Ì–ß‚è’l
 '-------------------------------------------------------------
 Public Function RunProcessWait(ByVal exe_path As String) As Long
 
@@ -673,12 +673,12 @@ Public Function RunProcessWait(ByVal exe_path As String) As Long
   Dim Process As Object
   Set Process = wsh.Exec(exe_path)
 
-  'ãƒ—ãƒ­ã‚»ã‚¹å®Œäº†æ™‚ã«é€šçŸ¥ã‚’å—ã‘å–ã‚‹
+  'ƒvƒƒZƒXŠ®—¹‚É’Ê’m‚ğó‚¯æ‚é
   Do While Process.Status = 0
     DoEvents
   Loop
 
-  'ãƒ—ãƒ­ã‚»ã‚¹ã®æˆ»ã‚Šå€¤ã‚’å–å¾—ã™ã‚‹
+  'ƒvƒƒZƒX‚Ì–ß‚è’l‚ğæ“¾‚·‚é
   RunProcessWait = Process.ExitCode
 
   Set Process = Nothing
@@ -686,9 +686,9 @@ Public Function RunProcessWait(ByVal exe_path As String) As Long
 End Function
 
 '-------------------------------------------------------------
-'ãƒ‘ã‚¹æ–‡å­—åˆ—ã®æœ«å°¾ã®\ã‚’é™¤å»ã—ã¦è¿”ã™
-' path : IN : ãƒ‘ã‚¹æ–‡å­—åˆ—
-' Ret : ãƒ‘ã‚¹æ–‡å­—åˆ—
+'ƒpƒX•¶š—ñ‚Ì––”ö‚Ì\‚ğœ‹‚µ‚Ä•Ô‚·
+' path : IN : ƒpƒX•¶š—ñ
+' Ret : ƒpƒX•¶š—ñ
 '-------------------------------------------------------------
 Public Function RemoveTrailingBackslash(ByVal path As String) As String
     If Right(path, 1) = "\" Then
@@ -698,25 +698,25 @@ Public Function RemoveTrailingBackslash(ByVal path As String) As String
 End Function
 
 '-------------------------------------------------------------
-'ãƒ•ã‚¡ã‚¤ãƒ«ã®å†…å®¹ã‚’æŒ‡å®šã•ã‚ŒãŸã‚·ãƒ¼ãƒˆã«å‡ºåŠ›ã™ã‚‹
-' file_path : IN : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹ (çµ¶å¯¾ãƒ‘ã‚¹)
-' sheet_name : IN : ã‚·ãƒ¼ãƒˆå
+'ƒtƒ@ƒCƒ‹‚Ì“à—e‚ğw’è‚³‚ê‚½ƒV[ƒg‚Éo—Í‚·‚é
+' file_path : IN : ƒtƒ@ƒCƒ‹ƒpƒX (â‘ÎƒpƒX)
+' sheet_name : IN : ƒV[ƒg–¼
 '-------------------------------------------------------------
 Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As String)
     If Common.IsExistsFile(file_path) = False Or sheet_name = "" Then
-        Err.Raise 53, , "æŒ‡å®šã•ã‚ŒãŸãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ã¾ã›ã‚“ (" & file_path & ")"
+        Err.Raise 53, , "w’è‚³‚ê‚½ƒtƒ@ƒCƒ‹‚ª‘¶İ‚µ‚Ü‚¹‚ñ (" & file_path & ")"
     End If
 
-    'ãƒ¯ãƒ¼ã‚¯ç”¨ã«ã‚³ãƒ”ãƒ¼ã™ã‚‹
+    'ƒ[ƒN—p‚ÉƒRƒs[‚·‚é
     Dim wk As String: wk = Common.CopyUniqueFile(file_path, "")
     
-    'ãƒ¯ãƒ¼ã‚¯ãƒ•ã‚¡ã‚¤ãƒ«ã‚’SJISã«å¤‰æ›ã™ã‚‹
+    'ƒ[ƒNƒtƒ@ƒCƒ‹‚ğSJIS‚É•ÏŠ·‚·‚é
     Common.UTF8toSJIS wk, False
 
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
-    'ãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ã
+    'ƒtƒ@ƒCƒ‹‚ğŠJ‚­
     Const FORMAT_ASCII = 0
     Const FORMAT_UNICODE = -1
     Const READ_ONLY = 1
@@ -727,7 +727,7 @@ Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As 
     Dim ws As Worksheet
     Set ws = ThisWorkbook.Sheets(sheet_name)
     
-    'ãƒ•ã‚¡ã‚¤ãƒ«ã®å†…å®¹ã‚’ã‚·ãƒ¼ãƒˆã«å‡ºåŠ›
+    'ƒtƒ@ƒCƒ‹‚Ì“à—e‚ğƒV[ƒg‚Éo—Í
     Dim row As Integer: row = 1
     
     Do While Not fileobj.AtEndOfStream
@@ -739,21 +739,21 @@ Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As 
     Set fileobj = Nothing
     Set fso = Nothing
     
-    'ãƒ¯ãƒ¼ã‚¯ãƒ•ã‚¡ã‚¤ãƒ«ã‚’å‰Šé™¤ã™ã‚‹
+    'ƒ[ƒNƒtƒ@ƒCƒ‹‚ğíœ‚·‚é
     DeleteFile wk
 End Sub
 
 '-------------------------------------------------------------
-'SJISã§ãƒ†ã‚­ã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã‚’ä½œæˆã™ã‚‹
-' contents : IN : å†…å®¹
-' path : IN : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹ (çµ¶å¯¾ãƒ‘ã‚¹)
+'SJIS‚ÅƒeƒLƒXƒgƒtƒ@ƒCƒ‹‚ğì¬‚·‚é
+' contents : IN : “à—e
+' path : IN : ƒtƒ@ƒCƒ‹ƒpƒX (â‘ÎƒpƒX)
 '-------------------------------------------------------------
 Public Sub CreateSJISTextFile(ByRef contents() As String, ByVal path As String)
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
     Dim txt As Object
-    Dim i As Integer
+    Dim i As Long
     
     Dim IS_OVERWRITE As Boolean: IS_OVERWRITE = True
     Dim IS_UNICODE As Boolean: IS_UNICODE = False
@@ -770,8 +770,8 @@ End Sub
 
 
 '-------------------------------------------------------------
-'ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€ã‚’ã¾ã¨ã‚ã¦ä½œæˆã™ã‚‹
-' path : IN : ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹ (çµ¶å¯¾ãƒ‘ã‚¹)
+'ƒTƒuƒtƒHƒ‹ƒ_‚ğ‚Ü‚Æ‚ß‚Äì¬‚·‚é
+' path : IN : ƒtƒHƒ‹ƒ_ƒpƒX (â‘ÎƒpƒX)
 '-------------------------------------------------------------
 Public Sub CreateFolder(ByVal path As String)
     Dim fso As Object
@@ -794,8 +794,8 @@ Public Sub CreateFolder(ByVal path As String)
 End Sub
 
 '-------------------------------------------------------------
-'ãƒ•ã‚©ãƒ«ãƒ€ã‚’å‰Šé™¤ã™ã‚‹
-' path : IN : ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹ (çµ¶å¯¾ãƒ‘ã‚¹)
+'ƒtƒHƒ‹ƒ_‚ğíœ‚·‚é
+' path : IN : ƒtƒHƒ‹ƒ_ƒpƒX (â‘ÎƒpƒX)
 '-------------------------------------------------------------
 Public Sub DeleteFolder(ByVal path As String)
     If IsExistsFolder(path) = False Then
@@ -811,24 +811,24 @@ Public Sub DeleteFolder(ByVal path As String)
 End Sub
 
 '-------------------------------------------------------------
-'æ–‡å­—åˆ—é…åˆ—ã®å…±é€šæ–‡å­—åˆ—ã‚’è¿”ã™
-' list : IN : æ–‡å­—åˆ—é…åˆ—
-' Ret : å…±é€šæ–‡å­—åˆ—
+'•¶š—ñ”z—ñ‚Ì‹¤’Ê•¶š—ñ‚ğ•Ô‚·
+' list : IN : •¶š—ñ”z—ñ
+' Ret : ‹¤’Ê•¶š—ñ
 '       Ex. list = ["hogeAbcdef", "hogeXyz", "hogeApple"]
 '           Ret = "hoge"
 '-------------------------------------------------------------
 Function GetCommonString(ByRef list() As String) As String
     Dim common_string As String
-    Dim i, j As Integer
+    Dim i, j As Long
     Dim flag As Boolean
     
-    'æœ€åˆã®æ–‡å­—åˆ—ã‚’å…±é€šæ–‡å­—åˆ—ã®åˆæœŸå€¤ã¨ã™ã‚‹
+    'Å‰‚Ì•¶š—ñ‚ğ‹¤’Ê•¶š—ñ‚Ì‰Šú’l‚Æ‚·‚é
     common_string = list(0)
     
-    'å„æ–‡å­—åˆ—ã‚’æ¯”è¼ƒã™ã‚‹
+    'Še•¶š—ñ‚ğ”äŠr‚·‚é
     For i = 1 To UBound(list)
         flag = False
-        'å…±é€šéƒ¨åˆ†ã‚’å–å¾—ã™ã‚‹
+        '‹¤’Ê•”•ª‚ğæ“¾‚·‚é
         For j = 1 To Len(common_string)
             If Mid(common_string, j, 1) <> Mid(list(i), j, 1) Then
                 common_string = Left(common_string, j - 1)
@@ -838,14 +838,14 @@ Function GetCommonString(ByRef list() As String) As String
         Next j
     Next i
     
-    'çµæœã‚’å‡ºåŠ›ã™ã‚‹
+    'Œ‹‰Ê‚ğo—Í‚·‚é
     GetCommonString = common_string
 End Function
 
 '-------------------------------------------------------------
-'çµ¶å¯¾ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹ã®è¦ªãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹ã‚’å–å¾—ã™ã‚‹
-' path : IN : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹ (çµ¶å¯¾ãƒ‘ã‚¹)
-' Ret : è¦ªãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹ (çµ¶å¯¾ãƒ‘ã‚¹)
+'â‘Îƒtƒ@ƒCƒ‹ƒpƒX‚ÌeƒtƒHƒ‹ƒ_ƒpƒX‚ğæ“¾‚·‚é
+' path : IN : ƒtƒ@ƒCƒ‹ƒpƒX (â‘ÎƒpƒX)
+' Ret : eƒtƒHƒ‹ƒ_ƒpƒX (â‘ÎƒpƒX)
 '       Ex. path = "C:\tmp\abc.txt"
 '           Ret = "C:\tmp"
 '-------------------------------------------------------------
@@ -862,10 +862,10 @@ Public Function GetFolderNameFromPath(ByVal path As String) As String
 End Function
 
 '-------------------------------------------------------------
-'ç›¸å¯¾ãƒ‘ã‚¹ã‚’çµ¶å¯¾ãƒ‘ã‚¹ã«å¤‰æ›ã™ã‚‹
-' base_path : IN : åŸºæº–ã¨ãªã‚‹ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' ref_path : IN : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹ï¼ˆç›¸å¯¾ãƒ‘ã‚¹)
-' Ret : çµ¶å¯¾ãƒ‘ã‚¹
+'‘Š‘ÎƒpƒX‚ğâ‘ÎƒpƒX‚É•ÏŠ·‚·‚é
+' base_path : IN : Šî€‚Æ‚È‚éƒtƒHƒ‹ƒ_ƒpƒX(â‘ÎƒpƒX)
+' ref_path : IN : ƒtƒ@ƒCƒ‹ƒpƒXi‘Š‘ÎƒpƒX)
+' Ret : â‘ÎƒpƒX
 '       Ex. base_path = "C:\tmp\abc"
 '           ref_path = "..\cdf\xyz.txt"
 '           Ret = "C:\tmp\cdf\xyz.txt"
@@ -880,9 +880,9 @@ Public Function GetAbsolutePathName(ByVal base_path As String, ByVal ref_path As
 End Function
 
 '-------------------------------------------------------------
-'ãƒ•ã‚¡ã‚¤ãƒ«ã®å­˜åœ¨ãƒã‚§ãƒƒã‚¯ã‚’è¡Œã†
-' path : IN : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' Ret : True/False (True=å­˜åœ¨ã™ã‚‹)
+'ƒtƒ@ƒCƒ‹‚Ì‘¶İƒ`ƒFƒbƒN‚ğs‚¤
+' path : IN : ƒtƒ@ƒCƒ‹ƒpƒX(â‘ÎƒpƒX)
+' Ret : True/False (True=‘¶İ‚·‚é)
 '-------------------------------------------------------------
 Public Function IsExistsFile(ByVal path As String) As Boolean
     Dim fso As Object
@@ -898,9 +898,9 @@ Public Function IsExistsFile(ByVal path As String) As Boolean
 End Function
 
 '-------------------------------------------------------------
-'ãƒ•ã‚©ãƒ«ãƒ€ã®å­˜åœ¨ãƒã‚§ãƒƒã‚¯ã‚’è¡Œã†
-' path : IN : ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' Ret : True/False (True=å­˜åœ¨ã™ã‚‹)
+'ƒtƒHƒ‹ƒ_‚Ì‘¶İƒ`ƒFƒbƒN‚ğs‚¤
+' path : IN : ƒtƒHƒ‹ƒ_ƒpƒX(â‘ÎƒpƒX)
+' Ret : True/False (True=‘¶İ‚·‚é)
 '-------------------------------------------------------------
 Public Function IsExistsFolder(ByVal path As String) As Boolean
     Dim fso As Object
@@ -916,19 +916,19 @@ Public Function IsExistsFolder(ByVal path As String) As Boolean
 End Function
 
 '-------------------------------------------------------------
-'ãƒ•ã‚¡ã‚¤ãƒ«åã‹ã‚‰æ‹¡å¼µå­ã‚’è¿”ã™
-' filename : IN : ãƒ•ã‚¡ã‚¤ãƒ«å
-' Ret : ãƒ•ã‚¡ã‚¤ãƒ«åã®æ‹¡å¼µå­
-'        Ex. "abc.txt"ã®å ´åˆã€"txt"ãŒè¿”ã‚‹
-'            "."ãŒå«ã¾ã‚Œã¦ã„ãªã„å ´åˆã¯""ãŒè¿”ã‚‹
+'ƒtƒ@ƒCƒ‹–¼‚©‚çŠg’£q‚ğ•Ô‚·
+' filename : IN : ƒtƒ@ƒCƒ‹–¼
+' Ret : ƒtƒ@ƒCƒ‹–¼‚ÌŠg’£q
+'        Ex. "abc.txt"‚Ìê‡A"txt"‚ª•Ô‚é
+'            "."‚ªŠÜ‚Ü‚ê‚Ä‚¢‚È‚¢ê‡‚Í""‚ª•Ô‚é
 '-------------------------------------------------------------
 Public Function GetFileExtension(ByVal filename As String) As String
     Dim dot_pos As Integer
     
-    ' "."ã®ä½ç½®ã‚’å–å¾—
+    ' "."‚ÌˆÊ’u‚ğæ“¾
     dot_pos = InStrRev(filename, ".")
     
-    ' æ‹¡å¼µå­ã‚’å–å¾—
+    ' Šg’£q‚ğæ“¾
     If dot_pos > 0 Then
         GetFileExtension = Right(filename, Len(filename) - dot_pos)
     Else
@@ -937,11 +937,11 @@ Public Function GetFileExtension(ByVal filename As String) As String
 End Function
 
 '-------------------------------------------------------------
-'æŒ‡å®šãƒ•ã‚©ãƒ«ãƒ€é…ä¸‹ã‚’æŒ‡å®šãƒ•ã‚¡ã‚¤ãƒ«åã§æ¤œç´¢ã—ã¦ãã®å†…å®¹ã‚’è¿”ã™
-' target_folder : IN :æ¤œç´¢ãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹(çµ¶å¯¾ãƒ‘ã‚¹)
-' target_file : IN :æ¤œç´¢ãƒ•ã‚¡ã‚¤ãƒ«å
-' Ret : èª­ã¿è¾¼ã‚“ã ãƒ•ã‚¡ã‚¤ãƒ«ã®å†…å®¹
-'       é…åˆ—ã®æœ«å°¾ã«ã¯æ¤œç´¢ãƒ•ã‚¡ã‚¤ãƒ«ã®çµ¶å¯¾ãƒ‘ã‚¹ã‚’æ ¼ç´ã™ã‚‹
+'w’èƒtƒHƒ‹ƒ_”z‰º‚ğw’èƒtƒ@ƒCƒ‹–¼‚ÅŒŸõ‚µ‚Ä‚»‚Ì“à—e‚ğ•Ô‚·
+' target_folder : IN :ŒŸõƒtƒHƒ‹ƒ_ƒpƒX(â‘ÎƒpƒX)
+' target_file : IN :ŒŸõƒtƒ@ƒCƒ‹–¼
+' Ret : “Ç‚İ‚ñ‚¾ƒtƒ@ƒCƒ‹‚Ì“à—e
+'       ”z—ñ‚Ì––”ö‚É‚ÍŒŸõƒtƒ@ƒCƒ‹‚Ìâ‘ÎƒpƒX‚ğŠi”[‚·‚é
 '-------------------------------------------------------------
 Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_file As String) As String()
     Dim fso As Object
@@ -953,13 +953,13 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Dim fileobj As Object
     For Each fileobj In folder.Files
         If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
-            'æ¤œç´¢å¯¾è±¡ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚€
+            'ŒŸõ‘ÎÛ‚Ìƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚Ş
             Dim contents As String: contents = ReadTextFileBySJIS(fileobj.path)
 
-            'ãƒ•ã‚¡ã‚¤ãƒ«ã®å†…å®¹ã‚’é…åˆ—ã«æ ¼ç´ã™ã‚‹
+            'ƒtƒ@ƒCƒ‹‚Ì“à—e‚ğ”z—ñ‚ÉŠi”[‚·‚é
             Dim lines() As String: lines = Split(contents, vbCrLf)
             
-            'æœ«å°¾ã«ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹ã‚’è¿½åŠ ã™ã‚‹
+            '––”ö‚Éƒtƒ@ƒCƒ‹ƒpƒX‚ğ’Ç‰Á‚·‚é
             Dim lines_cnt As Integer: lines_cnt = UBound(lines)
             ReDim Preserve lines(lines_cnt + 1)
             lines(lines_cnt + 1) = file.path
@@ -970,40 +970,40 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
         End If
     Next file
     
-    'ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€ã‚‚æ¤œç´¢ã™ã‚‹
+    'ƒTƒuƒtƒHƒ‹ƒ_‚àŒŸõ‚·‚é
     Dim subfolder As Object
     For Each subfolder In folder.subfolders
         Dim result() As String
         result = SearchAndReadFiles(subfolder.path, target_file, is_sjis)
         If UBound(result) >= 1 Then
-            'ã‚µãƒ–ãƒ•ã‚©ãƒ«ãƒ€ã‹ã‚‰çµæœãŒè¿”ã£ã¦ããŸå ´åˆã¯ã€ãã®çµæœã‚’è¿”ã™
+            'ƒTƒuƒtƒHƒ‹ƒ_‚©‚çŒ‹‰Ê‚ª•Ô‚Á‚Ä‚«‚½ê‡‚ÍA‚»‚ÌŒ‹‰Ê‚ğ•Ô‚·
             SearchAndReadFiles = result
             Set fso = Nothing
             Exit Function
         End If
     Next subfolder
     
-    'æ¤œç´¢å¯¾è±¡ã®ãƒ•ã‚¡ã‚¤ãƒ«ãŒè¦‹ã¤ã‹ã‚‰ãªã‹ã£ãŸå ´åˆã¯ã€ç©ºã®é…åˆ—ã‚’è¿”ã™
+    'ŒŸõ‘ÎÛ‚Ìƒtƒ@ƒCƒ‹‚ªŒ©‚Â‚©‚ç‚È‚©‚Á‚½ê‡‚ÍA‹ó‚Ì”z—ñ‚ğ•Ô‚·
     Dim ret_empty(0) As String
     SearchAndReadFiles = ret_empty
     Set fso = Nothing
 End Function
 
 '-------------------------------------------------------------
-'SJISã§ãƒ†ã‚­ã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚€
-'â€»UTF8ã®ãƒ•ã‚¡ã‚¤ãƒ«ã‚‚SJISã«å¤‰æ›ã—ã¦èª­ã¿è¾¼ã‚€!
-' path : IN : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹ (çµ¶å¯¾ãƒ‘ã‚¹)
-' Ret : èª­ã¿è¾¼ã‚“ã å†…å®¹
+'SJIS‚ÅƒeƒLƒXƒgƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚Ş
+'¦UTF8‚Ìƒtƒ@ƒCƒ‹‚àSJIS‚É•ÏŠ·‚µ‚Ä“Ç‚İ‚Ş!
+' path : IN : ƒtƒ@ƒCƒ‹ƒpƒX (â‘ÎƒpƒX)
+' Ret : “Ç‚İ‚ñ‚¾“à—e
 '-------------------------------------------------------------
 Public Function ReadTextFileBySJIS(ByVal path As String) As String
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "æŒ‡å®šã•ã‚ŒãŸãƒ•ã‚¡ã‚¤ãƒ«ãŒå­˜åœ¨ã—ã¾ã›ã‚“ (" & path & ")"
+        Err.Raise 53, , "w’è‚³‚ê‚½ƒtƒ@ƒCƒ‹‚ª‘¶İ‚µ‚Ü‚¹‚ñ (" & path & ")"
     End If
     
-    'ãƒ¯ãƒ¼ã‚¯ç”¨ã«ã‚³ãƒ”ãƒ¼ã™ã‚‹
+    'ƒ[ƒN—p‚ÉƒRƒs[‚·‚é
     Dim wk As String: wk = Common.CopyUniqueFile(path, "")
     
-    'ãƒ¯ãƒ¼ã‚¯ãƒ•ã‚¡ã‚¤ãƒ«ã‚’SJISã«å¤‰æ›ã™ã‚‹
+    'ƒ[ƒNƒtƒ@ƒCƒ‹‚ğSJIS‚É•ÏŠ·‚·‚é
     Common.UTF8toSJIS wk, False
     
     Dim fso As Object
@@ -1021,19 +1021,19 @@ Public Function ReadTextFileBySJIS(ByVal path As String) As String
     Set fileobj = Nothing
     Set fso = Nothing
     
-    'ãƒ¯ãƒ¼ã‚¯ãƒ•ã‚¡ã‚¤ãƒ«ã‚’å‰Šé™¤ã™ã‚‹
+    'ƒ[ƒNƒtƒ@ƒCƒ‹‚ğíœ‚·‚é
     DeleteFile wk
     
     ReadTextFileBySJIS = contents
 End Function
 
 '-------------------------------------------------------------
-'UTF-8å½¢å¼ã®ãƒ†ã‚­ã‚¹ãƒˆãƒ•ã‚¡ã‚¤ãƒ«ã‚’èª­ã¿è¾¼ã‚€
-' file_path : IN : ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹ (çµ¶å¯¾ãƒ‘ã‚¹)
-' Ret : èª­ã¿è¾¼ã‚“ã å†…å®¹
+'UTF-8Œ`®‚ÌƒeƒLƒXƒgƒtƒ@ƒCƒ‹‚ğ“Ç‚İ‚Ş
+' file_path : IN : ƒtƒ@ƒCƒ‹ƒpƒX (â‘ÎƒpƒX)
+' Ret : “Ç‚İ‚ñ‚¾“à—e
 '-------------------------------------------------------------
 Public Function ReadTextFileByUTF8(ByVal file_path) As String
-    'TODO:å¼•æ•°ãƒã‚§ãƒƒã‚¯
+    'TODO:ˆø”ƒ`ƒFƒbƒN
     
     Dim contents As String
     
@@ -1049,9 +1049,9 @@ Public Function ReadTextFileByUTF8(ByVal file_path) As String
 End Function
 
 '-------------------------------------------------------------
-'é…åˆ—ãŒç©ºã‹ã‚’ãƒã‚§ãƒƒã‚¯ã™ã‚‹
-' arg : IN : é…åˆ—
-' Ret : True/False (True=ç©º)
+'”z—ñ‚ª‹ó‚©‚ğƒ`ƒFƒbƒN‚·‚é
+' arg : IN : ”z—ñ
+' Ret : True/False (True=‹ó)
 '-------------------------------------------------------------
 Public Function IsEmptyArray(arg As Variant) As Boolean
     On Error Resume Next
@@ -1060,7 +1060,7 @@ Public Function IsEmptyArray(arg As Variant) As Boolean
 End Function
 
 '-------------------------------------------------------------
-'ç¾åœ¨æ—¥æ™‚ã‚’æ–‡å­—åˆ—ã§è¿”ã™
+'Œ»İ“ú‚ğ•¶š—ñ‚Å•Ô‚·
 ' Ret :Ex."20230326123456"
 '-------------------------------------------------------------
 Public Function GetNowTimeString() As String
@@ -1074,9 +1074,9 @@ Public Function GetNowTimeString() As String
 End Function
 
 '-------------------------------------------------------------
-'ã‚·ãƒ¼ãƒˆã®å­˜åœ¨ãƒã‚§ãƒƒã‚¯
-' sheet_name : IN : ã‚·ãƒ¼ãƒˆå
-' Ret : True/False (True=å­˜åœ¨ã™ã‚‹)
+'ƒV[ƒg‚Ì‘¶İƒ`ƒFƒbƒN
+' sheet_name : IN : ƒV[ƒg–¼
+' Ret : True/False (True=‘¶İ‚·‚é)
 '-------------------------------------------------------------
 Public Function IsExistSheet(ByVal sheet_name As String) As Boolean
     Dim ws As Worksheet
@@ -1092,8 +1092,8 @@ Public Function IsExistSheet(ByVal sheet_name As String) As Boolean
 End Function
 
 '-------------------------------------------------------------
-'ã‚·ãƒ¼ãƒˆã‚’å‰Šé™¤ã™ã‚‹
-' sheet_name : IN : ã‚·ãƒ¼ãƒˆå
+'ƒV[ƒg‚ğíœ‚·‚é
+' sheet_name : IN : ƒV[ƒg–¼
 '-------------------------------------------------------------
 Public Sub DeleteSheet(ByVal sheet_name As String)
     If IsExistSheet(sheet_name) = False Then
@@ -1106,8 +1106,8 @@ Public Sub DeleteSheet(ByVal sheet_name As String)
 End Sub
 
 '-------------------------------------------------------------
-'ã‚·ãƒ¼ãƒˆã‚’è¿½åŠ ã™ã‚‹
-' sheet_name : IN : ã‚·ãƒ¼ãƒˆå
+'ƒV[ƒg‚ğ’Ç‰Á‚·‚é
+' sheet_name : IN : ƒV[ƒg–¼
 '-------------------------------------------------------------
 Public Sub AddSheet(ByVal sheet_name As String)
     DeleteSheet sheet_name
