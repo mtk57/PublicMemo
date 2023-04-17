@@ -1,22 +1,17 @@
-Attribute VB_Name = "Process_Work01_001"
+Attribute VB_Name = "Process_001"
 Option Explicit
 
-Private prm001 As Param_Work01_001
+Private prm001 As Param_001
 
 Public Sub Run()
     Common.WriteLog "Run S"
     
     Dim msg As String: msg = ""
 
-    Set prm001 = New Param_Work01_001
+    Set prm001 = New Param_001
     
     prm001.Init
-    
-    msg = prm001.Validate()
-    If msg <> "" Then
-        Common.WriteLog "Run E1"
-        Err.Raise 53, , msg
-    End If
+    prm001.Validate
     
     Common.WriteLog prm001.GetAllValue()
     
@@ -33,6 +28,9 @@ Public Sub Run()
           prm001.GetDestDirPath(), _
           prm001.IsDebugLog() _
           )
+    
+    '外部ツールを閉じる
+    Common.CloseBook (Common.GetFileName(prm001.GetExternalPath()))
     
     If ret = False Then
         msg = "外部ツールの実行に失敗しました!"

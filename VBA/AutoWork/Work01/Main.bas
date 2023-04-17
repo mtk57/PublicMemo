@@ -1,8 +1,8 @@
-Attribute VB_Name = "Main_Work01"
+Attribute VB_Name = "Main"
 Option Explicit
 
-Private Const RUN_001 = "Work01_001"
-Private Const RUN_002 = "Work02_002"
+Private Const RUN_001 = "RUN_001"
+Private Const RUN_002 = "RUN_002"
 Private Const DEBUG_LOG_CLM = "D14"
 
 Public Sub Run001_Click()
@@ -19,7 +19,7 @@ On Error GoTo ErrorHandler
     Common.WriteLog "ÅöStart"
 
     Worksheets(Define.SHEET_01).Activate
-    Process_Work01_001.Run
+    Process_001.Run
 
     Common.WriteLog "ÅöEnd"
     GoTo FINISH
@@ -47,8 +47,8 @@ On Error GoTo ErrorHandler
     Common.WriteLog "------------------------------------"
     Common.WriteLog "ÅöStart"
 
-    Worksheets(Define.SHEET_02).Activate
-    Process_Work01_002.Run
+    Worksheets(Define.SHEET_01).Activate
+    Process_002.Run
 
     Common.WriteLog "ÅöEnd"
     GoTo FINISH
