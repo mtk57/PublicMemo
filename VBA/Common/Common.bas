@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.0"
+Public Const VERSION = "1.0.1"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -24,6 +24,19 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
 'ログファイル番号
 Private logfile_num As Integer
 Private is_log_opened As Boolean
+
+'-------------------------------------------------------------
+'ブックと閉じる
+' name : IN : ブック名
+'-------------------------------------------------------------
+Public Sub CloseBook(ByVal name As String)
+    Dim wb As Workbook
+    For Each wb In Workbooks
+        If InStr(wb.name, name) > 0 Then
+            wb.Close SaveChanges:=False
+        End If
+    Next
+End Sub
 
 '-------------------------------------------------------------
 'ファイルを削除する
@@ -345,7 +358,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String)
     Next subfolder
     
     For Each file In folder.Files
-        If Right(file.Name, Len(ext)) = ext Then
+        If Right(file.name, Len(ext)) = ext Then
             Set fso = Nothing
             Set folder = Nothing
         
@@ -407,15 +420,15 @@ End Sub
 Public Function DeleteEmptyArray(ByRef in_array() As String) As String()
     Dim ret_array() As String
     Dim i, cnt As Long
-    Dim row As String
+    Dim ROW As String
     
     ReDim ret_array(UBound(in_array))
     
     For i = LBound(in_array) To UBound(in_array)
-        row = in_array(i)
-        If Not IsEmpty(row) Then
-            If row <> "" Then
-                ret_array(cnt) = row
+        ROW = in_array(i)
+        If Not IsEmpty(ROW) Then
+            If ROW <> "" Then
+                ret_array(cnt) = ROW
                 cnt = cnt + 1
             End If
         End If
@@ -629,13 +642,13 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     'コピー元のフォルダ内のファイルをコピーする
     Dim file As Object
     For Each file In fso.GetFolder(src_path).Files
-        fso.CopyFile file.path, fso.BuildPath(dest_path, file.Name), True
+        fso.CopyFile file.path, fso.BuildPath(dest_path, file.name), True
     Next
     
     'コピー元のフォルダ内のサブフォルダをコピーする
     Dim subfolder As Object
     For Each subfolder In fso.GetFolder(src_path).subfolders
-        CopyFolder subfolder.path, fso.BuildPath(dest_path, subfolder.Name)
+        CopyFolder subfolder.path, fso.BuildPath(dest_path, subfolder.name)
     Next
     
     Set fso = Nothing
@@ -730,11 +743,11 @@ Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As 
     Set ws = ThisWorkbook.Sheets(sheet_name)
     
     'ファイルの内容をシートに出力
-    Dim row As Integer: row = 1
+    Dim ROW As Integer: ROW = 1
     
     Do While Not fileobj.AtEndOfStream
-        ws.Cells(row, 1).value = fileobj.ReadLine
-        row = row + 1
+        ws.Cells(ROW, 1).value = fileobj.ReadLine
+        ROW = ROW + 1
     Loop
     
     fileobj.Close
@@ -1084,7 +1097,7 @@ Public Function IsExistSheet(ByVal sheet_name As String) As Boolean
     Dim ws As Worksheet
     
     For Each ws In Worksheets
-        If ws.Name = sheet_name Then
+        If ws.name = sheet_name Then
             IsExistSheet = True
             Exit Function
         End If
@@ -1113,7 +1126,7 @@ End Sub
 '-------------------------------------------------------------
 Public Sub AddSheet(ByVal sheet_name As String)
     DeleteSheet sheet_name
-    Worksheets.Add.Name = sheet_name
+    Worksheets.Add.name = sheet_name
 End Sub
 
 
