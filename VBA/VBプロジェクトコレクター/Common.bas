@@ -97,7 +97,7 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     Set folder = fso.GetFolder(search_path)
     
     Dim file As Object
-    For Each file In folder.files
+    For Each file In folder.Files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like search_name Then
             '発見
             SearchFile = file.path
@@ -125,6 +125,54 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
 End Function
 
 '-------------------------------------------------------------
+'指定フォルダのUTF8を全てSJISにする
+' path : IN : フォルダパス(絶対パス)
+' ext : IN : 拡張子(Ex."*.vb")
+' is_subdir : IN : サブフォルダ含むか (True=含む)
+' Ret : ファイルリスト
+'-------------------------------------------------------------
+Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
+    If Common.IsExistsFolder(path) = False Then
+        Err.Raise 53, , "指定されたフォルダが存在しません (" & path & ")"
+    End If
+    
+    If ext = "" Then
+        Err.Raise 53, , "拡張子が指定されていません"
+    End If
+
+    Dim i As Long
+    Dim src_file_list() As String: src_file_list = Common.CreateFileList(path, ext, is_subdir)
+
+    For i = LBound(src_file_list) To UBound(src_file_list)
+        Common.UTF8toSJIS src_file_list(i), False
+    Next i
+End Sub
+
+'-------------------------------------------------------------
+'指定フォルダのSJISを全てUTF8にする
+' path : IN : フォルダパス(絶対パス)
+' ext : IN : 拡張子(Ex."*.vb")
+' is_subdir : IN : サブフォルダ含むか (True=含む)
+' Ret : ファイルリスト
+'-------------------------------------------------------------
+Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
+    If Common.IsExistsFolder(path) = False Then
+        Err.Raise 53, , "指定されたフォルダが存在しません (" & path & ")"
+    End If
+    
+    If ext = "" Then
+        Err.Raise 53, , "拡張子が指定されていません"
+    End If
+
+    Dim i As Long
+    Dim src_file_list() As String: src_file_list = Common.CreateFileList(path, ext, is_subdir)
+
+    For i = LBound(src_file_list) To UBound(src_file_list)
+        Common.SJIStoUTF8 src_file_list(i), False
+    Next i
+End Sub
+
+'-------------------------------------------------------------
 '指定されたファイルをSJIS→UTF8(BOMあり)変換する
 ' path : IN : ファイルパス(絶対パス)
 ' is_backup : IN : True/False (True=バックアップする)
@@ -133,7 +181,7 @@ End Function
 Public Sub SJIStoUTF8(ByVal path As String, ByVal is_backup As Boolean)
     Dim in_str As String
     Dim buf As String
-    Dim i As Integer
+    Dim i As Long
     
     Dim filenum As Integer: filenum = FreeFile
     
@@ -177,7 +225,7 @@ End Sub
 Public Sub UTF8toSJIS(ByVal path As String, ByVal is_backup As Boolean)
     Dim in_str As String
     Dim out_str() As String
-    Dim i As Integer
+    Dim i As Long
     
     'UTF-8もしくはUTF-8（BOM付き）のテキストファイルを読み込み
     With CreateObject("ADODB.Stream")
@@ -294,7 +342,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String)
         End If
     Next subfolder
     
-    For Each file In folder.files
+    For Each file In folder.Files
         If Right(file.Name, Len(ext)) = ext Then
             Set fso = Nothing
             Set folder = Nothing
@@ -578,7 +626,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     
     'コピー元のフォルダ内のファイルをコピーする
     Dim file As Object
-    For Each file In fso.GetFolder(src_path).files
+    For Each file In fso.GetFolder(src_path).Files
         fso.CopyFile file.path, fso.BuildPath(dest_path, file.Name), True
     Next
     
@@ -705,7 +753,7 @@ Public Sub CreateSJISTextFile(ByRef contents() As String, ByVal path As String)
     Set fso = CreateObject("Scripting.FileSystemObject")
     
     Dim txt As Object
-    Dim i As Integer
+    Dim i As Long
     
     Dim IS_OVERWRITE As Boolean: IS_OVERWRITE = True
     Dim IS_UNICODE As Boolean: IS_UNICODE = False
@@ -771,7 +819,7 @@ End Sub
 '-------------------------------------------------------------
 Function GetCommonString(ByRef list() As String) As String
     Dim common_string As String
-    Dim i, j As Integer
+    Dim i, j As Long
     Dim flag As Boolean
     
     '最初の文字列を共通文字列の初期値とする
@@ -903,7 +951,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Set folder = fso.GetFolder(target_folder)
     
     Dim fileobj As Object
-    For Each fileobj In folder.files
+    For Each fileobj In folder.Files
         If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
             '検索対象のファイルを読み込む
             Dim contents As String: contents = ReadTextFileBySJIS(fileobj.path)
@@ -1065,4 +1113,5 @@ Public Sub AddSheet(ByVal sheet_name As String)
     DeleteSheet sheet_name
     Worksheets.Add.Name = sheet_name
 End Sub
+
 
