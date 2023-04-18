@@ -3,10 +3,13 @@ Option Explicit
 
 Private Const RUN_001 = "RUN_001"
 Private Const RUN_002 = "RUN_002"
-Private Const DEBUG_LOG_CLM = "D14"
 
 Public Sub Run001_Click()
 On Error GoTo ErrorHandler
+    If Common.ShowYesNoMessageBox("[001]を実行します") = False Then
+        Exit Sub
+    End If
+
     Application.DisplayAlerts = False
     
     Dim msg As String: msg = "正常に終了しました"
@@ -36,6 +39,10 @@ End Sub
 
 Public Sub Run002_Click()
 On Error GoTo ErrorHandler
+    If Common.ShowYesNoMessageBox("[002]を実行します") = False Then
+        Exit Sub
+    End If
+
     Application.DisplayAlerts = False
     
     Dim msg As String: msg = "正常に終了しました"
@@ -67,7 +74,7 @@ Private Function IsEnableDebugLog() As Boolean
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets(Define.SHEET_01)
     
-    Dim is_debug_log_s As String: is_debug_log_s = main_sheet.Range(DEBUG_LOG_CLM).value
+    Dim is_debug_log_s As String: is_debug_log_s = main_sheet.Range(Define.DEBUG_LOG_CELL).value
     
     If is_debug_log_s = "" Or _
        is_debug_log_s = "NO" Then

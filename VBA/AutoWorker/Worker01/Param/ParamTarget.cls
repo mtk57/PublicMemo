@@ -2,7 +2,7 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "Param_002"
+Attribute VB_Name = "ParamTarget"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -21,7 +21,7 @@ Private tag As String
 
 'コンストラクタ
 Private Sub Class_Initialize()
-    HEADER = "[Param002] "
+    HEADER = "[Target Param] "
     
     vbprj_file_path = ""
     pid = ""
@@ -32,46 +32,53 @@ Private Sub Class_Initialize()
 End Sub
 
 '初期化
-Public Sub Init(ByVal ROW As Integer)
+Public Sub Init(ByVal row As Integer)
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets(Define.SHEET_01)
     
-    vbprj_file_path = main_sheet.Range("C" & ROW).value
-    pid = main_sheet.Range("D" & ROW).value
-    ticket_num = main_sheet.Range("E" & ROW).value
-    branch = main_sheet.Range("F" & ROW).value
-    commit = main_sheet.Range("G" & ROW).value
-    tag = main_sheet.Range("H" & ROW).value
+    Dim C1 As String: C1 = Define.TARGET_PARAM_CLM_1
+    Dim C2 As String: C2 = Define.TARGET_PARAM_CLM_2
+    Dim C3 As String: C3 = Define.TARGET_PARAM_CLM_3
+    Dim C4 As String: C4 = Define.TARGET_PARAM_CLM_4
+    Dim C5 As String: C5 = Define.TARGET_PARAM_CLM_5
+    Dim C6 As String: C6 = Define.TARGET_PARAM_CLM_6
+    
+    vbprj_file_path = main_sheet.Range(C1 & row).value
+    pid = main_sheet.Range(C2 & row).value
+    ticket_num = main_sheet.Range(C3 & row).value
+    branch = main_sheet.Range(C4 & row).value
+    commit = main_sheet.Range(C5 & row).value
+    tag = main_sheet.Range(C6 & row).value
 End Sub
 
 '検証
-Public Sub Validate(ByVal ROW As Integer)
+Public Sub Validate(ByVal row As Integer)
     If vbprj_file_path = "" Then
-        Err.Raise 53, , HEADER & "VBプロジェクトファイルが指定されていません(row=" & ROW & ")"
+        Err.Raise 53, , HEADER & "VBプロジェクトファイルが指定されていません(row=" & row & ")"
     End If
     
     If Common.IsExistsFile(vbprj_file_path) = False Then
-        Err.Raise 53, , HEADER & "VBプロジェクトファイルが見つかりません(vbprj_file_path=" & vbprj_file_path & ", row=" & ROW & ")"
+        Err.Raise 53, , HEADER & "VBプロジェクトファイルが見つかりません(vbprj_file_path=" & vbprj_file_path & ", row=" & row & ")"
     End If
     
     If pid = "" Then
-        Err.Raise 53, , HEADER & "pidが指定されていません(row=" & ROW & ")"
+        Err.Raise 53, , HEADER & "pidが指定されていません(row=" & row & ")"
     End If
     
     If ticket_num = "" Then
-        Err.Raise 53, , HEADER & "ticket_numが指定されていません(row=" & ROW & ")"
+        Err.Raise 53, , HEADER & "ticket_numが指定されていません(row=" & row & ")"
     End If
     
     If branch = "" Then
-        Err.Raise 53, , HEADER & "branchが指定されていません(row=" & ROW & ")"
+        Err.Raise 53, , HEADER & "branchが指定されていません(row=" & row & ")"
     End If
     
     If commit = "" Then
-        Err.Raise 53, , HEADER & "commitが指定されていません(row=" & ROW & ")"
+        Err.Raise 53, , HEADER & "commitが指定されていません(row=" & row & ")"
     End If
 
     If tag = "" Then
-        Err.Raise 53, , HEADER & "tagが指定されていません(row=" & ROW & ")"
+        Err.Raise 53, , HEADER & "tagが指定されていません(row=" & row & ")"
     End If
 End Sub
 

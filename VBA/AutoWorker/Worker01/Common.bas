@@ -420,15 +420,15 @@ End Sub
 Public Function DeleteEmptyArray(ByRef in_array() As String) As String()
     Dim ret_array() As String
     Dim i, cnt As Long
-    Dim ROW As String
+    Dim row As String
     
     ReDim ret_array(UBound(in_array))
     
     For i = LBound(in_array) To UBound(in_array)
-        ROW = in_array(i)
-        If Not IsEmpty(ROW) Then
-            If ROW <> "" Then
-                ret_array(cnt) = ROW
+        row = in_array(i)
+        If Not IsEmpty(row) Then
+            If row <> "" Then
+                ret_array(cnt) = row
                 cnt = cnt + 1
             End If
         End If
@@ -743,11 +743,11 @@ Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As 
     Set ws = ThisWorkbook.Sheets(sheet_name)
     
     'ファイルの内容をシートに出力
-    Dim ROW As Integer: ROW = 1
+    Dim row As Integer: row = 1
     
     Do While Not fileobj.AtEndOfStream
-        ws.Cells(ROW, 1).value = fileobj.ReadLine
-        ROW = ROW + 1
+        ws.Cells(row, 1).value = fileobj.ReadLine
+        row = row + 1
     Loop
     
     fileobj.Close

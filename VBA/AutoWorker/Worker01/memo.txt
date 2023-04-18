@@ -1,5 +1,5 @@
 Worker01																				
-	ver.0.3																			
+	ver.0.4																			
 																				
 																				
 																				
@@ -8,14 +8,17 @@ Worker01
 																				
 																				
 									★=必須											
-	Param 001								memo											
+	Common Param								memo											
 		外部ツールファイルパス(絶対パス) ★	C:\_git\PublicMemo\VBA\VBプロジェクトコレクター\VBProjCollector.xlsm																	
 		コピー先フォルダパス(絶対パス) ★	C:\_git\PublicMemo\VBA\VBプロジェクトコレクター\testdata\dst						末尾に"\"禁止。存在しない場合は作成する。											
 		デバッグログ出力	NO						未指定の場合は出力しない。											
+																				
+	Git Param								memo											
+		GitリポジトリURL	https://github.com/mtk57/GIT_0020																	
 		Gitフォルダパス(絶対パス) ★	C:\_tmp\GIT_0020						末尾に"\"禁止。存在しない場合は作成する。											
 		ベースブランチ名 ★	develop																	
 																				
-	Param 002								memo											
+	Target Param								memo											
 		VBプロジェクトファイルの絶対パス　★	PID　★	Redmine#　★	Branch	Commit	Tag		複数可。空行が見つかるまで探索。											
 		C:\_git\PublicMemo\VBA\VBプロジェクトコレクター\testdata\src\base\testVB6.vbp	PID_1	00001	fe_PID_1#00001	[COMMIT] PID_1	[TAG] PID_1													
 		C:\_git\PublicMemo\VBA\VBプロジェクトコレクター\testdata\src\vbdotnet\base\testDotNet.vbproj	PID_2	00002	fe_PID_2#00002	[COMMIT] PID_2	[TAG] PID_2													

@@ -11,6 +11,6 @@
 010 (HOST)  commit       (自動化)
 011 (HOST)  tag          (自動化)
 012 (HOST)  push         (自動化)
-013 (HOST)  007～012     (自動化)
+013 (HOST)  loop 007～012(自動化)
 
 
