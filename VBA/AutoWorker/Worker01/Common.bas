@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.1"
+Public Const VERSION = "1.0.2"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -280,11 +280,84 @@ Public Sub UTF8toSJIS(ByVal path As String, ByVal is_backup As Boolean)
 End Sub
 
 '-------------------------------------------------------------
+'ファイルがSJISかを判定する
+' path : IN : ファイルパス(絶対パス)
+' Ret : True/False (True=SJIS)
+'-------------------------------------------------------------
+Public Function IsSJIS(ByVal path As String) As Boolean
+    If Common.IsExistsFile(path) = False Then
+        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+    End If
+    
+    Dim in_str As String
+    Dim buf As String
+    Dim i As Long
+    
+    Dim filenum As Integer: filenum = FreeFile
+    
+    'Shift-JIS形式のテキストファイルを読み込み
+    in_str = ""
+    Open path For Input As #filenum
+        'テキストをすべて取得する
+        Do Until EOF(filenum)
+            Line Input #filenum, buf
+            in_str = in_str & buf & vbCrLf
+        Loop
+    Close #filenum
+        
+    'Shift-JIS以外のファイルを読み込んでしまった場合は終了
+    For i = 1 To Len(in_str)
+        If Asc(Mid(in_str, i, 1)) = -7295 Then
+            IsSJIS = False
+            Exit Function
+        End If
+    Next
+    
+    IsSJIS = True
+End Function
+
+'-------------------------------------------------------------
+'ファイルがUTF8(BOMあり/なし)かを判定する
+' path : IN : ファイルパス(絶対パス)
+' Ret : True/False (True=UTF8(BOMあり/なし))
+'-------------------------------------------------------------
+Public Function IsUTF8(ByVal path As String) As Boolean
+    If Common.IsExistsFile(path) = False Then
+        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+    End If
+    
+    Dim in_str As String
+    Dim out_str() As String
+    Dim i As Long
+    
+    'UTF-8もしくはUTF-8（BOM付き）のテキストファイルを読み込み
+    With CreateObject("ADODB.Stream")
+        .Charset = "UTF-8"
+        .Open
+        .LoadFromFile path
+        in_str = .ReadText
+        .Close
+    End With
+    
+    'UTF-8もしくはUTF-8（BOM付き）以外を読み込んでしまった場合は終了
+    For i = 1 To Len(in_str)
+        If Mid(in_str, i, 1) <> Chr(63) Then
+            If Asc(Mid(in_str, i, 1)) = 63 Then
+                IsUTF8 = False
+                Exit Function
+            End If
+        End If
+    Next
+    
+    IsUTF8 = True
+End Function
+
+'-------------------------------------------------------------
 'ファイルがUTF8(BOMあり)かを判定する
 ' path : IN : ファイルパス(絶対パス)
 ' Ret : True/False (True=UTF8(BOMあり), False=左記以外)
 '-------------------------------------------------------------
-Public Function IsUTF8(ByVal path As String) As Boolean
+Public Function IsUTF8_WithBom(ByVal path As String) As Boolean
     If Common.IsExistsFile(path) = False Then
         Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
     End If
@@ -293,14 +366,14 @@ Public Function IsUTF8(ByVal path As String) As Boolean
     Dim length As Integer: length = UBound(bytedata) + 1
     
     If length < 3 Then
-        IsUTF8 = False
+        IsUTF8_WithBom = False
         Exit Function
     End If
     
     If bytedata(0) = &HEF And bytedata(1) = &HBB And bytedata(2) = &HBF Then
-        IsUTF8 = True
+        IsUTF8_WithBom = True
     Else
-        IsUTF8 = False
+        IsUTF8_WithBom = False
     End If
     
 End Function
@@ -1128,5 +1201,7 @@ Public Sub AddSheet(ByVal sheet_name As String)
     DeleteSheet sheet_name
     Worksheets.Add.name = sheet_name
 End Sub
+
+
 
 
