@@ -374,10 +374,10 @@ Private Sub CopySrcToDstWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer)
         
     End If
     
-    If num1 = 0 And num2 = 0 Then
+    'If num1 = 0 And num2 = 0 Then
         'コピー後は全ファイルSJISにする!
-        Common.UTF8toSJIS_AllFile current_wk_src_dir_path, main_param.GetInExtension(), main_param.IsContainSubDir()
-    End If
+        'Common.UTF8toSJIS_AllFile current_wk_src_dir_path, main_param.GetInExtension(), main_param.IsContainSubDir()
+    'End If
         
     Common.WriteLog "CopySrcToDstWorkFolder E"
 End Sub
@@ -521,3 +521,5 @@ Private Sub DeleteWorkFolder(ByVal is_del_wk_dir As Boolean)
     Common.DeleteFolder path
     Common.WriteLog "DeleteWorkFolder E"
 End Sub
+
+
