@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.2"
+Public Const VERSION = "1.0.3"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -24,6 +24,39 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
 'ログファイル番号
 Private logfile_num As Integer
 Private is_log_opened As Boolean
+
+'-------------------------------------------------------------
+'拡張子を変更する
+' path : I : ファイルパス(絶対パス)
+' ext : I : 変更後の拡張子(Ex. ".new")
+' Ret : 変更後のファイルパス(絶対パス)
+'       pathのファイルが存在しない場合はpathを返す
+'-------------------------------------------------------------
+Public Function ChangeFileExt(ByVal path As String, ByVal ext As String) As String
+    If Common.IsExistsFile(path) = False Then
+        'Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        ChangeFileExt = path
+        Exit Function
+    End If
+    
+    Dim SEP As String: SEP = Application.PathSeparator
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    Dim old_ext As String: old_ext = fso.GetExtensionName(path)
+    Dim file_name As String: file_name = fso.GetBaseName(path)
+    Dim new_path As String
+    
+    '新しい拡張子に変更
+    file_name = file_name & ext
+    new_path = fso.GetParentFolderName(path) & SEP & file_name
+    
+    'ファイル名を変更
+    fso.MoveFile path, new_path
+    Set fso = Nothing
+    
+    ChangeFileExt = new_path
+End Function
 
 '-------------------------------------------------------------
 'ブックと閉じる
@@ -123,7 +156,7 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     
     'サブフォルダも検索する
     Dim subfolder As Object
-    For Each subfolder In folder.subfolders
+    For Each subfolder In folder.SubFolders
         Dim result As String
         result = SearchFile(subfolder.path, search_name)
         If result <> "" Then
@@ -420,7 +453,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String)
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set folder = fso.GetFolder(path)
     
-    For Each subfolder In folder.subfolders
+    For Each subfolder In folder.SubFolders
         If IsExistsExtensionFile(subfolder.path, ext) Then
             Set fso = Nothing
             Set folder = Nothing
@@ -507,7 +540,11 @@ Public Function DeleteEmptyArray(ByRef in_array() As String) As String()
         End If
     Next
     
-    ReDim Preserve ret_array(cnt - 1)
+    If cnt > 0 Then
+        ReDim Preserve ret_array(cnt - 1)
+    Else
+        ReDim ret_array(0)
+    End If
     
     DeleteEmptyArray = ret_array
 End Function
@@ -563,7 +600,7 @@ Private Function CreateFileListMain(ByVal path As String, ByVal ext As String, B
     Dim filelist_sub() As String
     Dim filelist_merge() As String
     
-    For Each f In fso.GetFolder(path).subfolders
+    For Each f In fso.GetFolder(path).SubFolders
         filelist_sub = CreateFileListMain(f.path, ext, is_subdir)
         filelist = Common.MergeArray(filelist_sub, filelist)
     Next f
@@ -660,11 +697,11 @@ Public Function GetFolderPathList(ByVal path As String) As String()
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set top_dir = fso.GetFolder(path)
 
-    dir_cnt = top_dir.subfolders.count
+    dir_cnt = top_dir.SubFolders.count
     If dir_cnt > 0 Then
         ReDim path_list(dir_cnt - 1)
         i = 0
-        For Each sub_dir In top_dir.subfolders
+        For Each sub_dir In top_dir.SubFolders
             path_list(i) = sub_dir.path
             i = i + 1
             
@@ -720,7 +757,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     
     'コピー元のフォルダ内のサブフォルダをコピーする
     Dim subfolder As Object
-    For Each subfolder In fso.GetFolder(src_path).subfolders
+    For Each subfolder In fso.GetFolder(src_path).SubFolders
         CopyFolder subfolder.path, fso.BuildPath(dest_path, subfolder.name)
     Next
     
@@ -1060,7 +1097,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     
     'サブフォルダも検索する
     Dim subfolder As Object
-    For Each subfolder In folder.subfolders
+    For Each subfolder In folder.SubFolders
         Dim result() As String
         result = SearchAndReadFiles(subfolder.path, target_file, is_sjis)
         If UBound(result) >= 1 Then

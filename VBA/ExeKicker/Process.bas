@@ -129,7 +129,9 @@ Private Function ExecSubParam() As Boolean
         Exit Function
     End If
 
-    Dim i, j As Integer
+    Dim h As Integer
+    Dim i As Integer
+    Dim j As Integer
     Dim exe_params() As String
     Dim is_match As Boolean
     Dim is_exit_for As Boolean
@@ -149,61 +151,72 @@ Private Function ExecSubParam() As Boolean
     
     '除外リストファイルを作成する
     CreateIgnoreListFile
+
     
     For i = LBound(sub_params) To UBound(sub_params)
-        is_exit_for = False
-        
+    
         Dim sub_param As SubParam
         Set sub_param = sub_params(i)
         
-        'exeiniを更新する
-        UpdateExeIniContents sub_param
+        'SJIS, UTF8ごとに実行する(0=SJIS, 1=UTF8)
+        For h = 0 To 1
         
-        For j = 0 To main_param.GetMaxExecCount() - 1
-            Common.WriteLog "Main Loop i=" & i & ", j=" & j
-        
-            '連番の作業用サブフォルダを作成する
-            CreateSeqWorkFolder i, j
+            'exeiniを更新する
+            UpdateExeIniContents sub_param, h
             
-            '作業用サブフォルダのsrc→dstにコピーする
-            CopySrcToDstWorkFolder i, j
+            For j = 0 To main_param.GetMaxExecCount() - 1
             
-            'exeに渡すパラメータリストを作成する
-            exe_params = CreateExeParamList(sub_param)
+                Common.WriteLog "[■Main Loop] i=" & i & ", h=" & h & ", j=" & j
             
-            'exeを実行する
-            RunExe exe_params
-            
-            '差分があるかチェックする
-            is_match = IsMatch()
-            If is_match = True Then
-                '全て一致
-                is_exit_for = True
-            Else
-                '1つ以上の不一致あり
-                If sub_param.IsExecNotDiff() = False Then
+                '連番の作業用サブフォルダを作成する
+                CreateSeqWorkFolder i, h, j
+                
+                '作業用サブフォルダのsrc→dstにコピーする
+                CopySrcToDstWorkFolder i, j, h
+                
+                'exeに渡すパラメータリストを作成する
+                exe_params = CreateExeParamList(sub_param)
+                
+                'exeを実行する
+                RunExe exe_params
+                
+                '差分があるかチェックする
+                is_exit_for = False
+                is_match = IsMatch()
+                If is_match = True Then
+                    '全て一致
                     is_exit_for = True
+                Else
+                    '1つ以上の不一致あり
+                    If sub_param.IsExecNotDiff() = False Then
+                        is_exit_for = True
+                    End If
                 End If
-            End If
-            
-            before_wk_dst_dir_path = current_wk_dst_dir_path
-            
-            '作業用サブフォルダを入れ替える
-            SwapWorkSubFolder
-            
-            If is_exit_for = True Then
-                Exit For
-            End If
-
-        Next j
+                
+                before_wk_dst_dir_path = current_wk_dst_dir_path
+                
+                '作業用サブフォルダを入れ替える
+                SwapWorkSubFolder
+                
+                If is_exit_for = True Then
+                    Exit For
+                End If
+    
+            Next j
+        
+        Next h
     
     Next i
     
-    'dstにコピーする
+
     If main_param.IsStepWorkDir() = False Then
         current_wk_dst_dir_path = before_wk_dst_dir_path
     End If
     
+    '最後に作業フォルダのリネームされた拡張子を元に戻す
+    RenameAllFileExtension current_wk_dst_dir_path, -1
+    
+    'dstにコピーする
     Common.DeleteFolder (main_param.GetDestDirPath())
     Common.CopyFolder current_wk_dst_dir_path, main_param.GetDestDirPath()
     
@@ -273,9 +286,88 @@ Private Sub CreateIgnoreListFile()
     Common.WriteLog "CreateIgnoreListFile E"
 End Sub
 
+'全ファイルを変換されないように拡張子をリネーム
+Private Sub RenameAllFileExtension(ByVal path As String, ByVal encode_type As Integer)
+    Common.WriteLog "RenameAllFileExtension S"
+    Common.WriteLog "path=(" & path & "), encode_type=(" & encode_type & ")"
+    
+    Dim all_file_list() As String
+    Dim i As Long
+    Dim renamed_path As String
+    
+    Const EXT_UTF8 = ".utf8"
+    Const EXT_SJIS = ".sjis"
+    
+    'ファイルリストを作成
+    all_file_list = Common.CreateFileList(path, main_param.GetInExtension(), True)
+    
+    If encode_type = 0 Then
+        '全てのファイルを読み込み、SJIS以外であれば拡張子をリネームする
+        For i = 0 To UBound(all_file_list)
+            If Common.IsSJIS(all_file_list(i)) = False Then
+                Common.WriteLog "Before Rename(UTF8)=" & all_file_list(i)
+            
+                renamed_path = Common.ChangeFileExt(all_file_list(i), EXT_UTF8)
+                
+                Common.WriteLog "After Rename(UTF8)=" & renamed_path
+            End If
+        Next i
+    ElseIf encode_type = 1 Then
+        '全てのファイルを読み込み、SJISであれば拡張子をリネームする
+        For i = 0 To UBound(all_file_list)
+            If all_file_list(i) = "" Then
+                Exit For
+            End If
+            
+            If Common.IsSJIS(all_file_list(i)) = True Then
+                Common.WriteLog "Before Rename(SJIS)=" & all_file_list(i)
+            
+                renamed_path = Common.ChangeFileExt(all_file_list(i), EXT_SJIS)
+                
+                Common.WriteLog "After Rename(SJIS)=" & renamed_path
+            End If
+        Next i
+        
+        'リネーム済の拡張子は元に戻す(UTF8)
+        Dim utf8_file_list() As String
+        utf8_file_list = Common.CreateFileList(path, "*" & EXT_UTF8, True)
+        
+        For i = 0 To UBound(utf8_file_list)
+            If utf8_file_list(i) = "" Then
+                Exit For
+            End If
+            
+            Common.WriteLog "Before Rename(UTF8)=" & utf8_file_list(i)
+        
+            renamed_path = Common.ChangeFileExt(utf8_file_list(i), Replace(main_param.GetInExtension(), "*", ""))
+            
+            Common.WriteLog "After Rename(UTF8)=" & renamed_path
+        Next i
+    Else
+        '最後にリネーム済の拡張子は元に戻す(SJIS)
+        Dim sjis_file_list() As String
+        sjis_file_list = Common.CreateFileList(path, "*" & EXT_SJIS, True)
+        
+        For i = 0 To UBound(sjis_file_list)
+            If sjis_file_list(i) = "" Then
+                Exit For
+            End If
+            
+            Common.WriteLog "Before Rename(SJIS)=" & sjis_file_list(i)
+        
+            renamed_path = Common.ChangeFileExt(sjis_file_list(i), Replace(main_param.GetInExtension(), "*", ""))
+            
+            Common.WriteLog "After Rename(SJIS)=" & renamed_path
+        Next i
+    End If
+    
+    Common.WriteLog "RenameAllFileExtension E"
+End Sub
+
 'exeiniを更新
-Private Sub UpdateExeIniContents(ByRef sub_param As SubParam)
+Private Sub UpdateExeIniContents(ByRef sub_param As SubParam, ByVal encode_type As Integer)
     Common.WriteLog "UpdateExeIniContents S"
+    Common.WriteLog "encode_type=(" & encode_type & ")"
 
     Dim ret As Long
     Dim path As String: path = main_param.GetExeIniFilePath()
@@ -286,33 +378,38 @@ Private Sub UpdateExeIniContents(ByRef sub_param As SubParam)
         Err.Raise 53, , "Iniファイルの更新に失敗しました(0)"
     End If
 
-    Dim count As String
+    Dim count As String: count = "0"
     If sub_param.IsEnableAddin = True Then
         count = "1"
-    Else
-        count = "0"
     End If
     ret = Common.WritePrivateProfileString("Extent", "Count", count, path)
     If ret = 0 Then
         Err.Raise 53, , "Iniファイルの更新に失敗しました(1)"
     End If
     
-    Dim skip As String
+    Dim skip As String: skip = "0"
     If sub_param.IsSkipComment = True Then
         skip = "1"
-    Else
-        skip = "0"
     End If
     ret = Common.WritePrivateProfileString("Comment", "SkipVb", skip, path)
     If ret = 0 Then
         Err.Raise 53, , "Iniファイルの更新に失敗しました(2)"
     End If
     
+    Dim encode As String: encode = "0"
+    If encode_type = 1 Then
+        encode = "1"
+    End If
+    ret = Common.WritePrivateProfileString("Convart", "baseChar", encode, path)
+    If ret = 0 Then
+        Err.Raise 53, , "Iniファイルの更新に失敗しました(3)"
+    End If
+    
     Common.WriteLog "UpdateExeIniContents E"
 End Sub
 
 '連番の作業用サブフォルダを作成する
-Private Sub CreateSeqWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer)
+Private Sub CreateSeqWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer, ByVal num3 As Integer)
     Common.WriteLog "CreateSeqWorkFolder S"
 
     If main_param.IsStepWorkDir() = False Then
@@ -321,8 +418,8 @@ Private Sub CreateSeqWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer)
     End If
 
     Dim path As String: path = main_param.GetToolWorkDirPath()
-    current_wk_src_dir_path = path & SEP & num1 & num2 & "_0"
-    current_wk_dst_dir_path = path & SEP & num1 & num2 & "_1"
+    current_wk_src_dir_path = path & SEP & num1 & num2 & num3 & "_0"
+    current_wk_dst_dir_path = path & SEP & num1 & num2 & num3 & "_1"
     Common.CreateFolder (current_wk_src_dir_path)
     Common.CreateFolder (current_wk_dst_dir_path)
     
@@ -330,7 +427,7 @@ Private Sub CreateSeqWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer)
 End Sub
 
 '作業用サブフォルダのsrc→dstにコピーする
-Private Sub CopySrcToDstWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer)
+Private Sub CopySrcToDstWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer, ByVal encode_type As Integer)
     Common.WriteLog "CopySrcToDstWorkFolder S"
 
     Dim src_path As String
@@ -341,13 +438,31 @@ Private Sub CopySrcToDstWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer)
         '途中経過を残す
         
         If num1 = 0 And num2 = 0 Then
-            '最初だけは本当のsrcからコピーする
-            src_path = main_param.GetSrcDirPath()
-            dst_path_0 = current_wk_src_dir_path
-            dst_path_1 = current_wk_dst_dir_path
-        
-            Common.CopyFolder src_path, dst_path_0
-            Common.CopyFolder src_path, dst_path_1
+            If encode_type = 0 Then
+                '最初だけは本当のsrcからコピーする
+                src_path = main_param.GetSrcDirPath()
+                dst_path_0 = current_wk_src_dir_path
+                dst_path_1 = current_wk_dst_dir_path
+            
+                Common.CopyFolder src_path, dst_path_0
+            
+                '全ファイルを変換されないように拡張子をリネーム
+                RenameAllFileExtension dst_path_0, encode_type
+            
+                Common.CopyFolder dst_path_0, dst_path_1
+            Else
+                src_path = before_wk_dst_dir_path
+                dst_path_0 = current_wk_src_dir_path
+                dst_path_1 = current_wk_dst_dir_path
+                
+                Common.CopyFolder src_path, dst_path_0
+                
+                '全ファイルを変換されないように拡張子をリネーム
+                RenameAllFileExtension dst_path_0, encode_type
+                
+                Common.CopyFolder dst_path_0, dst_path_1
+            End If
+
         Else
             src_path = before_wk_dst_dir_path
             dst_path_0 = current_wk_src_dir_path
@@ -361,14 +476,28 @@ Private Sub CopySrcToDstWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer)
         '途中経過を残さない
         
         If num1 = 0 And num2 = 0 Then
-            '最初だけは本当のsrcからコピーする
-            src_path = main_param.GetSrcDirPath()
-            dst_path_0 = current_wk_src_dir_path
-            dst_path_1 = current_wk_dst_dir_path
-            
-            Common.CopyFolder src_path, dst_path_0
-            Common.CopyFolder src_path, dst_path_1
+            If encode_type = 0 Then
+                '最初だけは本当のsrcからコピーする
+                src_path = main_param.GetSrcDirPath()
+                dst_path_0 = current_wk_src_dir_path
+                dst_path_1 = current_wk_dst_dir_path
+                
+                Common.CopyFolder src_path, dst_path_0
+                
+                '全ファイルを変換されないように拡張子をリネーム
+                RenameAllFileExtension dst_path_0, encode_type
+                
+                Common.CopyFolder dst_path_0, dst_path_1
+            Else
+                Common.DeleteFolder current_wk_dst_dir_path
+                
+                '全ファイルを変換されないように拡張子をリネーム
+                RenameAllFileExtension current_wk_src_dir_path, encode_type
+                
+                Common.CopyFolder current_wk_src_dir_path, current_wk_dst_dir_path
+            End If
         Else
+            Common.DeleteFolder current_wk_dst_dir_path
             Common.CopyFolder current_wk_src_dir_path, current_wk_dst_dir_path
         End If
         
@@ -468,6 +597,9 @@ Private Function IsMatch() As Boolean
 
     'ファイルを比較
     For i = LBound(src_file_list) To UBound(src_file_list)
+        If src_file_list(i) = "" Or dst_file_list(i) = "" Then
+            Exit For
+        End If
         is_match = Common.IsMatchTextFiles(src_file_list(i), dst_file_list(i))
         If is_match = False Then
             '1つでも差異があれば終了
