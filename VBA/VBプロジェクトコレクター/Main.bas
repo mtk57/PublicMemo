@@ -36,7 +36,7 @@ On Error GoTo ErrorHandler
     GoTo FINISH
     
 ErrorHandler:
-    msg = "エラーが発生しました(" & Err.Description & ")"
+    msg = "エラーが発生しました!" & vbCrLf & "Reason=" & Err.Description
     ret = False
 
 FINISH:
