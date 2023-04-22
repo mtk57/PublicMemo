@@ -184,16 +184,15 @@ Private Sub ExecSubParam()
             End If
         
         Next h
+        
+        '最後に作業フォルダのリネームされた拡張子を元に戻す
+        RenameAllFileExtension before_wk_dst_dir_path, -1
     
     Next i
-    
 
     If main_param.IsStepWorkDir() = False Then
         current_wk_dst_dir_path = before_wk_dst_dir_path
     End If
-    
-    '最後に作業フォルダのリネームされた拡張子を元に戻す
-    RenameAllFileExtension current_wk_dst_dir_path, -1
     
     'dstにコピーする
     Common.DeleteFolder (main_param.GetDestDirPath())
@@ -415,70 +414,34 @@ Private Sub CopySrcToDstWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer,
     If main_param.IsStepWorkDir() = True Then
         '途中経過を残す
         
-        If num1 = 0 And num2 = 0 Then
-            If encode_type = 0 Then
-                '最初だけは本当のsrcからコピーする
-                src_path = main_param.GetSrcDirPath()
-                dst_path_0 = current_wk_src_dir_path
-                dst_path_1 = current_wk_dst_dir_path
-            
-                Common.CopyFolder src_path, dst_path_0
-            
-                '全ファイルを変換されないように拡張子をリネーム
-                RenameAllFileExtension dst_path_0, encode_type
-            
-                Common.CopyFolder dst_path_0, dst_path_1
-            Else
-                src_path = before_wk_dst_dir_path
-                dst_path_0 = current_wk_src_dir_path
-                dst_path_1 = current_wk_dst_dir_path
-                
-                Common.CopyFolder src_path, dst_path_0
-                
-                '全ファイルを変換されないように拡張子をリネーム
-                RenameAllFileExtension dst_path_0, encode_type
-                
-                Common.CopyFolder dst_path_0, dst_path_1
-            End If
-
+        If num1 = 0 And num2 = 0 And encode_type = 0 Then
+            '最初だけは本当のsrcからコピーする
+            Common.CopyFolder main_param.GetSrcDirPath(), current_wk_src_dir_path
         Else
-            src_path = before_wk_dst_dir_path
-            dst_path_0 = current_wk_src_dir_path
-            dst_path_1 = current_wk_dst_dir_path
-            
-            Common.CopyFolder src_path, dst_path_0
-            Common.CopyFolder src_path, dst_path_1
+            'それ以外は前回DSTからコピーする
+            Common.CopyFolder before_wk_dst_dir_path, current_wk_src_dir_path
         End If
-    
+        
+        '変換されないように拡張子をリネーム
+        RenameAllFileExtension current_wk_src_dir_path, encode_type
+
+        'DSTにコピー
+        Common.CopyFolder current_wk_src_dir_path, current_wk_dst_dir_path
+            
     Else
         '途中経過を残さない
         
-        If num1 = 0 And num2 = 0 Then
-            If encode_type = 0 Then
-                '最初だけは本当のsrcからコピーする
-                src_path = main_param.GetSrcDirPath()
-                dst_path_0 = current_wk_src_dir_path
-                dst_path_1 = current_wk_dst_dir_path
-                
-                Common.CopyFolder src_path, dst_path_0
-                
-                '全ファイルを変換されないように拡張子をリネーム
-                RenameAllFileExtension dst_path_0, encode_type
-                
-                Common.CopyFolder dst_path_0, dst_path_1
-            Else
-                Common.DeleteFolder current_wk_dst_dir_path
-                
-                '全ファイルを変換されないように拡張子をリネーム
-                RenameAllFileExtension current_wk_src_dir_path, encode_type
-                
-                Common.CopyFolder current_wk_src_dir_path, current_wk_dst_dir_path
-            End If
-        Else
-            Common.DeleteFolder current_wk_dst_dir_path
-            Common.CopyFolder current_wk_src_dir_path, current_wk_dst_dir_path
+        If num1 = 0 And num2 = 0 And encode_type = 0 Then
+            '最初だけは本当のsrcからコピーする
+            Common.CopyFolder main_param.GetSrcDirPath(), current_wk_src_dir_path
         End If
         
+        '変換されないように拡張子をリネーム
+        RenameAllFileExtension current_wk_src_dir_path, encode_type
+
+        'DSTにコピー
+        Common.DeleteFolder current_wk_dst_dir_path
+        Common.CopyFolder current_wk_src_dir_path, current_wk_dst_dir_path
     End If
         
     Common.WriteLog "CopySrcToDstWorkFolder E"

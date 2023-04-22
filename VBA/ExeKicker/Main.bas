@@ -3,6 +3,11 @@ Option Explicit
 
 Public Sub Run_Click()
     On Error GoTo ErrorHandler
+    
+    If Common.ShowYesNoMessageBox("•ÏŠ·‚ğÀs‚µ‚Ü‚·B‚æ‚ë‚µ‚¢‚Å‚·‚©?") = False Then
+        Exit Sub
+    End If
+    
     Application.DisplayAlerts = False
     Dim msg As String: msg = "³í‚ÉI—¹‚µ‚Ü‚µ‚½"
     
