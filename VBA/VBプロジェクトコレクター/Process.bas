@@ -42,7 +42,7 @@ Public Sub Run()
         
         'VBプロジェクトファイルが参照しているファイルを同じフォルダ構成のままコピーする
         Dim dst_path As String: dst_path = main_param.GetDestDirPath() & SEP & GetProjectName(vbproj_path)
-        CopyProjectFiles dst_path, copy_files
+        CopyProjectFiles dst_path, copy_files, vbproj_path
         
         'BATファイルを作成する
         CreateBatFile vbproj_path, dst_path, copy_files
@@ -116,7 +116,8 @@ Private Sub SearchVBProjFile()
     
     vbprj_files = Common.DeleteEmptyArray(vbprj_files)
     
-    If Common.IsEmptyArray(vbprj_files) = True Then
+    If Common.IsEmptyArray(vbprj_files) = True Or _
+       vbprj_files(0) = "" Then
         err_msg = "VBプロジェクトファイルが見つかりませんでした"
         Common.WriteLog "SearchVBProjFile E1 (" & err_msg & ")"
         Err.Raise 53, , err_msg
@@ -299,12 +300,6 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
     cnt = 0
 
     For i = LBound(contents) To UBound(contents)
-        'Dim find_word As String: find_word = ".vb" & """ />"
-        'If InStr(contents(i), find_word) = 0 Then
-        '    '".vb" />"を含まないので無視
-        '    GoTo CONTINUE
-        'End If
-        
         If InStr(contents(i), "<Compile Include=") = 0 And _
            InStr(contents(i), "<EmbeddedResource Include=") = 0 And _
            InStr(contents(i), "<None Include=") = 0 Then
@@ -344,7 +339,7 @@ CONTINUE:
 End Function
 
 'VBプロジェクトファイルが参照しているファイルを同じフォルダ構成のままコピーする
-Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As String)
+Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As String, ByVal vbprj_path As String)
     Common.WriteLog "CopyProjectFiles S"
     
     Dim fso As Object
@@ -355,20 +350,30 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
     Dim dst_base_path As String: dst_base_path = Replace(base_path, ":", "")
     Dim i As Integer
     
+    Common.DeleteFolder in_dest_path
+    
     For i = LBound(filelist) To UBound(filelist)
         Dim src As String: src = filelist(i)
+        
+        If Right(src, 4) = ".sln" And _
+           Common.IsExistsFile(src) = False Then
+           'slnの場合、コピー元に存在しない場合は無視する
+           Common.WriteLog "[SKIP]" & src
+           GoTo CONTINUE
+        End If
+        
+        If Common.IsExistsFile(src) = False Then
+            Err.Raise 53, , "VBプロジェクトに記載されたファイルが存在しません" & vbCrLf & _
+                            "VB Project=" & vbprj_path & vbCrLf & _
+                            "Not found=" & src
+        End If
+        
         Dim dst As String: dst = in_dest_path & SEP & dst_base_path & Replace(src, base_path, "")
         Dim path As String: path = Common.GetFolderNameFromPath(dst)
         
         'フォルダが存在しない場合は作成する
         If Not fso.FolderExists(path) Then
             Common.CreateFolder (path)
-        End If
-        
-        If Right(src, 4) = ".sln" And _
-           Common.IsExistsFile(src) = False Then
-           'slnの場合、コピー元に存在しない場合
-           GoTo CONTINUE
         End If
         
         'ファイルをコピーする
@@ -535,7 +540,7 @@ Private Sub OutputSheet(ByVal vbproj_path As String)
     
     Dim prj_path As String: prj_path = contents(UBound(contents))
     
-    Dim before_sheet_name As String: before_sheet_name = ActiveSheet.Name
+    Dim before_sheet_name As String: before_sheet_name = ActiveSheet.name
     
     Common.AddSheet sheet_name
     

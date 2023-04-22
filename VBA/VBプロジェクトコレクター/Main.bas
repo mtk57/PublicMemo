@@ -52,6 +52,11 @@ Public Sub Run_Click()
 
 On Error GoTo ErrorHandler
     Application.DisplayAlerts = False
+    
+    Dim main_sheet As Worksheet
+    Set main_sheet = ThisWorkbook.Sheets("main")
+    main_sheet.Range("A3").value = "処理中..."
+    
     Process.IS_EXTERNAL = False
 
     Dim msg As String: msg = "正常に終了しました"
@@ -70,11 +75,12 @@ On Error GoTo ErrorHandler
     GoTo FINISH
     
 ErrorHandler:
-    msg = "エラーが発生しました(" & Err.Description & ")"
+    msg = "エラーが発生しました!" & vbCrLf & "Reason=" & Err.Description
 
 FINISH:
     Common.WriteLog msg
     Common.CloseLog
+    main_sheet.Range("A3").value = ""
     Application.DisplayAlerts = True
     MsgBox msg
 End Sub
