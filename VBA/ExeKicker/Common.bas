@@ -528,6 +528,12 @@ Public Function DeleteEmptyArray(ByRef in_array() As String) As String()
     Dim i, cnt As Long
     Dim row As String
     
+    cnt = 0
+    
+    If IsEmptyArray(in_array) = True Then
+        GoTo FINISH
+    End If
+    
     ReDim ret_array(UBound(in_array))
     
     For i = LBound(in_array) To UBound(in_array)
@@ -540,6 +546,7 @@ Public Function DeleteEmptyArray(ByRef in_array() As String) As String()
         End If
     Next
     
+FINISH:
     If cnt > 0 Then
         ReDim Preserve ret_array(cnt - 1)
     Else
