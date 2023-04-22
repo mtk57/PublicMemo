@@ -54,7 +54,7 @@ Private Sub Class_Initialize()
 End Sub
 
 '初期化
-Public Function Init() As String
+Public Sub Init()
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
     Const CLM = "N"
@@ -75,53 +75,41 @@ Public Function Init() As String
     is_step_wk_dir_s = main_sheet.Range(CLM & i + 9).value
     is_del_wk_dir_s = main_sheet.Range(CLM & i + 10).value
     max_exec_cnt_s = main_sheet.Range(CLM & i + 11).value
-    
-    Init = Validate()
-End Function
+End Sub
 
 '検証
-Private Function Validate() As String
+Public Sub Validate()
     'MUST
     If exe_file_path = "" Then
-        Validate = "exeファイルパスが指定されていません"
-        Exit Function
+        Err.Raise 53, , "exeファイルパスが指定されていません"
     ElseIf Common.IsExistsFile(exe_file_path) = False Then
-        Validate = "指定されたexeファイルが存在しません (" & exe_file_path & ")"
-        Exit Function
+        Err.Raise 53, , "指定されたexeファイルが存在しません (" & exe_file_path & ")"
     End If
 
     If src_dir_path = "" Then
-        Validate = "SRCフォルダパスが指定されていません"
-        Exit Function
+        Err.Raise 53, , "SRCフォルダパスが指定されていません"
     ElseIf Common.IsExistsFolder(src_dir_path) = False Then
-        Validate = "指定されたSRCフォルダが存在しません (" & src_dir_path & ")"
-        Exit Function
+        Err.Raise 53, , "指定されたSRCフォルダが存在しません (" & src_dir_path & ")"
     End If
 
     If dst_dir_path = "" Then
-        Validate = "DSTフォルダパスが指定されていません"
-        Exit Function
+        Err.Raise 53, , "DSTフォルダパスが指定されていません"
     End If
 
     If in_ext = "" Then
-        Validate = "拡張子が指定されていません"
-        Exit Function
+        Err.Raise 53, , "拡張子が指定されていません"
     End If
 
     If addin_file_path = "" Then
-        Validate = "アドインファイルパスが指定されていません"
-        Exit Function
+        Err.Raise 53, , "アドインファイルパスが指定されていません"
     ElseIf Common.IsExistsFile(addin_file_path) = False Then
-        Validate = "指定されたアドインファイルが存在しません (" & addin_file_path & ")"
-        Exit Function
+        Err.Raise 53, , "指定されたアドインファイルが存在しません (" & addin_file_path & ")"
     End If
 
     If exe_ini_file_path = "" Then
-        Validate = "ExeIniファイルパスが指定されていません"
-        Exit Function
+        Err.Raise 53, , "ExeIniファイルパスが指定されていません"
     ElseIf Common.IsExistsFile(exe_ini_file_path) = False Then
-        Validate = "指定されたExeIniファイルが存在しません (" & exe_ini_file_path & ")"
-        Exit Function
+        Err.Raise 53, , "指定されたExeIniファイルが存在しません (" & exe_ini_file_path & ")"
     End If
 
     'WANT
@@ -157,12 +145,9 @@ Private Function Validate() As String
             max_exec_cnt = 1
         End If
     Else
-        Validate = "最大実行回数が数字ではありません (" & max_exec_cnt_s & ")"
-        Exit Function
+        Err.Raise 53, , "最大実行回数が数字ではありません (" & max_exec_cnt_s & ")"
     End If
-
-    Validate = ""
-End Function
+End Sub
 
 '=========================================
 'Getter

@@ -24,19 +24,12 @@ Public Sub Run()
     DQ = Chr(34)
 
     'パラメータのチェックと収集を行う
-    If CheckAndCollectParam() = False Then
-        Common.WriteLog "Run E1"
-        Exit Sub
-    End If
+    CheckAndCollectParam
     
     'Sub Paramを順に実行していく
-    If ExecSubParam() = False Then
-        Common.WriteLog "Run E2"
-        Exit Sub
-    End If
+    ExecSubParam
     
     Common.WriteLog "Run E"
-    MsgBox "終わりました"
 End Sub
 
 '作業用フォルダ削除
@@ -48,32 +41,23 @@ Public Sub DelWkDir()
     SEP = Application.PathSeparator
 
     'パラメータのチェックと収集を行う
-    If CheckAndCollectParam() = False Then
-        Common.WriteLog "DelWkDir E1"
-        Exit Sub
-    End If
+    CheckAndCollectParam
     
     DeleteWorkFolder True
     
     Common.WriteLog "DelWkDir E"
-    MsgBox "終わりました"
 End Sub
 
 'パラメータのチェックと収集を行う
-Private Function CheckAndCollectParam() As Boolean
+Private Sub CheckAndCollectParam()
     Common.WriteLog "CheckAndCollectParam S"
     
     Dim err_msg As String
 
     'Main Params
     Set main_param = New MainParam
-    err_msg = main_param.Init()
-    If err_msg <> "" Then
-        MsgBox err_msg
-        CheckAndCollectParam = False
-        Common.WriteLog "CheckAndCollectParam E1 (" & err_msg & ")"
-        Exit Function
-    End If
+    main_param.Init
+    main_param.Validate
     
     Common.WriteLog main_param.GetAllValue()
 
@@ -87,14 +71,10 @@ Private Function CheckAndCollectParam() As Boolean
         Dim sub_param As SubParam
         Set sub_param = New SubParam
         
-        err_msg = sub_param.Init(row)
-        If err_msg <> "" Then
-            MsgBox err_msg
-            CheckAndCollectParam = False
-            Common.WriteLog "CheckAndCollectParam E2 (row=" & row & ", msg=" & err_msg & ")"
-            Exit Function
-        End If
-        
+        Common.WriteLog "row=" & row
+        sub_param.Init row
+        sub_param.Validate
+
         Common.WriteLog sub_param.GetAllValue()
         
         If sub_param.GetEnable() = "STOPPER" Then
@@ -111,22 +91,17 @@ CONTINUE:
         row = row + SUB_ROWS + 1
     Loop
 
-    CheckAndCollectParam = True
     Common.WriteLog "CheckAndCollectParam E"
-End Function
+End Sub
 
 'Sub Paramを順に実行していく
-Private Function ExecSubParam() As Boolean
+Private Sub ExecSubParam()
     Common.WriteLog "ExecSubParam S"
     
     Dim errmsg As String
     
     If UBound(sub_params) < 0 Then
-        errmsg = "有効なSub paramがありません"
-        MsgBox errmsg
-        ExecSubParam = True
-        Common.WriteLog "ExecSubParam E1 (" & errmsg & ")"
-        Exit Function
+        Err.Raise 53, , "有効なSub paramがありません"
     End If
 
     Dim h As Integer
@@ -139,11 +114,7 @@ Private Function ExecSubParam() As Boolean
     '対象拡張子のファイルが存在するか確認する
     Dim ext As String: ext = Replace(main_param.GetInExtension(), "*", "")
     If Common.IsExistsExtensionFile(main_param.GetSrcDirPath(), ext) = False Then
-        errmsg = "処理対象の拡張子のファイルが存在しません (" & ext & ")"
-        MsgBox errmsg
-        ExecSubParam = True
-        Common.WriteLog "ExecSubParam E2 (" & errmsg & ")"
-        Exit Function
+        Err.Raise 53, , "処理対象の拡張子のファイルが存在しません (" & ext & ")"
     End If
     
     '作業用フォルダを作成する
@@ -160,6 +131,8 @@ Private Function ExecSubParam() As Boolean
         
         'SJIS, UTF8ごとに実行する(0=SJIS, 1=UTF8)
         For h = 0 To 1
+        
+            Dim unmatch_cnt As Integer: unmatch_cnt = 0
         
             'exeiniを更新する
             UpdateExeIniContents sub_param, h
@@ -190,6 +163,8 @@ Private Function ExecSubParam() As Boolean
                     '1つ以上の不一致あり
                     If sub_param.IsExecNotDiff() = False Then
                         is_exit_for = True
+                    Else
+                        unmatch_cnt = unmatch_cnt + 1
                     End If
                 End If
                 
@@ -203,6 +178,10 @@ Private Function ExecSubParam() As Boolean
                 End If
     
             Next j
+            
+            If unmatch_cnt >= main_param.GetMaxExecCount() And IsTestMode() = False Then
+                Err.Raise 53, , "不一致が最大値以上になったので中止します(" & unmatch_cnt & ")"
+            End If
         
         Next h
     
@@ -223,9 +202,8 @@ Private Function ExecSubParam() As Boolean
     '作業用フォルダを削除する
     DeleteWorkFolder main_param.IsDeleteWorkDir()
 
-    ExecSubParam = True
     Common.WriteLog "ExecSubParam E"
-End Function
+End Sub
 
 '作業用フォルダを作成する
 Private Sub CreateWorkFolder()
@@ -502,11 +480,6 @@ Private Sub CopySrcToDstWorkFolder(ByVal num1 As Integer, ByVal num2 As Integer,
         End If
         
     End If
-    
-    'If num1 = 0 And num2 = 0 Then
-        'コピー後は全ファイルSJISにする!
-        'Common.UTF8toSJIS_AllFile current_wk_src_dir_path, main_param.GetInExtension(), main_param.IsContainSubDir()
-    'End If
         
     Common.WriteLog "CopySrcToDstWorkFolder E"
 End Sub
@@ -575,8 +548,7 @@ Private Sub RunExe(ByRef param_list() As String)
         ret = Common.RunProcessWait(exe_param)
         
         If ret <> 0 Then
-            Common.WriteLog "exe ret=" & ret
-            Err.Raise 53, , "Exeの実行に失敗しました(ret=" & ret & ")"
+            Err.Raise 53, , "Exeの実行に失敗しました(exe ret=" & ret & ")"
         End If
     
     Next i
@@ -597,10 +569,13 @@ Private Function IsMatch() As Boolean
 
     'ファイルを比較
     For i = LBound(src_file_list) To UBound(src_file_list)
+    
         If src_file_list(i) = "" Or dst_file_list(i) = "" Then
             Exit For
         End If
+        
         is_match = Common.IsMatchTextFiles(src_file_list(i), dst_file_list(i))
+        
         If is_match = False Then
             '1つでも差異があれば終了
             IsMatch = is_match
@@ -654,4 +629,12 @@ Private Sub DeleteWorkFolder(ByVal is_del_wk_dir As Boolean)
     Common.WriteLog "DeleteWorkFolder E"
 End Sub
 
-
+Private Function IsTestMode() As Boolean
+    Common.WriteLog "IsTestMode S"
+    IsTestMode = False
+    If Common.GetFileName(main_param.GetExeFilePath()) = "cs.exe" Then
+        Common.WriteLog "[TestMode]"
+        IsTestMode = True
+    End If
+    Common.WriteLog "IsTestMode E"
+End Function

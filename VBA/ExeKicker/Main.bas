@@ -4,6 +4,11 @@ Option Explicit
 Public Sub Run_Click()
     On Error GoTo ErrorHandler
     Application.DisplayAlerts = False
+    Dim msg As String: msg = "正常に終了しました"
+    
+    Dim main_sheet As Worksheet
+    Set main_sheet = ThisWorkbook.Sheets("main")
+    main_sheet.Range("A2").value = "処理中..."
     
     If IsEnableDebugLog() = True Then
         Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "ExeKicker.log"
@@ -15,17 +20,17 @@ Public Sub Run_Click()
     Process.Run
 
     Common.WriteLog "★End"
+    GoTo FINISH
 
-    Common.CloseLog
-    Application.DisplayAlerts = True
-    Exit Sub
-    
 ErrorHandler:
-    Dim errmsg As String: errmsg = "エラーが発生しました：" & Err.Description
-    MsgBox errmsg, vbCritical, "エラー"
-    Common.WriteLog errmsg
+    msg = "エラーが発生しました(" & Err.Description & ")"
+
+FINISH:
+    Common.WriteLog msg
     Common.CloseLog
+    main_sheet.Range("A2").value = ""
     Application.DisplayAlerts = True
+    MsgBox msg
 End Sub
 
 Public Sub DeleteWorkDir_Click()

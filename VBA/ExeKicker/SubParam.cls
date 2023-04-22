@@ -37,7 +37,7 @@ Private Sub Class_Initialize()
 End Sub
 
 '初期化
-Public Function Init(ByVal start_row_num As Integer) As String
+Public Sub Init(ByVal start_row_num As Integer)
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
     Dim i As Integer: i = start_row_num
@@ -51,12 +51,10 @@ Public Function Init(ByVal start_row_num As Integer) As String
     is_enable_addin_s = main_sheet.Range(CLM & i + 2).value
     is_skip_comment_s = main_sheet.Range(CLM & i + 3).value
     is_exec_not_diff_s = main_sheet.Range(CLM & i + 4).value
-    
-    Init = Validate()
-End Function
+End Sub
 
 '検証
-Private Function Validate() As String
+Public Sub Validate()
     
     'MUST
     If is_enable = "" Or _
@@ -69,15 +67,13 @@ Private Function Validate() As String
     End If
 
     If is_enable = "DISABLE" Or is_enable = "STOPPER" Then
-        GoTo FINISH
+        Exit Sub
     End If
     
     If ini_file_path = "" Then
-        Validate = "変換定義Iniファイルパスが指定されていません"
-        Exit Function
+        Err.Raise 53, , "変換定義Iniファイルパスが指定されていません"
     ElseIf Common.IsExistsFile(ini_file_path) = False Then
-        Validate = "指定された変換定義Iniファイルが存在しません (" & ini_file_path & ")"
-        Exit Function
+        Err.Raise 53, , "指定された変換定義Iniファイルが存在しません (" & ini_file_path & ")"
     End If
 
     'WANT
@@ -101,10 +97,7 @@ Private Function Validate() As String
     Else
         is_exec_not_diff = True
     End If
-
-FINISH:
-    Validate = ""
-End Function
+End Sub
 
 '=========================================
 'Getter

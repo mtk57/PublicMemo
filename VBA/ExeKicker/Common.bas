@@ -631,6 +631,8 @@ Public Function IsMatchTextFiles(ByVal file1 As String, ByVal file2 As String) A
     Dim filesize1 As Long: filesize1 = FileLen(file1)
     Dim filesize2 As Long: filesize2 = FileLen(file2)
     
+    'TODO:バイナリレベルで比較すべき
+    
     'まずファイルサイズでチェック
     If filesize1 = 0 And filesize2 = 0 Then
         'どちらも0byteなので一致
