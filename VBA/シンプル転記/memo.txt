@@ -1,0 +1,24 @@
+シンプル転記						ver.	0.3																																																		
+処理中...												パスは全て絶対パスで指定すること																	Sub paramはいくらでも追加してよいが、以下のルールを守ること。																												
+												関連するフォルダ・ファイルは他アプリで開いている場合は実行前に閉じておくこと。																	・1行間を空けること。																												
+																													・既存のSub paramと同じ行の構成にすること。（順序性を守ること）																												
+	Main Param									★=MUST				=ComboBox																						memo																					
+			①デバッグログ出力										YES																							※未指定の場合は「NO」とする。「YES」の場合は本ファイルと同じフォルダに出力する。																					
+			②DST検索列が見つからない場合										無視																							※未指定の場合は「中断」とする。																					
+			③書式もコピーするか?										YES																							※未指定の場合は「NO」とする。xls, xlsx, xlsm指定時のみ。																					
+			④バックアップ作成										YES																							※未指定の場合は「NO」とする。「YES」の場合はDSTファイルと同じフォルダに作成する。																					
+																																																									
+	Sub Params																																																								
+		1																																																							
+			有効無効										ENABLE																							※未指定の場合は「STOPPER」とする。																					
+			①SRCファイルパス									★	C:\_git\PublicMemo\VBA\シンプル転記\testdata\src\src.xlsx																							※xls, xlsx, xlsm, csv, tsvのみ対応。																					
+			②SRCシート名									★	src																							※xls, xlsx, xlsm指定時のみ。																					
+			③SRC開始行										2																							※未指定の場合は1とする。1始まり。																					
+			④SRC検索列									★	C																							※","でAND指定可。xls, xlsx, xlsm指定時は列名(A～)、csv,tsv指定時は列番号(1始まり)																					
+			⑤SRC転記列									★	A																							※xls, xlsx, xlsm指定時は列名(A～)、csv,tsv指定時は列番号(1始まり)																					
+			1.DSTファイルパス									★	C:\_git\PublicMemo\VBA\シンプル転記\testdata\dst\dst.xlsx																							※xls, xlsx, xlsm, csv, tsvのみ対応。																					
+			2.DSTシート名										dst																							※未指定の場合はSRCと同じとする。																					
+			3.DST開始行										1																							※未指定の場合はSRCと同じとする。1始まり。																					
+			4.DST検索列										A																							※","でAND指定可。未指定の場合はSRCと同じとする。xls, xlsx, xlsm指定時は列名(A～)、csv,tsv指定時は列番号(1始まり)																					
+			5.DST転記列										B																							※未指定の場合はSRCと同じとする。xls, xlsx, xlsm指定時は列名(A～)、csv,tsv指定時は列番号(1始まり)																					
+																																																									
