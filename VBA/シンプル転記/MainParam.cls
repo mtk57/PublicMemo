@@ -28,12 +28,12 @@ End Sub
 Public Sub Init()
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
-    Const CLM = "N"
+    Const clm = "N"
     Const i = 6
     
-    dst_not_found_action = main_sheet.Range(CLM & i).value
-    is_copy_format_s = main_sheet.Range(CLM & i + 1).value
-    is_backup_s = main_sheet.Range(CLM & i + 1).value
+    dst_not_found_action = main_sheet.Range(clm & i).value
+    is_copy_format_s = main_sheet.Range(clm & i + 1).value
+    is_backup_s = main_sheet.Range(clm & i + 1).value
 End Sub
 
 'åüèÿ

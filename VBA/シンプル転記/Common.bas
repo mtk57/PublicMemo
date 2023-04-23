@@ -26,11 +26,42 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 '-------------------------------------------------------------
+'指定列の全行を指定ワードで検索し、ヒットした行番号を返す
+' ws : I : ワークシート
+' find_clm : I : 指定列名(Ex."A")
+' find_start_row : I : 検索開始行(1始まり)
+' keyword : I : 検索ワード
+' Ret : ヒットした行番号
+'-------------------------------------------------------------
+Public Function FindRowByKeyword( _
+  ByVal ws As Worksheet, _
+  ByVal find_clm As String, _
+  ByVal find_start_row As Long, _
+  ByVal keyword As String _
+) As Long
+    Dim rng As Range
+    Dim cell As Range
+    Dim found_row As Long
+    
+    Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
+    
+    found_row = 0
+    For Each cell In rng
+        If cell.value = keyword Then
+            found_row = cell.row
+            Exit For
+        End If
+    Next cell
+    
+    FindRowByKeyword = found_row
+End Function
+
+'-------------------------------------------------------------
 'シートの内容を2次元配列に格納する
 ' sheet_name : I : シート名
 ' Ret : シートの内容
 '-------------------------------------------------------------
-Function GetSheetContentsByStringArray(ByVal sheet_name As String) As String()
+Public Function GetSheetContentsByStringArray(ByVal sheet_name As String) As String()
     Dim ws As Worksheet
     Dim arr() As String
     Dim row_cnt As Long, clm_cnt As Long

@@ -54,21 +54,21 @@ Public Sub Init(ByVal start_row_num As Long)
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
     Dim i As Long: i = start_row_num
-    Const CLM = "N"
+    Const clm = "N"
     
-    is_enable = main_sheet.Range(CLM & i).value
+    is_enable = main_sheet.Range(clm & i).value
     
-    src_file_path = main_sheet.Range(CLM & i + 1).value
-    src_sheet_name = main_sheet.Range(CLM & i + 2).value
-    src_start_row_s = main_sheet.Range(CLM & i + 3).value
-    src_find_clm = main_sheet.Range(CLM & i + 4).value
-    src_tran_clm = main_sheet.Range(CLM & i + 5).value
+    src_file_path = main_sheet.Range(clm & i + 1).value
+    src_sheet_name = main_sheet.Range(clm & i + 2).value
+    src_start_row_s = main_sheet.Range(clm & i + 3).value
+    src_find_clm = main_sheet.Range(clm & i + 4).value
+    src_tran_clm = main_sheet.Range(clm & i + 5).value
     
-    dst_file_path = main_sheet.Range(CLM & i + 6).value
-    dst_sheet_name = main_sheet.Range(CLM & i + 7).value
-    dst_start_row_s = main_sheet.Range(CLM & i + 8).value
-    dst_find_clm = main_sheet.Range(CLM & i + 9).value
-    dst_tran_clm = main_sheet.Range(CLM & i + 10).value
+    dst_file_path = main_sheet.Range(clm & i + 6).value
+    dst_sheet_name = main_sheet.Range(clm & i + 7).value
+    dst_start_row_s = main_sheet.Range(clm & i + 8).value
+    dst_find_clm = main_sheet.Range(clm & i + 9).value
+    dst_tran_clm = main_sheet.Range(clm & i + 10).value
 End Sub
 
 'åüèÿ

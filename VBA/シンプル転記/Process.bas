@@ -107,9 +107,9 @@ Private Function CollectSrcDatas(ByRef sub_param As SubParam) As String()
     Common.WriteLog "CollectSrcDatas S"
 
     Dim ws As Worksheet
-    Dim temp_sheet As String
     Dim book_name As String
-    
+    Dim temp_sheet As String
+
     'SRCファイルパスのSRCシート名を開く
     Set ws = Common.GetSheet(sub_param.GetSrcFilePath(), sub_param.GetSrcSheetName(), False)
     book_name = Common.GetFileName(sub_param.GetSrcFilePath())
@@ -141,19 +141,51 @@ End Function
 Private Sub Transcription(ByRef sub_param As SubParam, ByRef src_datas() As String)
     Common.WriteLog "Transcription S"
     
-    '配列の内容をデバッグ出力に表示
-    'Dim r As Long, c As Long
-    'For r = LBound(src_datas, 1) To UBound(src_datas, 1)
-    '    For c = LBound(src_datas, 2) To UBound(src_datas, 2)
-    '        Debug.Print src_datas(r, c),
-    '    Next c
-    '    Debug.Print
-    'Next r
+    Dim ws As Worksheet
+    Dim book_name As String
+    Dim r As Long, c As Long
+    Dim find_word As String
+    Dim found_row As Long
     
     'DSTファイルパスのDSTシート名を開く
-    '2次元配列の行数分ループする
-    '   SRC検索列の値が、DST検索列にあるか検索する
-    '   あれば、SRC転記列の値をDST転記列に入れる
+    Set ws = Common.GetSheet(sub_param.GetDstFilePath(), sub_param.GetDstSheetName(), True)
+    book_name = Common.GetFileName(sub_param.GetDstFilePath())
+    
+    'SRC検索列の値が、DST検索列にあるか検索する
+    'あれば、SRC転記列の値をDST転記列に入れる
+    For r = LBound(src_datas, 1) To UBound(src_datas, 1)
+    
+        find_word = Trim(src_datas(r, 1))
+        
+        If find_word = "" Then
+            GoTo CONTINUE_ROW
+        End If
+        
+        '指定列の全行を指定ワードで検索し、ヒットした行番号を取得する
+        found_row = Common.FindRowByKeyword( _
+                       ws, _
+                       sub_param.GetDstFindClm(), _
+                       sub_param.GetDstStartRow(), _
+                       find_word _
+                    )
+    
+        If found_row = 0 Then
+            '見つからない!
+            Common.WriteLog "Search value is not found!" & vbCrLf & _
+                            "r=" & r & vbCrLf & _
+                            "find_word=" & find_word
+            'TODO:いったん無視
+            GoTo CONTINUE_ROW
+        End If
+        
+        
+        
+CONTINUE_ROW:
+        
+    Next r
+    
+    'DSTファイルパスと閉じる
+    Common.CloseBook (Common.GetFileName(sub_param.GetDstFilePath()))
     
     Common.WriteLog "Transcription E"
 End Sub
