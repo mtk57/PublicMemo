@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.4"
+Public Const VERSION = "1.0.5"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -24,6 +24,30 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
 'ログファイル番号
 Private logfile_num As Integer
 Private is_log_opened As Boolean
+
+
+'-------------------------------------------------------------
+'フォルダをリネームする
+' path : I : フォルダパス(絶対パス)
+' rename : I : リネーム後のフォルダ名
+' Ret : リネーム後のフォルダパス
+'-------------------------------------------------------------
+Public Function RenameFolder(ByVal path As String, ByVal rename As String) As String
+    If IsExistsFolder(path) = False Then
+        Err.Raise 53, , "指定されたフォルダが存在しません (" & path & ")"
+    End If
+
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    Dim folder As Object
+    Set folder = fso.GetFolder(path)
+    
+    folder.name = rename
+    RenameFolder = folder.path
+    
+    Set fso = Nothing
+End Function
 
 '-------------------------------------------------------------
 '指定列の全行を指定ワードで検索し、ヒットした行番号を返す
@@ -218,7 +242,7 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     Set folder = fso.GetFolder(search_path)
     
     Dim file As Object
-    For Each file In folder.Files
+    For Each file In folder.files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like search_name Then
             '発見
             SearchFile = file.path
@@ -562,7 +586,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String)
         End If
     Next subfolder
     
-    For Each file In folder.Files
+    For Each file In folder.files
         If Right(file.name, Len(ext)) = ext Then
             Set fso = Nothing
             Set folder = Nothing
@@ -859,7 +883,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     
     'コピー元のフォルダ内のファイルをコピーする
     Dim file As Object
-    For Each file In fso.GetFolder(src_path).Files
+    For Each file In fso.GetFolder(src_path).files
         fso.CopyFile file.path, fso.BuildPath(dest_path, file.name), True
     Next
     
@@ -1044,6 +1068,25 @@ Public Sub DeleteFolder(ByVal path As String)
 End Sub
 
 '-------------------------------------------------------------
+'フォルダを移動する
+' src_path : IN : 移動元フォルダパス (絶対パス)
+' dst_path : IN : 移動先フォルダパス (絶対パス)
+'-------------------------------------------------------------
+Public Sub MoveFolder(ByVal src_path As String, ByVal dst_path As String)
+    If IsExistsFolder(src_path) = False Then
+        Err.Raise 53, , "移動元フォルダが存在しません (" & src_path & ")"
+        Exit Sub
+    End If
+
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+
+    fso.MoveFolder src_path, dst_path
+    
+    Set fso = Nothing
+End Sub
+
+'-------------------------------------------------------------
 '文字列配列の共通文字列を返す
 ' list : IN : 文字列配列
 ' Ret : 共通文字列
@@ -1184,7 +1227,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Set folder = fso.GetFolder(target_folder)
     
     Dim fileobj As Object
-    For Each fileobj In folder.Files
+    For Each fileobj In folder.files
         If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
             '検索対象のファイルを読み込む
             Dim contents As String: contents = ReadTextFileBySJIS(fileobj.path)
@@ -1356,4 +1399,6 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
+
 
