@@ -395,30 +395,56 @@ Public Function IsSJIS(ByVal path As String) As Boolean
         Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
     End If
     
-    Dim in_str As String
-    Dim buf As String
+    Dim Ado As Object
+    Const TYPE_BINARY = 1
+    Set Ado = CreateObject("ADODB.Stream")
+    Ado.Type = TYPE_BINARY
+    Ado.Open
+
+    Ado.LoadFromFile path
+    Dim read_data As String: read_data = Ado.Read
+    Ado.Close
+    Set Ado = Nothing
+
     Dim i As Long
+    Dim first_byte As Byte
+    Dim second_byte As Byte
+    Dim is_dbcs As Boolean
     
-    Dim filenum As Integer: filenum = FreeFile
-    
-    'Shift-JIS形式のテキストファイルを読み込み
-    in_str = ""
-    Open path For Input As #filenum
-        'テキストをすべて取得する
-        Do Until EOF(filenum)
-            Line Input #filenum, buf
-            in_str = in_str & buf & vbCrLf
-        Loop
-    Close #filenum
-        
-    'Shift-JIS以外のファイルを読み込んでしまった場合は終了
-    For i = 1 To Len(in_str)
-        If Asc(Mid(in_str, i, 1)) = -7295 Then
-            IsSJIS = False
-            Exit Function
+    For i = 1 To LenB(read_data)
+
+        first_byte = AscB(MidB(read_data, i, 1))
+
+        '全角文字列(DBCS)の先頭1バイトであるか
+        is_dbcs = False
+
+        If &H81 <= first_byte And first_byte <= &H9F Then
+            is_dbcs = True
+        ElseIf &HE0 <= first_byte And first_byte <= &HEF Then
+            is_dbcs = True
+        End If
+
+        If is_dbcs Then
+            i = i + 1
+
+            If i > LenB(read_data) Then
+                IsSJIS = False
+                Exit Function
+            End If
+
+            second_byte = AscB(MidB(read_data, i, 1))
+
+            If &H40 <= second_byte And second_byte <= &H7F Then
+                'SJIS!
+            ElseIf &H80 <= second_byte And second_byte <= &HFC Then
+                'SJIS!
+            Else
+                IsSJIS = False
+                Exit Function
+            End If
         End If
     Next
-    
+
     IsSJIS = True
 End Function
 
@@ -1330,6 +1356,4 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
-
-
 
