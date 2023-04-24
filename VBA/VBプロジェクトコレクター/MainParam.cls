@@ -17,6 +17,7 @@ Private src_dir_path As String
 Private dst_dir_path As String
 Private is_out_sheet As Boolean
 Private is_create_bat As Boolean
+Private move_base_dir As String
 
 Private is_out_sheet_s As String
 Private is_create_bat_s As String
@@ -29,6 +30,7 @@ Private Sub Class_Initialize()
     dst_dir_path = ""
     is_out_sheet = False
     is_create_bat = False
+    move_base_dir = ""
     
     is_out_sheet_s = ""
     is_create_bat_s = ""
@@ -47,6 +49,7 @@ Public Sub Init()
     dst_dir_path = main_sheet.Range(CLM & i + 5).value
     is_out_sheet_s = main_sheet.Range(CLM & i + 6).value
     is_create_bat_s = main_sheet.Range(CLM & i + 7).value
+    move_base_dir = main_sheet.Range(CLM & i + 8).value
 End Sub
 
 '初期化(外部実行用)
@@ -55,29 +58,25 @@ Public Sub InitForExternal(ByVal path As String)
 End Sub
 
 '検証
-Public Function Validate() As String
+Public Sub Validate()
     Dim ext As String
 
     If vbprj_file_name <> "" Then
         ext = Common.GetFileExtension(vbprj_file_name)
     
         If ext <> "vbp" And ext <> "vbproj" Then
-            Validate = "VBプロジェクトファイル名が未対応の拡張子です。(" & vbprj_file_name & ")"
-            Exit Function
+            Err.Raise 53, , "VBプロジェクトファイル名が未対応の拡張子です。(" & vbprj_file_name & ")"
         End If
     
         If src_dir_path = "" Then
-            Validate = "VBプロジェクトファイルを検索するフォルダパスが指定されていません"
-            Exit Function
+            Err.Raise 53, , "VBプロジェクトファイルを検索するフォルダパスが指定されていません"
         ElseIf Common.IsExistsFolder(src_dir_path) = False Then
-            Validate = "VBプロジェクトファイルを検索するフォルダが存在しません (" & src_dir_path & ")"
-            Exit Function
+            Err.Raise 53, , "VBプロジェクトファイルを検索するフォルダが存在しません (" & src_dir_path & ")"
         End If
     End If
 
     If dst_dir_path = "" Then
-        Validate = "コピー先フォルダパスが指定されていません"
-        Exit Function
+        Err.Raise 53, , "コピー先フォルダパスが指定されていません"
     End If
     
     If is_out_sheet_s = "" Or is_out_sheet_s = "NO" Then
@@ -92,8 +91,7 @@ Public Function Validate() As String
         is_create_bat = True
     End If
 
-    Validate = ""
-End Function
+End Sub
 
 '=========================================
 'Getter
@@ -134,6 +132,13 @@ Public Function IsCreateBat() As Boolean
     IsCreateBat = is_create_bat
 End Function
 
+'-----------------------------------------
+'移動起点フォルダ名
+'-----------------------------------------
+Public Function GetMoveBaseDirName() As String
+    GetMoveBaseDirName = move_base_dir
+End Function
+
 Public Function GetAllValue() As String
     Dim ret As String
     
@@ -142,7 +147,8 @@ Public Function GetAllValue() As String
           "src_dir_path=(" & src_dir_path & "), " & _
           "dst_dir_path=(" & dst_dir_path & "), " & _
           "is_out_sheet=(" & is_out_sheet_s & "), " & _
-          "is_create_bat=(" & is_create_bat_s & ")"
+          "is_create_bat=(" & is_create_bat_s & "), " & _
+          "move_base_dir=(" & move_base_dir & ")"
 
     GetAllValue = ret
 End Function

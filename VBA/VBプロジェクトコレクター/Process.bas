@@ -68,18 +68,10 @@ Private Sub CheckAndCollectParam()
     End If
     
     'Main Params
-    err_msg = main_param.Validate()
-    If err_msg <> "" Then
-        Common.WriteLog "CheckAndCollectParam E1 (" & err_msg & ")"
-        Err.Raise 53, , err_msg
-    End If
+    main_param.Validate
     
     'Sub Params
-    err_msg = sub_param.Validate()
-    If err_msg <> "" Then
-        Common.WriteLog "CheckAndCollectParam E2 (" & err_msg & ")"
-        Err.Raise 53, , err_msg
-    End If
+    sub_param.Validate
     
     Common.WriteLog main_param.GetAllValue()
     
@@ -348,7 +340,9 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
     Dim SEP As String: SEP = Application.PathSeparator
     Dim base_path As String: base_path = Common.GetCommonString(filelist)
     Dim dst_base_path As String: dst_base_path = Replace(base_path, ":", "")
+    Dim dst_file_path() As String
     Dim i As Integer
+    Dim cnt As Integer: cnt = 0
     
     Common.DeleteFolder in_dest_path
     
@@ -379,14 +373,94 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
         'ファイルをコピーする
         fso.CopyFile src, dst
         
+        ReDim Preserve dst_file_path(cnt)
+        dst_file_path(cnt) = dst
+        
+        cnt = cnt + 1
+        
 CONTINUE:
         
     Next i
+    
+    '移動起点フォルダを移動する
+    MoveBaseFolder in_dest_path, dst_file_path, vbprj_path
     
     Set fso = Nothing
     Common.WriteLog "CopyProjectFiles E"
 End Sub
 
+'移動起点フォルダを移動する
+Private Sub MoveBaseFolder( _
+    ByVal in_dest_path As String, _
+    ByRef dst_file_path() As String, _
+    ByVal vbprj_path As String _
+)
+    Common.WriteLog "MoveBaseFolder S"
+
+    If main_param.GetMoveBaseDirName() = "" Then
+        Common.WriteLog "MoveBaseFolder E1"
+        Exit Sub
+    End If
+    
+    '移動起点フォルダ名が指定されている場合、コピー先フォルダパスに存在するかチェックする
+    Dim base_dir As String: base_dir = ""
+    Dim i As Long
+    For i = LBound(dst_file_path) To UBound(dst_file_path)
+        base_dir = GetFolderPathByKeyword( _
+                        Common.GetFolderNameFromPath(dst_file_path(i)), _
+                        main_param.GetMoveBaseDirName())
+        If base_dir <> "" Then
+            Exit For
+        End If
+    Next i
+    
+    '存在しない場合は何もしない
+    If base_dir = "" Then
+        Common.WriteLog "MoveBaseFolder E2"
+        Exit Sub
+    End If
+    
+    '存在する場合はリネームして移動する
+    Dim renamed_dir As String: renamed_dir = main_param.GetMoveBaseDirName() & "_" & GetProjectName(vbprj_path)
+    Dim renamed_path As String: renamed_path = Common.RenameFolder(base_dir, renamed_dir)
+    
+    Common.MoveFolder renamed_path, main_param.GetDestDirPath() & SEP & renamed_dir
+    Common.DeleteFolder in_dest_path
+    
+    Common.WriteLog "MoveBaseFolder E"
+End Sub
+
+'フォルダパスに指定フォルダ名があるかチェックし、あればそのフォルダまでのパスを返す
+Private Function GetFolderPathByKeyword(path As String, keyword As String) As String
+    Common.WriteLog "GetFolderPathByKeyword S"
+    
+    Dim path_ary() As String
+    Dim ret_ary() As String
+    Dim i As Integer
+    Dim j As Integer
+    
+    path_ary = Split(path, SEP)
+
+    For i = UBound(path_ary) To 0 Step -1
+        If path_ary(i) = keyword Then
+        
+            ReDim Preserve ret_ary(i)
+            
+            For j = LBound(ret_ary) To UBound(ret_ary)
+                ret_ary(j) = path_ary(j)
+            Next j
+        
+            GetFolderPathByKeyword = Join(ret_ary, SEP)
+            Common.WriteLog "GetFolderPathByKeyword E1"
+            Exit Function
+        End If
+    Next i
+    
+    GetFolderPathByKeyword = ""
+    Common.WriteLog "GetFolderPathByKeyword E"
+End Function
+
+'VBプロジェクト名を返す
 Private Function GetProjectName(ByVal vbprj_file_path As String) As String
     Common.WriteLog "GetProjectName S"
     Dim vbprj_file_name As String: vbprj_file_name = Common.GetFileName(vbprj_file_path)
@@ -477,7 +551,7 @@ Private Sub CreateBatFile(ByVal vbproj_path As String, ByVal dst_path As String,
     Dim bat_name As String: bat_name = GetProjectName(vbproj_path) & ".bat"
 
     Const FIRST_ROW_CNT = 7
-    Const ROW_CNT = 3
+    Const row_cnt = 3
     Const SECOND_ROW_CNT = 2
     
     ReDim Preserve contents(FIRST_ROW_CNT)
@@ -496,7 +570,7 @@ Private Sub CreateBatFile(ByVal vbproj_path As String, ByVal dst_path As String,
 
     For i = LBound(copy_files) To UBound(copy_files)
         contents_cnt = UBound(contents)
-        ReDim Preserve contents(contents_cnt + ROW_CNT)
+        ReDim Preserve contents(contents_cnt + row_cnt)
     
         Dim file As String: file = copy_files(i)
         
@@ -504,9 +578,9 @@ Private Sub CreateBatFile(ByVal vbproj_path As String, ByVal dst_path As String,
         Dim dst_tmp As String: dst_tmp = "%DST_DIR%" & SEP & dst_base_path & Replace(file, base_path, "")
         Dim dst As String: dst = Common.GetFolderNameFromPath(dst_tmp)
         
-        contents(i * ROW_CNT + OFFSET) = "md " & DQ & dst & DQ
-        contents(i * ROW_CNT + OFFSET + 1) = "xcopy /Y /F " & DQ & src & DQ & " " & DQ & dst & DQ
-        contents(i * ROW_CNT + OFFSET + 2) = ""
+        contents(i * row_cnt + OFFSET) = "md " & DQ & dst & DQ
+        contents(i * row_cnt + OFFSET + 1) = "xcopy /Y /F " & DQ & src & DQ & " " & DQ & dst & DQ
+        contents(i * row_cnt + OFFSET + 2) = ""
     Next i
     
     contents_cnt = UBound(contents)

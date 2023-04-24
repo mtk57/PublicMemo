@@ -32,7 +32,7 @@ Private Sub CollectParam()
     Set main_sheet = ThisWorkbook.Sheets("main")
 
     Const CLM = "C"
-    Dim row As Integer: row = 17
+    Dim row As Integer: row = 18
     Dim i As Integer: i = 0
     Dim path As String
     
@@ -51,33 +51,30 @@ Private Sub CollectParam()
 End Sub
 
 '検証
-Public Function Validate() As String
-    Dim errmsg As String: errmsg = ""
+Public Sub Validate()
     Dim i As Integer
     Dim path As String
     Dim ext As String
     
     If GetVBProjFilePathListCount() <= 0 Then
-        Validate = ""
-        Exit Function
+        Exit Sub
     End If
     
     For i = LBound(vbprj_file_paths) To UBound(vbprj_file_paths)
         path = vbprj_file_paths(i)
         If Common.IsExistsFile(path) = False Then
-            errmsg = "[SubParam] VBプロジェクトファイルが見つかりません。(" & path & ")"
-            Exit For
+            Err.Raise 53, , "[SubParam] VBプロジェクトファイルが見つかりません。" & vbCrLf & _
+                            "path=" & path
         End If
         
         ext = Common.GetFileExtension(path)
         If ext <> "vbp" And ext <> "vbproj" Then
-            errmsg = "[SubParam] VBプロジェクトファイル名が未対応の拡張子です。(" & path & ")"
-            Exit For
+            Err.Raise 53, , "[SubParam] VBプロジェクトファイル名が未対応の拡張子です。" & vbCrLf & _
+                            "path=" & path
         End If
     Next i
 
-    Validate = errmsg
-End Function
+End Sub
 
 '=========================================
 'Getter

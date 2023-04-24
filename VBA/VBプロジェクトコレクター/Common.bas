@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.3"
+Public Const VERSION = "1.0.5"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -24,6 +24,87 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
 'ログファイル番号
 Private logfile_num As Integer
 Private is_log_opened As Boolean
+
+
+'-------------------------------------------------------------
+'フォルダをリネームする
+' path : I : フォルダパス(絶対パス)
+' rename : I : リネーム後のフォルダ名
+' Ret : リネーム後のフォルダパス
+'-------------------------------------------------------------
+Public Function RenameFolder(ByVal path As String, ByVal rename As String) As String
+    If IsExistsFolder(path) = False Then
+        Err.Raise 53, , "指定されたフォルダが存在しません (" & path & ")"
+    End If
+
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    Dim folder As Object
+    Set folder = fso.GetFolder(path)
+    
+    folder.name = rename
+    RenameFolder = folder.path
+    
+    Set fso = Nothing
+End Function
+
+'-------------------------------------------------------------
+'指定列の全行を指定ワードで検索し、ヒットした行番号を返す
+' ws : I : ワークシート
+' find_clm : I : 指定列名(Ex."A")
+' find_start_row : I : 検索開始行(1始まり)
+' keyword : I : 検索ワード
+' Ret : ヒットした行番号
+'-------------------------------------------------------------
+Public Function FindRowByKeyword( _
+  ByVal ws As Worksheet, _
+  ByVal find_clm As String, _
+  ByVal find_start_row As Long, _
+  ByVal keyword As String _
+) As Long
+    Dim rng As Range
+    Dim cell As Range
+    Dim found_row As Long
+    
+    Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
+    
+    found_row = 0
+    For Each cell In rng
+        If cell.value = keyword Then
+            found_row = cell.row
+            Exit For
+        End If
+    Next cell
+    
+    FindRowByKeyword = found_row
+End Function
+
+'-------------------------------------------------------------
+'シートの内容を2次元配列に格納する
+' sheet_name : I : シート名
+' Ret : シートの内容
+'-------------------------------------------------------------
+Public Function GetSheetContentsByStringArray(ByVal sheet_name As String) As String()
+    Dim ws As Worksheet
+    Dim arr() As String
+    Dim row_cnt As Long, clm_cnt As Long
+    Dim r As Long, c As Long
+    
+    Set ws = ActiveWorkbook.Worksheets(sheet_name)
+
+    row_cnt = ws.Cells(ws.Rows.count, 1).End(xlUp).row
+    clm_cnt = ws.Cells(1, ws.Columns.count).End(xlToLeft).Column
+
+    ReDim arr(1 To row_cnt, 1 To clm_cnt)
+    For r = 1 To row_cnt
+        For c = 1 To clm_cnt
+            arr(r, c) = CStr(ws.Cells(r, c).value)
+        Next c
+    Next r
+
+    GetSheetContentsByStringArray = arr
+End Function
 
 '-------------------------------------------------------------
 '拡張子を変更する
@@ -59,8 +140,24 @@ Public Function ChangeFileExt(ByVal path As String, ByVal ext As String) As Stri
 End Function
 
 '-------------------------------------------------------------
+'ブックを開いてシートを取得する
+' book_path : IN : Excelファイルパス(絶対パス)
+' sheet_name : IN : シート名
+' visible : IN : True/False (True=表示, False=非表示)
+' Ret : シートオブジェクト
+'-------------------------------------------------------------
+Public Function GetSheet(ByVal book_path As String, ByVal sheet_name As String, ByVal visible As Boolean) As Worksheet
+    Dim wb As Workbook
+    Dim ws As Worksheet
+    Application.ScreenUpdating = False
+    Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, ReadOnly:=True, CorruptLoad:=xlRepairFile)
+    ActiveWindow.visible = visible
+    Set GetSheet = wb.Worksheets(sheet_name)
+End Function
+
+'-------------------------------------------------------------
 'ブックと閉じる
-' name : IN : ブック名
+' name : IN : ブック名(Excelファイル名)
 '-------------------------------------------------------------
 Public Sub CloseBook(ByVal name As String)
     Dim wb As Workbook
@@ -322,30 +419,56 @@ Public Function IsSJIS(ByVal path As String) As Boolean
         Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
     End If
     
-    Dim in_str As String
-    Dim buf As String
+    Dim Ado As Object
+    Const TYPE_BINARY = 1
+    Set Ado = CreateObject("ADODB.Stream")
+    Ado.Type = TYPE_BINARY
+    Ado.Open
+
+    Ado.LoadFromFile path
+    Dim read_data As String: read_data = Ado.Read
+    Ado.Close
+    Set Ado = Nothing
+
     Dim i As Long
+    Dim first_byte As Byte
+    Dim second_byte As Byte
+    Dim is_dbcs As Boolean
     
-    Dim filenum As Integer: filenum = FreeFile
-    
-    'Shift-JIS形式のテキストファイルを読み込み
-    in_str = ""
-    Open path For Input As #filenum
-        'テキストをすべて取得する
-        Do Until EOF(filenum)
-            Line Input #filenum, buf
-            in_str = in_str & buf & vbCrLf
-        Loop
-    Close #filenum
-        
-    'Shift-JIS以外のファイルを読み込んでしまった場合は終了
-    For i = 1 To Len(in_str)
-        If Asc(Mid(in_str, i, 1)) = -7295 Then
-            IsSJIS = False
-            Exit Function
+    For i = 1 To LenB(read_data)
+
+        first_byte = AscB(MidB(read_data, i, 1))
+
+        '全角文字列(DBCS)の先頭1バイトであるか
+        is_dbcs = False
+
+        If &H81 <= first_byte And first_byte <= &H9F Then
+            is_dbcs = True
+        ElseIf &HE0 <= first_byte And first_byte <= &HEF Then
+            is_dbcs = True
+        End If
+
+        If is_dbcs Then
+            i = i + 1
+
+            If i > LenB(read_data) Then
+                IsSJIS = False
+                Exit Function
+            End If
+
+            second_byte = AscB(MidB(read_data, i, 1))
+
+            If &H40 <= second_byte And second_byte <= &H7F Then
+                'SJIS!
+            ElseIf &H80 <= second_byte And second_byte <= &HFC Then
+                'SJIS!
+            Else
+                IsSJIS = False
+                Exit Function
+            End If
         End If
     Next
-    
+
     IsSJIS = True
 End Function
 
@@ -945,6 +1068,25 @@ Public Sub DeleteFolder(ByVal path As String)
 End Sub
 
 '-------------------------------------------------------------
+'フォルダを移動する
+' src_path : IN : 移動元フォルダパス (絶対パス)
+' dst_path : IN : 移動先フォルダパス (絶対パス)
+'-------------------------------------------------------------
+Public Sub MoveFolder(ByVal src_path As String, ByVal dst_path As String)
+    If IsExistsFolder(src_path) = False Then
+        Err.Raise 53, , "移動元フォルダが存在しません (" & src_path & ")"
+        Exit Sub
+    End If
+
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+
+    fso.MoveFolder src_path, dst_path
+    
+    Set fso = Nothing
+End Sub
+
+'-------------------------------------------------------------
 '文字列配列の共通文字列を返す
 ' list : IN : 文字列配列
 ' Ret : 共通文字列
@@ -1064,7 +1206,7 @@ Public Function GetFileExtension(ByVal filename As String) As String
     
     ' 拡張子を取得
     If dot_pos > 0 Then
-        GetFileExtension = Right(filename, Len(filename) - dot_pos)
+        GetFileExtension = LCase(Right(filename, Len(filename) - dot_pos))
     Else
         GetFileExtension = ""
     End If
@@ -1248,6 +1390,15 @@ Public Sub AddSheet(ByVal sheet_name As String)
     Worksheets.Add.name = sheet_name
 End Sub
 
+'-------------------------------------------------------------
+'ブックをアクティブにする
+' book_name : IN : ブック名(Excelファイル名)
+'-------------------------------------------------------------
+Public Sub ActiveBook(ByVal book_name As String)
+    Dim wb As Workbook
+    Set wb = Workbooks(book_name)
+    wb.Activate
+End Sub
 
 
 
