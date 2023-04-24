@@ -179,7 +179,7 @@ Private Sub ExecSubParam()
     
             Next j
             
-            If unmatch_cnt >= main_param.GetMaxExecCount() And IsTestMode() = False Then
+            If unmatch_cnt > main_param.GetMaxExecCount() And IsTestMode() = False Then
                 Err.Raise 53, , "不一致が最大値以上になったので中止します(" & unmatch_cnt & ")"
             End If
         
@@ -195,7 +195,10 @@ Private Sub ExecSubParam()
     End If
     
     'dstにコピーする
-    Common.DeleteFolder (main_param.GetDestDirPath())
+    If Common.IsExistsFolder(main_param.GetDestDirPath()) = True Then
+        Common.DeleteFolder (main_param.GetDestDirPath())
+    End If
+    Common.CreateFolder main_param.GetDestDirPath()
     Common.CopyFolder current_wk_dst_dir_path, main_param.GetDestDirPath()
     
     '作業用フォルダを削除する
@@ -281,7 +284,7 @@ Private Sub RenameAllFileExtension(ByVal path As String, ByVal encode_type As In
     If encode_type = 0 Then
         '全てのファイルを読み込み、SJIS以外であれば拡張子をリネームする
         For i = 0 To UBound(all_file_list)
-            If Common.IsSJIS(all_file_list(i)) = False Then
+            If Common.IsUTF8(all_file_list(i)) = True Then
                 Common.WriteLog "Before Rename(UTF8)=" & all_file_list(i)
             
                 renamed_path = Common.ChangeFileExt(all_file_list(i), EXT_UTF8)
