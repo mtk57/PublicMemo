@@ -14,6 +14,9 @@ Private current_wk_src_dir_path As String
 Private current_wk_dst_dir_path As String
 Private before_wk_dst_dir_path As String
 
+'リネーム前のVB6系ファイルパスリスト
+Private before_rename_vb6_files() As String
+
 'メイン処理
 Public Sub Run()
     Common.WriteLog "Run S"
@@ -110,15 +113,15 @@ Private Sub ExecSubParam()
     Dim exe_params() As String
     Dim is_match As Boolean
     Dim is_exit_for As Boolean
-    
-    '対象拡張子のファイルが存在するか確認する
-    Dim ext As String: ext = Replace(main_param.GetInExtension(), "*", "")
-    If Common.IsExistsExtensionFile(main_param.GetSrcDirPath(), ext) = False Then
-        Err.Raise 53, , "処理対象の拡張子のファイルが存在しません (" & ext & ")"
-    End If
-    
+        
+    '対象拡張子のチェック
+    ValidateSourceExtension
+
     '作業用フォルダを作成する
     CreateWorkFolder
+    
+    'VB6系の拡張子を統一する
+    RenameVB6Files
     
     'Iniファイルのバックアップを作成する
     BackupIniFile
@@ -197,6 +200,9 @@ Private Sub ExecSubParam()
         current_wk_dst_dir_path = before_wk_dst_dir_path
     End If
     
+    'VB6系の拡張子を元に戻す
+    RestoreVB6Files
+    
     'dstにコピーする
     If Common.IsExistsFolder(main_param.GetDestDirPath()) = True Then
         Common.DeleteFolder (main_param.GetDestDirPath())
@@ -211,6 +217,36 @@ Private Sub ExecSubParam()
     RestoreIniFile
 
     Common.WriteLog "ExecSubParam E"
+End Sub
+
+'対象拡張子のチェック
+Private Sub ValidateSourceExtension()
+    Common.WriteLog "ValidateSourceExtension S"
+    
+    '対象拡張子のファイルが存在するか確認する
+    Dim ext As String: ext = Replace(main_param.GetInExtension(), "*", "")
+    
+    If ext = "vb6" Then
+        'Dim i As Integer
+        'Dim vb6_exts(3) As String
+        'vb6_exts(0) = ".bas"
+        'vb6_exts(1) = ".frm"
+        'vb6_exts(2) = ".cls"
+        'vb6_exts(3) = ".ctl"
+        
+        'For i = LBound(vb6_exts) To UBound(vb6_exts)
+        '    ext = vb6_exts(i)
+        '    If Common.IsExistsExtensionFile(main_param.GetSrcDirPath(), ext) = False Then
+        '        Err.Raise 53, , "処理対象の拡張子のファイルが存在しません (" & ext & ")"
+        '    End If
+        'Next i
+    Else
+        If Common.IsExistsExtensionFile(main_param.GetSrcDirPath(), ext) = False Then
+            Err.Raise 53, , "処理対象の拡張子のファイルが存在しません (" & ext & ")"
+        End If
+    End If
+    
+    Common.WriteLog "ValidateSourceExtension E"
 End Sub
 
 '作業用フォルダを作成する
@@ -238,6 +274,50 @@ Private Sub CreateWorkFolder()
     End If
     
     Common.WriteLog "CreateWorkFolder E"
+End Sub
+
+'VB6系の拡張子を統一する
+Private Sub RenameVB6Files()
+    Common.WriteLog "RenameVB6Files S"
+    
+    If main_param.GetInExtension() <> "vb6" Then
+        Common.WriteLog "RenameVB6Files E1"
+        Exit Sub
+    End If
+    
+    Dim i As Long
+    Dim all_file_list() As String
+    Dim path As String
+    Dim ext As String
+    Dim cnt As String: cnt = 0
+    
+    all_file_list = Common.CreateFileList(main_param.GetSrcDirPath(), "*.*", main_param.IsContainSubDir())
+    
+    '全ファイルを検索してVB6系拡張子のファイルリストを作成する
+    For i = LBound(all_file_list) To UBound(all_file_list)
+        path = all_file_list(i)
+        ext = Common.GetFileExtension(path)
+        
+        If ext = "frm" Or ext = "cls" Or ext = "ctl" Then
+            ReDim Preserve before_rename_vb6_files(cnt)
+            before_rename_vb6_files(cnt) = path
+            cnt = cnt + 1
+        End If
+    Next i
+    
+    If Common.IsEmptyArray(before_rename_vb6_files) = True Then
+        Common.WriteLog "RenameVB6Files E2"
+        Exit Sub
+    End If
+        
+    'basにリネームする
+    Dim renamed_path As String
+    For i = LBound(before_rename_vb6_files) To UBound(before_rename_vb6_files)
+        path = before_rename_vb6_files(i)
+        renamed_path = Common.ChangeFileExt(path, ".bas")
+    Next i
+    
+    Common.WriteLog "RenameVB6Files E"
 End Sub
 
 'Iniファイルのバックアップを作成する
@@ -643,6 +723,39 @@ Private Sub SwapWorkSubFolder()
     current_wk_dst_dir_path = tmp
     
     Common.WriteLog "SwapWorkSubFolder E"
+End Sub
+
+'VB6系の拡張子を元に戻す
+Private Sub RestoreVB6Files()
+    Common.WriteLog "RestoreVB6Files S"
+    
+    If main_param.GetInExtension() <> "vb6" Then
+        Common.WriteLog "RestoreVB6Files E1"
+        Exit Sub
+    End If
+    
+    If Common.IsEmptyArray(before_rename_vb6_files) = True Then
+        Common.WriteLog "RestoreVB6Files E2"
+        Exit Sub
+    End If
+    
+    'DSTの拡張子を元に戻す
+    'TODO:
+    
+    'SRCの拡張子も元に戻す
+    Dim i As Long
+    Dim org_path As String
+    Dim org_ext As String
+    Dim cur_path As String
+    Dim renamed_path As String
+    For i = LBound(before_rename_vb6_files) To UBound(before_rename_vb6_files)
+        org_path = before_rename_vb6_files(i)
+        org_ext = Common.GetFileExtension(org_path)
+        cur_path = Replace(org_path, org_ext, "bas")
+        renamed_path = Common.ChangeFileExt(cur_path, "." & org_ext)
+    Next i
+    
+    Common.WriteLog "RestoreVB6Files E"
 End Sub
 
 '作業用フォルダを削除する
