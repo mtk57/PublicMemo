@@ -1,0 +1,1 @@
+VB.NET UTF8 BOMなし
