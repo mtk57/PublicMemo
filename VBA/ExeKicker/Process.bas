@@ -120,6 +120,9 @@ Private Sub ExecSubParam()
     '作業用フォルダを作成する
     CreateWorkFolder
     
+    'Iniファイルのバックアップを作成する
+    BackupIniFile
+    
     '除外リストファイルを作成する
     CreateIgnoreListFile
 
@@ -203,6 +206,9 @@ Private Sub ExecSubParam()
     
     '作業用フォルダを削除する
     DeleteWorkFolder main_param.IsDeleteWorkDir()
+    
+    'Iniファイルのバックアップを元に戻す
+    RestoreIniFile
 
     Common.WriteLog "ExecSubParam E"
 End Sub
@@ -232,6 +238,74 @@ Private Sub CreateWorkFolder()
     End If
     
     Common.WriteLog "CreateWorkFolder E"
+End Sub
+
+'Iniファイルのバックアップを作成する
+Private Sub BackupIniFile()
+    Common.WriteLog "CreateIgnoreListFile S"
+    
+    Dim i As Long
+    Dim sub_param As SubParam
+    Dim src_path As String
+    Dim dst_path As String
+    
+    src_path = main_param.GetExeIniFilePath()
+    dst_path = src_path & ".bak"
+    
+    If Common.IsExistsFile(dst_path) = True Then
+        Common.DeleteFile dst_path
+    End If
+    
+    Common.CopyFile src_path, dst_path
+    
+    For i = LBound(sub_params) To UBound(sub_params)
+        Set sub_param = sub_params(i)
+        
+        src_path = sub_param.GetIniFilePath()
+        dst_path = src_path & ".bak"
+        
+        If Common.IsExistsFile(dst_path) = True Then
+            Common.DeleteFile dst_path
+        End If
+        
+        Common.CopyFile src_path, dst_path
+    Next i
+    
+    Common.WriteLog "BackupDefineIniFile E"
+End Sub
+
+'Iniファイルのバックアップを元に戻す
+Private Sub RestoreIniFile()
+    Common.WriteLog "RestoreDefineIniFile S"
+    
+    Dim i As Long
+    Dim sub_param As SubParam
+    Dim src_path As String
+    Dim dst_path As String
+    
+    src_path = main_param.GetExeIniFilePath()
+    dst_path = src_path & ".bak"
+    
+    If Common.IsExistsFile(src_path) = True And Common.IsExistsFile(dst_path) = True Then
+        Common.DeleteFile src_path
+        Common.CopyFile dst_path, src_path
+        Common.DeleteFile dst_path
+    End If
+    
+    For i = LBound(sub_params) To UBound(sub_params)
+        Set sub_param = sub_params(i)
+        
+        src_path = sub_param.GetIniFilePath()
+        dst_path = src_path & ".bak"
+        
+        If Common.IsExistsFile(src_path) = True And Common.IsExistsFile(dst_path) = True Then
+            Common.DeleteFile src_path
+            Common.CopyFile dst_path, src_path
+            Common.DeleteFile dst_path
+        End If
+    Next i
+
+    Common.WriteLog "RestoreDefineIniFile E"
 End Sub
 
 '除外リストファイルを作成する
@@ -376,6 +450,7 @@ Private Sub UpdateExeIniContents(ByRef sub_param As SubParam, ByVal encode_type 
         Err.Raise 53, , "Iniファイルの更新に失敗しました(2)"
     End If
     
+    path = sub_param.GetIniFilePath()
     Dim encode As String: encode = "0"
     If encode_type = 1 Then
         encode = "1"

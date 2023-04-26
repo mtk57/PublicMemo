@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.4"
+Public Const VERSION = "1.0.6"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -24,6 +24,47 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
 'ログファイル番号
 Private logfile_num As Integer
 Private is_log_opened As Boolean
+
+'-------------------------------------------------------------
+'ファイルをコピーする
+' src_path : I : コピー元ファイルパス(絶対パス)
+' dst_path : I : コピー先ファイルパス(絶対パス)
+'-------------------------------------------------------------
+Public Sub CopyFile(ByVal src_path As String, ByVal dst_path As String)
+    If IsExistsFile(src_path) = False Then
+        Err.Raise 53, , "[CopyFile] 指定されたファイルが存在しません (src_path=" & src_path & ")"
+    End If
+    
+    If dst_path = "" Or src_path = dst_path Or IsExistsFile(dst_path) = True Then
+        Exit Sub
+    End If
+    
+    FileCopy src_path, dst_path
+End Sub
+
+
+'-------------------------------------------------------------
+'フォルダをリネームする
+' path : I : フォルダパス(絶対パス)
+' rename : I : リネーム後のフォルダ名
+' Ret : リネーム後のフォルダパス
+'-------------------------------------------------------------
+Public Function RenameFolder(ByVal path As String, ByVal rename As String) As String
+    If IsExistsFolder(path) = False Then
+        Err.Raise 53, , "[RenameFolder] 指定されたフォルダが存在しません (path=" & path & ")"
+    End If
+
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    Dim folder As Object
+    Set folder = fso.GetFolder(path)
+    
+    folder.name = rename
+    RenameFolder = folder.path
+    
+    Set fso = Nothing
+End Function
 
 '-------------------------------------------------------------
 '指定列の全行を指定ワードで検索し、ヒットした行番号を返す
@@ -91,7 +132,7 @@ End Function
 '-------------------------------------------------------------
 Public Function ChangeFileExt(ByVal path As String, ByVal ext As String) As String
     If Common.IsExistsFile(path) = False Then
-        'Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        'Err.Raise 53, , "[ChangeFileExt] 指定されたファイルが存在しません (path=" & path & ")"
         ChangeFileExt = path
         Exit Function
     End If
@@ -218,7 +259,7 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     Set folder = fso.GetFolder(search_path)
     
     Dim file As Object
-    For Each file In folder.Files
+    For Each file In folder.files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like search_name Then
             '発見
             SearchFile = file.path
@@ -254,11 +295,11 @@ End Function
 '-------------------------------------------------------------
 Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
     If Common.IsExistsFolder(path) = False Then
-        Err.Raise 53, , "指定されたフォルダが存在しません (" & path & ")"
+        Err.Raise 53, , "[UTF8toSJIS_AllFile] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
     
     If ext = "" Then
-        Err.Raise 53, , "拡張子が指定されていません"
+        Err.Raise 53, , "[UTF8toSJIS_AllFile] 拡張子が指定されていません"
     End If
 
     Dim i As Long
@@ -278,11 +319,11 @@ End Sub
 '-------------------------------------------------------------
 Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
     If Common.IsExistsFolder(path) = False Then
-        Err.Raise 53, , "指定されたフォルダが存在しません (" & path & ")"
+        Err.Raise 53, , "[SJIStoUTF8_AllFile] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
     
     If ext = "" Then
-        Err.Raise 53, , "拡張子が指定されていません"
+        Err.Raise 53, , "[SJIStoUTF8_AllFile] 拡張子が指定されていません"
     End If
 
     Dim i As Long
@@ -392,7 +433,7 @@ End Sub
 '-------------------------------------------------------------
 Public Function IsSJIS(ByVal path As String) As Boolean
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        Err.Raise 53, , "[IsSJIS] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
     Dim Ado As Object
@@ -455,7 +496,7 @@ End Function
 '-------------------------------------------------------------
 Public Function IsUTF8(ByVal path As String) As Boolean
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        Err.Raise 53, , "[IsUTF8] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
     Dim in_str As String
@@ -491,7 +532,7 @@ End Function
 '-------------------------------------------------------------
 Public Function IsUTF8_WithBom(ByVal path As String) As Boolean
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        Err.Raise 53, , "[IsUTF8_WithBom] 指定されたファイルが存在しません (path" & path & ")"
     End If
 
     Dim bytedata() As Byte: bytedata = ReadBinary(path, 3)
@@ -562,7 +603,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String)
         End If
     Next subfolder
     
-    For Each file In folder.Files
+    For Each file In folder.files
         If Right(file.name, Len(ext)) = ext Then
             Set fso = Nothing
             Set folder = Nothing
@@ -849,7 +890,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     
     'コピー元のフォルダが存在しない場合、エラーを発生させる
     If Not fso.FolderExists(src_path) Then
-        Err.Raise 53, , "指定されたフォルダが存在しません"
+        Err.Raise 53, , "[CopyFolder] 指定されたフォルダが存在しません。(src_path=" & src_path & ")"
     End If
     
     'コピー先のフォルダが存在しない場合、作成する
@@ -859,7 +900,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     
     'コピー元のフォルダ内のファイルをコピーする
     Dim file As Object
-    For Each file In fso.GetFolder(src_path).Files
+    For Each file In fso.GetFolder(src_path).files
         fso.CopyFile file.path, fso.BuildPath(dest_path, file.name), True
     Next
     
@@ -937,7 +978,7 @@ End Function
 '-------------------------------------------------------------
 Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As String)
     If Common.IsExistsFile(file_path) = False Or sheet_name = "" Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & file_path & ")"
+        Err.Raise 53, , "[OutputTextFileToSheet] 指定されたファイルが存在しません (file_path=" & file_path & ")"
     End If
 
     'ワーク用にコピーする
@@ -1039,6 +1080,25 @@ Public Sub DeleteFolder(ByVal path As String)
     Set fso = CreateObject("Scripting.FileSystemObject")
 
     fso.DeleteFolder path
+    
+    Set fso = Nothing
+End Sub
+
+'-------------------------------------------------------------
+'フォルダを移動する
+' src_path : IN : 移動元フォルダパス (絶対パス)
+' dst_path : IN : 移動先フォルダパス (絶対パス)
+'-------------------------------------------------------------
+Public Sub MoveFolder(ByVal src_path As String, ByVal dst_path As String)
+    If IsExistsFolder(src_path) = False Then
+        Err.Raise 53, , "[MoveFolder] 移動元フォルダが存在しません (src_path=" & src_path & ")"
+        Exit Sub
+    End If
+
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+
+    fso.MoveFolder src_path, dst_path
     
     Set fso = Nothing
 End Sub
@@ -1184,7 +1244,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Set folder = fso.GetFolder(target_folder)
     
     Dim fileobj As Object
-    For Each fileobj In folder.Files
+    For Each fileobj In folder.files
         If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
             '検索対象のファイルを読み込む
             Dim contents As String: contents = ReadTextFileBySJIS(fileobj.path)
@@ -1230,7 +1290,7 @@ End Function
 '-------------------------------------------------------------
 Public Function ReadTextFileBySJIS(ByVal path As String) As String
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        Err.Raise 53, , "[ReadTextFileBySJIS] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
     'ワーク用にコピーする
@@ -1356,4 +1416,6 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
+
 
