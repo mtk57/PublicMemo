@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.5"
+Public Const VERSION = "1.0.6"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -25,6 +25,23 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
 Private logfile_num As Integer
 Private is_log_opened As Boolean
 
+'-------------------------------------------------------------
+'ファイルをコピーする
+' src_path : I : コピー元ファイルパス(絶対パス)
+' dst_path : I : コピー先ファイルパス(絶対パス)
+'-------------------------------------------------------------
+Public Sub CopyFile(ByVal src_path As String, ByVal dst_path As String)
+    If IsExistsFile(src_path) = False Then
+        Err.Raise 53, , "[CopyFile] 指定されたファイルが存在しません (src_path=" & src_path & ")"
+    End If
+    
+    If dst_path = "" Or src_path = dst_path Or IsExistsFile(dst_path) = True Then
+        Exit Sub
+    End If
+    
+    FileCopy src_path, dst_path
+End Sub
+
 
 '-------------------------------------------------------------
 'フォルダをリネームする
@@ -34,7 +51,7 @@ Private is_log_opened As Boolean
 '-------------------------------------------------------------
 Public Function RenameFolder(ByVal path As String, ByVal rename As String) As String
     If IsExistsFolder(path) = False Then
-        Err.Raise 53, , "指定されたフォルダが存在しません (" & path & ")"
+        Err.Raise 53, , "[RenameFolder] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
 
     Dim fso As Object
@@ -115,7 +132,7 @@ End Function
 '-------------------------------------------------------------
 Public Function ChangeFileExt(ByVal path As String, ByVal ext As String) As String
     If Common.IsExistsFile(path) = False Then
-        'Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        'Err.Raise 53, , "[ChangeFileExt] 指定されたファイルが存在しません (path=" & path & ")"
         ChangeFileExt = path
         Exit Function
     End If
@@ -278,11 +295,11 @@ End Function
 '-------------------------------------------------------------
 Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
     If Common.IsExistsFolder(path) = False Then
-        Err.Raise 53, , "指定されたフォルダが存在しません (" & path & ")"
+        Err.Raise 53, , "[UTF8toSJIS_AllFile] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
     
     If ext = "" Then
-        Err.Raise 53, , "拡張子が指定されていません"
+        Err.Raise 53, , "[UTF8toSJIS_AllFile] 拡張子が指定されていません"
     End If
 
     Dim i As Long
@@ -302,11 +319,11 @@ End Sub
 '-------------------------------------------------------------
 Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
     If Common.IsExistsFolder(path) = False Then
-        Err.Raise 53, , "指定されたフォルダが存在しません (" & path & ")"
+        Err.Raise 53, , "[SJIStoUTF8_AllFile] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
     
     If ext = "" Then
-        Err.Raise 53, , "拡張子が指定されていません"
+        Err.Raise 53, , "[SJIStoUTF8_AllFile] 拡張子が指定されていません"
     End If
 
     Dim i As Long
@@ -416,7 +433,7 @@ End Sub
 '-------------------------------------------------------------
 Public Function IsSJIS(ByVal path As String) As Boolean
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        Err.Raise 53, , "[IsSJIS] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
     Dim Ado As Object
@@ -479,7 +496,7 @@ End Function
 '-------------------------------------------------------------
 Public Function IsUTF8(ByVal path As String) As Boolean
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        Err.Raise 53, , "[IsUTF8] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
     Dim in_str As String
@@ -515,7 +532,7 @@ End Function
 '-------------------------------------------------------------
 Public Function IsUTF8_WithBom(ByVal path As String) As Boolean
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        Err.Raise 53, , "[IsUTF8_WithBom] 指定されたファイルが存在しません (path" & path & ")"
     End If
 
     Dim bytedata() As Byte: bytedata = ReadBinary(path, 3)
@@ -873,7 +890,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     
     'コピー元のフォルダが存在しない場合、エラーを発生させる
     If Not fso.FolderExists(src_path) Then
-        Err.Raise 53, , "指定されたフォルダが存在しません"
+        Err.Raise 53, , "[CopyFolder] 指定されたフォルダが存在しません。(src_path=" & src_path & ")"
     End If
     
     'コピー先のフォルダが存在しない場合、作成する
@@ -961,7 +978,7 @@ End Function
 '-------------------------------------------------------------
 Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As String)
     If Common.IsExistsFile(file_path) = False Or sheet_name = "" Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & file_path & ")"
+        Err.Raise 53, , "[OutputTextFileToSheet] 指定されたファイルが存在しません (file_path=" & file_path & ")"
     End If
 
     'ワーク用にコピーする
@@ -1074,7 +1091,7 @@ End Sub
 '-------------------------------------------------------------
 Public Sub MoveFolder(ByVal src_path As String, ByVal dst_path As String)
     If IsExistsFolder(src_path) = False Then
-        Err.Raise 53, , "移動元フォルダが存在しません (" & src_path & ")"
+        Err.Raise 53, , "[MoveFolder] 移動元フォルダが存在しません (src_path=" & src_path & ")"
         Exit Sub
     End If
 
@@ -1273,7 +1290,7 @@ End Function
 '-------------------------------------------------------------
 Public Function ReadTextFileBySJIS(ByVal path As String) As String
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        Err.Raise 53, , "[ReadTextFileBySJIS] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
     'ワーク用にコピーする
