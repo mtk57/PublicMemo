@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.6"
+Public Const VERSION = "1.0.7"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -581,14 +581,15 @@ End Function
 '-------------------------------------------------------------
 '指定フォルダ配下に指定拡張子のファイルが存在するか
 ' path : IN : フォルダパス(絶対パス)
-' ext : IN : 拡張子(Ex. ".vb")
+' in_ext : IN : 拡張子(Ex. "*.vb")
 ' Ret : True/False (True=存在する, False=存在しない)
 '-------------------------------------------------------------
-Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String) As Boolean
+Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As String) As Boolean
     Dim fso As Object
     Dim folder As Object
     Dim subfolder As Object
     Dim file As Object
+    Dim ext As String: ext = Replace(in_ext, "*", "")
     
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set folder = fso.GetFolder(path)

@@ -180,7 +180,22 @@ End Function
 'Šg’£Žq
 '-----------------------------------------
 Public Function GetInExtension() As String
-    GetInExtension = in_ext
+    If IsVB6Extension() = True Then
+        GetInExtension = "*.bas"
+    Else
+        GetInExtension = in_ext
+    End If
+End Function
+
+'-----------------------------------------
+'Šg’£Žq‚ÍVB6‚©?
+'-----------------------------------------
+Public Function IsVB6Extension() As Boolean
+    If in_ext = "VB6" Then
+        IsVB6Extension = True
+    Else
+        IsVB6Extension = False
+    End If
 End Function
 
 '-----------------------------------------
