@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.2"
+Public Const VERSION = "1.0.8"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -25,9 +25,225 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
 Private logfile_num As Integer
 Private is_log_opened As Boolean
 
+Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'Gitコマンドを実行する
+' repo_path : I : ローカルリポジトリフォルダパス(絶対パス)
+' command : I : コマンド (Ex."git log --oneline")
+' Ret : 標準出力
+'-------------------------------------------------------------
+Public Function RunGit(ByVal repo_path As String, ByVal command As String) As String()
+    Dim err_msg As String: err_msg = ""
+    
+    If IsExistsFolder(repo_path) = False Then
+        err_msg = "[RunGit] 指定されたフォルダが存在しません (repo_path=" & repo_path & ")"
+        GoTo FINISH
+    End If
+    
+    'コマンド実行結果格納用の一時ファイルパス
+    Dim temp As String: temp = GetTempFolder() & Application.PathSeparator & Common.GetNowTimeString() & ".txt"
+
+    'コマンド作成
+    Dim run_cmd As String: run_cmd = GIT_BASH & _
+                                     " --login -i -c & cd " & repo_path & " & " & _
+                                     command & _
+                                     " > " & temp
+    'コマンド実行
+    Dim objShell As Object
+    Dim objExec As Object
+    Set objShell = CreateObject("WScript.Shell")
+    Set objExec = objShell.Exec("cmd.exe /c " & Chr(34) & run_cmd & Chr(34))
+    
+    'プロセス完了時に通知を受け取る
+    Do While objExec.Status = 0
+        DoEvents
+    Loop
+    
+    'プロセスの戻り値を取得する
+    If objExec.ExitCode <> 0 Then
+        err_msg = "[RunGit] プロセスの戻り値が0以外です (exit code=" & objExec.ExitCode & ")"
+        GoTo FINISH
+    End If
+    
+    Dim cmd_result As String: cmd_result = Common.ReadTextFileByUTF8(temp)
+    Common.DeleteFile (temp)
+    
+    Dim std_out() As String
+    std_out = Split(cmd_result, vbLf)
+
+FINISH:
+    Set objShell = Nothing
+    Set objExec = Nothing
+    
+    If err_msg <> "" Then
+        Err.Raise 53, , err_msg
+    End If
+
+    RunGit = std_out()
+End Function
+
+'-------------------------------------------------------------
+'一時フォルダパスを取得する
+' Ret : 一時フォルダパス(絶対パス)
+'-------------------------------------------------------------
+Public Function GetTempFolder() As String
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    GetTempFolder = fso.getSpecialFolder(2)
+    Set fso = Nothing
+End Function
+
+'-------------------------------------------------------------
+'ファイルをコピーする
+' src_path : I : コピー元ファイルパス(絶対パス)
+' dst_path : I : コピー先ファイルパス(絶対パス)
+'-------------------------------------------------------------
+Public Sub CopyFile(ByVal src_path As String, ByVal dst_path As String)
+    If IsExistsFile(src_path) = False Then
+        Err.Raise 53, , "[CopyFile] 指定されたファイルが存在しません (src_path=" & src_path & ")"
+    End If
+    
+    If dst_path = "" Or src_path = dst_path Or IsExistsFile(dst_path) = True Then
+        Exit Sub
+    End If
+    
+    FileCopy src_path, dst_path
+End Sub
+
+
+'-------------------------------------------------------------
+'フォルダをリネームする
+' path : I : フォルダパス(絶対パス)
+' rename : I : リネーム後のフォルダ名
+' Ret : リネーム後のフォルダパス
+'-------------------------------------------------------------
+Public Function RenameFolder(ByVal path As String, ByVal rename As String) As String
+    If IsExistsFolder(path) = False Then
+        Err.Raise 53, , "[RenameFolder] 指定されたフォルダが存在しません (path=" & path & ")"
+    End If
+
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    Dim folder As Object
+    Set folder = fso.GetFolder(path)
+    
+    folder.name = rename
+    RenameFolder = folder.path
+    
+    Set fso = Nothing
+End Function
+
+'-------------------------------------------------------------
+'指定列の全行を指定ワードで検索し、ヒットした行番号を返す
+' ws : I : ワークシート
+' find_clm : I : 指定列名(Ex."A")
+' find_start_row : I : 検索開始行(1始まり)
+' keyword : I : 検索ワード
+' Ret : ヒットした行番号
+'-------------------------------------------------------------
+Public Function FindRowByKeyword( _
+  ByVal ws As Worksheet, _
+  ByVal find_clm As String, _
+  ByVal find_start_row As Long, _
+  ByVal keyword As String _
+) As Long
+    Dim rng As Range
+    Dim cell As Range
+    Dim found_row As Long
+    
+    Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
+    
+    found_row = 0
+    For Each cell In rng
+        If cell.value = keyword Then
+            found_row = cell.row
+            Exit For
+        End If
+    Next cell
+    
+    FindRowByKeyword = found_row
+End Function
+
+'-------------------------------------------------------------
+'シートの内容を2次元配列に格納する
+' sheet_name : I : シート名
+' Ret : シートの内容
+'-------------------------------------------------------------
+Public Function GetSheetContentsByStringArray(ByVal sheet_name As String) As String()
+    Dim ws As Worksheet
+    Dim arr() As String
+    Dim row_cnt As Long, clm_cnt As Long
+    Dim r As Long, c As Long
+    
+    Set ws = ActiveWorkbook.Worksheets(sheet_name)
+
+    row_cnt = ws.Cells(ws.Rows.count, 1).End(xlUp).row
+    clm_cnt = ws.Cells(1, ws.Columns.count).End(xlToLeft).Column
+
+    ReDim arr(1 To row_cnt, 1 To clm_cnt)
+    For r = 1 To row_cnt
+        For c = 1 To clm_cnt
+            arr(r, c) = CStr(ws.Cells(r, c).value)
+        Next c
+    Next r
+
+    GetSheetContentsByStringArray = arr
+End Function
+
+'-------------------------------------------------------------
+'拡張子を変更する
+' path : I : ファイルパス(絶対パス)
+' ext : I : 変更後の拡張子(Ex. ".new")
+' Ret : 変更後のファイルパス(絶対パス)
+'       pathのファイルが存在しない場合はpathを返す
+'-------------------------------------------------------------
+Public Function ChangeFileExt(ByVal path As String, ByVal ext As String) As String
+    If Common.IsExistsFile(path) = False Then
+        'Err.Raise 53, , "[ChangeFileExt] 指定されたファイルが存在しません (path=" & path & ")"
+        ChangeFileExt = path
+        Exit Function
+    End If
+    
+    Dim SEP As String: SEP = Application.PathSeparator
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    Dim old_ext As String: old_ext = fso.GetExtensionName(path)
+    Dim file_name As String: file_name = fso.GetBaseName(path)
+    Dim new_path As String
+    
+    '新しい拡張子に変更
+    file_name = file_name & ext
+    new_path = fso.GetParentFolderName(path) & SEP & file_name
+    
+    'ファイル名を変更
+    fso.MoveFile path, new_path
+    Set fso = Nothing
+    
+    ChangeFileExt = new_path
+End Function
+
+'-------------------------------------------------------------
+'ブックを開いてシートを取得する
+' book_path : IN : Excelファイルパス(絶対パス)
+' sheet_name : IN : シート名
+' visible : IN : True/False (True=表示, False=非表示)
+' Ret : シートオブジェクト
+'-------------------------------------------------------------
+Public Function GetSheet(ByVal book_path As String, ByVal sheet_name As String, ByVal visible As Boolean) As Worksheet
+    Dim wb As Workbook
+    Dim ws As Worksheet
+    Application.ScreenUpdating = False
+    Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, ReadOnly:=True, CorruptLoad:=xlRepairFile)
+    ActiveWindow.visible = visible
+    Set GetSheet = wb.Worksheets(sheet_name)
+End Function
+
 '-------------------------------------------------------------
 'ブックと閉じる
-' name : IN : ブック名
+' name : IN : ブック名(Excelファイル名)
 '-------------------------------------------------------------
 Public Sub CloseBook(ByVal name As String)
     Dim wb As Workbook
@@ -112,7 +328,7 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     Set folder = fso.GetFolder(search_path)
     
     Dim file As Object
-    For Each file In folder.Files
+    For Each file In folder.files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like search_name Then
             '発見
             SearchFile = file.path
@@ -123,7 +339,7 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     
     'サブフォルダも検索する
     Dim subfolder As Object
-    For Each subfolder In folder.subfolders
+    For Each subfolder In folder.SubFolders
         Dim result As String
         result = SearchFile(subfolder.path, search_name)
         If result <> "" Then
@@ -148,11 +364,11 @@ End Function
 '-------------------------------------------------------------
 Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
     If Common.IsExistsFolder(path) = False Then
-        Err.Raise 53, , "指定されたフォルダが存在しません (" & path & ")"
+        Err.Raise 53, , "[UTF8toSJIS_AllFile] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
     
     If ext = "" Then
-        Err.Raise 53, , "拡張子が指定されていません"
+        Err.Raise 53, , "[UTF8toSJIS_AllFile] 拡張子が指定されていません"
     End If
 
     Dim i As Long
@@ -172,11 +388,11 @@ End Sub
 '-------------------------------------------------------------
 Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
     If Common.IsExistsFolder(path) = False Then
-        Err.Raise 53, , "指定されたフォルダが存在しません (" & path & ")"
+        Err.Raise 53, , "[SJIStoUTF8_AllFile] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
     
     If ext = "" Then
-        Err.Raise 53, , "拡張子が指定されていません"
+        Err.Raise 53, , "[SJIStoUTF8_AllFile] 拡張子が指定されていません"
     End If
 
     Dim i As Long
@@ -286,33 +502,59 @@ End Sub
 '-------------------------------------------------------------
 Public Function IsSJIS(ByVal path As String) As Boolean
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        Err.Raise 53, , "[IsSJIS] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
-    Dim in_str As String
-    Dim buf As String
+    Dim Ado As Object
+    Const TYPE_BINARY = 1
+    Set Ado = CreateObject("ADODB.Stream")
+    Ado.Type = TYPE_BINARY
+    Ado.Open
+
+    Ado.LoadFromFile path
+    Dim read_data As String: read_data = Ado.Read
+    Ado.Close
+    Set Ado = Nothing
+
     Dim i As Long
+    Dim first_byte As Byte
+    Dim second_byte As Byte
+    Dim is_dbcs As Boolean
     
-    Dim filenum As Integer: filenum = FreeFile
-    
-    'Shift-JIS形式のテキストファイルを読み込み
-    in_str = ""
-    Open path For Input As #filenum
-        'テキストをすべて取得する
-        Do Until EOF(filenum)
-            Line Input #filenum, buf
-            in_str = in_str & buf & vbCrLf
-        Loop
-    Close #filenum
-        
-    'Shift-JIS以外のファイルを読み込んでしまった場合は終了
-    For i = 1 To Len(in_str)
-        If Asc(Mid(in_str, i, 1)) = -7295 Then
-            IsSJIS = False
-            Exit Function
+    For i = 1 To LenB(read_data)
+
+        first_byte = AscB(MidB(read_data, i, 1))
+
+        '全角文字列(DBCS)の先頭1バイトであるか
+        is_dbcs = False
+
+        If &H81 <= first_byte And first_byte <= &H9F Then
+            is_dbcs = True
+        ElseIf &HE0 <= first_byte And first_byte <= &HEF Then
+            is_dbcs = True
+        End If
+
+        If is_dbcs Then
+            i = i + 1
+
+            If i > LenB(read_data) Then
+                IsSJIS = False
+                Exit Function
+            End If
+
+            second_byte = AscB(MidB(read_data, i, 1))
+
+            If &H40 <= second_byte And second_byte <= &H7F Then
+                'SJIS!
+            ElseIf &H80 <= second_byte And second_byte <= &HFC Then
+                'SJIS!
+            Else
+                IsSJIS = False
+                Exit Function
+            End If
         End If
     Next
-    
+
     IsSJIS = True
 End Function
 
@@ -323,7 +565,7 @@ End Function
 '-------------------------------------------------------------
 Public Function IsUTF8(ByVal path As String) As Boolean
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        Err.Raise 53, , "[IsUTF8] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
     Dim in_str As String
@@ -359,7 +601,7 @@ End Function
 '-------------------------------------------------------------
 Public Function IsUTF8_WithBom(ByVal path As String) As Boolean
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        Err.Raise 53, , "[IsUTF8_WithBom] 指定されたファイルが存在しません (path" & path & ")"
     End If
 
     Dim bytedata() As Byte: bytedata = ReadBinary(path, 3)
@@ -408,19 +650,20 @@ End Function
 '-------------------------------------------------------------
 '指定フォルダ配下に指定拡張子のファイルが存在するか
 ' path : IN : フォルダパス(絶対パス)
-' ext : IN : 拡張子(Ex. ".vb")
+' in_ext : IN : 拡張子(Ex. "*.vb")
 ' Ret : True/False (True=存在する, False=存在しない)
 '-------------------------------------------------------------
-Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String) As Boolean
+Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As String) As Boolean
     Dim fso As Object
     Dim folder As Object
     Dim subfolder As Object
     Dim file As Object
+    Dim ext As String: ext = Replace(in_ext, "*", "")
     
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set folder = fso.GetFolder(path)
     
-    For Each subfolder In folder.subfolders
+    For Each subfolder In folder.SubFolders
         If IsExistsExtensionFile(subfolder.path, ext) Then
             Set fso = Nothing
             Set folder = Nothing
@@ -430,7 +673,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal ext As String)
         End If
     Next subfolder
     
-    For Each file In folder.Files
+    For Each file In folder.files
         If Right(file.name, Len(ext)) = ext Then
             Set fso = Nothing
             Set folder = Nothing
@@ -495,6 +738,12 @@ Public Function DeleteEmptyArray(ByRef in_array() As String) As String()
     Dim i, cnt As Long
     Dim row As String
     
+    cnt = 0
+    
+    If IsEmptyArray(in_array) = True Then
+        GoTo FINISH
+    End If
+    
     ReDim ret_array(UBound(in_array))
     
     For i = LBound(in_array) To UBound(in_array)
@@ -507,7 +756,12 @@ Public Function DeleteEmptyArray(ByRef in_array() As String) As String()
         End If
     Next
     
-    ReDim Preserve ret_array(cnt - 1)
+FINISH:
+    If cnt > 0 Then
+        ReDim Preserve ret_array(cnt - 1)
+    Else
+        ReDim ret_array(0)
+    End If
     
     DeleteEmptyArray = ret_array
 End Function
@@ -563,7 +817,7 @@ Private Function CreateFileListMain(ByVal path As String, ByVal ext As String, B
     Dim filelist_sub() As String
     Dim filelist_merge() As String
     
-    For Each f In fso.GetFolder(path).subfolders
+    For Each f In fso.GetFolder(path).SubFolders
         filelist_sub = CreateFileListMain(f.path, ext, is_subdir)
         filelist = Common.MergeArray(filelist_sub, filelist)
     Next f
@@ -593,6 +847,8 @@ End Function
 Public Function IsMatchTextFiles(ByVal file1 As String, ByVal file2 As String) As Boolean
     Dim filesize1 As Long: filesize1 = FileLen(file1)
     Dim filesize2 As Long: filesize2 = FileLen(file2)
+    
+    'TODO:バイナリレベルで比較すべき
     
     'まずファイルサイズでチェック
     If filesize1 = 0 And filesize2 = 0 Then
@@ -660,11 +916,11 @@ Public Function GetFolderPathList(ByVal path As String) As String()
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set top_dir = fso.GetFolder(path)
 
-    dir_cnt = top_dir.subfolders.count
+    dir_cnt = top_dir.SubFolders.count
     If dir_cnt > 0 Then
         ReDim path_list(dir_cnt - 1)
         i = 0
-        For Each sub_dir In top_dir.subfolders
+        For Each sub_dir In top_dir.SubFolders
             path_list(i) = sub_dir.path
             i = i + 1
             
@@ -704,7 +960,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     
     'コピー元のフォルダが存在しない場合、エラーを発生させる
     If Not fso.FolderExists(src_path) Then
-        Err.Raise 53, , "指定されたフォルダが存在しません"
+        Err.Raise 53, , "[CopyFolder] 指定されたフォルダが存在しません。(src_path=" & src_path & ")"
     End If
     
     'コピー先のフォルダが存在しない場合、作成する
@@ -714,13 +970,13 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     
     'コピー元のフォルダ内のファイルをコピーする
     Dim file As Object
-    For Each file In fso.GetFolder(src_path).Files
+    For Each file In fso.GetFolder(src_path).files
         fso.CopyFile file.path, fso.BuildPath(dest_path, file.name), True
     Next
     
     'コピー元のフォルダ内のサブフォルダをコピーする
     Dim subfolder As Object
-    For Each subfolder In fso.GetFolder(src_path).subfolders
+    For Each subfolder In fso.GetFolder(src_path).SubFolders
         CopyFolder subfolder.path, fso.BuildPath(dest_path, subfolder.name)
     Next
     
@@ -792,7 +1048,7 @@ End Function
 '-------------------------------------------------------------
 Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As String)
     If Common.IsExistsFile(file_path) = False Or sheet_name = "" Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & file_path & ")"
+        Err.Raise 53, , "[OutputTextFileToSheet] 指定されたファイルが存在しません (file_path=" & file_path & ")"
     End If
 
     'ワーク用にコピーする
@@ -894,6 +1150,25 @@ Public Sub DeleteFolder(ByVal path As String)
     Set fso = CreateObject("Scripting.FileSystemObject")
 
     fso.DeleteFolder path
+    
+    Set fso = Nothing
+End Sub
+
+'-------------------------------------------------------------
+'フォルダを移動する
+' src_path : IN : 移動元フォルダパス (絶対パス)
+' dst_path : IN : 移動先フォルダパス (絶対パス)
+'-------------------------------------------------------------
+Public Sub MoveFolder(ByVal src_path As String, ByVal dst_path As String)
+    If IsExistsFolder(src_path) = False Then
+        Err.Raise 53, , "[MoveFolder] 移動元フォルダが存在しません (src_path=" & src_path & ")"
+        Exit Sub
+    End If
+
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+
+    fso.MoveFolder src_path, dst_path
     
     Set fso = Nothing
 End Sub
@@ -1018,7 +1293,7 @@ Public Function GetFileExtension(ByVal filename As String) As String
     
     ' 拡張子を取得
     If dot_pos > 0 Then
-        GetFileExtension = Right(filename, Len(filename) - dot_pos)
+        GetFileExtension = LCase(Right(filename, Len(filename) - dot_pos))
     Else
         GetFileExtension = ""
     End If
@@ -1039,7 +1314,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Set folder = fso.GetFolder(target_folder)
     
     Dim fileobj As Object
-    For Each fileobj In folder.Files
+    For Each fileobj In folder.files
         If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
             '検索対象のファイルを読み込む
             Dim contents As String: contents = ReadTextFileBySJIS(fileobj.path)
@@ -1060,7 +1335,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     
     'サブフォルダも検索する
     Dim subfolder As Object
-    For Each subfolder In folder.subfolders
+    For Each subfolder In folder.SubFolders
         Dim result() As String
         result = SearchAndReadFiles(subfolder.path, target_file, is_sjis)
         If UBound(result) >= 1 Then
@@ -1085,7 +1360,7 @@ End Function
 '-------------------------------------------------------------
 Public Function ReadTextFileBySJIS(ByVal path As String) As String
     If Common.IsExistsFile(path) = False Then
-        Err.Raise 53, , "指定されたファイルが存在しません (" & path & ")"
+        Err.Raise 53, , "[ReadTextFileBySJIS] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
     'ワーク用にコピーする
@@ -1202,6 +1477,15 @@ Public Sub AddSheet(ByVal sheet_name As String)
     Worksheets.Add.name = sheet_name
 End Sub
 
+'-------------------------------------------------------------
+'ブックをアクティブにする
+' book_name : IN : ブック名(Excelファイル名)
+'-------------------------------------------------------------
+Public Sub ActiveBook(ByVal book_name As String)
+    Dim wb As Workbook
+    Set wb = Workbooks(book_name)
+    wb.Activate
+End Sub
 
 
 
