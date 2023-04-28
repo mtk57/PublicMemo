@@ -53,8 +53,9 @@ Public Sub Init()
 End Sub
 
 '‰Šú‰»(ŠO•”Às—p)
-Public Sub InitForExternal(ByVal path As String)
-    dst_dir_path = path
+Public Sub InitForExternal(ByVal dst_dir As String, ByVal base_dir As String)
+    dst_dir_path = dst_dir
+    move_base_dir = base_dir
 End Sub
 
 'ŒŸØ

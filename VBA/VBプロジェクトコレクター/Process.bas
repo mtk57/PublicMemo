@@ -29,6 +29,9 @@ Public Sub Run()
     'VBプロジェクトファイルを検索する
     SearchVBProjFile
     
+    'コピー先フォルダを削除する
+    DeleteDestFolder
+    
     Dim i As Integer
     Dim copy_files() As String
     
@@ -116,6 +119,19 @@ Private Sub SearchVBProjFile()
     End If
     
     Common.WriteLog "SearchVBProjFile E"
+End Sub
+
+'コピー先フォルダを削除する
+Private Sub DeleteDestFolder()
+    Common.WriteLog "DeleteDestFolder S"
+
+    If Common.IsExistsFolder(main_param.GetDestDirPath()) = True Then
+        Common.DeleteFolder main_param.GetDestDirPath()
+    End If
+    
+    Common.CreateFolder main_param.GetDestDirPath()
+
+    Common.WriteLog "DeleteDestFolder E"
 End Sub
 
 'VBプロジェクトファイルのパースを行い、コピーするファイルリストを取得する

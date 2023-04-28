@@ -5,12 +5,14 @@ Option Explicit
 '他のブックから呼び出す場合はこのメソッドを使うこと
 ' vbprj_files : IN : VBプロジェクトファイルパスリスト(絶対パス)
 ' dst_dir_path : IN : コピー先フォルダパス(絶対パス)
+' base_folder : IN : 移動起点フォルダ名
 ' is_debug : IN : デバッグログ出力有無(True=出力する)
 ' Ret : True/False (True=成功)
 '--------------------------------------------------------
 Public Function Run( _
     ByRef vbprj_files() As String, _
     ByVal dst_dir_path As String, _
+    ByVal base_folder As String, _
     ByVal is_debug As Boolean _
     ) As Boolean
     
@@ -28,8 +30,9 @@ On Error GoTo ErrorHandler
     '開始
     Common.WriteLog "------------------------------------"
     Common.WriteLog "★Start"
+    Common.WriteLog "Receive Param=(" & dst_dir_path & "), (" & base_folder & ")"
     
-    CreateParamForExternal vbprj_files, dst_dir_path
+    CreateParamForExternal vbprj_files, dst_dir_path, base_folder
     Process.Run
 
     Common.WriteLog "★End"
@@ -49,8 +52,11 @@ End Function
 '--------------------------------------------------------
 '--------------------------------------------------------
 Public Sub Run_Click()
-
 On Error GoTo ErrorHandler
+    If Common.ShowYesNoMessageBox("VBプロジェクトファイル収集を実行します") = False Then
+        Exit Sub
+    End If
+    
     Application.DisplayAlerts = False
     
     Dim main_sheet As Worksheet
@@ -102,7 +108,8 @@ End Function
 
 Private Sub CreateParamForExternal( _
     ByRef vbprj_files() As String, _
-    ByVal dst_dir_path As String _
+    ByVal dst_dir_path As String, _
+    ByVal base_dir As String _
     )
     Common.WriteLog "CreateParamForExternal S"
     
@@ -111,7 +118,7 @@ Private Sub CreateParamForExternal( _
     Set main_param = New MainParam
     Set sub_param = New SubParam
     
-    main_param.InitForExternal dst_dir_path
+    main_param.InitForExternal dst_dir_path, base_dir
     sub_param.InitForExternal vbprj_files
     
     Set Process.main_param = main_param
