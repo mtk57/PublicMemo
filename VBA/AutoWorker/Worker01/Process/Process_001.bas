@@ -1,19 +1,19 @@
 Attribute VB_Name = "Process_001"
 Option Explicit
 
-Private prm As Param
+Private prms As ParamContainer
 
 Public Sub Run()
     Common.WriteLog "Run S"
     
     Dim msg As String: msg = ""
 
-    Set prm = New Param
+    Set prms = New ParamContainer
     
-    prm.Init
-    prm.Validate
+    prms.Init
+    prms.Validate
     
-    Common.WriteLog prm.GetAllValue()
+    Common.WriteLog prms.GetAllValue()
     
     '外部ツール実行
     Const MACRO_NAME As String = "Main.Run"
@@ -21,16 +21,17 @@ Public Sub Run()
     
     ret = Application.Run( _
           "'" & _
-          prm.GetExternalPath() & _
+          prms.GetExternalPath() & _
           "'!" & _
           MACRO_NAME, _
-          prm.GetVBProjFilePathList(), _
-          prm.GetDestDirPath(), _
-          prm.IsDebugLog() _
+          prms.GetVBProjFilePathList(), _
+          prms.GetDestDirPath(), _
+          prms.GetBaseFolder(), _
+          prms.IsDebugLog() _
           )
     
     '外部ツールを閉じる
-    Common.CloseBook (Common.GetFileName(prm.GetExternalPath()))
+    Common.CloseBook (Common.GetFileName(prms.GetExternalPath()))
     
     If ret = False Then
         msg = "外部ツールの実行に失敗しました!"

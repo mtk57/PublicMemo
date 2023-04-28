@@ -14,6 +14,7 @@ Private HEADER As String
 'メンバー変数
 Private git_url As String
 Private git_path As String
+Private base_folder As String
 Private base_branch As String
 
 'コンストラクタ
@@ -22,6 +23,7 @@ Private Sub Class_Initialize()
 
     git_url = ""
     git_path = ""
+    base_folder = ""
     base_branch = ""
 End Sub
 
@@ -34,21 +36,18 @@ Public Sub Init()
     
     git_url = main_sheet.Range(CLM & i).value
     git_path = main_sheet.Range(CLM & i + 1).value
-    base_branch = main_sheet.Range(CLM & i + 2).value
+    base_folder = main_sheet.Range(CLM & i + 2).value
+    base_branch = main_sheet.Range(CLM & i + 3).value
 End Sub
 
 '検証
 Public Sub Validate()
-    If git_url = "" Then
-        Err.Raise 53, , HEADER & "GitリポジトリURLが指定されていません"
-    End If
-    
     If git_path = "" Then
         Err.Raise 53, , HEADER & "Gitフォルダパスが指定されていません"
     End If
     
-    If Common.IsExistsFolder(git_path) = False Then
-        Err.Raise 53, , HEADER & "Gitフォルダパスが見つかりません (" & git_path & ")"
+    If base_folder = "" Then
+        Err.Raise 53, , HEADER & "起点フォルダ名が指定されていません"
     End If
 
     If base_branch = "" Then
@@ -69,6 +68,10 @@ Public Function GetGitDirPath() As String
     GetGitDirPath = git_path
 End Function
 
+Public Function GetBaseFolder() As String
+    GetBaseFolder = base_folder
+End Function
+
 Public Function GetBaseBranch() As String
     GetBaseBranch = base_branch
 End Function
@@ -79,6 +82,7 @@ Public Function GetAllValue() As String
     ret = HEADER & _
           "git_url=(" & git_url & "), " & _
           "git_path=(" & git_path & "), " & _
+          "base_folder=(" & base_folder & "), " & _
           "base_branch=(" & base_branch & ")"
           
     GetAllValue = ret

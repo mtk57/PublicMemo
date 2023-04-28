@@ -2,7 +2,7 @@ VERSION 1.0 CLASS
 BEGIN
   MultiUse = -1  'True
 END
-Attribute VB_Name = "Param"
+Attribute VB_Name = "ParamContainer"
 Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = False
@@ -18,7 +18,7 @@ Private target_list() As ParamTarget
 
 'コンストラクタ
 Private Sub Class_Initialize()
-    HEADER = "[Param] "
+    HEADER = "[ParamContainer] "
 End Sub
 
 '初期化
@@ -28,6 +28,7 @@ Public Sub Init()
     
     common_param.Init
     git_param.Init
+    
     CollectTarget
 End Sub
 
@@ -69,6 +70,8 @@ End Sub
 Public Sub Validate()
     common_param.Validate
     git_param.Validate
+    
+    
 End Sub
 
 '=========================================
@@ -101,6 +104,10 @@ End Function
 
 Public Function GetGitDirPath() As String
     GetGitDirPath = git_param.GetGitDirPath()
+End Function
+
+Public Function GetBaseFolder() As String
+    GetBaseFolder = git_param.GetBaseFolder()
 End Function
 
 Public Function GetBaseBranch() As String
