@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.7"
+Public Const VERSION = "1.0.8"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -24,6 +24,75 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
 'ログファイル番号
 Private logfile_num As Integer
 Private is_log_opened As Boolean
+
+Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'Gitコマンドを実行する
+' repo_path : I : ローカルリポジトリフォルダパス(絶対パス)
+' command : I : コマンド (Ex."git log --oneline")
+' Ret : 標準出力
+'-------------------------------------------------------------
+Public Function RunGit(ByVal repo_path As String, ByVal command As String) As String()
+    Dim err_msg As String: err_msg = ""
+    
+    If IsExistsFolder(repo_path) = False Then
+        err_msg = "[RunGit] 指定されたフォルダが存在しません (repo_path=" & repo_path & ")"
+        GoTo FINISH
+    End If
+    
+    'コマンド実行結果格納用の一時ファイルパス
+    Dim temp As String: temp = GetTempFolder() & Application.PathSeparator & Common.GetNowTimeString() & ".txt"
+
+    'コマンド作成
+    Dim run_cmd As String: run_cmd = GIT_BASH & _
+                                     " --login -i -c & cd " & repo_path & " & " & _
+                                     command & _
+                                     " > " & temp
+    'コマンド実行
+    Dim objShell As Object
+    Dim objExec As Object
+    Set objShell = CreateObject("WScript.Shell")
+    Set objExec = objShell.Exec("cmd.exe /c " & Chr(34) & run_cmd & Chr(34))
+    
+    'プロセス完了時に通知を受け取る
+    Do While objExec.Status = 0
+        DoEvents
+    Loop
+    
+    'プロセスの戻り値を取得する
+    If objExec.ExitCode <> 0 Then
+        err_msg = "[RunGit] プロセスの戻り値が0以外です (exit code=" & objExec.ExitCode & ")"
+        GoTo FINISH
+    End If
+    
+    Dim cmd_result As String: cmd_result = Common.ReadTextFileByUTF8(temp)
+    Common.DeleteFile (temp)
+    
+    Dim std_out() As String
+    std_out = Split(cmd_result, vbLf)
+
+FINISH:
+    Set objShell = Nothing
+    Set objExec = Nothing
+    
+    If err_msg <> "" Then
+        Err.Raise 53, , err_msg
+    End If
+
+    RunGit = std_out()
+End Function
+
+'-------------------------------------------------------------
+'一時フォルダパスを取得する
+' Ret : 一時フォルダパス(絶対パス)
+'-------------------------------------------------------------
+Public Function GetTempFolder() As String
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    GetTempFolder = fso.getSpecialFolder(2)
+    Set fso = Nothing
+End Function
 
 '-------------------------------------------------------------
 'ファイルをコピーする
