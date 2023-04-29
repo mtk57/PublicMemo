@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.8"
+Public Const VERSION = "1.0.9"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -49,6 +49,8 @@ Public Function RunGit(ByVal repo_path As String, ByVal command As String) As St
                                      " --login -i -c & cd " & repo_path & " & " & _
                                      command & _
                                      " > " & temp
+    WriteLog "[RunGit] run_cmd=" & run_cmd
+    
     'コマンド実行
     Dim objShell As Object
     Dim objExec As Object
@@ -1419,6 +1421,11 @@ End Function
 Public Function IsEmptyArray(arg As Variant) As Boolean
     On Error Resume Next
     IsEmptyArray = Not (UBound(arg) > 0)
+    
+    If IsEmptyArray = True Then
+        Exit Function
+    End If
+    
     IsEmptyArray = CBool(Err.Number <> 0)
 End Function
 
