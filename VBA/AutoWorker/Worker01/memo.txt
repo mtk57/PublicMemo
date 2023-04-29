@@ -1,6 +1,6 @@
-Worker01			オフへのインプット作業支援																	
-	ver.0.7.0																			
-																				
+Worker01			ブランチ作成支援																	
+	ver.0.9.0																			
+									Danger Zone											
 		1.[Target]のVBプロジェクトファイル(C20～C39)を②のフォルダに収集する。																		
 		"1.(B)に(A)をクローンする。
 2.(C)にスイッチする。
@@ -23,5 +23,23 @@ Worker01			オフへのインプット作業支援
 																				
 	[Target] Param				黄色セルは式が入っているので変更しないこと				memo											
 		(1)VBプロジェクトファイルの絶対パス　★	(2)PID　★	(3)Redmine#　★	(4)Branch	(5)Commit	(6)Tag		複数可。空行が見つかるまで探索。											
-	1	C:\_git_wk\GIT_0010\SRC_010\Zerosrc\DownSizing\testA\testA.vbp	PID_1	00001	fe_PID_1#00001	[COMMIT] PID_1	[TAG] PID_1													
-	2	C:\_git_wk\GIT_0010\SRC_010\Zerosrc\Other\testB\testB.vbproj	PID_2	00002	fe_PID_2#00002	[COMMIT] PID_2	[TAG] PID_2													
+	1	C:\_git_wk\GIT_0010\SRC_010\Zerosrc\DownSizing\testA\testA.vbp	PID_1	00001	fe_PID_1#00001	[COMMIT] PID_1	TAG-PID_1													
+	2	C:\_git_wk\GIT_0010\SRC_010\Zerosrc\Other\testB\testB.vbproj	PID_2	00002	fe_PID_2#00002	[COMMIT] PID_2	TAG-PID_2													
+	3				fe_#00000	[COMMIT] 	TAG-													
+	4				fe_#00000	[COMMIT] 	TAG-													
+	5				fe_#00000	[COMMIT] 	TAG-													
+	6				fe_#00000	[COMMIT] 	TAG-													
+	7				fe_#00000	[COMMIT] 	TAG-													
+	8				fe_#00000	[COMMIT] 	TAG-													
+	9				fe_#00000	[COMMIT] 	TAG-													
+	10				fe_#00000	[COMMIT] 	TAG-													
+	11				fe_#00000	[COMMIT] 	TAG-													
+	12				fe_#00000	[COMMIT] 	TAG-													
+	13				fe_#00000	[COMMIT] 	TAG-													
+	14				fe_#00000	[COMMIT] 	TAG-													
+	15				fe_#00000	[COMMIT] 	TAG-													
+	16				fe_#00000	[COMMIT] 	TAG-													
+	17				fe_#00000	[COMMIT] 	TAG-													
+	18				fe_#00000	[COMMIT] 	TAG-													
+	19				fe_#00000	[COMMIT] 	TAG-													
+	20				fe_#00000	[COMMIT] 	TAG-													

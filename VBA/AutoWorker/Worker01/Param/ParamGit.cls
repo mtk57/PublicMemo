@@ -16,6 +16,8 @@ Private git_url As String
 Private git_path As String
 Private base_folder As String
 Private base_branch As String
+Private is_delete_exist_branch As Boolean
+Private is_delete_exist_branch_s As String
 
 'コンストラクタ
 Private Sub Class_Initialize()
@@ -25,6 +27,7 @@ Private Sub Class_Initialize()
     git_path = ""
     base_folder = ""
     base_branch = ""
+    is_delete_exist_branch = False
 End Sub
 
 '初期化
@@ -38,6 +41,7 @@ Public Sub Init()
     git_path = main_sheet.Range(CLM & i + 1).value
     base_folder = main_sheet.Range(CLM & i + 2).value
     base_branch = main_sheet.Range(CLM & i + 3).value
+    is_delete_exist_branch_s = main_sheet.Range(CLM & i + 4).value
 End Sub
 
 '検証
@@ -52,6 +56,12 @@ Public Sub Validate()
 
     If base_branch = "" Then
         Err.Raise 53, , HEADER & "ベースブランチ名が指定されていません"
+    End If
+    
+    If is_delete_exist_branch_s = "NO" Or is_delete_exist_branch_s = "" Then
+        is_delete_exist_branch = False
+    Else
+        is_delete_exist_branch = True
     End If
 
 End Sub
@@ -76,6 +86,10 @@ Public Function GetBaseBranch() As String
     GetBaseBranch = base_branch
 End Function
 
+Public Function IsDeleteExistBranch() As Boolean
+    IsDeleteExistBranch = is_delete_exist_branch
+End Function
+
 Public Function GetAllValue() As String
     Dim ret As String
     
@@ -83,7 +97,8 @@ Public Function GetAllValue() As String
           "git_url=(" & git_url & "), " & _
           "git_path=(" & git_path & "), " & _
           "base_folder=(" & base_folder & "), " & _
-          "base_branch=(" & base_branch & ")"
+          "base_branch=(" & base_branch & "), " & _
+          "is_delete_exist_branch=(" & is_delete_exist_branch_s & ")"
           
     GetAllValue = ret
 End Function

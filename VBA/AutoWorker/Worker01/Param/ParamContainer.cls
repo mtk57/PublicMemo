@@ -114,6 +114,10 @@ Public Function GetBaseBranch() As String
     GetBaseBranch = git_param.GetBaseBranch()
 End Function
 
+Public Function IsDeleteExistBranch() As Boolean
+    IsDeleteExistBranch = git_param.IsDeleteExistBranch()
+End Function
+
 Public Function GetVBProjFilePathList() As String()
     Dim ret() As String
     Dim i As Long

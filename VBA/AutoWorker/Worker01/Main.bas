@@ -3,6 +3,7 @@ Option Explicit
 
 Private Const RUN_001 = "RUN_001"
 Private Const RUN_002 = "RUN_002"
+Private Const DEL_BRANCH_TAG = "DEL_BRANCH_TAG"
 
 Public Sub Run001_Click()
 On Error GoTo ErrorHandler
@@ -10,6 +11,7 @@ On Error GoTo ErrorHandler
         Exit Sub
     End If
 
+    VisibleProcessingMessage True
     Application.DisplayAlerts = False
     
     Dim msg As String: msg = "正常に終了しました"
@@ -34,6 +36,7 @@ FINISH:
     Common.WriteLog msg
     Common.CloseLog
     Application.DisplayAlerts = True
+    VisibleProcessingMessage False
     MsgBox msg
 End Sub
 
@@ -43,6 +46,7 @@ On Error GoTo ErrorHandler
         Exit Sub
     End If
 
+    VisibleProcessingMessage True
     Application.DisplayAlerts = False
     
     Dim msg As String: msg = "正常に終了しました"
@@ -67,8 +71,45 @@ FINISH:
     Common.WriteLog msg
     Common.CloseLog
     Application.DisplayAlerts = True
+    VisibleProcessingMessage False
     MsgBox msg
 End Sub
+
+Public Sub DeleteBranchAndTag_Click()
+On Error GoTo ErrorHandler
+    If Common.ShowYesNoMessageBox("[Delete Branch & Tag]を実行します") = False Then
+        Exit Sub
+    End If
+
+    VisibleProcessingMessage True
+    Application.DisplayAlerts = False
+    
+    Dim msg As String: msg = "正常に終了しました"
+
+    If IsEnableDebugLog() = True Then
+        Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "AutoRun_" & DEL_BRANCH_TAG & ".log"
+    End If
+
+    Common.WriteLog "------------------------------------"
+    Common.WriteLog "★Start"
+
+    Worksheets(Define.SHEET_01).Activate
+    Process_DeleteBranchAndTag.Run
+
+    Common.WriteLog "★End"
+    GoTo FINISH
+
+ErrorHandler:
+    msg = "エラーが発生しました(" & Err.Description & ")"
+
+FINISH:
+    Common.WriteLog msg
+    Common.CloseLog
+    Application.DisplayAlerts = True
+    VisibleProcessingMessage False
+    MsgBox msg
+End Sub
+
 
 Private Function IsEnableDebugLog() As Boolean
     Dim main_sheet As Worksheet
@@ -83,4 +124,14 @@ Private Function IsEnableDebugLog() As Boolean
         IsEnableDebugLog = True
     End If
 End Function
+
+Private Sub VisibleProcessingMessage(ByVal is_visible As Boolean)
+    Dim main_sheet As Worksheet
+    Set main_sheet = ThisWorkbook.Sheets(Define.SHEET_01)
+    
+    main_sheet.Range(Define.NOW_PROCESS).value = ""
+    If is_visible = True Then
+        main_sheet.Range(Define.NOW_PROCESS).value = "処理中..."
+    End If
+End Sub
 
