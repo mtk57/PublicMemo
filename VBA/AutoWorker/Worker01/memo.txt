@@ -1,24 +1,27 @@
-Worker01																				
-	ver.0.4																			
+Worker01			オフへのインプット作業支援																	
+	ver.0.7.0																			
 																				
-																				
-																				
-																				
-																				
-																				
-																				
+		1.[Target]のVBプロジェクトファイル(C20～C39)を②のフォルダに収集する。																		
+		"1.(B)に(A)をクローンする。
+2.(C)にスイッチする。
+3.(4)ブランチを作成する。
+4.②のフォルダをコピーして(5)コミットする。(コピーは②\(C)配下を(B)\(C)にコピーするので注意)
+5.(6)タグをつけてプッシュする。
+6.2～5を[Target]の行数分繰り返す。"																		
 									★=必須											
-	Common Param								memo											
-		外部ツールファイルパス(絶対パス) ★	C:\_git\PublicMemo\VBA\VBプロジェクトコレクター\VBProjCollector.xlsm																	
-		コピー先フォルダパス(絶対パス) ★	C:\_git\PublicMemo\VBA\VBプロジェクトコレクター\testdata\dst						末尾に"\"禁止。存在しない場合は作成する。											
+	[Common] Param								memo											
+		①外部ツールファイルパス(絶対パス) ★	C:\_git\PublicMemo\VBA\VBプロジェクトコレクター\VBProjCollector.xlsm																	
+		②VBプロジェクトファイルを収集するフォルダパス(絶対パス) ★	C:\_tmp\Worker01_wk						末尾に"\"禁止。存在しない場合は作成する。											
 		デバッグログ出力	NO						未指定の場合は出力しない。											
 																				
-	Git Param								memo											
-		GitリポジトリURL	https://github.com/mtk57/GIT_0020																	
-		Gitフォルダパス(絶対パス) ★	C:\_tmp\GIT_0020						末尾に"\"禁止。存在しない場合は作成する。											
-		ベースブランチ名 ★	develop																	
+	[Git] Param								memo											
+		(A)GitリポジトリURL	https://github.com/mtk57/GIT_0020						未指定の場合はクローン済とみなす。											
+		(B)Gitフォルダパス(絶対パス) ★	C:\_git_wk\GIT_0020						末尾に"\"禁止。存在しない場合は作成する。											
+		(C)起点フォルダ名★	Zerosrc						②から(C)のフォルダ配下を(B)にコピーする。											
+		(D)ベースブランチ名 ★	develop																	
+		(E)(4)が存在した場合は削除する	YES																	
 																				
-	Target Param								memo											
-		VBプロジェクトファイルの絶対パス　★	PID　★	Redmine#　★	Branch	Commit	Tag		複数可。空行が見つかるまで探索。											
-		C:\_git\PublicMemo\VBA\VBプロジェクトコレクター\testdata\src\base\testVB6.vbp	PID_1	00001	fe_PID_1#00001	[COMMIT] PID_1	[TAG] PID_1													
-		C:\_git\PublicMemo\VBA\VBプロジェクトコレクター\testdata\src\vbdotnet\base\testDotNet.vbproj	PID_2	00002	fe_PID_2#00002	[COMMIT] PID_2	[TAG] PID_2													
+	[Target] Param				黄色セルは式が入っているので変更しないこと				memo											
+		(1)VBプロジェクトファイルの絶対パス　★	(2)PID　★	(3)Redmine#　★	(4)Branch	(5)Commit	(6)Tag		複数可。空行が見つかるまで探索。											
+	1	C:\_git_wk\GIT_0010\SRC_010\Zerosrc\DownSizing\testA\testA.vbp	PID_1	00001	fe_PID_1#00001	[COMMIT] PID_1	[TAG] PID_1													
+	2	C:\_git_wk\GIT_0010\SRC_010\Zerosrc\Other\testB\testB.vbproj	PID_2	00002	fe_PID_2#00002	[COMMIT] PID_2	[TAG] PID_2													
