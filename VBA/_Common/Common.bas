@@ -352,7 +352,7 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     Set folder = fso.GetFolder(search_path)
     
     Dim file As Object
-    For Each file In folder.files
+    For Each file In folder.Files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like search_name Then
             '発見
             SearchFile = file.path
@@ -697,7 +697,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As Stri
         End If
     Next subfolder
     
-    For Each file In folder.files
+    For Each file In folder.Files
         If Right(file.name, Len(ext)) = ext Then
             Set fso = Nothing
             Set folder = Nothing
@@ -1000,7 +1000,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     'コピー元のフォルダ内のファイルをコピーする
     Const OVERWRITE = True
     Dim file As Object
-    For Each file In fso.GetFolder(src_path).files
+    For Each file In fso.GetFolder(src_path).Files
         fso.CopyFile file.path, fso.BuildPath(dest_path, file.name), OVERWRITE
     Next
     
@@ -1344,7 +1344,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Set folder = fso.GetFolder(target_folder)
     
     Dim fileobj As Object
-    For Each fileobj In folder.files
+    For Each fileobj In folder.Files
         If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
             '検索対象のファイルを読み込む
             Dim contents As String: contents = ReadTextFileBySJIS(fileobj.path)
@@ -1443,11 +1443,11 @@ End Function
 
 '-------------------------------------------------------------
 '配列が空かをチェックする
-' arg : IN : 配列
+' arr : IN : 配列
 ' Ret : True/False (True=空)
 ' 注意:String型の場合、[0] = ""のみの配列はFalseを返す
 '-------------------------------------------------------------
-Public Function IsEmptyArray(arg As Variant) As Boolean
+Public Function IsEmptyArray(arr As Variant) As Boolean
     On Error Resume Next
     Dim i As Integer
     i = UBound(arr) - LBound(arr) + 1
@@ -1524,6 +1524,8 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
+
 
 
 
