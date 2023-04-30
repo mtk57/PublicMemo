@@ -42,13 +42,15 @@ Public Sub Init(ByVal row As Integer)
     Dim C4 As String: C4 = Define.TARGET_PARAM_CLM_4
     Dim C5 As String: C5 = Define.TARGET_PARAM_CLM_5
     Dim C6 As String: C6 = Define.TARGET_PARAM_CLM_6
+    Dim C7 As String: C7 = Define.TARGET_PARAM_CLM_7
+    Dim C8 As String: C8 = Define.TARGET_PARAM_CLM_8
     
     vbprj_file_path = main_sheet.Range(C1 & row).value
-    pid = main_sheet.Range(C2 & row).value
-    ticket_num = main_sheet.Range(C3 & row).value
-    branch = main_sheet.Range(C4 & row).value
-    commit = main_sheet.Range(C5 & row).value
-    tag = main_sheet.Range(C6 & row).value
+    pid = main_sheet.Range(C4 & row).value
+    ticket_num = main_sheet.Range(C5 & row).value
+    branch = main_sheet.Range(C6 & row).value
+    commit = main_sheet.Range(C7 & row).value
+    tag = main_sheet.Range(C8 & row).value
 End Sub
 
 'åüèÿ

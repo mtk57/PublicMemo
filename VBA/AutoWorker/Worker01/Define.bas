@@ -21,4 +21,6 @@ Public Const TARGET_PARAM_CLM_3 = "E"
 Public Const TARGET_PARAM_CLM_4 = "F"
 Public Const TARGET_PARAM_CLM_5 = "G"
 Public Const TARGET_PARAM_CLM_6 = "H"
+Public Const TARGET_PARAM_CLM_7 = "I"
+Public Const TARGET_PARAM_CLM_8 = "J"
 Public Const TARGET_PARAM_ROW = 21
