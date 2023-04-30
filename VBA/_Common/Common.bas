@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.10"
+Public Const VERSION = "1.0.11"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -754,40 +754,22 @@ End Sub
 
 '-------------------------------------------------------------
 '配列の空行を削除する
-' in_array : IN : 文字列配列
+' arr : IN : 文字列配列
 ' Ret : 空行を削除した配列
 '-------------------------------------------------------------
-Public Function DeleteEmptyArray(ByRef in_array() As String) As String()
-    Dim ret_array() As String
-    Dim i, cnt As Long
-    Dim row As String
-    
-    cnt = 0
-    
-    If IsEmptyArray(in_array) = True Then
-        GoTo FINISH
-    End If
-    
-    ReDim ret_array(UBound(in_array))
-    
-    For i = LBound(in_array) To UBound(in_array)
-        row = in_array(i)
-        If Not IsEmpty(row) Then
-            If row <> "" Then
-                ret_array(cnt) = row
-                cnt = cnt + 1
-            End If
+Public Function DeleteEmptyArray(ByRef arr() As String) As String()
+    Dim result() As String
+    Dim i As Integer
+    Dim count As Integer
+    count = 0
+    For i = LBound(arr) To UBound(arr)
+        If arr(i) <> "" Then
+            ReDim Preserve result(count)
+            result(count) = arr(i)
+            count = count + 1
         End If
-    Next
-    
-FINISH:
-    If cnt > 0 Then
-        ReDim Preserve ret_array(cnt - 1)
-    Else
-        ReDim ret_array(0)
-    End If
-    
-    DeleteEmptyArray = ret_array
+    Next i
+    DeleteEmptyArray = result
 End Function
 
 '-------------------------------------------------------------
@@ -1463,16 +1445,19 @@ End Function
 '配列が空かをチェックする
 ' arg : IN : 配列
 ' Ret : True/False (True=空)
+' 注意:String型の場合、[0] = ""のみの配列はFalseを返す
 '-------------------------------------------------------------
 Public Function IsEmptyArray(arg As Variant) As Boolean
     On Error Resume Next
-    IsEmptyArray = Not (UBound(arg) > 0)
-    
-    If IsEmptyArray = True Then
-        Exit Function
+    Dim i As Integer
+    i = UBound(arr) - LBound(arr) + 1
+    If Err.Number = 0 Then
+        IsEmptyArray = False
+    Else
+        IsEmptyArray = True
+        Err.Clear
     End If
-    
-    IsEmptyArray = CBool(Err.Number <> 0)
+    On Error GoTo 0
 End Function
 
 '-------------------------------------------------------------
