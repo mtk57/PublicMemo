@@ -16,8 +16,6 @@ Private is_enable As String
 'SRC
 Private src_file_path As String
 Private src_sheet_name As String
-Private src_start_row As Long
-Private src_start_row_s As String
 Private src_find_clm As String
 Private src_tran_clm As String
 Private src_ext As String
@@ -25,8 +23,6 @@ Private src_ext As String
 'DST
 Private dst_file_path As String
 Private dst_sheet_name As String
-Private dst_start_row As Long
-Private dst_start_row_s As String
 Private dst_find_clm As String
 Private dst_tran_clm As String
 Private dst_ext As String
@@ -38,15 +34,15 @@ Private Sub Class_Initialize()
     
     src_file_path = ""
     src_sheet_name = ""
-    src_start_row = 0
     src_find_clm = ""
     src_tran_clm = ""
+    src_ext = ""
     
     dst_file_path = ""
     dst_sheet_name = ""
-    dst_start_row = 0
     dst_find_clm = ""
     dst_tran_clm = ""
+    dst_ext = ""
 End Sub
 
 '初期化
@@ -54,21 +50,18 @@ Public Sub Init(ByVal start_row_num As Long)
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
     Dim i As Long: i = start_row_num
-    Const clm = "N"
     
-    is_enable = main_sheet.Range(clm & i).value
+    is_enable = main_sheet.Range("D" & i).value
     
-    src_file_path = main_sheet.Range(clm & i + 1).value
-    src_sheet_name = main_sheet.Range(clm & i + 2).value
-    src_start_row_s = main_sheet.Range(clm & i + 3).value
-    src_find_clm = main_sheet.Range(clm & i + 4).value
-    src_tran_clm = main_sheet.Range(clm & i + 5).value
+    src_file_path = main_sheet.Range("E" & i).value
+    src_sheet_name = main_sheet.Range("F" & i).value
+    src_find_clm = main_sheet.Range("G" & i).value
+    src_tran_clm = main_sheet.Range("H" & i).value
     
-    dst_file_path = main_sheet.Range(clm & i + 6).value
-    dst_sheet_name = main_sheet.Range(clm & i + 7).value
-    dst_start_row_s = main_sheet.Range(clm & i + 8).value
-    dst_find_clm = main_sheet.Range(clm & i + 9).value
-    dst_tran_clm = main_sheet.Range(clm & i + 10).value
+    dst_file_path = main_sheet.Range("I" & i).value
+    dst_sheet_name = main_sheet.Range("J" & i).value
+    dst_find_clm = main_sheet.Range("K" & i).value
+    dst_tran_clm = main_sheet.Range("L" & i).value
 End Sub
 
 '検証
@@ -99,20 +92,6 @@ Public Sub Validate()
         Err.Raise 53, , "SRCシート名が指定されていません"
     End If
 
-    If src_start_row_s = "" Then
-        src_start_row = 1
-    ElseIf IsNumeric(src_start_row_s) Then
-        src_start_row = Int(src_start_row_s)
-        
-        If src_start_row < 1 Then
-            Err.Raise 53, , "SRC開始行が1未満です" & vbCrLf & _
-                            src_start_row
-        End If
-    Else
-        Err.Raise 53, , "SRC開始行が数字ではありません" & vbCrLf & _
-                        src_start_row_s
-    End If
-
     If src_find_clm = "" Then
         Err.Raise 53, , "SRC検索列が指定されていません"
     Else
@@ -138,20 +117,6 @@ Public Sub Validate()
 
     If dst_sheet_name = "" Then
         dst_sheet_name = src_sheet_name
-    End If
-
-    If dst_start_row_s = "" Then
-        dst_start_row = src_start_row
-    ElseIf IsNumeric(dst_start_row_s) Then
-        dst_start_row = Int(dst_start_row_s)
-    
-        If dst_start_row < 1 Then
-            Err.Raise 53, , "DST開始行が1未満です" & vbCrLf & _
-                            dst_start_row
-        End If
-    Else
-        Err.Raise 53, , "DST開始行が数字ではありません" & vbCrLf & _
-                        dst_start_row_s
     End If
 
     If dst_find_clm = "" Then
@@ -215,13 +180,6 @@ Public Function GetSrcSheetName() As String
 End Function
 
 '-----------------------------------------
-'SRC開始行
-'-----------------------------------------
-Public Function GetSrcStartRow() As Long
-    GetSrcStartRow = src_start_row
-End Function
-
-'-----------------------------------------
 'SRC検索列
 '-----------------------------------------
 Public Function GetSrcFindClm() As String
@@ -257,13 +215,6 @@ Public Function GetDstSheetName() As String
 End Function
 
 '-----------------------------------------
-'DST開始行
-'-----------------------------------------
-Public Function GetDstStartRow() As Long
-    GetDstStartRow = dst_start_row
-End Function
-
-'-----------------------------------------
 'DST検索列
 '-----------------------------------------
 Public Function GetDstFindClm() As String
@@ -292,12 +243,10 @@ Public Function GetAllValue() As String
           "is_enable=(" & is_enable & "), " & _
           "src_file_path=(" & src_file_path & "), " & _
           "src_sheet_name=(" & src_sheet_name & "), " & _
-          "src_start_row=(" & src_start_row & "), " & _
           "src_find_clm=(" & src_find_clm & "), " & _
           "src_tran_clm=(" & src_tran_clm & "), " & _
           "dst_file_path=(" & dst_file_path & "), " & _
           "dst_sheet_name=(" & dst_sheet_name & "), " & _
-          "dst_start_row=(" & dst_start_row & "), " & _
           "dst_find_clm=(" & dst_find_clm & "), " & _
           "dst_tran_clm=(" & dst_tran_clm & ")"
     GetAllValue = ret

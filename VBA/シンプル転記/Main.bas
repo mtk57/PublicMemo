@@ -13,7 +13,7 @@ Public Sub Run_Click()
     
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
-    main_sheet.Range("A2").value = "èàóùíÜ..."
+    main_sheet.Range("A4").value = "èàóùíÜ..."
     
     If IsEnableDebugLog() = True Then
         Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "SimpleTranscription.log"
@@ -33,7 +33,7 @@ ErrorHandler:
 FINISH:
     Common.WriteLog msg
     Common.CloseLog
-    main_sheet.Range("A2").value = ""
+    main_sheet.Range("A4").value = ""
     Application.DisplayAlerts = True
     MsgBox msg
 End Sub
@@ -42,7 +42,7 @@ Private Function IsEnableDebugLog() As Boolean
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
 
-    Dim is_debug_log_s As String: is_debug_log_s = main_sheet.Range("N6").value
+    Dim is_debug_log_s As String: is_debug_log_s = main_sheet.Range("G6").value
     
     If is_debug_log_s = "" Or _
        is_debug_log_s = "NO" Then
