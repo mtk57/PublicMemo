@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.12"
+Public Const VERSION = "1.0.13"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -1461,13 +1461,12 @@ End Function
 '配列が空かをチェックする
 ' arr : IN : 配列
 ' Ret : True/False (True=空)
-' 注意:String型の場合、[0] = ""のみの配列はFalseを返す
 '-------------------------------------------------------------
 Public Function IsEmptyArray(arr As Variant) As Boolean
     On Error Resume Next
     Dim i As Integer
-    i = UBound(arr) - LBound(arr) + 1
-    If Err.Number = 0 Then
+    i = UBound(arr)
+    If i >= 0 Then
         IsEmptyArray = False
     Else
         IsEmptyArray = True
