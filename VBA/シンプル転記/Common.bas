@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.13"
+Public Const VERSION = "1.0.14"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -1466,7 +1466,7 @@ Public Function IsEmptyArray(arr As Variant) As Boolean
     On Error Resume Next
     Dim i As Integer
     i = UBound(arr)
-    If i >= 0 Then
+    If i >= 0 And Err.Number = 0 Then
         IsEmptyArray = False
     Else
         IsEmptyArray = True
@@ -1539,8 +1539,5 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
-
-
-
 
 
