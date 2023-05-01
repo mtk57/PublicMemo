@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.14"
+Public Const VERSION = "1.0.15"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -55,6 +55,13 @@ End Function
 '-------------------------------------------------------------
 Public Function RunGit(ByVal repo_path As String, ByVal command As String) As String()
     Dim err_msg As String: err_msg = ""
+    
+    'If InStr(command, "git push") > 0 Then
+    '    If ShowYesNoMessageBox("git push‚ğÀs‚µ‚Ü‚·B") = False Then
+    '       err_msg = "git push‚ğ’†~‚µ‚Ü‚µ‚½"
+    '       GoTo FINISH
+    '    End If
+    'End If
     
     If IsExistsFolder(repo_path) = False Then
         If InStr(command, "git clone") = 0 Then
