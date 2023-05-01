@@ -41,8 +41,7 @@ Private Sub CheckAndCollectParam()
     Common.WriteLog main_param.GetAllValue()
 
     'Sub Params
-    Const START_ROW = 13
-    Const SUB_ROWS = 1 + (5 * 2)    '1=ENABLE, 5=SubParam, 2=SRC, DST
+    Const START_ROW = 15
     Dim row As Long: row = START_ROW
     Dim cnt As Long: cnt = 0
     
@@ -67,7 +66,7 @@ Private Sub CheckAndCollectParam()
         cnt = cnt + 1
         
 CONTINUE:
-        row = row + SUB_ROWS + 1
+        row = row + 1
     Loop
 
     Common.WriteLog "CheckAndCollectParam E"
@@ -77,25 +76,31 @@ End Sub
 Private Sub ExecSubParam()
     Common.WriteLog "ExecSubParam S"
     
-    If Common.IsEmptyArray(sub_params) = True Or _
-       UBound(sub_params) < 0 Then
+    If Common.IsEmptyArray(sub_params) = True Then
         Err.Raise 53, , "有効なSub paramがありません"
     End If
 
     Dim i As Integer
-    Dim src_datas() As String
+    Dim copy_datas() As CopyData
+    Dim sub_param As SubParam
     
     For i = LBound(sub_params) To UBound(sub_params)
-        Common.WriteLog "■Main Loop (i=" & i & ")"
-    
-        Dim sub_param As SubParam
         Set sub_param = sub_params(i)
         
+        Common.WriteLog "■Main Loop (SubParam Row#=" & sub_param.GetSubParamRowNumber() & ")"
+        
         '転記元データを収集する
-        src_datas = CollectSrcDatas(sub_param)
+        copy_datas = CollectSrcDatas(sub_param)
             
-        '収集データを転記する
-        Transcription sub_param, src_datas
+        If Common.IsEmptyArray(copy_datas) = True Then
+            Common.WriteLog "転記元データがありません。"
+            GoTo CONTINUE_FOR
+        End If
+            
+        '転記元データを転記先に転記する
+        Transcription sub_param, copy_datas
+
+CONTINUE_FOR:
 
     Next i
     
@@ -103,89 +108,101 @@ Private Sub ExecSubParam()
 End Sub
 
 '転記元データを収集する
-Private Function CollectSrcDatas(ByRef sub_param As SubParam) As String()
+Private Function CollectSrcDatas(ByRef sub_param As SubParam) As CopyData()
     Common.WriteLog "CollectSrcDatas S"
 
     Dim ws As Worksheet
-    Dim book_name As String
-    Dim temp_sheet As String
+    Dim copy_datas() As CopyData
+    Dim copy_data As CopyData
+    Dim cnt As Long
+    Dim cell As Range
 
     'SRCファイルパスのSRCシート名を開く
-    Set ws = Common.GetSheet(sub_param.GetSrcFilePath(), sub_param.GetSrcSheetName(), False)
-    book_name = Common.GetFileName(sub_param.GetSrcFilePath())
+    Set ws = Common.GetSheet(sub_param.GetSrcFilePath(), sub_param.GetSrcSheetName(), True, False)
     
-    '作業用シートを追加する
-    Common.ActiveBook book_name
-    temp_sheet = Common.GetNowTimeString()
-    ActiveWorkbook.Worksheets.Add.name = temp_sheet
+    'SRC検索列の黄色セルに対応するSRC転記列の値を収集する
+    Dim key_rng As Range
+    Dim value_rng As Range
+    Dim key_clm As String: key_clm = sub_param.GetSrcFindClm()
+    Dim val_clm As String: val_clm = sub_param.GetSrcTranClm()
     
-    'SRC開始行から、SRC検索列、SRC転記列の全行を作業用シートにコピーする
-    'TODO:SRC検索列の複数行対応
-    CopyColumnToAnotherSheet _
-      sub_param.GetSrcSheetName(), sub_param.GetSrcFindClm(), sub_param.GetSrcStartRow(), _
-      temp_sheet, "A", 1
-    CopyColumnToAnotherSheet _
-      sub_param.GetSrcSheetName(), sub_param.GetSrcTranClm(), sub_param.GetSrcStartRow(), _
-      temp_sheet, "B", 1
+    Set key_rng = ws.Range(key_clm & "1:" & key_clm & ws.Cells(ws.Rows.count, key_clm).End(xlUp).row)
+    Set value_rng = ws.Range(val_clm & "1:" & val_clm & ws.Cells(ws.Rows.count, val_clm).End(xlUp).row)
+
+    cnt = 0
+    For Each cell In key_rng
+        '収集対象は黄色セルのみとする
+        If cell.Interior.Color = RGB(255, 255, 0) Then
+            ReDim Preserve copy_datas(cnt)
+            Set copy_data = New CopyData
+            copy_data.Init cell.value, value_rng.Cells(cell.row, 1).value
+            Set copy_datas(cnt) = copy_data
+            cnt = cnt + 1
+        End If
+    Next cell
     
-    'SRC開始行から、SRC検索列、SRC転記列の全行を2次元配列に格納する
-    CollectSrcDatas = Common.GetSheetContentsByStringArray(temp_sheet)
-    
-    'SRCファイルパスと閉じる
+    'SRCファイルを閉じる
     Common.CloseBook (Common.GetFileName(sub_param.GetSrcFilePath()))
+    
+    CollectSrcDatas = copy_datas
     
     Common.WriteLog "CollectSrcDatas E"
 End Function
 
 '転記する
-Private Sub Transcription(ByRef sub_param As SubParam, ByRef src_datas() As String)
+Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As CopyData)
     Common.WriteLog "Transcription S"
     
     Dim ws As Worksheet
     Dim book_name As String
-    Dim r As Long, c As Long
-    Dim find_word As String
+    Dim row As Long
+    Dim keyword As String
     Dim found_row As Long
+    Dim trans_rng As Range
+    Dim copy_data As CopyData
     
     'DSTファイルパスのDSTシート名を開く
-    Set ws = Common.GetSheet(sub_param.GetDstFilePath(), sub_param.GetDstSheetName(), True)
+    Set ws = Common.GetSheet(sub_param.GetDstFilePath(), sub_param.GetDstSheetName(), False, True)
     book_name = Common.GetFileName(sub_param.GetDstFilePath())
     
     'SRC検索列の値が、DST検索列にあるか検索する
     'あれば、SRC転記列の値をDST転記列に入れる
-    For r = LBound(src_datas, 1) To UBound(src_datas, 1)
+    For row = LBound(copy_datas, 1) To UBound(copy_datas, 1)
     
-        find_word = Trim(src_datas(r, 1))
+        Set copy_data = copy_datas(row)
+        keyword = copy_data.GetKey()
         
-        If find_word = "" Then
+        If keyword = "" Then
             GoTo CONTINUE_ROW
         End If
         
         '指定列の全行を指定ワードで検索し、ヒットした行番号を取得する
-        found_row = Common.FindRowByKeyword( _
+        found_row = Common.FindRowByKeywordFromWorksheet( _
                        ws, _
                        sub_param.GetDstFindClm(), _
-                       sub_param.GetDstStartRow(), _
-                       find_word _
+                       1, _
+                       keyword _
                     )
     
         If found_row = 0 Then
             '見つからない!
-            Common.WriteLog "Search value is not found!" & vbCrLf & _
-                            "r=" & r & vbCrLf & _
-                            "find_word=" & find_word
+            Common.WriteLog "Search keyword is not found!" & vbCrLf & _
+                            "row=" & row & vbCrLf & _
+                            "keyword=" & keyword
             'TODO:いったん無視
             GoTo CONTINUE_ROW
         End If
         
-        
+        '転記
+        Set trans_rng = Range(sub_param.GetDstTranClm() & found_row)
+        trans_rng.value = copy_data.GetValue()
         
 CONTINUE_ROW:
         
-    Next r
+    Next row
     
-    'DSTファイルパスと閉じる
-    Common.CloseBook (Common.GetFileName(sub_param.GetDstFilePath()))
+    'DSTファイルを保存して閉じる
+    Common.SaveAndCloseBook (book_name)
     
     Common.WriteLog "Transcription E"
 End Sub
@@ -221,4 +238,38 @@ Private Sub CopyColumnToAnotherSheet( _
     Common.WriteLog "CopyColumnToAnotherSheet E"
 End Sub
 
+Function GetYellowCellData( _
+  ByVal filePath As String, _
+  ByVal sheetName As String, _
+  ByVal searchCol As String, _
+  ByVal dataCol As String _
+  ) As Variant
+    Dim wb As Workbook
+    Dim ws As Worksheet
+    Dim searchRange As Range
+    Dim dataRange As Range
+    Dim cell As Range
+    Dim result() As String
+    Dim i As Long
 
+    Set wb = Workbooks.Open(filePath)
+    Set ws = wb.Sheets(sheetName)
+
+    Set searchRange = ws.Range(searchCol & "1:" & searchCol & ws.Cells(ws.Rows.count, searchCol).End(xlUp).row)
+    Set dataRange = ws.Range(dataCol & "1:" & dataCol & ws.Cells(ws.Rows.count, dataCol).End(xlUp).row)
+
+    ReDim result(0 To searchRange.Cells.count - 1, 0 To 1)
+
+    i = 0
+    For Each cell In searchRange
+        If cell.Interior.Color = RGB(255, 255, 0) Then
+            result(i, 0) = cell.value
+            result(i, 1) = dataRange.Cells(cell.row, 1).value
+            i = i + 1
+        End If
+    Next cell
+
+    wb.Close SaveChanges:=False
+
+    GetYellowCellData = result
+End Function

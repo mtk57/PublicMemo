@@ -12,6 +12,7 @@ Option Explicit
 'メンバー変数
 
 Private is_enable As String
+Private row_number As Long
 
 'SRC
 Private src_file_path As String
@@ -31,6 +32,7 @@ Private dst_ext As String
 'コンストラクタ
 Private Sub Class_Initialize()
     is_enable = "STOPPER"
+    row_number = 1
     
     src_file_path = ""
     src_sheet_name = ""
@@ -46,10 +48,11 @@ Private Sub Class_Initialize()
 End Sub
 
 '初期化
-Public Sub Init(ByVal start_row_num As Long)
+Public Sub Init(ByVal row_num As Long)
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
-    Dim i As Long: i = start_row_num
+    Dim i As Long: i = row_num
+    row_number = row_num
     
     is_enable = main_sheet.Range("D" & i).value
     
@@ -113,7 +116,7 @@ Public Sub Validate()
     
     dst_ext = Common.GetFileExtension(dst_file_path)
     
-    CheckExtensionCombination
+    'CheckExtensionCombination
 
     If dst_sheet_name = "" Then
         dst_sheet_name = src_sheet_name
@@ -163,6 +166,13 @@ End Sub
 '-----------------------------------------
 Public Function GetEnable() As String
     GetEnable = is_enable
+End Function
+
+'-----------------------------------------
+'SubParamの行番号
+'-----------------------------------------
+Public Function GetSubParamRowNumber() As Long
+    GetSubParamRowNumber = row_number
 End Function
 
 '-----------------------------------------
