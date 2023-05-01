@@ -111,8 +111,7 @@ Private Sub SearchVBProjFile()
     
     vbprj_files = Common.DeleteEmptyArray(vbprj_files)
     
-    If Common.IsEmptyArray(vbprj_files) = True Or _
-       vbprj_files(0) = "" Then
+    If Common.IsEmptyArray(vbprj_files) = True Then
         err_msg = "VBプロジェクトファイルが見つかりませんでした"
         Common.WriteLog "SearchVBProjFile E1 (" & err_msg & ")"
         Err.Raise 53, , err_msg
