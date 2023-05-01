@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.8"
+Public Const VERSION = "1.0.14"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -28,6 +28,26 @@ Private is_log_opened As Boolean
 Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
 
 '-------------------------------------------------------------
+'文字列からキーワードで検索し、ヒットしたキーワードから最後までの文字列を返す
+' target : I : 検索対象の文字列
+' keyword : I : 検索キーワード
+' Ret : ヒットしたキーワードから最後までの文字列(見つからない場合は"")
+' Ex.
+'   target:"C:\abc\def\xyz\123.txt"
+'   keyword:"def"
+'   Ret:"def\xyz\123.txt"
+'-------------------------------------------------------------
+Function GetStringByKeyword(ByVal target As String, ByVal keyword As String) As String
+    Dim pos As Long
+    pos = InStr(target, keyword)
+    If pos > 0 Then
+        GetStringByKeyword = Mid(target, pos)
+    Else
+        GetStringByKeyword = ""
+    End If
+End Function
+
+'-------------------------------------------------------------
 'Gitコマンドを実行する
 ' repo_path : I : ローカルリポジトリフォルダパス(絶対パス)
 ' command : I : コマンド (Ex."git log --oneline")
@@ -37,8 +57,10 @@ Public Function RunGit(ByVal repo_path As String, ByVal command As String) As St
     Dim err_msg As String: err_msg = ""
     
     If IsExistsFolder(repo_path) = False Then
-        err_msg = "[RunGit] 指定されたフォルダが存在しません (repo_path=" & repo_path & ")"
-        GoTo FINISH
+        If InStr(command, "git clone") = 0 Then
+            err_msg = "[RunGit] 指定されたフォルダが存在しません (repo_path=" & repo_path & ")"
+            GoTo FINISH
+        End If
     End If
     
     'コマンド実行結果格納用の一時ファイルパス
@@ -49,6 +71,8 @@ Public Function RunGit(ByVal repo_path As String, ByVal command As String) As St
                                      " --login -i -c & cd " & repo_path & " & " & _
                                      command & _
                                      " > " & temp
+    WriteLog "[RunGit] run_cmd=" & run_cmd
+    
     'コマンド実行
     Dim objShell As Object
     Dim objExec As Object
@@ -136,14 +160,14 @@ Public Function RenameFolder(ByVal path As String, ByVal rename As String) As St
 End Function
 
 '-------------------------------------------------------------
-'指定列の全行を指定ワードで検索し、ヒットした行番号を返す
+'ワークシートの指定列の全行を指定ワードで検索し、ヒットした行番号を返す
 ' ws : I : ワークシート
 ' find_clm : I : 指定列名(Ex."A")
 ' find_start_row : I : 検索開始行(1始まり)
 ' keyword : I : 検索ワード
 ' Ret : ヒットした行番号
 '-------------------------------------------------------------
-Public Function FindRowByKeyword( _
+Public Function FindRowByKeywordFromWorksheet( _
   ByVal ws As Worksheet, _
   ByVal find_clm As String, _
   ByVal find_start_row As Long, _
@@ -163,7 +187,7 @@ Public Function FindRowByKeyword( _
         End If
     Next cell
     
-    FindRowByKeyword = found_row
+    FindRowByKeywordFromWorksheet = found_row
 End Function
 
 '-------------------------------------------------------------
@@ -227,23 +251,39 @@ End Function
 
 '-------------------------------------------------------------
 'ブックを開いてシートを取得する
-' book_path : IN : Excelファイルパス(絶対パス)
-' sheet_name : IN : シート名
-' visible : IN : True/False (True=表示, False=非表示)
+' book_path : I : Excelファイルパス(絶対パス)
+' sheet_name : I : シート名
+' readonly : I : True/False (True=読取専用で開く, False=読取専用で開かない)
+' visible : I : True/False (True=表示, False=非表示)
 ' Ret : シートオブジェクト
 '-------------------------------------------------------------
-Public Function GetSheet(ByVal book_path As String, ByVal sheet_name As String, ByVal visible As Boolean) As Worksheet
+Public Function GetSheet(ByVal book_path As String, ByVal sheet_name As String, ByVal readonly As Boolean, ByVal visible As Boolean) As Worksheet
     Dim wb As Workbook
     Dim ws As Worksheet
     Application.ScreenUpdating = False
-    Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, ReadOnly:=True, CorruptLoad:=xlRepairFile)
+    'Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, readonly:=readonly, CorruptLoad:=xlRepairFile)
+    Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, readonly:=readonly)
     ActiveWindow.visible = visible
     Set GetSheet = wb.Worksheets(sheet_name)
 End Function
 
 '-------------------------------------------------------------
-'ブックと閉じる
-' name : IN : ブック名(Excelファイル名)
+'ブックを保存して閉じる
+' name : I : ブック名(Excelファイル名)
+'-------------------------------------------------------------
+Public Sub SaveAndCloseBook(ByVal name As String)
+    Dim wb As Workbook
+    For Each wb In Workbooks
+        If InStr(wb.name, name) > 0 Then
+            wb.Save
+            wb.Close
+        End If
+    Next
+End Sub
+
+'-------------------------------------------------------------
+'ブックを閉じる
+' name : I : ブック名(Excelファイル名)
 '-------------------------------------------------------------
 Public Sub CloseBook(ByVal name As String)
     Dim wb As Workbook
@@ -730,40 +770,22 @@ End Sub
 
 '-------------------------------------------------------------
 '配列の空行を削除する
-' in_array : IN : 文字列配列
+' arr : IN : 文字列配列
 ' Ret : 空行を削除した配列
 '-------------------------------------------------------------
-Public Function DeleteEmptyArray(ByRef in_array() As String) As String()
-    Dim ret_array() As String
-    Dim i, cnt As Long
-    Dim row As String
-    
-    cnt = 0
-    
-    If IsEmptyArray(in_array) = True Then
-        GoTo FINISH
-    End If
-    
-    ReDim ret_array(UBound(in_array))
-    
-    For i = LBound(in_array) To UBound(in_array)
-        row = in_array(i)
-        If Not IsEmpty(row) Then
-            If row <> "" Then
-                ret_array(cnt) = row
-                cnt = cnt + 1
-            End If
+Public Function DeleteEmptyArray(ByRef arr() As String) As String()
+    Dim result() As String
+    Dim i As Integer
+    Dim count As Integer
+    count = 0
+    For i = LBound(arr) To UBound(arr)
+        If arr(i) <> "" Then
+            ReDim Preserve result(count)
+            result(count) = arr(i)
+            count = count + 1
         End If
-    Next
-    
-FINISH:
-    If cnt > 0 Then
-        ReDim Preserve ret_array(cnt - 1)
-    Else
-        ReDim ret_array(0)
-    End If
-    
-    DeleteEmptyArray = ret_array
+    Next i
+    DeleteEmptyArray = result
 End Function
 
 '-------------------------------------------------------------
@@ -771,11 +793,11 @@ End Function
 ' path : IN : フォルダパス(絶対パス)
 ' ext : IN : 拡張子(Ex."*.vb")
 ' is_subdir : IN : サブフォルダ含むか (True=含む)
-' Ret : ファイルリスト
+' Ret : ファイルリスト(絶対パスのリスト)
 '-------------------------------------------------------------
 Public Function CreateFileList(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean) As String()
     Dim list() As String: list = CreateFileListMain(path, ext, is_subdir)
-    CreateFileList = DeleteEmptyArray(list)
+    CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), ext)
 End Function
 
 Private Function CreateFileListMain(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean) As String()
@@ -824,6 +846,29 @@ Private Function CreateFileListMain(ByVal path As String, ByVal ext As String, B
     
     Set fso = Nothing
     CreateFileListMain = filelist
+End Function
+
+'-------------------------------------------------------------
+'ファイルパスの配列から指定拡張子のファイルのみを新しい配列にコピーして返す。
+' path_list : I : ファイルパスの配列
+' in_ext : I : 拡張子(Ex. "*.txt")
+' Ret : フィルター後のファイルパスの配列
+'-------------------------------------------------------------
+Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String) As String()
+    Dim i As Long
+    Dim j As Long: j = 0
+    Dim filtered_list() As String
+    Dim ext As String: ext = Replace(in_ext, "*", "")
+      
+    For i = 0 To UBound(path_list)
+        If Right(path_list(i), Len(ext)) = ext Then
+            ReDim Preserve filtered_list(j)
+            filtered_list(j) = path_list(i)
+            j = j + 1
+        End If
+    Next i
+    
+    FilterFileListByExtension = filtered_list
 End Function
 
 '-------------------------------------------------------------
@@ -969,9 +1014,10 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     End If
     
     'コピー元のフォルダ内のファイルをコピーする
+    Const OVERWRITE = True
     Dim file As Object
     For Each file In fso.GetFolder(src_path).files
-        fso.CopyFile file.path, fso.BuildPath(dest_path, file.name), True
+        fso.CopyFile file.path, fso.BuildPath(dest_path, file.name), OVERWRITE
     Next
     
     'コピー元のフォルダ内のサブフォルダをコピーする
@@ -1413,13 +1459,20 @@ End Function
 
 '-------------------------------------------------------------
 '配列が空かをチェックする
-' arg : IN : 配列
+' arr : IN : 配列
 ' Ret : True/False (True=空)
 '-------------------------------------------------------------
-Public Function IsEmptyArray(arg As Variant) As Boolean
+Public Function IsEmptyArray(arr As Variant) As Boolean
     On Error Resume Next
-    IsEmptyArray = Not (UBound(arg) > 0)
-    IsEmptyArray = CBool(Err.Number <> 0)
+    Dim i As Integer
+    i = UBound(arr)
+    If i >= 0 And Err.Number = 0 Then
+        IsEmptyArray = False
+    Else
+        IsEmptyArray = True
+        Err.Clear
+    End If
+    On Error GoTo 0
 End Function
 
 '-------------------------------------------------------------
@@ -1486,6 +1539,5 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
-
 
 
