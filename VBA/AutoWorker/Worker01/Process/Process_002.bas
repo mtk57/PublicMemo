@@ -25,15 +25,15 @@ Public Sub Run()
     Dim targetlist() As ParamTarget
     targetlist = prms.GetTargetList()
         
-    DoClone
+    WorkerCommon.DoClone prms
     
     For i = LBound(targetlist) To UBound(targetlist)
     
         Set target = targetlist(i)
     
-        SwitchDevelopBranch
+        WorkerCommon.SwitchDevelopBranch prms
         
-        DoPull
+        WorkerCommon.DoPull prms
         
         CreateFeatureBranch target
         
@@ -52,92 +52,13 @@ Public Sub Run()
     Common.WriteLog "Run E"
 End Sub
 
-Private Sub DoClone()
-    Common.WriteLog "DoClone S"
-    
-    If prms.GetUrl() = "" Then
-        Common.WriteLog "DoClone E1"
-        Exit Sub
-    End If
-    
-    If Common.IsExistsFolder(prms.GetGitDirPath()) = True Then
-        Common.WriteLog "DoClone E2"
-        Exit Sub
-    End If
-    
-    Dim cmd As String
-    Dim git_result() As String
-    
-    'クローン
-    cmd = "git clone " & prms.GetUrl() & " " & prms.GetGitDirPath()
-    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
-    
-    Common.WriteLog "DoClone E"
-End Sub
-
-Private Sub SwitchDevelopBranch()
-    Common.WriteLog "SwitchDevelopBranch S"
-    
-    Dim cmd As String
-    Dim git_result() As String
-    
-    'developブランチが存在しない場合はエラーとする
-    If IsExistBranch(prms.GetBaseBranch()) = False Then
-        Err.Raise 53, , "ブランチが存在しません。(" & prms.GetBaseBranch() & ")"
-    End If
-    
-    'カレントブランチを確認する
-    cmd = "git branch --show-current"
-    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
-    
-    If git_result(0) = prms.GetBaseBranch() Then
-        Common.WriteLog "CheckoutBranch E1"
-        Exit Sub
-    End If
-    
-    'ローカルブランチがあるか確認する
-    Dim is_exist_local As Boolean: is_exist_local = False
-    
-    cmd = "git branch --list " & prms.GetBaseBranch()
-    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
-    
-    If Common.IsEmptyArray(git_result) = False Then
-        is_exist_local = True
-    End If
-    
-    If is_exist_local = True Then
-        'ローカルブランチがあるのでswitchで切り替え
-        cmd = "git switch " & prms.GetBaseBranch()
-        git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
-    Else
-        'ローカルブランチがないので作成して切り替え
-        cmd = "git checkout -b " & prms.GetBaseBranch()
-        git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
-    End If
-    
-    Common.WriteLog "SwitchDevelopBranch E"
-End Sub
-
-Private Sub DoPull()
-    Common.WriteLog "DoPull S"
-    
-    Dim cmd As String
-    Dim git_result() As String
-    
-    'プル
-    cmd = "git pull origin " & prms.GetBaseBranch()
-    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
-    
-    Common.WriteLog "DoPull E"
-End Sub
-
 Private Sub CreateFeatureBranch(ByRef target As ParamTarget)
     Common.WriteLog "CreateFeatureBranch S"
     
     Dim cmd As String
     Dim git_result() As String
     
-    If IsExistBranch(target.GetBranch()) = True Then
+    If WorkerCommon.IsExistBranch(prms, target.GetBranch()) = True Then
         If prms.IsDeleteExistBranch() = False Then
             'featureブランチが既に存在する場合はエラーとする
             Err.Raise 53, , "ブランチが既に存在します。(" & target.GetBranch() & ")"
@@ -164,7 +85,7 @@ Private Sub DoCopy(ByRef target As ParamTarget)
     Dim path As String: path = Common.GetStringByKeyword(target.GetVBPrjFilePath(), SEP & prms.GetBaseFolder() & SEP)
     
     '起点フォルダをリネーム
-    Dim prj_name As String: prj_name = GetProjectName(path)
+    Dim prj_name As String: prj_name = WorkerCommon.GetProjectName(path)
     path = Replace(path, SEP & prms.GetBaseFolder() & SEP, prms.GetBaseFolder() & "_" & prj_name & SEP)
     
     'VBプロジェクトを収集したフォルダ直下から、一致するファイルがあるかチェックする
@@ -245,6 +166,11 @@ End Sub
 Private Sub DoPush(ByRef target As ParamTarget)
     Common.WriteLog "DoPush S"
     
+    If prms.IsUpdateRemote() = False Then
+        Common.WriteLog "DoPush E1"
+        Exit Sub
+    End If
+    
     Dim cmd As String
     Dim git_result() As String
     
@@ -255,41 +181,5 @@ Private Sub DoPush(ByRef target As ParamTarget)
     Common.WriteLog "DoPush E"
 End Sub
 
-'ブランチの存在チェック
-Private Function IsExistBranch(ByVal branch As String) As Boolean
-    Common.WriteLog "DoIsExistBranchPush S"
-    
-    Dim cmd As String
-    Dim git_result() As String
-    Dim i As Long
-    Dim is_find As Boolean: is_find = False
-    
-    '全てのブランチのリストを取得する
-    cmd = "git branch --all"
-    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
-    
-    If Common.IsEmptyArray(git_result) = True Then
-        Err.Raise 53, , "ブランチが1つも存在しません。"
-    End If
-    
-    'ブランチが存在するかチェックする
-    For i = LBound(git_result) To UBound(git_result)
-        If InStr(git_result(i), branch) > 0 Then
-            is_find = True
-            Exit For
-        End If
-    Next i
-    
-    IsExistBranch = is_find
-    
-    Common.WriteLog "IsExistBranch E"
-End Function
 
-'VBプロジェクト名を返す
-Private Function GetProjectName(ByVal vbprj_file_path As String) As String
-    Common.WriteLog "GetProjectName S"
-    Dim vbprj_file_name As String: vbprj_file_name = Common.GetFileName(vbprj_file_path)
-    Dim ext As String: ext = Common.GetFileExtension(vbprj_file_name)
-    GetProjectName = Replace(vbprj_file_name, "." & ext, "")
-    Common.WriteLog "GetProjectName E"
-End Function
+

@@ -33,8 +33,8 @@ Public Sub Init()
 End Sub
 
 Private Sub CollectTarget()
-    Dim main_sheet As Worksheet
-    Set main_sheet = ThisWorkbook.Sheets(Define.SHEET_01)
+    Dim params As Worksheet
+    Set params = ThisWorkbook.Sheets("params")
 
     Const CLM = Define.TARGET_PARAM_CLM_1
     Const row = Define.TARGET_PARAM_ROW
@@ -42,7 +42,7 @@ Private Sub CollectTarget()
     Dim path As String
     
     Do
-        path = main_sheet.Range(CLM & row + i).value
+        path = params.Range(CLM & row + i).value
         
         If path = "" Then
             Exit Do
@@ -114,8 +114,16 @@ Public Function GetBaseBranch() As String
     GetBaseBranch = git_param.GetBaseBranch()
 End Function
 
+Public Function IsUpdateRemote() As Boolean
+    IsUpdateRemote = git_param.IsUpdateRemote()
+End Function
+
 Public Function IsDeleteExistBranch() As Boolean
     IsDeleteExistBranch = git_param.IsDeleteExistBranch()
+End Function
+
+Public Function GetCollectStep() As String
+    GetCollectStep = git_param.GetCollectStep()
 End Function
 
 Public Function GetVBProjFilePathList() As String()

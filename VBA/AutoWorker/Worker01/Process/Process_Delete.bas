@@ -61,13 +61,13 @@ Private Sub DeleteBranch(ByRef target As ParamTarget)
     git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
     
     'ローカルブランチを削除する
-    If WorkerCommon.IsExistLocalBranch(prms.GetGitDirPath(), target.GetBranch()) = True Then
+    If WorkerCommon.IsExistLocalBranch(prms, target.GetBranch()) = True Then
         cmd = "git branch -D " & target.GetBranch()
         git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
     End If
 
     'リモートブランチを削除する
-    If WorkerCommon.IsExistRemoteBranch(prms.GetGitDirPath(), target.GetBranch()) = True Then
+    If WorkerCommon.IsExistRemoteBranch(prms, target.GetBranch()) = True Then
         cmd = "git push origin --delete " & target.GetBranch()
         git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
     End If
@@ -90,7 +90,7 @@ Private Sub DeleteTag(ByRef target As ParamTarget)
     Dim cmd As String
     Dim git_result() As String
     
-    If WorkerCommon.IsExistTag(prms.GetGitDirPath(), target.GetTag()) = True Then
+    If WorkerCommon.IsExistTag(prms, target.GetTag()) = True Then
         'ローカルタグを削除する
         cmd = "git tag -d " & target.GetTag()
         git_result = Common.RunGit(prms.GetGitDirPath(), cmd)

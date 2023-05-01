@@ -13,6 +13,8 @@ Private HEADER As String
 
 'メンバー変数
 Private vbprj_file_path As String
+Private lot As String
+Private phase As String
 Private pid As String
 Private ticket_num As String
 Private branch As String
@@ -24,6 +26,8 @@ Private Sub Class_Initialize()
     HEADER = "[Target Param] "
     
     vbprj_file_path = ""
+    lot = ""
+    phase = ""
     pid = ""
     ticket_num = ""
     branch = ""
@@ -33,8 +37,8 @@ End Sub
 
 '初期化
 Public Sub Init(ByVal row As Integer)
-    Dim main_sheet As Worksheet
-    Set main_sheet = ThisWorkbook.Sheets(Define.SHEET_01)
+    Dim sheet As Worksheet
+    Set sheet = ThisWorkbook.Sheets("params")
     
     Dim C1 As String: C1 = Define.TARGET_PARAM_CLM_1
     Dim C2 As String: C2 = Define.TARGET_PARAM_CLM_2
@@ -45,12 +49,14 @@ Public Sub Init(ByVal row As Integer)
     Dim C7 As String: C7 = Define.TARGET_PARAM_CLM_7
     Dim C8 As String: C8 = Define.TARGET_PARAM_CLM_8
     
-    vbprj_file_path = main_sheet.Range(C1 & row).value
-    pid = main_sheet.Range(C4 & row).value
-    ticket_num = main_sheet.Range(C5 & row).value
-    branch = main_sheet.Range(C6 & row).value
-    commit = main_sheet.Range(C7 & row).value
-    tag = main_sheet.Range(C8 & row).value
+    vbprj_file_path = sheet.Range(C1 & row).value
+    lot = sheet.Range(C2 & row).value
+    phase = sheet.Range(C3 & row).value
+    pid = sheet.Range(C4 & row).value
+    ticket_num = sheet.Range(C5 & row).value
+    branch = sheet.Range(C6 & row).value
+    commit = sheet.Range(C7 & row).value
+    tag = sheet.Range(C8 & row).value
 End Sub
 
 '検証
@@ -63,8 +69,16 @@ Public Sub Validate(ByVal row As Integer)
         Err.Raise 53, , HEADER & "VBプロジェクトファイルが見つかりません(vbprj_file_path=" & vbprj_file_path & ", row=" & row & ")"
     End If
     
+    If lot = "" Then
+        Err.Raise 53, , HEADER & "Lotが指定されていません(row=" & row & ")"
+    End If
+    
+    If phase = "" Then
+        Err.Raise 53, , HEADER & "Phaseが指定されていません(row=" & row & ")"
+    End If
+    
     If pid = "" Then
-        Err.Raise 53, , HEADER & "pidが指定されていません(row=" & row & ")"
+        Err.Raise 53, , HEADER & "PIDが指定されていません(row=" & row & ")"
     End If
     
     If ticket_num = "" Then
@@ -96,6 +110,14 @@ Public Function GetTicketNum() As String
     GetTicketNum = ticket_num
 End Function
 
+Public Function GetLot() As String
+    GetLot = lot
+End Function
+
+Public Function GetPhase() As String
+    GetPhase = phase
+End Function
+
 Public Function GetPID() As String
     GetPID = pid
 End Function
@@ -117,8 +139,10 @@ Public Function GetAllValue() As String
     
     ret = HEADER & _
           "vbprj_file_path=(" & vbprj_file_path & "), " & _
-          "ticket_num=(" & ticket_num & "), " & _
+          "lot=(" & lot & "), " & _
+          "phase=(" & phase & "), " & _
           "pid=(" & pid & "), " & _
+          "ticket_num=(" & ticket_num & "), " & _
           "branch=(" & branch & "), " & _
           "commit=(" & commit & "), " & _
           "tag=(" & tag & ")"

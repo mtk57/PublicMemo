@@ -1,19 +1,16 @@
 Attribute VB_Name = "Define"
 Option Explicit
 
-
-Public Const SHEET_01 = "Worker01"
-
-Public Const DEBUG_LOG_CELL = "D10"
-Public Const NOW_PROCESS = "D2"
+Public Const DEBUG_LOG_CELL = "D7"
+Public Const NOW_PROCESS = "A2"
 
 Public Const COMMON_PARAM_CLM = "D"
-Public Const COMMON_PARAM_ROW = 8
+Public Const COMMON_PARAM_ROW = 5
 Public Const COMMON_PARAM_ROWS = 3
 
 Public Const GIT_PARAM_CLM = "D"
-Public Const GIT_PARAM_ROW = 13
-Public Const GIT_PARAM_ROWS = 5
+Public Const GIT_PARAM_ROW = 10
+Public Const GIT_PARAM_ROWS = 7
 
 Public Const TARGET_PARAM_CLM_1 = "C"
 Public Const TARGET_PARAM_CLM_2 = "D"
@@ -23,7 +20,7 @@ Public Const TARGET_PARAM_CLM_5 = "G"
 Public Const TARGET_PARAM_CLM_6 = "H"
 Public Const TARGET_PARAM_CLM_7 = "I"
 Public Const TARGET_PARAM_CLM_8 = "J"
-Public Const TARGET_PARAM_ROW = 21
+Public Const TARGET_PARAM_ROW = 20
 
 Public Enum DELETE_ENUM
     TYPE_BRANCH

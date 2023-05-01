@@ -16,8 +16,11 @@ Private git_url As String
 Private git_path As String
 Private base_folder As String
 Private base_branch As String
+Private is_update_remote As Boolean
+Private is_update_remote_s As String
 Private is_delete_exist_branch As Boolean
 Private is_delete_exist_branch_s As String
+Private collect_step As String
 
 'コンストラクタ
 Private Sub Class_Initialize()
@@ -27,21 +30,25 @@ Private Sub Class_Initialize()
     git_path = ""
     base_folder = ""
     base_branch = ""
+    is_update_remote = False
     is_delete_exist_branch = False
+    collect_step = ""
 End Sub
 
 '初期化
 Public Sub Init()
-    Dim main_sheet As Worksheet
-    Set main_sheet = ThisWorkbook.Sheets(Define.SHEET_01)
+    Dim sheet As Worksheet
+    Set sheet = ThisWorkbook.Sheets("params")
     Const CLM = Define.GIT_PARAM_CLM
     Const i = Define.GIT_PARAM_ROW
     
-    git_url = main_sheet.Range(CLM & i).value
-    git_path = main_sheet.Range(CLM & i + 1).value
-    base_folder = main_sheet.Range(CLM & i + 2).value
-    base_branch = main_sheet.Range(CLM & i + 3).value
-    is_delete_exist_branch_s = main_sheet.Range(CLM & i + 4).value
+    git_url = sheet.Range(CLM & i).value
+    git_path = sheet.Range(CLM & i + 1).value
+    base_folder = sheet.Range(CLM & i + 2).value
+    base_branch = sheet.Range(CLM & i + 3).value
+    is_update_remote_s = sheet.Range(CLM & i + 4).value
+    is_delete_exist_branch_s = sheet.Range(CLM & i + 5).value
+    collect_step = sheet.Range(CLM & i + 6).value
 End Sub
 
 '検証
@@ -58,10 +65,20 @@ Public Sub Validate()
         Err.Raise 53, , HEADER & "ベースブランチ名が指定されていません"
     End If
     
+    If is_update_remote_s = "NO" Or is_update_remote_s = "" Then
+        is_update_remote = False
+    Else
+        is_update_remote = True
+    End If
+    
     If is_delete_exist_branch_s = "NO" Or is_delete_exist_branch_s = "" Then
         is_delete_exist_branch = False
     Else
         is_delete_exist_branch = True
+    End If
+    
+    If collect_step = "" Then
+        collect_step = "STEP1.?"
     End If
 
 End Sub
@@ -86,8 +103,16 @@ Public Function GetBaseBranch() As String
     GetBaseBranch = base_branch
 End Function
 
+Public Function IsUpdateRemote() As Boolean
+    IsUpdateRemote = is_update_remote
+End Function
+
 Public Function IsDeleteExistBranch() As Boolean
     IsDeleteExistBranch = is_delete_exist_branch
+End Function
+
+Public Function GetCollectStep() As String
+    GetCollectStep = collect_step
 End Function
 
 Public Function GetAllValue() As String
@@ -98,7 +123,9 @@ Public Function GetAllValue() As String
           "git_path=(" & git_path & "), " & _
           "base_folder=(" & base_folder & "), " & _
           "base_branch=(" & base_branch & "), " & _
-          "is_delete_exist_branch=(" & is_delete_exist_branch_s & ")"
+          "is_update_remote=(" & is_update_remote_s & "), " & _
+          "is_delete_exist_branch=(" & is_delete_exist_branch_s & "), " & _
+          "collect_step=(" & collect_step & ")"
           
     GetAllValue = ret
 End Function

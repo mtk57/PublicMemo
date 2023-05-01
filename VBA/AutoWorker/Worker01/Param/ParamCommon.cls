@@ -28,14 +28,14 @@ End Sub
 
 'èâä˙âª
 Public Sub Init()
-    Dim main_sheet As Worksheet
-    Set main_sheet = ThisWorkbook.Sheets(Define.SHEET_01)
+    Dim sheet As Worksheet
+    Set sheet = ThisWorkbook.Sheets("params")
     Const CLM = Define.COMMON_PARAM_CLM
     Const i = Define.COMMON_PARAM_ROW
     
-    external_path = main_sheet.Range(CLM & i).value
-    dst_dir_path = main_sheet.Range(CLM & i + 1).value
-    is_debug_log_s = main_sheet.Range(CLM & i + 2).value
+    external_path = sheet.Range(CLM & i).value
+    dst_dir_path = sheet.Range(CLM & i + 1).value
+    is_debug_log_s = sheet.Range(CLM & i + 2).value
 End Sub
 
 'åüèÿ
