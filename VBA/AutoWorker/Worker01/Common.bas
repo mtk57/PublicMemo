@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.10"
+Public Const VERSION = "1.0.14"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -160,14 +160,14 @@ Public Function RenameFolder(ByVal path As String, ByVal rename As String) As St
 End Function
 
 '-------------------------------------------------------------
-'指定列の全行を指定ワードで検索し、ヒットした行番号を返す
+'ワークシートの指定列の全行を指定ワードで検索し、ヒットした行番号を返す
 ' ws : I : ワークシート
 ' find_clm : I : 指定列名(Ex."A")
 ' find_start_row : I : 検索開始行(1始まり)
 ' keyword : I : 検索ワード
 ' Ret : ヒットした行番号
 '-------------------------------------------------------------
-Public Function FindRowByKeyword( _
+Public Function FindRowByKeywordFromWorksheet( _
   ByVal ws As Worksheet, _
   ByVal find_clm As String, _
   ByVal find_start_row As Long, _
@@ -187,7 +187,7 @@ Public Function FindRowByKeyword( _
         End If
     Next cell
     
-    FindRowByKeyword = found_row
+    FindRowByKeywordFromWorksheet = found_row
 End Function
 
 '-------------------------------------------------------------
@@ -251,23 +251,39 @@ End Function
 
 '-------------------------------------------------------------
 'ブックを開いてシートを取得する
-' book_path : IN : Excelファイルパス(絶対パス)
-' sheet_name : IN : シート名
-' visible : IN : True/False (True=表示, False=非表示)
+' book_path : I : Excelファイルパス(絶対パス)
+' sheet_name : I : シート名
+' readonly : I : True/False (True=読取専用で開く, False=読取専用で開かない)
+' visible : I : True/False (True=表示, False=非表示)
 ' Ret : シートオブジェクト
 '-------------------------------------------------------------
-Public Function GetSheet(ByVal book_path As String, ByVal sheet_name As String, ByVal visible As Boolean) As Worksheet
+Public Function GetSheet(ByVal book_path As String, ByVal sheet_name As String, ByVal readonly As Boolean, ByVal visible As Boolean) As Worksheet
     Dim wb As Workbook
     Dim ws As Worksheet
     Application.ScreenUpdating = False
-    Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, ReadOnly:=True, CorruptLoad:=xlRepairFile)
+    'Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, readonly:=readonly, CorruptLoad:=xlRepairFile)
+    Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, readonly:=readonly)
     ActiveWindow.visible = visible
     Set GetSheet = wb.Worksheets(sheet_name)
 End Function
 
 '-------------------------------------------------------------
-'ブックと閉じる
-' name : IN : ブック名(Excelファイル名)
+'ブックを保存して閉じる
+' name : I : ブック名(Excelファイル名)
+'-------------------------------------------------------------
+Public Sub SaveAndCloseBook(ByVal name As String)
+    Dim wb As Workbook
+    For Each wb In Workbooks
+        If InStr(wb.name, name) > 0 Then
+            wb.Save
+            wb.Close
+        End If
+    Next
+End Sub
+
+'-------------------------------------------------------------
+'ブックを閉じる
+' name : I : ブック名(Excelファイル名)
 '-------------------------------------------------------------
 Public Sub CloseBook(ByVal name As String)
     Dim wb As Workbook
@@ -754,40 +770,22 @@ End Sub
 
 '-------------------------------------------------------------
 '配列の空行を削除する
-' in_array : IN : 文字列配列
+' arr : IN : 文字列配列
 ' Ret : 空行を削除した配列
 '-------------------------------------------------------------
-Public Function DeleteEmptyArray(ByRef in_array() As String) As String()
-    Dim ret_array() As String
-    Dim i, cnt As Long
-    Dim row As String
-    
-    cnt = 0
-    
-    If IsEmptyArray(in_array) = True Then
-        GoTo FINISH
-    End If
-    
-    ReDim ret_array(UBound(in_array))
-    
-    For i = LBound(in_array) To UBound(in_array)
-        row = in_array(i)
-        If Not IsEmpty(row) Then
-            If row <> "" Then
-                ret_array(cnt) = row
-                cnt = cnt + 1
-            End If
+Public Function DeleteEmptyArray(ByRef arr() As String) As String()
+    Dim result() As String
+    Dim i As Integer
+    Dim count As Integer
+    count = 0
+    For i = LBound(arr) To UBound(arr)
+        If arr(i) <> "" Then
+            ReDim Preserve result(count)
+            result(count) = arr(i)
+            count = count + 1
         End If
-    Next
-    
-FINISH:
-    If cnt > 0 Then
-        ReDim Preserve ret_array(cnt - 1)
-    Else
-        ReDim ret_array(0)
-    End If
-    
-    DeleteEmptyArray = ret_array
+    Next i
+    DeleteEmptyArray = result
 End Function
 
 '-------------------------------------------------------------
@@ -1461,18 +1459,20 @@ End Function
 
 '-------------------------------------------------------------
 '配列が空かをチェックする
-' arg : IN : 配列
+' arr : IN : 配列
 ' Ret : True/False (True=空)
 '-------------------------------------------------------------
-Public Function IsEmptyArray(arg As Variant) As Boolean
+Public Function IsEmptyArray(arr As Variant) As Boolean
     On Error Resume Next
-    IsEmptyArray = Not (UBound(arg) > 0)
-    
-    If IsEmptyArray = True Then
-        Exit Function
+    Dim i As Integer
+    i = UBound(arr)
+    If i >= 0 And Err.Number = 0 Then
+        IsEmptyArray = False
+    Else
+        IsEmptyArray = True
+        Err.Clear
     End If
-    
-    IsEmptyArray = CBool(Err.Number <> 0)
+    On Error GoTo 0
 End Function
 
 '-------------------------------------------------------------
@@ -1539,6 +1539,7 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
 
 
 

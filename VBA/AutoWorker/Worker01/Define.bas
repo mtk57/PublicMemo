@@ -24,3 +24,9 @@ Public Const TARGET_PARAM_CLM_6 = "H"
 Public Const TARGET_PARAM_CLM_7 = "I"
 Public Const TARGET_PARAM_CLM_8 = "J"
 Public Const TARGET_PARAM_ROW = 21
+
+Public Enum DELETE_ENUM
+    TYPE_BRANCH
+    TYPE_TAG
+End Enum
+

@@ -3,7 +3,8 @@ Option Explicit
 
 Private Const RUN_001 = "RUN_001"
 Private Const RUN_002 = "RUN_002"
-Private Const DEL_BRANCH_TAG = "DEL_BRANCH_TAG"
+Private Const DEL_BRANCH = "DEL_BRANCH"
+Private Const DEL_TAG = "DEL_TAG"
 
 Public Sub Run001_Click()
 On Error GoTo ErrorHandler
@@ -75,9 +76,9 @@ FINISH:
     MsgBox msg
 End Sub
 
-Public Sub DeleteBranchAndTag_Click()
+Public Sub DeleteBranch_Click()
 On Error GoTo ErrorHandler
-    If Common.ShowYesNoMessageBox("[Delete Branch & Tag]を実行します") = False Then
+    If Common.ShowYesNoMessageBox("[Delete Branch]を実行します") = False Then
         Exit Sub
     End If
 
@@ -87,14 +88,14 @@ On Error GoTo ErrorHandler
     Dim msg As String: msg = "正常に終了しました"
 
     If IsEnableDebugLog() = True Then
-        Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "AutoRun_" & DEL_BRANCH_TAG & ".log"
+        Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "AutoRun_" & DEL_BRANCH & ".log"
     End If
 
     Common.WriteLog "------------------------------------"
     Common.WriteLog "★Start"
 
     Worksheets(Define.SHEET_01).Activate
-    Process_DeleteBranchAndTag.Run
+    Process_Delete.Run DELETE_ENUM.TYPE_BRANCH
 
     Common.WriteLog "★End"
     GoTo FINISH
@@ -110,6 +111,40 @@ FINISH:
     MsgBox msg
 End Sub
 
+Public Sub DeleteTag_Click()
+On Error GoTo ErrorHandler
+    If Common.ShowYesNoMessageBox("[Delete Tag]を実行します") = False Then
+        Exit Sub
+    End If
+
+    VisibleProcessingMessage True
+    Application.DisplayAlerts = False
+    
+    Dim msg As String: msg = "正常に終了しました"
+
+    If IsEnableDebugLog() = True Then
+        Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "AutoRun_" & DEL_TAG & ".log"
+    End If
+
+    Common.WriteLog "------------------------------------"
+    Common.WriteLog "★Start"
+
+    Worksheets(Define.SHEET_01).Activate
+    Process_Delete.Run DELETE_ENUM.TYPE_TAG
+
+    Common.WriteLog "★End"
+    GoTo FINISH
+
+ErrorHandler:
+    msg = "エラーが発生しました(" & Err.Description & ")"
+
+FINISH:
+    Common.WriteLog msg
+    Common.CloseLog
+    Application.DisplayAlerts = True
+    VisibleProcessingMessage False
+    MsgBox msg
+End Sub
 
 Private Function IsEnableDebugLog() As Boolean
     Dim main_sheet As Worksheet
