@@ -20,6 +20,10 @@ Public Sub Run()
     
     Common.WriteLog prms.GetAllValue()
     
+    If Common.IsExistsFolder(prms.GetDestDirPath) = False Then
+        Common.CreateFolder prms.GetDestDirPath()
+    End If
+    
     Dim i As Integer
     Dim target As ParamTarget
     Dim targetlist() As ParamTarget
