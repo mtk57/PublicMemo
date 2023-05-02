@@ -342,7 +342,7 @@ REM vbpのフォルダにCD
 CD /d "D:\Zerowork\kawasaki\Lab\Redmine\110¥VB6"
 
 REM コンパイル (/out を指定しないとエラー時にポップアップが出てしまう)
-"C:\Program Files\Microsoft Visual Studio VB98 VB6.exe" /m Project1.vbp /out out.log
+"C:\Program Files\Microsoft Visual Studio\VB98\VB6.exe" /m Project1.vbp /out out.log
 
 
 エラー例(out.log)
