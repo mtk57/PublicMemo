@@ -336,3 +336,32 @@ Static
 	C#に該当機能なし。VBではローカル変数を静的に出来る。
 
 ---------------------------------------
+■VB6 BATからコンパイル
+
+REM vbpのフォルダにCD
+CD /d "D:\Zerowork\kawasaki\Lab\Redmine\110¥VB6"
+
+REM コンパイル (/out を指定しないとエラー時にポップアップが出てしまう)
+"C:\Program Files\Microsoft Visual Studio VB98 VB6.exe" /m Project1.vbp /out out.log
+
+
+エラー例(out.log)
+ﾌｧｲﾙ内のｺﾝﾊﾟｲﾙｴﾗｰ - 'D:\Zerowork¥kawasaki\Lab¥Redmine #110\VB6\Form1.frm', 行番号 - 4 : 変数が定義されていません。
+'Projectl.exe' のﾋﾞﾙﾄﾞに失敗しました。
+
+正常例 (out.log)
+'Project1.exe' のﾋﾞﾙﾄﾞが正常に終了しました。 
+
+残念なのは、エラーでも終了コード (echo %errorlevel%) が0となること。 
+なので、成否の判断はexeが出来たかどうかだが、
+exe名を取得するのがメンドイので、ログファイルを「失敗」とかGREPするしかないかも。
+
+ログファイルへの追記。
+echo ABC >> out.log
+
+Win100VS2019
+"C:\Program Files (x86)\Microsoft Visual Studio¥2019 Professional\MSBuild¥Current\Bin\MSBuild.exe"
+
+
+
+
