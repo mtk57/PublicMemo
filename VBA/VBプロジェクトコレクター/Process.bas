@@ -633,9 +633,8 @@ Private Sub CreateBuildBatFile(ByRef vbprj_files() As String)
     Dim i As Long
     Dim contents() As String
     Dim contents_cnt As Long
-    Dim platform As String: platform = "Any CPU"
        
-    Const FIRST_ROW_CNT = 13
+    Const FIRST_ROW_CNT = 11
     Const row_cnt = 5
     Const SECOND_ROW_CNT = 2
     
@@ -646,16 +645,14 @@ Private Sub CreateBuildBatFile(ByRef vbprj_files() As String)
     contents(1) = "set VB6EXE=" & VB6EXE
     contents(2) = "set MSBLDEXE=" & MSBLDEXE
     contents(3) = "set BUILDLOG=" & BUILDLOG
-    contents(4) = "set PLATFORM=" & platform
-    contents(5) = ""
-    contents(6) = "echo VB6EXE=%VB6EXE%"
-    contents(7) = "echo MSBLDEXE=%MSBLDEXE%"
-    contents(8) = "echo BUILDLOG=%BUILDLOG%"
-    contents(9) = "echo PLATFORM=%PLATFORM%"
-    contents(10) = ""
-    contents(11) = "REM 各プロジェクトをビルド"
-    contents(12) = "echo Start Build > %BUILDLOG%"
-    contents(13) = ""
+    contents(4) = ""
+    contents(5) = "echo VB6EXE=%VB6EXE%"
+    contents(6) = "echo MSBLDEXE=%MSBLDEXE%"
+    contents(7) = "echo BUILDLOG=%BUILDLOG%"
+    contents(8) = ""
+    contents(9) = "REM 各プロジェクトをビルド"
+    contents(10) = "echo Start Build > %BUILDLOG%"
+    contents(11) = ""
     
     Dim OFFSET As Long: OFFSET = UBound(contents) + 1
 
