@@ -312,7 +312,8 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
     For i = LBound(contents) To UBound(contents)
         If InStr(contents(i), "<Compile Include=") = 0 And _
            InStr(contents(i), "<EmbeddedResource Include=") = 0 And _
-           InStr(contents(i), "<None Include=") = 0 Then
+           InStr(contents(i), "<None Include=") = 0 And _
+           InStr(contents(i), "<HintPath>") = 0 Then
             'ビルドに必要なファイルを含まないので無視
             GoTo CONTINUE
         End If
@@ -325,8 +326,10 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
             path = Trim(Replace(Replace(contents(i), "<Compile Include=""", ""), """ />", ""))
         ElseIf InStr(contents(i), "<EmbeddedResource Include=") > 0 Then
             path = Trim(Replace(Replace(contents(i), "<EmbeddedResource Include=""", ""), """ />", ""))
-        Else
+        ElseIf InStr(contents(i), "<None Include=") > 0 Then
             path = Trim(Replace(Replace(contents(i), "<None Include=""", ""), """ />", ""))
+        Else
+            path = Trim(Replace(Replace(contents(i), "<HintPath>", ""), "</HintPath>", ""))
         End If
         
         path = Replace(path, """>", "")
@@ -624,7 +627,7 @@ Private Sub CreateBuildBatFile(ByRef vbprj_files() As String)
     End If
     
     Const VB6EXE = "C:\Program Files\Microsoft Visual Studio\VB98\VB6.exe"
-    Const MSBLDEXE = "C:\Program Files (x86)\Microsoft Visual Studio\2019 Professional\MSBuild\Current\Bin\MSBuild.exe"
+    Const MSBLDEXE = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\MSBuild\Current\Bin\MSBuild.exe"
     Const BUILDLOG = "build.log"
     
     Dim i As Long
@@ -687,9 +690,9 @@ Private Sub CreateBuildBatFile(ByRef vbprj_files() As String)
         ElseIf ext = "vbproj" Then
             
             'MSBuildでビルド
-            contents(i * row_cnt + OFFSET + 0) = "IF EXIST " & DQ & "MSBLDEXE" & DQ & " ("
+            contents(i * row_cnt + OFFSET + 0) = "IF EXIST " & DQ & "%MSBLDEXE%" & DQ & " ("
             contents(i * row_cnt + OFFSET + 1) = "  echo VB.NET Build [" & target_path & "] >> %BUILDLOG%"
-            contents(i * row_cnt + OFFSET + 2) = "  " & DQ & "%MSBLDEXE%" & DQ & " " & DQ & target_path & DQ & " /t:clean;rebuild /p:Configuration=Release;Platform=" & DQ & "%PLATFORM%" & DQ & " /fl"
+            contents(i * row_cnt + OFFSET + 2) = "  " & DQ & "%MSBLDEXE%" & DQ & " " & DQ & Replace(target_path, ".\", "C:\") & DQ & " /t:clean;rebuild /p:Configuration=Release /fl"
             contents(i * row_cnt + OFFSET + 3) = ")"
             contents(i * row_cnt + OFFSET + 4) = ""
         
