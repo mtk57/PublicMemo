@@ -19,10 +19,12 @@ Private is_out_sheet As Boolean
 Private is_create_copy_bat As Boolean
 Private move_base_dir As String
 Private is_create_build_bat As Boolean
+Private is_delete_path32 As Boolean
 
 Private is_out_sheet_s As String
 Private is_create_copy_bat_s As String
 Private is_create_build_bat_s As String
+Private is_delete_path32_s As String
 
 'コンストラクタ
 Private Sub Class_Initialize()
@@ -34,10 +36,12 @@ Private Sub Class_Initialize()
     is_create_copy_bat = False
     move_base_dir = ""
     is_create_build_bat = False
+    is_delete_path32 = False
     
     is_out_sheet_s = ""
     is_create_copy_bat_s = ""
     is_create_build_bat_s = ""
+    is_delete_path32_s = ""
 End Sub
 
 '初期化
@@ -55,6 +59,7 @@ Public Sub Init()
     is_create_copy_bat_s = main_sheet.Range(CLM & i + 7).value
     move_base_dir = main_sheet.Range(CLM & i + 8).value
     is_create_build_bat_s = main_sheet.Range(CLM & i + 9).value
+    is_delete_path32_s = main_sheet.Range(CLM & i + 10).value
 End Sub
 
 '初期化(外部実行用)
@@ -66,6 +71,7 @@ Public Sub InitForExternal( _
     dst_dir_path = dst_dir
     move_base_dir = base_dir
     is_create_build_bat = build_bat
+    is_delete_path32 = True
 End Sub
 
 '検証
@@ -106,6 +112,12 @@ Public Sub Validate()
         is_create_build_bat = False
     Else
         is_create_build_bat = True
+    End If
+
+    If is_delete_path32_s = "" Or is_delete_path32_s = "NO" Then
+        is_delete_path32 = False
+    Else
+        is_delete_path32 = True
     End If
 
 End Sub
@@ -163,6 +175,13 @@ Public Function IsCreateBuildBat() As Boolean
     IsCreateBuildBat = is_create_build_bat
 End Function
 
+'-----------------------------------------
+'VBPファイルのPath32を削除有無
+'-----------------------------------------
+Public Function IsDeletePath32() As Boolean
+    IsDeletePath32 = is_delete_path32
+End Function
+
 Public Function GetAllValue() As String
     Dim ret As String
     
@@ -173,7 +192,8 @@ Public Function GetAllValue() As String
           "is_out_sheet=(" & is_out_sheet_s & "), " & _
           "is_create_copy_bat=(" & is_create_copy_bat_s & "), " & _
           "move_base_dir=(" & move_base_dir & "), " & _
-          "is_create_build_bat=" & is_create_build_bat_s & ")"
+          "is_create_build_bat=" & is_create_build_bat_s & "), " & _
+          "is_delete_path32=" & is_delete_path32_s & ")"
 
     GetAllValue = ret
 End Function

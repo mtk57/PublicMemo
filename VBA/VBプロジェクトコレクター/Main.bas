@@ -51,8 +51,6 @@ FINISH:
     Run = ret
 End Function
 
-'--------------------------------------------------------
-'--------------------------------------------------------
 Public Sub Run_Click()
 On Error GoTo ErrorHandler
     If Common.ShowYesNoMessageBox("VBプロジェクトファイル収集を実行します") = False Then

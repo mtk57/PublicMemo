@@ -370,7 +370,7 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
     For i = LBound(filelist) To UBound(filelist)
         Dim src As String: src = filelist(i)
         
-        If Right(src, 4) = ".sln" And _
+        If Common.GetFileExtension(src) = "sln" And _
            Common.IsExistsFile(src) = False Then
            'slnの場合、コピー元に存在しない場合は無視する
            Common.WriteLog "[SKIP]" & src
@@ -393,6 +393,11 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
         
         'ファイルをコピーする
         fso.CopyFile src, dst
+        
+        If Common.GetFileExtension(dst) = "vbp" Then
+            'VBPファイルのPath32はコンパイル時には不要なので削除しておく
+            DeletePath32FromVBPFile dst
+        End If
         
         ReDim Preserve dst_file_path(cnt)
         dst_file_path(cnt) = dst
@@ -669,8 +674,8 @@ Private Sub CreateBuildBatFile(ByRef vbprj_files() As String)
         Dim renamed_dir As String: renamed_dir = main_param.GetMoveBaseDirName() & "_" & GetProjectName(path)
         Dim dst_path As String: dst_path = Replace(Common.GetStringByKeyword(path, main_param.GetMoveBaseDirName()), main_param.GetMoveBaseDirName() & SEP, renamed_dir & SEP)
         
-        '.\src_testVB6\base\testVB6.vbp
-        Dim target_path As String: target_path = ".\" & dst_path
+        'D:\src_testVB6\base\testVB6.vbp
+        Dim target_path As String: target_path = "D:\" & dst_path
         
         contents_cnt = UBound(contents)
         ReDim Preserve contents(contents_cnt + row_cnt)
@@ -689,7 +694,7 @@ Private Sub CreateBuildBatFile(ByRef vbprj_files() As String)
             'MSBuildでビルド
             contents(i * row_cnt + OFFSET + 0) = "IF EXIST " & DQ & "%MSBLDEXE%" & DQ & " ("
             contents(i * row_cnt + OFFSET + 1) = "  echo VB.NET Build [" & target_path & "] >> %BUILDLOG%"
-            contents(i * row_cnt + OFFSET + 2) = "  " & DQ & "%MSBLDEXE%" & DQ & " " & DQ & Replace(target_path, ".\", "C:\") & DQ & " /t:clean;rebuild /p:Configuration=Release /fl"
+            contents(i * row_cnt + OFFSET + 2) = "  " & DQ & "%MSBLDEXE%" & DQ & " " & DQ & Replace(target_path, "D:\", "C:\") & DQ & " /t:clean;rebuild /p:Configuration=Release /fl"
             contents(i * row_cnt + OFFSET + 3) = ")"
             contents(i * row_cnt + OFFSET + 4) = ""
         
@@ -706,6 +711,20 @@ Private Sub CreateBuildBatFile(ByRef vbprj_files() As String)
     Common.CreateSJISTextFile contents, main_param.GetDestDirPath() & SEP & "Build_" & Common.GetNowTimeString() & ".bat"
     
     Common.WriteLog "CreateBuildBatFile E"
+End Sub
+
+'VBPファイルのPath32はコンパイル時には不要なので削除しておく
+Private Sub DeletePath32FromVBPFile(ByVal path As String)
+    Common.WriteLog "DeletePath32FromVBPFile S"
+
+    If main_param.IsDeletePath32() = False Then
+        Common.WriteLog "DeletePath32FromVBPFile E1"
+        Exit Sub
+    End If
+    
+    Common.RemoveLinesWithKeyword path, "Path32="
+
+    Common.WriteLog "DeletePath32FromVBPFile E"
 End Sub
 
 'VBプロジェクトファイルをシート出力する
