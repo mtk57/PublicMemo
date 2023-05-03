@@ -13,3 +13,4 @@ ResFile32="sub\resfile323.RES"
 UserControl=usercontrol1.ctl
 UserControl=..\cmn\usercontrol2.ctl
 UserControl=sub\usercontrol3.ctl
+Path32=..\..\bin
