@@ -16,11 +16,13 @@ Private src_dir_path As String
 
 Private dst_dir_path As String
 Private is_out_sheet As Boolean
-Private is_create_bat As Boolean
+Private is_create_copy_bat As Boolean
 Private move_base_dir As String
+Private is_create_build_bat As Boolean
 
 Private is_out_sheet_s As String
-Private is_create_bat_s As String
+Private is_create_copy_bat_s As String
+Private is_create_build_bat_s As String
 
 'コンストラクタ
 Private Sub Class_Initialize()
@@ -29,11 +31,13 @@ Private Sub Class_Initialize()
     
     dst_dir_path = ""
     is_out_sheet = False
-    is_create_bat = False
+    is_create_copy_bat = False
     move_base_dir = ""
+    is_create_build_bat = False
     
     is_out_sheet_s = ""
-    is_create_bat_s = ""
+    is_create_copy_bat_s = ""
+    is_create_build_bat_s = ""
 End Sub
 
 '初期化
@@ -48,14 +52,20 @@ Public Sub Init()
     
     dst_dir_path = main_sheet.Range(CLM & i + 5).value
     is_out_sheet_s = main_sheet.Range(CLM & i + 6).value
-    is_create_bat_s = main_sheet.Range(CLM & i + 7).value
+    is_create_copy_bat_s = main_sheet.Range(CLM & i + 7).value
     move_base_dir = main_sheet.Range(CLM & i + 8).value
+    is_create_build_bat_s = main_sheet.Range(CLM & i + 9).value
 End Sub
 
 '初期化(外部実行用)
-Public Sub InitForExternal(ByVal dst_dir As String, ByVal base_dir As String)
+Public Sub InitForExternal( _
+    ByVal dst_dir As String, _
+    ByVal base_dir As String, _
+    ByVal build_bat As Boolean _
+)
     dst_dir_path = dst_dir
     move_base_dir = base_dir
+    is_create_build_bat = build_bat
 End Sub
 
 '検証
@@ -86,10 +96,16 @@ Public Sub Validate()
         is_out_sheet = True
     End If
 
-    If is_create_bat_s = "" Or is_create_bat_s = "NO" Then
-        is_create_bat = False
+    If is_create_copy_bat_s = "" Or is_create_copy_bat_s = "NO" Then
+        is_create_copy_bat = False
     Else
-        is_create_bat = True
+        is_create_copy_bat = True
+    End If
+    
+    If is_create_build_bat_s = "" Or is_create_build_bat_s = "NO" Then
+        is_create_build_bat = False
+    Else
+        is_create_build_bat = True
     End If
 
 End Sub
@@ -127,10 +143,10 @@ Public Function IsOutSheet() As Boolean
 End Function
 
 '-----------------------------------------
-'BATファイル出力有無
+'コピーBATファイル出力有無
 '-----------------------------------------
-Public Function IsCreateBat() As Boolean
-    IsCreateBat = is_create_bat
+Public Function IsCreateCopyBat() As Boolean
+    IsCreateCopyBat = is_create_copy_bat
 End Function
 
 '-----------------------------------------
@@ -138,6 +154,13 @@ End Function
 '-----------------------------------------
 Public Function GetMoveBaseDirName() As String
     GetMoveBaseDirName = move_base_dir
+End Function
+
+'-----------------------------------------
+'ビルドBATファイル出力有無
+'-----------------------------------------
+Public Function IsCreateBuildBat() As Boolean
+    IsCreateBuildBat = is_create_build_bat
 End Function
 
 Public Function GetAllValue() As String
@@ -148,8 +171,9 @@ Public Function GetAllValue() As String
           "src_dir_path=(" & src_dir_path & "), " & _
           "dst_dir_path=(" & dst_dir_path & "), " & _
           "is_out_sheet=(" & is_out_sheet_s & "), " & _
-          "is_create_bat=(" & is_create_bat_s & "), " & _
-          "move_base_dir=(" & move_base_dir & ")"
+          "is_create_copy_bat=(" & is_create_copy_bat_s & "), " & _
+          "move_base_dir=(" & move_base_dir & "), " & _
+          "is_create_build_bat=" & is_create_build_bat_s & ")"
 
     GetAllValue = ret
 End Function

@@ -3,16 +3,18 @@ Option Explicit
 
 '--------------------------------------------------------
 '他のブックから呼び出す場合はこのメソッドを使うこと
-' vbprj_files : IN : VBプロジェクトファイルパスリスト(絶対パス)
-' dst_dir_path : IN : コピー先フォルダパス(絶対パス)
-' base_folder : IN : 移動起点フォルダ名
-' is_debug : IN : デバッグログ出力有無(True=出力する)
+' vbprj_files : I : VBプロジェクトファイルパスリスト(絶対パス)
+' dst_dir_path : I : コピー先フォルダパス(絶対パス)
+' base_folder : I : 移動起点フォルダ名
+' is_create_build_bat : I : ビルドBAT出力有無(True=出力する)
+' is_debug : I : デバッグログ出力有無(True=出力する)
 ' Ret : True/False (True=成功)
 '--------------------------------------------------------
 Public Function Run( _
     ByRef vbprj_files() As String, _
     ByVal dst_dir_path As String, _
     ByVal base_folder As String, _
+    ByVal is_create_build_bat As Boolean, _
     ByVal is_debug As Boolean _
     ) As Boolean
     
@@ -32,7 +34,7 @@ On Error GoTo ErrorHandler
     Common.WriteLog "★Start"
     Common.WriteLog "Receive Param=(" & dst_dir_path & "), (" & base_folder & ")"
     
-    CreateParamForExternal vbprj_files, dst_dir_path, base_folder
+    CreateParamForExternal vbprj_files, dst_dir_path, base_folder, is_create_build_bat
     Process.Run
 
     Common.WriteLog "★End"
@@ -109,7 +111,8 @@ End Function
 Private Sub CreateParamForExternal( _
     ByRef vbprj_files() As String, _
     ByVal dst_dir_path As String, _
-    ByVal base_dir As String _
+    ByVal base_dir As String, _
+    ByVal is_create_build_bat As Boolean _
     )
     Common.WriteLog "CreateParamForExternal S"
     
@@ -118,7 +121,7 @@ Private Sub CreateParamForExternal( _
     Set main_param = New MainParam
     Set sub_param = New SubParam
     
-    main_param.InitForExternal dst_dir_path, base_dir
+    main_param.InitForExternal dst_dir_path, base_dir, is_create_build_bat
     sub_param.InitForExternal vbprj_files
     
     Set Process.main_param = main_param

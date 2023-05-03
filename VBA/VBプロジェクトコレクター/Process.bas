@@ -47,12 +47,15 @@ Public Sub Run()
         Dim dst_path As String: dst_path = main_param.GetDestDirPath() & SEP & GetProjectName(vbproj_path)
         CopyProjectFiles dst_path, copy_files, vbproj_path
         
-        'BATファイルを作成する
-        CreateBatFile vbproj_path, dst_path, copy_files
+        'コピーBATファイルを作成する
+        CreateCopyBatFile vbproj_path, dst_path, copy_files
     
         'VBプロジェクトファイルをシート出力する
         OutputSheet vbproj_path
     Next i
+    
+    'ビルドBATファイルを作成する
+    CreateBuildBatFile vbprj_files
 
     Common.WriteLog "Run E"
 End Sub
@@ -484,7 +487,7 @@ Private Function GetProjectName(ByVal vbprj_file_path As String) As String
     Common.WriteLog "GetProjectName E"
 End Function
 
-'BATファイルを作成する
+'コピーBATファイルを作成する
 '作成イメージ (SJISで作成すること)
 '-------------------
 '@echo off
@@ -546,21 +549,21 @@ End Function
 '
 'pause
 '-------------------
-Private Sub CreateBatFile(ByVal vbproj_path As String, ByVal dst_path As String, ByRef copy_files() As String)
-    If IS_EXTERNAL = True Then
-        Exit Sub
-    End If
-    
-    Common.WriteLog "CreateBatFile S"
+Private Sub CreateCopyBatFile( _
+    ByVal vbproj_path As String, _
+    ByVal dst_path As String, _
+    ByRef copy_files() As String _
+)
+    Common.WriteLog "CreateCopyBatFile S"
 
-    If main_param.IsCreateBat() = False Then
-        Common.WriteLog "CreateBatFile E1"
+    If main_param.IsCreateCopyBat() = False Then
+        Common.WriteLog "CreateCopyBatFile E1"
         Exit Sub
     End If
     
-    Dim i As Integer
+    Dim i As Long
     Dim contents() As String
-    Dim contents_cnt As Integer
+    Dim contents_cnt As Long
     Dim base_path As String: base_path = Common.GetCommonString(copy_files)
     Dim dst_base_path As String: dst_base_path = Replace(base_path, ":", "")
     Dim bat_name As String: bat_name = GetProjectName(vbproj_path) & ".bat"
@@ -581,7 +584,7 @@ Private Sub CreateBatFile(ByVal vbproj_path As String, ByVal dst_path As String,
     contents(6) = ""
     contents(7) = "REM 各ファイルをコピー"
     
-    Dim OFFSET As Integer: OFFSET = UBound(contents) + 1
+    Dim OFFSET As Long: OFFSET = UBound(contents) + 1
 
     For i = LBound(copy_files) To UBound(copy_files)
         contents_cnt = UBound(contents)
@@ -606,7 +609,103 @@ Private Sub CreateBatFile(ByVal vbproj_path As String, ByVal dst_path As String,
     'ファイルに出力する
     Common.CreateSJISTextFile contents, dst_path & SEP & bat_name
     
-    Common.WriteLog "CreateBatFile E"
+    Common.WriteLog "CreateCopyBatFile E"
+End Sub
+
+'ビルドBATファイルを作成する
+' https://stackoverflow.com/questions/3444505/what-are-the-command-line-options-for-the-vb6-ide-compiler
+' https://sh-yoshida.hatenablog.com/entry/2017/05/27/012755
+Private Sub CreateBuildBatFile(ByRef vbprj_files() As String)
+    Common.WriteLog "CreateBuildBatFile S"
+
+    If main_param.IsCreateBuildBat() = False Then
+        Common.WriteLog "CreateBuildBatFile E1"
+        Exit Sub
+    End If
+    
+    Const VB6EXE = "C:\Program Files\Microsoft Visual Studio\VB98\VB6.exe"
+    Const MSBLDEXE = "C:\Program Files (x86)\Microsoft Visual Studio\2019 Professional\MSBuild\Current\Bin\MSBuild.exe"
+    Const BUILDLOG = "build.log"
+    
+    Dim i As Long
+    Dim contents() As String
+    Dim contents_cnt As Long
+    Dim platform As String: platform = "Any CPU"
+       
+    Const FIRST_ROW_CNT = 13
+    Const row_cnt = 5
+    Const SECOND_ROW_CNT = 2
+    
+    ReDim Preserve contents(FIRST_ROW_CNT)
+    
+    'コマンド作成開始
+    contents(0) = "@echo off"
+    contents(1) = "set VB6EXE=" & VB6EXE
+    contents(2) = "set MSBLDEXE=" & MSBLDEXE
+    contents(3) = "set BUILDLOG=" & BUILDLOG
+    contents(4) = "set PLATFORM=" & platform
+    contents(5) = ""
+    contents(6) = "echo VB6EXE=%VB6EXE%"
+    contents(7) = "echo MSBLDEXE=%MSBLDEXE%"
+    contents(8) = "echo BUILDLOG=%BUILDLOG%"
+    contents(9) = "echo PLATFORM=%PLATFORM%"
+    contents(10) = ""
+    contents(11) = "REM 各プロジェクトをビルド"
+    contents(12) = "echo Start Build > %BUILDLOG%"
+    contents(13) = ""
+    
+    Dim OFFSET As Long: OFFSET = UBound(contents) + 1
+
+    'VB6.exeの存在チェック
+    'MSBuild.exeの存在チェック
+
+    '結果ログファイルの存在チェック
+    ' →存在する場合は削除
+    
+    'VBプロジェクトループ
+    For i = LBound(vbprj_files) To UBound(vbprj_files)
+        Dim path As String: path = vbprj_files(i)
+        Dim ext As String: ext = Common.GetFileExtension(path)
+        Dim renamed_dir As String: renamed_dir = main_param.GetMoveBaseDirName() & "_" & GetProjectName(path)
+        Dim dst_path As String: dst_path = Replace(Common.GetStringByKeyword(path, main_param.GetMoveBaseDirName()), main_param.GetMoveBaseDirName() & SEP, renamed_dir & SEP)
+        
+        '.\src_testVB6\base\testVB6.vbp
+        Dim target_path As String: target_path = ".\" & dst_path
+        
+        contents_cnt = UBound(contents)
+        ReDim Preserve contents(contents_cnt + row_cnt)
+        
+        If ext = "vbp" Then
+            
+            'VB6でコンパイル
+            contents(i * row_cnt + OFFSET + 0) = "IF EXIST " & DQ & "%VB6EXE%" & DQ & " ("
+            contents(i * row_cnt + OFFSET + 1) = "  echo VB6 Build [" & target_path & "] >> %BUILDLOG%"
+            contents(i * row_cnt + OFFSET + 2) = "  " & DQ & "%VB6EXE%" & DQ & " /m " & DQ & target_path & DQ & " /out " & "%BUILDLOG%"
+            contents(i * row_cnt + OFFSET + 3) = ")"
+            contents(i * row_cnt + OFFSET + 4) = ""
+        
+        ElseIf ext = "vbproj" Then
+            
+            'MSBuildでビルド
+            contents(i * row_cnt + OFFSET + 0) = "IF EXIST " & DQ & "MSBLDEXE" & DQ & " ("
+            contents(i * row_cnt + OFFSET + 1) = "  echo VB.NET Build [" & target_path & "] >> %BUILDLOG%"
+            contents(i * row_cnt + OFFSET + 2) = "  " & DQ & "%MSBLDEXE%" & DQ & " " & DQ & target_path & DQ & " /t:clean;rebuild /p:Configuration=Release;Platform=" & DQ & "%PLATFORM%" & DQ & " /fl"
+            contents(i * row_cnt + OFFSET + 3) = ")"
+            contents(i * row_cnt + OFFSET + 4) = ""
+        
+        End If
+        
+    Next i
+
+    contents_cnt = UBound(contents)
+    ReDim Preserve contents(contents_cnt + SECOND_ROW_CNT)
+    contents(contents_cnt + SECOND_ROW_CNT - 1) = ""
+    contents(contents_cnt + SECOND_ROW_CNT) = "pause"
+    
+    'ファイルに出力する
+    Common.CreateSJISTextFile contents, main_param.GetDestDirPath() & SEP & "Build_" & Common.GetNowTimeString() & ".bat"
+    
+    Common.WriteLog "CreateBuildBatFile E"
 End Sub
 
 'VBプロジェクトファイルをシート出力する
