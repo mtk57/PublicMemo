@@ -360,7 +360,7 @@ exe名を取得するのがメンドイので、ログファイルを「失敗�
 echo ABC >> out.log
 
 Win100VS2019
-"C:\Program Files (x86)\Microsoft Visual Studio¥2019 Professional\MSBuild¥Current\Bin\MSBuild.exe"
+"C:\Program Files (x86)\Microsoft Visual Studio¥2019\Professional\MSBuild¥Current\Bin\MSBuild.exe"
 
 
 
