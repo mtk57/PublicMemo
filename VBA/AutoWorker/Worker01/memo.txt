@@ -1,39 +1,41 @@
 Parameters																						
 																						
-											★=必須											
-	[Common]										memo											
-		①外部ツールファイルパス(絶対パス) ★	C:\_git\PublicMemo\VBA\VBプロジェクトコレクター\VBProjCollector.xlsm																			
-		②VBプロジェクトファイルを収集するフォルダパス(絶対パス) ★	C:\_tmp\Worker01_wk								末尾に"\"禁止。存在しない場合は作成する。											
-		デバッグログ出力	NO								未指定の場合は出力しない。											
 																						
-	[Git]										memo											
-		(A)GitリポジトリURL	https://github.com/mtk57/GIT_0020								未指定の場合はクローン済とみなす。											
-		(B)Gitフォルダパス(絶対パス) ★	C:\_git_wk\GIT_0020								末尾に"\"禁止。存在しない場合は作成する。											
-		(C)起点フォルダ名★	Zsrc								②から(C)のフォルダ配下を(B)にコピーする。											
+	[Common]		★=必須				memo															
+		①外部ツールファイルパス(絶対パス) ★	C:\_git\PublicMemo\VBA\VBプロジェクトコレクター\VBProjCollector.xlsm																			
+		②VBプロジェクトファイルを収集するフォルダパス(絶対パス) ★	C:\_tmp\Worker01_wk				末尾に"\"禁止。存在しない場合は作成する。															
+		デバッグログ出力	YES				未指定の場合は出力しない。															
+																						
+	[Git]						memo															
+		(A)GitリポジトリURL	https://github.com/mtk57/GIT_0020				未指定の場合はクローン済とみなす。															
+		(B)Gitフォルダパス(絶対パス) ★	C:\_git_wk\GIT_0020				末尾に"\"禁止。存在しない場合は作成する。															
+		(C)起点フォルダ名★	Zsrc				②から(C)のフォルダ配下を(B)にコピーする。															
 		(D)ベースブランチ名 ★	develop																			
 		(E)リモートブランチを更新する	NO																			
 		(F)(6)が存在した場合は削除する	NO																			
-		(G)タグ収集するSTEP	STEP1.?								タグ収集時に参照。未指定の場合は全STEP("STEP1.?")とする。正規表現可。(8)に"STEP1.1"を含むこと。 Ex1."STEP1.?", Ex2."STEP1.[24]"											
+		(G)タグ収集するSTEP	STEP1.?				タグ収集時に参照。未指定は全STEP("STEP1.?")とする。正規表現可。(8)に"STEP1.1"を含むこと。 Ex1."STEP1.?", Ex2."STEP1.[24]"															
+		(H)VBプロジェクト未参照ファイルを除外	YES				タグ収集時に参照。未指定はNOとする。															
 																						
-	[Target]						黄色セルは式が入っているので変更しないこと				memo											
-		(1)VBプロジェクトファイルの絶対パス　★	(2)Lot　★	(3)Phase　★	(4)PID　★	(5)Redmine#　★	(6)Branch	(7)Commit	(8)Tag		複数可。空行が見つかるまで探索。											
-	1	C:\_git_wk\GIT_0010\SRC_010\Zsrc\DSizing\testA\testA.vbp	1	1	PID_1	00001	fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.1-PID_1													
-	2	C:\_git_wk\GIT_0010\SRC_010\Zsrc\Other\testB\testB.vbproj	1	1	PID_2	00002	fe_PID_2#00002	[COMMIT] PID_2	TAG-LO1-PH1-STEP1.1-PID_2													
-	3						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	4						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	5						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	6						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	7						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	8						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	9						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	10						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	11						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	12						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	13						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	14						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	15						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	16						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	17						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	18						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	19						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
-	20						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+							memo															
+	[Target]						未指定の場合はクローン済とみなす。黄色セルは式が入っているので変更しないこと															
+	(0)有効無効	(1)VBプロジェクトファイルの絶対パス　★	(2)Lot　★	(3)Phase　★	(4)PID　★	(5)Redmine#　★	(6)Branch	(7)Commit	(8)Tag													
+1	Enable	C:\_git_wk\GIT_0010\SRC_010\Zsrc\DSizing\testA\testA.vbp	1	1	PID_1	00001	fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.1-PID_1													
+2	Enable	C:\_git_wk\GIT_0010\SRC_010\Zsrc\Other\testB\testB.vbproj	1	1	PID_2	00002	fe_PID_2#00002	[COMMIT] PID_2	TAG-LO1-PH1-STEP1.1-PID_2													
+3							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+4							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+5							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+6							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+7							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+8							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+9							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+10							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+11							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+12							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+13							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+14							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+15							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+16							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+17							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+18							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+19							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													
+20							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP1.1-													

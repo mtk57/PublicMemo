@@ -36,15 +36,16 @@ Private Sub CollectTarget()
     Dim params As Worksheet
     Set params = ThisWorkbook.Sheets("params")
 
-    Const CLM = Define.TARGET_PARAM_CLM_1
+    Const CLM = Define.TARGET_PARAM_CLM_0
     Const row = Define.TARGET_PARAM_ROW
     Dim i As Long: i = 0
-    Dim path As String
+    Dim cnt As Long: cnt = 0
+    Dim enable As String
     
     Do
-        path = params.Range(CLM & row + i).value
+        enable = params.Range(CLM & row + i).value
         
-        If path = "" Then
+        If enable = "" Then
             Exit Do
         End If
         
@@ -54,14 +55,17 @@ Private Sub CollectTarget()
         target.Init row + i
         target.Validate row + i
         
-        ReDim Preserve target_list(i)
-        Set target_list(i) = target
+        If target.IsEnable = True Then
+            ReDim Preserve target_list(cnt)
+            Set target_list(cnt) = target
+            cnt = cnt + 1
+        End If
         
         i = i + 1
     Loop
     
-    If i = 0 Then
-        Err.Raise 53, , HEADER & "VBプロジェクトファイルが指定されていません(0個)"
+    If cnt = 0 Then
+        Err.Raise 53, , HEADER & "有効なTarget行がありません。"
     End If
     
 End Sub
@@ -124,6 +128,13 @@ End Function
 
 Public Function GetCollectStep() As String
     GetCollectStep = git_param.GetCollectStep()
+End Function
+
+'-------------------------------------------------
+'VBプロジェクト未参照ファイルを除外
+'-------------------------------------------------
+Public Function IsIgnoreNotRef() As Boolean
+    IsIgnoreNotRef = git_param.IsIgnoreNotRef()
 End Function
 
 Public Function GetVBProjFilePathList() As String()

@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.15"
+Public Const VERSION = "1.0.16"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -26,6 +26,68 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'Variant型の配列をString型の配列に変換する
+' arr : I : variant型の配列
+' Ret : String型の配列
+'-------------------------------------------------------------
+Public Function VariantToStringArray(arr As Variant) As String()
+    Dim ret_arr() As String
+    Dim i As Long
+    
+    ReDim ret_arr(LBound(arr) To UBound(arr))
+    
+    For i = LBound(arr) To UBound(arr)
+        ret_arr(i) = CStr(arr(i))
+    Next i
+    
+    VariantToStringArray = ret_arr
+End Function
+
+'-------------------------------------------------------------
+'ファイル内のキーワードを含む行を削除して上書き保存する
+' path : I : ファイルパス(絶対パス)
+' keyword : I : キーワード
+'-------------------------------------------------------------
+Public Sub RemoveLinesWithKeyword(ByVal path As String, ByVal keyword As String)
+    If IsExistsFile(path) = False Then
+        Err.Raise 53, , "[RemoveLinesWithKeyword] 指定されたファイルが存在しません (path=" & path & ")"
+    End If
+    
+    If keyword = "" Then
+        Exit Sub
+    End If
+    
+    Dim fso As Object
+    Dim file As Object
+    Dim temp_file As Object
+    Dim line As String
+    Dim temp_ext As String: temp_ext = "." & GetNowTimeString()
+    
+    Const READ_ONLY = 1
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set file = fso.OpenTextFile(path, READ_ONLY)
+    Set temp_file = fso.CreateTextFile(path & temp_ext, True)
+    
+    Do While Not file.AtEndOfStream
+        line = file.ReadLine
+        
+        If InStr(line, keyword) = 0 Then
+            temp_file.WriteLine line
+        End If
+    Loop
+    
+    file.Close
+    temp_file.Close
+    
+    fso.DeleteFile path
+    fso.MoveFile path & temp_ext, path
+    
+    Set temp_file = Nothing
+    Set file = Nothing
+    Set fso = Nothing
+End Sub
 
 '-------------------------------------------------------------
 '文字列からキーワードで検索し、ヒットしたキーワードから最後までの文字列を返す
@@ -55,13 +117,6 @@ End Function
 '-------------------------------------------------------------
 Public Function RunGit(ByVal repo_path As String, ByVal command As String) As String()
     Dim err_msg As String: err_msg = ""
-    
-    'If InStr(command, "git push") > 0 Then
-    '    If ShowYesNoMessageBox("git pushを実行します。") = False Then
-    '       err_msg = "git pushを中止しました"
-    '       GoTo FINISH
-    '    End If
-    'End If
     
     If IsExistsFolder(repo_path) = False Then
         If InStr(command, "git clone") = 0 Then

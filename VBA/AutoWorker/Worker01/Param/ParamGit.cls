@@ -21,6 +21,8 @@ Private is_update_remote_s As String
 Private is_delete_exist_branch As Boolean
 Private is_delete_exist_branch_s As String
 Private collect_step As String
+Private is_ignore_not_ref As Boolean
+Private is_ignore_not_ref_s As String
 
 'コンストラクタ
 Private Sub Class_Initialize()
@@ -33,6 +35,7 @@ Private Sub Class_Initialize()
     is_update_remote = False
     is_delete_exist_branch = False
     collect_step = ""
+    is_ignore_not_ref = False
 End Sub
 
 '初期化
@@ -49,6 +52,7 @@ Public Sub Init()
     is_update_remote_s = sheet.Range(CLM & i + 4).value
     is_delete_exist_branch_s = sheet.Range(CLM & i + 5).value
     collect_step = sheet.Range(CLM & i + 6).value
+    is_ignore_not_ref_s = sheet.Range(CLM & i + 7).value
 End Sub
 
 '検証
@@ -81,38 +85,72 @@ Public Sub Validate()
         collect_step = "STEP1.?"
     End If
 
+    If is_ignore_not_ref_s = "NO" Or is_ignore_not_ref_s = "" Then
+        is_ignore_not_ref = False
+    Else
+        is_ignore_not_ref = True
+    End If
+
 End Sub
 
 '=========================================
 'Getter
 '=========================================
 
+'-------------------------------------------------
+'GitリポジトリURL
+'-------------------------------------------------
 Public Function GetUrl() As String
     GetUrl = git_url
 End Function
 
+'-------------------------------------------------
+'Gitフォルダパス(絶対パス)
+'-------------------------------------------------
 Public Function GetGitDirPath() As String
     GetGitDirPath = git_path
 End Function
 
+'-------------------------------------------------
+'起点フォルダ名
+'-------------------------------------------------
 Public Function GetBaseFolder() As String
     GetBaseFolder = base_folder
 End Function
 
+'-------------------------------------------------
+'ベースブランチ名
+'-------------------------------------------------
 Public Function GetBaseBranch() As String
     GetBaseBranch = base_branch
 End Function
 
+'-------------------------------------------------
+'リモートブランチを更新する
+'-------------------------------------------------
 Public Function IsUpdateRemote() As Boolean
     IsUpdateRemote = is_update_remote
 End Function
 
+'-------------------------------------------------
+'Branchが存在した場合は削除する
+'-------------------------------------------------
 Public Function IsDeleteExistBranch() As Boolean
     IsDeleteExistBranch = is_delete_exist_branch
 End Function
 
+'-------------------------------------------------
+'タグ収集するSTEP
+'-------------------------------------------------
 Public Function GetCollectStep() As String
     GetCollectStep = collect_step
+End Function
+
+'-------------------------------------------------
+'VBプロジェクト未参照ファイルを除外
+'-------------------------------------------------
+Public Function IsIgnoreNotRef() As Boolean
+    IsIgnoreNotRef = is_ignore_not_ref
 End Function
 
 Public Function GetAllValue() As String
@@ -125,7 +163,8 @@ Public Function GetAllValue() As String
           "base_branch=(" & base_branch & "), " & _
           "is_update_remote=(" & is_update_remote_s & "), " & _
           "is_delete_exist_branch=(" & is_delete_exist_branch_s & "), " & _
-          "collect_step=(" & collect_step & ")"
+          "collect_step=(" & collect_step & "), " & _
+          "is_ignore_not_ref=(" & is_ignore_not_ref_s & ")"
           
     GetAllValue = ret
 End Function

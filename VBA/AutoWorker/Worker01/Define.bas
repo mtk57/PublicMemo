@@ -10,8 +10,9 @@ Public Const COMMON_PARAM_ROWS = 3
 
 Public Const GIT_PARAM_CLM = "D"
 Public Const GIT_PARAM_ROW = 10
-Public Const GIT_PARAM_ROWS = 7
+Public Const GIT_PARAM_ROWS = 8
 
+Public Const TARGET_PARAM_CLM_0 = "B"
 Public Const TARGET_PARAM_CLM_1 = "C"
 Public Const TARGET_PARAM_CLM_2 = "D"
 Public Const TARGET_PARAM_CLM_3 = "E"
@@ -20,7 +21,7 @@ Public Const TARGET_PARAM_CLM_5 = "G"
 Public Const TARGET_PARAM_CLM_6 = "H"
 Public Const TARGET_PARAM_CLM_7 = "I"
 Public Const TARGET_PARAM_CLM_8 = "J"
-Public Const TARGET_PARAM_ROW = 20
+Public Const TARGET_PARAM_ROW = 22
 
 Public Enum DELETE_ENUM
     TYPE_BRANCH

@@ -1,8 +1,207 @@
 Attribute VB_Name = "WorkerCommon"
 Option Explicit
 
+'vbpファイルのパースを行う
+' vbp_path : I : vbpファイルパス(絶対パス)
+' contents : I : 読み込んだファイルの内容
+' Ret : 参照しているファイルのリスト
+Public Function ParseVB6Project( _
+    ByVal vbp_path As String, _
+    ByRef contents() As String _
+) As String()
+    Common.WriteLog "ParseVB6Project S"
+
+    Dim i, cnt As Integer
+    Dim filelist() As String
+    Dim datas() As String
+    Dim key As String
+    Dim value As String
+    
+    Dim base_path As String: base_path = Common.GetFolderNameFromPath(vbp_path)
+
+    cnt = 0
+
+    For i = LBound(contents) To UBound(contents)
+        If InStr(contents(i), "=") = 0 Then
+            '"="を含まないので無視
+            GoTo CONTINUE
+        End If
+        
+        'Key/Valueに分ける
+        datas = Split(contents(i), "=")
+        
+        'キーを取得
+        key = datas(0)
+        
+        '対象キーか?
+        If key <> "Module" And key <> "Form" And key <> "Class" And key <> "ResFile32" And key <> "UserControl" Then
+            '対象外なので無視
+            GoTo CONTINUE
+        End If
+        
+        '値を取得
+        value = Replace(datas(1), """", "")
+        
+        ReDim Preserve filelist(cnt)
+        Dim path As String
+        
+        If InStr(value, ";") > 0 Then
+            path = Trim(Split(value, ";")(1))
+        Else
+            path = Trim(value)
+        End If
+        
+        '絶対パスに変換する
+        filelist(cnt) = Common.GetAbsolutePathName(base_path, path)
+        cnt = cnt + 1
+        
+CONTINUE:
+    Next i
+    
+    ParseVB6Project = filelist
+    Common.WriteLog "ParseVB6Project E"
+End Function
+
+'vbprojファイルのパースを行う
+' vbp_path : I : vbprojファイルパス(絶対パス)
+' contents : I : 読み込んだファイルの内容
+' Ret : 参照しているファイルのリスト
+Public Function ParseVBNETProject( _
+    ByVal vbproj_path As String, _
+    ByRef contents() As String _
+) As String()
+    Common.WriteLog "ParseVBNETProject S"
+
+    Dim i, cnt As Integer
+    Dim filelist() As String
+    
+    Dim base_path As String: base_path = Common.GetFolderNameFromPath(vbproj_path)
+
+    cnt = 0
+
+    For i = LBound(contents) To UBound(contents)
+        If InStr(contents(i), "<Compile Include=") = 0 And _
+           InStr(contents(i), "<EmbeddedResource Include=") = 0 And _
+           InStr(contents(i), "<None Include=") = 0 And _
+           InStr(contents(i), "<HintPath>") = 0 Then
+            'ビルドに必要なファイルを含まないので無視
+            GoTo CONTINUE
+        End If
+        
+        ReDim Preserve filelist(cnt)
+        
+        Dim path As String
+        
+        If InStr(contents(i), "<Compile Include=") > 0 Then
+            path = Trim(Replace(Replace(contents(i), "<Compile Include=""", ""), """ />", ""))
+        ElseIf InStr(contents(i), "<EmbeddedResource Include=") > 0 Then
+            path = Trim(Replace(Replace(contents(i), "<EmbeddedResource Include=""", ""), """ />", ""))
+        ElseIf InStr(contents(i), "<None Include=") > 0 Then
+            path = Trim(Replace(Replace(contents(i), "<None Include=""", ""), """ />", ""))
+        Else
+            path = Trim(Replace(Replace(contents(i), "<HintPath>", ""), "</HintPath>", ""))
+        End If
+        
+        path = Replace(path, """>", "")
+        
+        '絶対パスに変換する
+        filelist(cnt) = Common.GetAbsolutePathName(base_path, path)
+        cnt = cnt + 1
+        
+CONTINUE:
+    Next i
+    
+    ParseVBNETProject = filelist
+    Common.WriteLog "ParseVBNETProject E"
+End Function
+
+'ファイルの内容を取得する
+Public Function DoShow( _
+    ByRef prms As ParamContainer, _
+    ByVal path As String _
+) As String()
+    Common.WriteLog "DoShow S"
+
+    Dim repo_path As String: repo_path = prms.GetGitDirPath()
+
+    Dim cmd As String
+    Dim git_result() As String
+    
+    cmd = "git show " & path
+    git_result = Common.RunGit(repo_path, cmd)
+    
+    git_result = Common.DeleteEmptyArray(git_result)
+    
+    DoShow = git_result
+
+    Common.WriteLog "DoShow E"
+End Function
+
+'指定ファイル名がタグに含まれるか検索して、存在すればファイルパスを返す
+Public Function GetFilePathByTag( _
+    ByRef prms As ParamContainer, _
+    ByVal tag As String, _
+    ByVal filename As String _
+) As String
+    Common.WriteLog "GetFilePathByTag S"
+    
+    Dim git_result() As String
+    
+    'タグに含まれれるファイルの一覧を取得する
+    git_result = DoLsTree(prms, tag)
+    
+    If Common.IsEmptyArray(git_result) = True Then
+        Common.WriteLog "File not found. (tag=" & tag & ")"
+        Common.WriteLog "GetFilePathByTag E1"
+        GetFilePathByTag = ""
+        Exit Function
+    End If
+    
+    Dim i As Long
+    
+    For i = LBound(git_result) To UBound(git_result)
+        If InStr(git_result(i), "/" & filename) > 0 Then
+            If Common.GetFileExtension(git_result(i)) = Common.GetFileExtension(filename) Then
+                GetFilePathByTag = git_result(i)
+                Common.WriteLog "GetFilePathByTag E2"
+                Exit Function
+            End If
+        End If
+    Next i
+    
+    Common.WriteLog "File not found. (filename=" & filename & ")"
+    GetFilePathByTag = ""
+
+    Common.WriteLog "GetFilePathByTag E"
+End Function
+
+'タグに含まれれるファイルの一覧を取得する
+Public Function DoLsTree( _
+    ByRef prms As ParamContainer, _
+    ByVal tag As String _
+) As String()
+    Common.WriteLog "DoLsTree S"
+
+    Dim repo_path As String: repo_path = prms.GetGitDirPath()
+
+    Dim cmd As String
+    Dim git_result() As String
+    
+    cmd = "git ls-tree -r --name-only " & tag
+    git_result = Common.RunGit(repo_path, cmd)
+    
+    git_result = Common.DeleteEmptyArray(git_result)
+    
+    DoLsTree = git_result
+
+    Common.WriteLog "DoLsTree E"
+End Function
+
 'ローカル/リモートブランチの存在チェック
-Public Function IsExistBranch(ByRef prms As ParamContainer, ByVal branch As String) As Boolean
+Public Function IsExistBranch( _
+    ByRef prms As ParamContainer, _
+    ByVal branch As String _
+) As Boolean
     Common.WriteLog "IsExistBranch S"
     
     Dim repo_path As String: repo_path = prms.GetGitDirPath()
@@ -18,7 +217,10 @@ Public Function IsExistBranch(ByRef prms As ParamContainer, ByVal branch As Stri
 End Function
 
 'ローカルブランチの存在チェック
-Public Function IsExistLocalBranch(ByRef prms As ParamContainer, ByVal branch As String) As Boolean
+Public Function IsExistLocalBranch( _
+    ByRef prms As ParamContainer, _
+    ByVal branch As String _
+) As Boolean
     Common.WriteLog "IsExistLocalBranch S"
     
     Dim repo_path As String: repo_path = prms.GetGitDirPath()
@@ -39,7 +241,10 @@ Public Function IsExistLocalBranch(ByRef prms As ParamContainer, ByVal branch As
 End Function
 
 'リモートブランチの存在チェック
-Public Function IsExistRemoteBranch(ByRef prms As ParamContainer, ByVal branch As String) As Boolean
+Public Function IsExistRemoteBranch( _
+    ByRef prms As ParamContainer, _
+    ByVal branch As String _
+) As Boolean
     Common.WriteLog "IsExistRemoteBranch S"
     
     Dim repo_path As String: repo_path = prms.GetGitDirPath()
@@ -60,7 +265,10 @@ Public Function IsExistRemoteBranch(ByRef prms As ParamContainer, ByVal branch A
 End Function
 
 'タグの存在チェック
-Public Function IsExistTag(ByRef prms As ParamContainer, ByVal tag As String) As Boolean
+Public Function IsExistTag( _
+    ByRef prms As ParamContainer, _
+    ByVal tag As String _
+) As Boolean
     Common.WriteLog "IsExistTag S"
     
     Dim repo_path As String: repo_path = prms.GetGitDirPath()

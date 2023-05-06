@@ -46,6 +46,7 @@ Public Sub Run()
     Common.WriteLog "Run E"
 End Sub
 
+'タグを収集する
 Private Sub CollectTag(ByRef target As ParamTarget)
     Common.WriteLog "CollectTag S"
     
@@ -53,6 +54,7 @@ Private Sub CollectTag(ByRef target As ParamTarget)
     tag_list = GetTargetTagList(target)
     
     If Common.IsEmptyArray(tag_list) = True Then
+        Common.WriteLog "Tag not found."
         Common.WriteLog "CollectTag E1"
         Exit Sub
     End If
@@ -61,10 +63,9 @@ Private Sub CollectTag(ByRef target As ParamTarget)
     Dim cmd As String
     Dim git_result() As String
     Dim i As Long
-    
+
     For i = LBound(tag_list) To UBound(tag_list)
-        cmd = "git archive " & tag_list(i) & " -o " & prms.GetDestDirPath() & SEP & tag_list(i) & ".zip"
-        git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+        DoArchive target, tag_list(i)
     Next i
         
     Common.WriteLog "CollectTag E"
@@ -86,10 +87,161 @@ Private Function GetTargetTagList(ByRef target As ParamTarget) As String()
     git_result = Common.DeleteEmptyArray(git_result)
     
     If Common.IsEmptyArray(git_result) = True Then
-        Common.WriteLog "Tag is nothing.(" & find_word & ")"
+        Common.WriteLog "Tag not found.(" & find_word & ")"
     End If
     
     GetTargetTagList = git_result
 
     Common.WriteLog "GetTargetTagList E"
 End Function
+
+'タグをzipで保存する
+Private Sub DoArchive(ByVal target As ParamTarget, ByVal tag As String)
+    Common.WriteLog "DoArchive S"
+    Common.WriteLog "tag=" & tag
+
+    If prms.IsIgnoreNotRef() = False Then
+        GoTo FINISH
+    End If
+
+    Dim i As Long  '0=vbp, 1=vbproj
+    
+    Dim target_filename As String: target_filename = target.GetVBPrjFilePath()
+    Dim target_filename_list(1) As String
+    
+    If Common.GetFileExtension(target_filename) = "vbp" Then
+        target_filename_list(0) = Common.GetFileName(target_filename)
+        target_filename_list(1) = Replace(target_filename_list(0), ".vbp", ".vbproj")
+    Else
+        target_filename_list(1) = Common.GetFileName(target_filename)
+        target_filename_list(0) = Replace(target_filename_list(1), ".vbproj", ".vbp")
+    End If
+    
+    Dim ref_file_list() As String
+    Dim ref_file_list_vb6() As String
+    Dim ref_file_list_vbnet() As String
+    
+    For i = LBound(target_filename_list) To UBound(target_filename_list)
+        Dim filepath As String: filepath = WorkerCommon.GetFilePathByTag(prms, tag, target_filename_list(i))
+        
+        If filepath = "" Then
+            GoTo CONTINUE
+        End If
+        
+        Dim contents() As String: contents = WorkerCommon.DoShow(prms, tag & ":" & filepath)
+        
+        'VBプロジェクトファイルを解析して、参照されているファイルの一覧を取得する
+        If i = 0 Then
+            'VB6
+            ref_file_list_vb6 = GetRefFileListForVB6project(filepath, contents)
+        Else
+            'VB.NET
+            ref_file_list_vbnet = GetRefFileListForVBdotNetProject(filepath, contents)
+        End If
+    
+CONTINUE:
+    
+    Next i
+    
+    ref_file_list = Common.DeleteEmptyArray(Common.VariantToStringArray(Common.MergeArray(ref_file_list_vb6, ref_file_list_vbnet)))
+    
+    If Common.IsEmptyArray(ref_file_list) = True Then
+        Common.WriteLog "ref_file_list is empty."
+        Common.WriteLog "DoArchive E1"
+        Exit Sub
+    End If
+    
+FINISH:
+    Dim cmd As String
+    Dim git_result() As String
+    Dim zip_file As String: zip_file = prms.GetDestDirPath() & SEP & tag & ".zip"
+    
+    If prms.IsIgnoreNotRef() = False Then
+        cmd = "git archive " & tag & " -o " & zip_file
+    Else
+        'git archive --format=zip --output=<出力ファイル名>.zip <タグ名> <ファイルパス>
+        Dim files As String: files = Join(ref_file_list, " ")
+        cmd = "git archive --format=zip --output=" & zip_file & " " & tag & " " & files
+    End If
+    
+    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+
+    Common.WriteLog "DoArchive E"
+End Sub
+
+'VBプロジェクトファイルを解析して、参照されているファイルの一覧を取得する
+Private Function GetRefFileListForVB6project( _
+    ByVal vbprj_path As String, _
+    ByRef contents() As String _
+) As String()
+    Common.WriteLog "GetRefFileListForVB6project S"
+    
+    Dim ref_files() As String
+
+    'vbpファイルに記載されているファイルをリストに追加
+    ref_files = WorkerCommon.ParseVB6Project( _
+                    prms.GetGitDirPath() & SEP & Replace(vbprj_path, "/", "\"), _
+                    contents _
+                )
+    
+    '相対パスに変更する
+    ref_files = UpdateRefFiles(ref_files)
+
+    'vbpファイルをリストに追加する
+    Dim cnt As Long: cnt = UBound(ref_files)
+    ReDim Preserve ref_files(cnt + 1)
+    ref_files(cnt + 1) = vbprj_path
+
+    GetRefFileListForVB6project = ref_files
+    
+    Common.WriteLog "GetRefFileListForVB6project E"
+End Function
+
+'VB.NETプロジェクトファイルを解析して、参照されているファイルの一覧を取得する
+Private Function GetRefFileListForVBdotNetProject( _
+    ByVal vbprj_path As String, _
+    ByRef contents() As String _
+) As String()
+    Common.WriteLog "GetRefFileListForVBdotNetProject S"
+    
+    Dim ref_files() As String
+
+    'vbpファイルに記載されているファイルをリストに追加
+    ref_files = WorkerCommon.ParseVBNETProject( _
+                    prms.GetGitDirPath() & SEP & Replace(vbprj_path, "/", "\"), _
+                    contents _
+                )
+    
+    '相対パスに変更する
+    ref_files = UpdateRefFiles(ref_files)
+    
+    'vbprojファイルとslnファイルをリストに追加する
+    Dim cnt As Long: cnt = UBound(ref_files)
+    ReDim Preserve ref_files(cnt + 2)
+    ref_files(cnt + 1) = vbprj_path
+    ref_files(cnt + 2) = Replace(vbprj_path, ".vbproj", ".sln")
+        
+    GetRefFileListForVBdotNetProject = ref_files
+    
+    Common.WriteLog "GetRefFileListForVBdotNetProject E"
+End Function
+
+'相対パスに変更する
+Private Function UpdateRefFiles(ByRef ref_files() As String) As String()
+    Common.WriteLog "UpdateRefFiles S"
+    
+    Dim ret_files() As String
+    Dim i As Long
+    Dim cnt As Long: cnt = 0
+    
+    For i = LBound(ref_files) To UBound(ref_files)
+        ReDim Preserve ret_files(cnt)
+        ret_files(cnt) = Replace(Replace(ref_files(i), prms.GetGitDirPath() & SEP, ""), SEP, "/")
+        cnt = cnt + 1
+    Next i
+    
+    UpdateRefFiles = ret_files
+
+    Common.WriteLog "UpdateRefFiles E"
+End Function
+
