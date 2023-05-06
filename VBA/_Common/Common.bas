@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.15"
+Public Const VERSION = "1.0.16"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -26,6 +26,24 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'Variant型の配列をString型の配列に変換する
+' arr : I : variant型の配列
+' Ret : String型の配列
+'-------------------------------------------------------------
+Public Function VariantToStringArray(arr As Variant) As String()
+    Dim ret_arr() As String
+    Dim i As Long
+    
+    ReDim ret_arr(LBound(arr) To UBound(arr))
+    
+    For i = LBound(arr) To UBound(arr)
+        ret_arr(i) = CStr(arr(i))
+    Next i
+    
+    VariantToStringArray = ret_arr
+End Function
 
 '-------------------------------------------------------------
 'ファイル内のキーワードを含む行を削除して上書き保存する
@@ -1583,5 +1601,7 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
+
 
 
