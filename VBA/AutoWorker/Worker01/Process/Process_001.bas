@@ -27,6 +27,7 @@ Public Sub Run()
           prms.GetVBProjFilePathList(), _
           prms.GetDestDirPath(), _
           prms.GetBaseFolder(), _
+          True, _
           prms.IsDebugLog() _
           )
     
