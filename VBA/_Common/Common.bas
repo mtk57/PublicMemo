@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.17"
+Public Const VERSION = "1.0.18"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -171,7 +171,7 @@ Public Function RunGit(ByVal repo_path As String, ByVal command As String) As St
         GoTo FINISH
     End If
     
-    If IsSJIS(temp) = True Then
+    If IsUTF8(temp) = False Then
         is_lf = False
         cmd_result = ReadTextFileBySJIS(temp)
     Else
@@ -870,11 +870,13 @@ Public Function DeleteEmptyArray(ByRef arr() As String) As String()
     Dim result() As String
     Dim i As Integer
     Dim count As Integer
+    Dim wk As String
     count = 0
     For i = LBound(arr) To UBound(arr)
-        If arr(i) <> "" Then
+        wk = Replace(Replace(Replace(arr(i), vbCrLf, ""), vbCr, ""), vbLf, "")
+        If wk <> "" Then
             ReDim Preserve result(count)
-            result(count) = arr(i)
+            result(count) = wk
             count = count + 1
         End If
     Next i
