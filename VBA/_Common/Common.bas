@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.16"
+Public Const VERSION = "1.0.17"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -26,6 +26,19 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'空ファイルか否かを返す
+' path : I : ファイルパス(絶対パス)
+' Ret : True/False (True=空ファイル)
+'-------------------------------------------------------------
+Public Function IsEmptyFile(ByVal path As String) As Boolean
+    If IsExistsFile(path) = False Then
+        Err.Raise 53, , "[RemoveLinesWithKeyword] 指定されたファイルが存在しません (path=" & path & ")"
+    End If
+    
+    IsEmptyFile = (FileLen(path) = 0)
+End Function
 
 '-------------------------------------------------------------
 'Variant型の配列をString型の配列に変換する
@@ -117,6 +130,8 @@ End Function
 '-------------------------------------------------------------
 Public Function RunGit(ByVal repo_path As String, ByVal command As String) As String()
     Dim err_msg As String: err_msg = ""
+    Dim cmd_result As String: cmd_result = ""
+    Dim is_lf As Boolean: is_lf = True
     
     If IsExistsFolder(repo_path) = False Then
         If InStr(command, "git clone") = 0 Then
@@ -126,7 +141,7 @@ Public Function RunGit(ByVal repo_path As String, ByVal command As String) As St
     End If
     
     'コマンド実行結果格納用の一時ファイルパス
-    Dim temp As String: temp = GetTempFolder() & Application.PathSeparator & Common.GetNowTimeString() & ".txt"
+    Dim temp As String: temp = GetTempFolder() & Application.PathSeparator & GetNowTimeString() & ".txt"
 
     'コマンド作成
     Dim run_cmd As String: run_cmd = GIT_BASH & _
@@ -152,13 +167,29 @@ Public Function RunGit(ByVal repo_path As String, ByVal command As String) As St
         GoTo FINISH
     End If
     
-    Dim cmd_result As String: cmd_result = Common.ReadTextFileByUTF8(temp)
-    Common.DeleteFile (temp)
+    If IsEmptyFile(temp) = True Then
+        GoTo FINISH
+    End If
     
-    Dim std_out() As String
-    std_out = Split(cmd_result, vbLf)
-
+    If IsSJIS(temp) = True Then
+        is_lf = False
+        cmd_result = ReadTextFileBySJIS(temp)
+    Else
+        is_lf = True
+        cmd_result = ReadTextFileByUTF8(temp)
+    End If
+    
+    DeleteFile (temp)
+    
 FINISH:
+    Dim std_out() As String
+    
+    If is_lf = True Then
+        std_out = Split(cmd_result, vbLf)
+    Else
+        std_out = Split(cmd_result, vbCrLf)
+    End If
+
     Set objShell = Nothing
     Set objExec = Nothing
     
@@ -166,7 +197,7 @@ FINISH:
         Err.Raise 53, , err_msg
     End If
 
-    RunGit = std_out()
+    RunGit = std_out
 End Function
 
 '-------------------------------------------------------------
@@ -286,7 +317,7 @@ End Function
 '       pathのファイルが存在しない場合はpathを返す
 '-------------------------------------------------------------
 Public Function ChangeFileExt(ByVal path As String, ByVal ext As String) As String
-    If Common.IsExistsFile(path) = False Then
+    If IsExistsFile(path) = False Then
         'Err.Raise 53, , "[ChangeFileExt] 指定されたファイルが存在しません (path=" & path & ")"
         ChangeFileExt = path
         Exit Function
@@ -361,7 +392,7 @@ End Sub
 ' path : IN : ファイルパス(絶対パス)
 '-------------------------------------------------------------
 Public Sub DeleteFile(ByVal path As String)
-    If Common.IsExistsFile(path) = False Then
+    If IsExistsFile(path) = False Then
         Exit Sub
     End If
     
@@ -383,7 +414,7 @@ End Sub
 ' Ret : リネームコピー後のファイルパス
 '-------------------------------------------------------------
 Public Function CopyUniqueFile(ByVal src_file_path As String, ByVal dst_dir_path As String) As String
-    If Common.IsExistsFile(src_file_path) = False Then
+    If IsExistsFile(src_file_path) = False Then
         CopyUniqueFile = ""
         Exit Function
     End If
@@ -391,10 +422,10 @@ Public Function CopyUniqueFile(ByVal src_file_path As String, ByVal dst_dir_path
     Dim SEP As String: SEP = Application.PathSeparator
     Dim dst_file_path As String
     
-    Dim unique_filename As String: unique_filename = Common.GetFileName(src_file_path) & ".bak_" & GetNowTimeString()
+    Dim unique_filename As String: unique_filename = GetFileName(src_file_path) & ".bak_" & GetNowTimeString()
     
     If dst_dir_path = "" Then
-        dst_file_path = Common.GetFolderNameFromPath(src_file_path) & SEP & unique_filename
+        dst_file_path = GetFolderNameFromPath(src_file_path) & SEP & unique_filename
     Else
         dst_file_path = dst_dir_path & SEP & unique_filename
     End If
@@ -465,7 +496,7 @@ End Function
 ' Ret : ファイルリスト
 '-------------------------------------------------------------
 Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
-    If Common.IsExistsFolder(path) = False Then
+    If IsExistsFolder(path) = False Then
         Err.Raise 53, , "[UTF8toSJIS_AllFile] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
     
@@ -474,10 +505,10 @@ Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal i
     End If
 
     Dim i As Long
-    Dim src_file_list() As String: src_file_list = Common.CreateFileList(path, ext, is_subdir)
+    Dim src_file_list() As String: src_file_list = CreateFileList(path, ext, is_subdir)
 
     For i = LBound(src_file_list) To UBound(src_file_list)
-        Common.UTF8toSJIS src_file_list(i), False
+        UTF8toSJIS src_file_list(i), False
     Next i
 End Sub
 
@@ -489,7 +520,7 @@ End Sub
 ' Ret : ファイルリスト
 '-------------------------------------------------------------
 Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
-    If Common.IsExistsFolder(path) = False Then
+    If IsExistsFolder(path) = False Then
         Err.Raise 53, , "[SJIStoUTF8_AllFile] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
     
@@ -498,10 +529,10 @@ Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal i
     End If
 
     Dim i As Long
-    Dim src_file_list() As String: src_file_list = Common.CreateFileList(path, ext, is_subdir)
+    Dim src_file_list() As String: src_file_list = CreateFileList(path, ext, is_subdir)
 
     For i = LBound(src_file_list) To UBound(src_file_list)
-        Common.SJIStoUTF8 src_file_list(i), False
+        SJIStoUTF8 src_file_list(i), False
     Next i
 End Sub
 
@@ -603,7 +634,7 @@ End Sub
 ' Ret : True/False (True=SJIS)
 '-------------------------------------------------------------
 Public Function IsSJIS(ByVal path As String) As Boolean
-    If Common.IsExistsFile(path) = False Then
+    If IsExistsFile(path) = False Then
         Err.Raise 53, , "[IsSJIS] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
@@ -666,7 +697,7 @@ End Function
 ' Ret : True/False (True=UTF8(BOMあり/なし))
 '-------------------------------------------------------------
 Public Function IsUTF8(ByVal path As String) As Boolean
-    If Common.IsExistsFile(path) = False Then
+    If IsExistsFile(path) = False Then
         Err.Raise 53, , "[IsUTF8] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
@@ -702,7 +733,7 @@ End Function
 ' Ret : True/False (True=UTF8(BOMあり), False=左記以外)
 '-------------------------------------------------------------
 Public Function IsUTF8_WithBom(ByVal path As String) As Boolean
-    If Common.IsExistsFile(path) = False Then
+    If IsExistsFile(path) = False Then
         Err.Raise 53, , "[IsUTF8_WithBom] 指定されたファイルが存在しません (path" & path & ")"
     End If
 
@@ -873,7 +904,7 @@ Private Function CreateFileListMain(ByVal path As String, ByVal ext As String, B
     file = Dir(path & "\" & ext)
     
     If file <> "" Then
-        If Common.IsEmptyArray(filelist) = True Then
+        If IsEmptyArray(filelist) = True Then
             cnt = 0
         Else
             cnt = UBound(filelist) + 1
@@ -903,7 +934,7 @@ Private Function CreateFileListMain(ByVal path As String, ByVal ext As String, B
     
     For Each f In fso.GetFolder(path).SubFolders
         filelist_sub = CreateFileListMain(f.path, ext, is_subdir)
-        filelist = Common.MergeArray(filelist_sub, filelist)
+        filelist = MergeArray(filelist_sub, filelist)
     Next f
     
     Set fso = Nothing
@@ -1155,15 +1186,15 @@ End Function
 ' sheet_name : IN : シート名
 '-------------------------------------------------------------
 Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As String)
-    If Common.IsExistsFile(file_path) = False Or sheet_name = "" Then
+    If IsExistsFile(file_path) = False Or sheet_name = "" Then
         Err.Raise 53, , "[OutputTextFileToSheet] 指定されたファイルが存在しません (file_path=" & file_path & ")"
     End If
 
     'ワーク用にコピーする
-    Dim wk As String: wk = Common.CopyUniqueFile(file_path, "")
+    Dim wk As String: wk = CopyUniqueFile(file_path, "")
     
     'ワークファイルをSJISに変換する
-    Common.UTF8toSJIS wk, False
+    UTF8toSJIS wk, False
 
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
@@ -1467,15 +1498,15 @@ End Function
 ' Ret : 読み込んだ内容
 '-------------------------------------------------------------
 Public Function ReadTextFileBySJIS(ByVal path As String) As String
-    If Common.IsExistsFile(path) = False Then
+    If IsExistsFile(path) = False Then
         Err.Raise 53, , "[ReadTextFileBySJIS] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
     'ワーク用にコピーする
-    Dim wk As String: wk = Common.CopyUniqueFile(path, "")
+    Dim wk As String: wk = CopyUniqueFile(path, "")
     
     'ワークファイルをSJISに変換する
-    Common.UTF8toSJIS wk, False
+    UTF8toSJIS wk, False
     
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
