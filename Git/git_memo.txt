@@ -118,7 +118,7 @@ $ git pull
 
 ------------
 ■タグのファイルパスを検索
-$ git ls-tree -r --name-only <タグ名> | grep <検索したいファイル名>
+$ git ls-tree -r --name-only <タグ名> | grep <検索したいファイル名>  #grepが使えない場合はfindstrを使う
 
 ------------
 ■タグのファイルの内容を表示
