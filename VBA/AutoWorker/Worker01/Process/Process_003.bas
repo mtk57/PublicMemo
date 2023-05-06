@@ -106,14 +106,14 @@ Private Sub DoArchive(ByVal target As ParamTarget, ByVal tag As String)
 
     Dim i As Long  '0=vbp, 1=vbproj
     
-    Dim target_filename As String: target_filename = target.GetVBPrjFilePath()
+    Dim target_filename As String: target_filename = Common.GetFileName(target.GetVBPrjFilePath())
     Dim target_filename_list(1) As String
     
     If Common.GetFileExtension(target_filename) = "vbp" Then
-        target_filename_list(0) = Common.GetFileName(target_filename)
+        target_filename_list(0) = target_filename
         target_filename_list(1) = Replace(target_filename_list(0), ".vbp", ".vbproj")
     Else
-        target_filename_list(1) = Common.GetFileName(target_filename)
+        target_filename_list(1) = target_filename
         target_filename_list(0) = Replace(target_filename_list(1), ".vbproj", ".vbp")
     End If
     
@@ -122,7 +122,7 @@ Private Sub DoArchive(ByVal target As ParamTarget, ByVal tag As String)
     Dim ref_file_list_vbnet() As String
     
     For i = LBound(target_filename_list) To UBound(target_filename_list)
-        Dim filepath As String: filepath = WorkerCommon.GetFilePathByTag(prms, tag, target_filename_list(i))
+        Dim filepath As String: filepath = WorkerCommon.GetFilepathByTag(prms, tag, target_filename_list(i))
         
         If filepath = "" Then
             GoTo CONTINUE

@@ -137,64 +137,55 @@ Public Function DoShow( _
     Common.WriteLog "DoShow E"
 End Function
 
-'指定ファイル名がタグに含まれるか検索して、存在すればファイルパスを返す
-Public Function GetFilePathByTag( _
+'タグをファイル名で検索して存在すればファイルパスを返す
+Public Function GetFilepathByTag( _
     ByRef prms As ParamContainer, _
     ByVal tag As String, _
     ByVal filename As String _
 ) As String
-    Common.WriteLog "GetFilePathByTag S"
-    
-    Dim git_result() As String
-    
-    'タグに含まれれるファイルの一覧を取得する
-    git_result = DoLsTree(prms, tag)
-    
-    If Common.IsEmptyArray(git_result) = True Then
-        Common.WriteLog "File not found. (tag=" & tag & ")"
-        Common.WriteLog "GetFilePathByTag E1"
-        GetFilePathByTag = ""
-        Exit Function
-    End If
-    
-    Dim i As Long
-    
-    For i = LBound(git_result) To UBound(git_result)
-        If InStr(git_result(i), "/" & filename) > 0 Then
-            If Common.GetFileExtension(git_result(i)) = Common.GetFileExtension(filename) Then
-                GetFilePathByTag = git_result(i)
-                Common.WriteLog "GetFilePathByTag E2"
-                Exit Function
-            End If
-        End If
-    Next i
-    
-    Common.WriteLog "File not found. (filename=" & filename & ")"
-    GetFilePathByTag = ""
-
-    Common.WriteLog "GetFilePathByTag E"
-End Function
-
-'タグに含まれれるファイルの一覧を取得する
-Public Function DoLsTree( _
-    ByRef prms As ParamContainer, _
-    ByVal tag As String _
-) As String()
-    Common.WriteLog "DoLsTree S"
+    Common.WriteLog "GetFilepathByTag S"
 
     Dim repo_path As String: repo_path = prms.GetGitDirPath()
 
     Dim cmd As String
     Dim git_result() As String
     
-    cmd = "git ls-tree -r --name-only " & tag
+    cmd = "git ls-tree -r --name-only " & tag & " | findstr " & filename
+    
+On Error Resume Next
     git_result = Common.RunGit(repo_path, cmd)
+    
+    Dim err_msg As String: err_msg = Err.Description
+    Err.Clear
+On Error GoTo 0
+
+    If err_msg = "" Then
+        '成功
+    ElseIf InStr(err_msg, "exit code=1") = 0 Then
+        'exit code=1以外は上位に再度エラー通知
+        Err.Raise 53, , "[GetFilepathByTag] git ls-treeでエラー (err_msg=" & err_msg & ")"
+    Else
+        'exit code=1はfilenameが見つからない場合と思われるので準正常として動作
+        Common.WriteLog "File not found.(tag=" & tag & ", filename=(" & filename & ")"
+        GetFilepathByTag = ""
+        Exit Function
+    End If
     
     git_result = Common.DeleteEmptyArray(git_result)
     
-    DoLsTree = git_result
+    If Common.IsEmptyArray(git_result) = True Or _
+       UBound(git_result) > 0 Then
+        Common.WriteLog "File not found.(tag=" & tag & ", filename=(" & filename & ")"
+        GetFilepathByTag = ""
+    Else
+        If Common.GetFileExtension(filename) = Common.GetFileExtension(git_result(0)) Then
+            GetFilepathByTag = git_result(0)
+        Else
+            GetFilepathByTag = ""
+        End If
+    End If
 
-    Common.WriteLog "DoLsTree E"
+    Common.WriteLog "GetFilepathByTag E"
 End Function
 
 'ローカル/リモートブランチの存在チェック
