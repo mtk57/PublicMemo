@@ -41,7 +41,7 @@ Private Sub CheckAndCollectParam()
     Common.WriteLog main_param.GetAllValue()
 
     'Sub Params
-    Const START_ROW = 15
+    Const START_ROW = 16
     Dim row As Long: row = START_ROW
     Dim cnt As Long: cnt = 0
     
@@ -118,7 +118,14 @@ Private Function CollectSrcDatas(ByRef sub_param As SubParam) As CopyData()
     Dim cell As Range
 
     'SRCファイルパスのSRCシート名を開く
-    Set ws = Common.GetSheet(sub_param.GetSrcFilePath(), sub_param.GetSrcSheetName(), True, False)
+    Const READ_ONLY_FLG = True
+    Const VISIBLE_FLG = True
+    Set ws = Common.GetSheet( _
+                sub_param.GetSrcFilePath(), _
+                sub_param.GetSrcSheetName(), _
+                READ_ONLY_FLG, _
+                VISIBLE_FLG _
+             )
     
     'SRC検索列の黄色セルに対応するSRC転記列の値を収集する
     Dim key_rng As Range
@@ -141,8 +148,10 @@ Private Function CollectSrcDatas(ByRef sub_param As SubParam) As CopyData()
         End If
     Next cell
     
-    'SRCファイルを閉じる
-    Common.CloseBook (Common.GetFileName(sub_param.GetSrcFilePath()))
+    If main_param.IsNotClose() = False Then
+        'SRCファイルを閉じる
+        Common.CloseBook (Common.GetFileName(sub_param.GetSrcFilePath()))
+    End If
     
     CollectSrcDatas = copy_datas
     
@@ -162,7 +171,14 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
     Dim copy_data As CopyData
     
     'DSTファイルパスのDSTシート名を開く
-    Set ws = Common.GetSheet(sub_param.GetDstFilePath(), sub_param.GetDstSheetName(), False, True)
+    Const READ_ONLY_FLG = False
+    Const VISIBLE_FLG = True
+    Set ws = Common.GetSheet( _
+                sub_param.GetDstFilePath(), _
+                sub_param.GetDstSheetName(), _
+                READ_ONLY_FLG, _
+                VISIBLE_FLG _
+             )
     book_name = Common.GetFileName(sub_param.GetDstFilePath())
     
     'SRC検索列の値が、DST検索列にあるか検索する
@@ -201,8 +217,10 @@ CONTINUE_ROW:
         
     Next row
     
-    'DSTファイルを保存して閉じる
-    Common.SaveAndCloseBook (book_name)
+    If main_param.IsNotClose() = False Then
+        'DSTファイルを保存して閉じる
+        Common.SaveAndCloseBook (book_name)
+    End If
     
     Common.WriteLog "Transcription E"
 End Sub

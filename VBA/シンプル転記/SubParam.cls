@@ -69,6 +69,8 @@ End Sub
 
 '検証
 Public Sub Validate()
+    Dim SEP As String: SEP = Application.PathSeparator
+
     If is_enable = "" Or _
        is_enable = "STOPPER" Then
        is_enable = "STOPPER"
@@ -84,9 +86,18 @@ Public Sub Validate()
     
     If src_file_path = "" Then
         Err.Raise 53, , "SRCファイルパスが指定されていません"
-    ElseIf Common.IsExistsFile(src_file_path) = False Then
-        Err.Raise 53, , "SRCファイルが存在しません" & vbCrLf & _
-                        src_file_path
+    End If
+    
+    If InStr(src_file_path, SEP) > 0 Then
+        If Common.IsExistsFile(src_file_path) = False Then
+            Err.Raise 53, , "SRCファイルが存在しません" & vbCrLf & _
+                            src_file_path
+        End If
+    Else
+        If Common.IsOpenWorkbook(src_file_path) = False Then
+            Err.Raise 53, , "SRCファイルが開かれていません" & vbCrLf & _
+                            src_file_path
+        End If
     End If
     
     src_ext = Common.GetFileExtension(src_file_path)
@@ -109,9 +120,18 @@ Public Sub Validate()
     
     If dst_file_path = "" Then
         Err.Raise 53, , "DSTファイルパスが指定されていません"
-    ElseIf Common.IsExistsFile(dst_file_path) = False Then
-        Err.Raise 53, , "DSTファイルが存在しません" & vbCrLf & _
-                        dst_file_path
+    End If
+    
+    If InStr(dst_file_path, SEP) > 0 Then
+        If Common.IsExistsFile(dst_file_path) = False Then
+            Err.Raise 53, , "DSTファイルが存在しません" & vbCrLf & _
+                            dst_file_path
+        End If
+    Else
+        If Common.IsOpenWorkbook(dst_file_path) = False Then
+            Err.Raise 53, , "DSTファイルが開かれていません" & vbCrLf & _
+                            dst_file_path
+        End If
     End If
     
     dst_ext = Common.GetFileExtension(dst_file_path)

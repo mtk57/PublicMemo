@@ -16,12 +16,15 @@ Private is_copy_format As Boolean
 Private is_copy_format_s As String
 Private is_backup As Boolean
 Private is_backup_s As String
+Private is_not_close As Boolean
+Private is_not_close_s As String
 
 'コンストラクタ
 Private Sub Class_Initialize()
     dst_not_found_action = ""
     is_copy_format = False
     is_backup = False
+    is_not_close = False
 End Sub
 
 '初期化
@@ -29,11 +32,12 @@ Public Sub Init()
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
     Const clm = "G"
-    Const i = 6
+    Const i = 7
     
     dst_not_found_action = main_sheet.Range(clm & i).value
     is_copy_format_s = main_sheet.Range(clm & i + 1).value
-    is_backup_s = main_sheet.Range(clm & i + 1).value
+    is_backup_s = main_sheet.Range(clm & i + 2).value
+    is_not_close_s = main_sheet.Range(clm & i + 3).value
 End Sub
 
 '検証
@@ -58,6 +62,14 @@ Public Sub Validate()
     Else
         is_backup = True
     End If
+
+    If is_not_close_s = "" Or _
+       is_not_close_s = "NO" Then
+       is_not_close = False
+    Else
+        is_not_close = True
+    End If
+
 End Sub
 
 '=========================================
@@ -85,7 +97,12 @@ Public Function IsBackup() As Boolean
     IsBackup = is_backup
 End Function
 
-
+'-----------------------------------------
+'転記後にファイルを閉じない
+'-----------------------------------------
+Public Function IsNotClose() As Boolean
+    IsNotClose = is_not_close
+End Function
 
 
 Public Function GetAllValue() As String
@@ -94,7 +111,8 @@ Public Function GetAllValue() As String
     ret = "[Main Param] " & _
           "dst_not_found_action=(" & dst_not_found_action & "), " & _
           "is_copy_format=(" & is_copy_format_s & "), " & _
-          "is_backup=(" & is_backup_s & ")"
+          "is_backup=(" & is_backup_s & "), " & _
+          "is_not_close=(" & is_not_close_s & ")"
 
     GetAllValue = ret
 End Function

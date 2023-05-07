@@ -2,7 +2,7 @@ Attribute VB_Name = "Main"
 Option Explicit
 
 Public Sub Run_Click()
-    On Error GoTo ErrorHandler
+On Error GoTo ErrorHandler
     
     If Common.ShowYesNoMessageBox("転記を実行します。よろしいですか?") = False Then
         Exit Sub
@@ -28,7 +28,8 @@ Public Sub Run_Click()
     GoTo FINISH
 
 ErrorHandler:
-    msg = "エラーが発生しました!" & vbCrLf & "Reason=" & Err.Description
+    msg = "エラーが発生しました!" & vbCrLf & _
+          "Reason=" & Err.Description
 
 FINISH:
     Common.WriteLog msg
