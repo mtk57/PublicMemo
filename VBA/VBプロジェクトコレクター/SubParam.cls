@@ -12,6 +12,9 @@ Option Explicit
 'メンバー変数
 Private vbprj_file_paths() As String
 
+Private Const CLM_ = "C"
+Private Const START_ROW_ = 21
+
 'コンストラクタ
 Private Sub Class_Initialize()
     'Do nothing
@@ -31,13 +34,12 @@ Private Sub CollectParam()
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
 
-    Const CLM = "C"
-    Dim row As Integer: row = 21
+    Dim row As Integer: row = START_ROW_
     Dim i As Integer: i = 0
     Dim path As String
     
     Do
-        path = main_sheet.Range(CLM & row + i).value
+        path = main_sheet.Range(CLM_ & row + i).value
         
         If path = "" Then
             Exit Do

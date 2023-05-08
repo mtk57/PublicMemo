@@ -27,6 +27,9 @@ Private is_create_copy_bat_s As String
 Private is_create_build_bat_s As String
 Private is_delete_path32_s As String
 
+Private Const CLM_ = "O"
+Private Const ROW_ = 6
+
 'コンストラクタ
 Private Sub Class_Initialize()
     vbprj_file_name = ""
@@ -50,19 +53,17 @@ End Sub
 Public Sub Init()
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
-    Const CLM = "O"
-    Const i = 6
+
+    vbprj_file_name = main_sheet.Range(CLM_ & ROW_).value
+    src_dir_path = main_sheet.Range(CLM_ & ROW_ + 1).value
     
-    vbprj_file_name = main_sheet.Range(CLM & i).value
-    src_dir_path = main_sheet.Range(CLM & i + 1).value
-    
-    dst_dir_path = main_sheet.Range(CLM & i + 5).value
-    is_out_sheet_s = main_sheet.Range(CLM & i + 6).value
-    is_create_copy_bat_s = main_sheet.Range(CLM & i + 7).value
-    move_base_dir = main_sheet.Range(CLM & i + 8).value
-    is_create_build_bat_s = main_sheet.Range(CLM & i + 9).value
-    is_delete_path32_s = main_sheet.Range(CLM & i + 10).value
-    ignore_files = main_sheet.Range(CLM & i + 11).value
+    dst_dir_path = main_sheet.Range(CLM_ & ROW_ + 5).value
+    is_out_sheet_s = main_sheet.Range(CLM_ & ROW_ + 6).value
+    is_create_copy_bat_s = main_sheet.Range(CLM_ & ROW_ + 7).value
+    move_base_dir = main_sheet.Range(CLM_ & ROW_ + 8).value
+    is_create_build_bat_s = main_sheet.Range(CLM_ & ROW_ + 9).value
+    is_delete_path32_s = main_sheet.Range(CLM_ & ROW_ + 10).value
+    ignore_files = main_sheet.Range(CLM_ & ROW_ + 11).value
 End Sub
 
 '初期化(外部実行用)
@@ -71,6 +72,9 @@ Public Sub InitForExternal( _
     ByVal base_dir As String, _
     ByVal build_bat As Boolean _
 )
+    Dim main_sheet As Worksheet
+    Set main_sheet = ThisWorkbook.Sheets("main")
+    
     dst_dir_path = dst_dir
     
     is_out_sheet_s = "NO"
@@ -90,6 +94,8 @@ Public Sub InitForExternal( _
     
     is_delete_path32_s = "YES"
     is_delete_path32 = True
+    
+    ignore_files = main_sheet.Range(CLM_ & ROW_ + 11).value
 End Sub
 
 '検証

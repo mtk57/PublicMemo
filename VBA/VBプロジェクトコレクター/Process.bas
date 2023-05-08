@@ -764,7 +764,7 @@ Private Sub OutputSheet(ByVal vbproj_path As String)
     
     Dim before_sheet_name As String: before_sheet_name = ActiveSheet.name
     
-    Common.AddSheet sheet_name
+    Common.AddSheet ThisWorkbook, sheet_name
     
     'ファイルの内容を指定されたシートに出力する
     Common.OutputTextFileToSheet vbproj_path, sheet_name
