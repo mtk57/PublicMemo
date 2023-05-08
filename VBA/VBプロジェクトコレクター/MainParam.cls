@@ -20,6 +20,7 @@ Private is_create_copy_bat As Boolean
 Private move_base_dir As String
 Private is_create_build_bat As Boolean
 Private is_delete_path32 As Boolean
+Private ignore_files As String
 
 Private is_out_sheet_s As String
 Private is_create_copy_bat_s As String
@@ -37,6 +38,7 @@ Private Sub Class_Initialize()
     move_base_dir = ""
     is_create_build_bat = False
     is_delete_path32 = False
+    ignore_files = ""
     
     is_out_sheet_s = ""
     is_create_copy_bat_s = ""
@@ -60,6 +62,7 @@ Public Sub Init()
     move_base_dir = main_sheet.Range(CLM & i + 8).value
     is_create_build_bat_s = main_sheet.Range(CLM & i + 9).value
     is_delete_path32_s = main_sheet.Range(CLM & i + 10).value
+    ignore_files = main_sheet.Range(CLM & i + 11).value
 End Sub
 
 '初期化(外部実行用)
@@ -69,8 +72,23 @@ Public Sub InitForExternal( _
     ByVal build_bat As Boolean _
 )
     dst_dir_path = dst_dir
+    
+    is_out_sheet_s = "NO"
+    is_out_sheet = False
+    
+    is_create_copy_bat_s = "NO"
+    is_create_copy_bat = False
+    
     move_base_dir = base_dir
+    
     is_create_build_bat = build_bat
+    If is_create_build_bat = True Then
+        is_create_build_bat_s = "YES"
+    Else
+        is_create_build_bat_s = "NO"
+    End If
+    
+    is_delete_path32_s = "YES"
     is_delete_path32 = True
 End Sub
 
@@ -182,6 +200,13 @@ Public Function IsDeletePath32() As Boolean
     IsDeletePath32 = is_delete_path32
 End Function
 
+'-----------------------------------------
+'収集除外ファイル(vbproj)
+'-----------------------------------------
+Public Function GetIgnoreFiles() As String
+    GetIgnoreFiles = ignore_files
+End Function
+
 Public Function GetAllValue() As String
     Dim ret As String
     
@@ -192,8 +217,9 @@ Public Function GetAllValue() As String
           "is_out_sheet=(" & is_out_sheet_s & "), " & _
           "is_create_copy_bat=(" & is_create_copy_bat_s & "), " & _
           "move_base_dir=(" & move_base_dir & "), " & _
-          "is_create_build_bat=" & is_create_build_bat_s & "), " & _
-          "is_delete_path32=" & is_delete_path32_s & ")"
+          "is_create_build_bat=(" & is_create_build_bat_s & "), " & _
+          "is_delete_path32=(" & is_delete_path32_s & "), " & _
+          "ignore_files=(" & ignore_files & ")"
 
     GetAllValue = ret
 End Function

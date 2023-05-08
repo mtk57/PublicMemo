@@ -301,11 +301,17 @@ End Function
 Private Function ParseVBNETProject(ByRef contents() As String) As String()
     Common.WriteLog "ParseVBNETProject S"
 
-    Dim i, cnt As Integer
+    Dim i As Long
+    Dim j As Long
+    Dim cnt As Long
     Dim filelist() As String
     
     Dim vbproj_path As String: vbproj_path = contents(UBound(contents))
     Dim base_path As String: base_path = Common.GetFolderNameFromPath(vbproj_path)
+    
+    '除外ファイルリストを作成
+    Dim ignore_files() As String
+    ignore_files = Split(main_param.GetIgnoreFiles(), ",")
 
     cnt = 0
 
@@ -316,6 +322,15 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
            InStr(contents(i), "<HintPath>") = 0 Then
             'ビルドに必要なファイルを含まないので無視
             GoTo CONTINUE
+        End If
+        
+        If Common.IsEmptyArray(ignore_files) = False Then
+            For j = LBound(ignore_files) To UBound(ignore_files)
+                If InStr(contents(i), ignore_files(j)) > 0 Then
+                    '除外ファイルを含むので無視
+                    GoTo CONTINUE
+                End If
+            Next j
         End If
         
         ReDim Preserve filelist(cnt)
