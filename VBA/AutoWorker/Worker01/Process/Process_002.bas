@@ -96,16 +96,18 @@ Private Sub DoCopy(ByRef target As ParamTarget)
     Dim check_path As String
     Dim is_match As Boolean: is_match = False
     
-    For i = LBound(file_list) To UBound(file_list)
-        check_path = file_list(i)
-        If InStr(check_path, path) > 0 Then
-            is_match = True
-            Exit For
-        End If
-    Next i
+    If Common.IsEmptyArray(file_list) = False Then
+        For i = LBound(file_list) To UBound(file_list)
+            check_path = file_list(i)
+            If InStr(check_path, path) > 0 Then
+                is_match = True
+                Exit For
+            End If
+        Next i
+    End If
     
     If is_match = False Then
-        Err.Raise 53, , "VBプロジェクトファイルが見つかりません。(" & check_path & ")"
+        Err.Raise 53, , "VBプロジェクトファイルが見つかりません。path=(" & prms.GetDestDirPath() & ")"
     End If
     
     '起点フォルダをリネームして、Gitフォルダにコピー

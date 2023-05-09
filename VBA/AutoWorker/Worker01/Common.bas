@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.18"
+Public Const VERSION = "1.0.20"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -26,6 +26,32 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'ブックが開いているか否かを返す
+' book_name : I : ブック名
+' Ret : True/False (True=開いている)
+'-------------------------------------------------------------
+Function IsOpenWorkbook(ByVal book_name As String) As Boolean
+    Dim wb As Workbook
+    Dim is_err As Boolean
+    is_err = False
+
+On Error Resume Next
+    Set wb = Workbooks(book_name)
+    
+    If Err.Number <> 0 Then
+        is_err = True
+        Err.Clear
+    End If
+
+On Error GoTo 0
+    If is_err = True Then
+        IsOpenWorkbook = False
+    Else
+        IsOpenWorkbook = True
+    End If
+End Function
 
 '-------------------------------------------------------------
 '空ファイルか否かを返す
@@ -130,13 +156,12 @@ End Function
 '-------------------------------------------------------------
 Public Function RunGit(ByVal repo_path As String, ByVal command As String) As String()
     Dim err_msg As String: err_msg = ""
-    Dim cmd_result As String: cmd_result = ""
-    Dim is_lf As Boolean: is_lf = True
+    Dim std_out() As String
     
     If IsExistsFolder(repo_path) = False Then
         If InStr(command, "git clone") = 0 Then
             err_msg = "[RunGit] 指定されたフォルダが存在しません (repo_path=" & repo_path & ")"
-            GoTo FINISH
+            GoTo FINISH_3
         End If
     End If
     
@@ -164,37 +189,35 @@ Public Function RunGit(ByVal repo_path As String, ByVal command As String) As St
     'プロセスの戻り値を取得する
     If objExec.ExitCode <> 0 Then
         err_msg = "[RunGit] プロセスの戻り値が0以外です (exit code=" & objExec.ExitCode & ")"
-        GoTo FINISH
+        
+        If IsEmptyFile(temp) = True Then
+            GoTo FINISH_2
+        Else
+            GoTo FINISH
+        End If
+        
     End If
     
     If IsEmptyFile(temp) = True Then
-        GoTo FINISH
+        GoTo FINISH_2
     End If
-    
-    If IsUTF8(temp) = False Then
-        is_lf = False
-        cmd_result = ReadTextFileBySJIS(temp)
-    Else
-        is_lf = True
-        cmd_result = ReadTextFileByUTF8(temp)
-    End If
-    
-    DeleteFile (temp)
     
 FINISH:
-    Dim std_out() As String
-    
-    If is_lf = True Then
-        std_out = Split(cmd_result, vbLf)
+    If IsUTF8(temp) = False Then
+        std_out = Split(ReadTextFileBySJIS(temp), vbCrLf)
     Else
-        std_out = Split(cmd_result, vbCrLf)
+        std_out = Split(ReadTextFileByUTF8(temp), vbLf)
     End If
 
+FINISH_2:
+    DeleteFile (temp)
+    
+FINISH_3:
     Set objShell = Nothing
     Set objExec = Nothing
     
     If err_msg <> "" Then
-        Err.Raise 53, , err_msg
+        Err.Raise 53, , err_msg & vbCrLf & "std_out=" & Join(std_out, ",")
     End If
 
     RunGit = std_out
@@ -350,14 +373,33 @@ End Function
 ' visible : I : True/False (True=表示, False=非表示)
 ' Ret : シートオブジェクト
 '-------------------------------------------------------------
-Public Function GetSheet(ByVal book_path As String, ByVal sheet_name As String, ByVal readonly As Boolean, ByVal visible As Boolean) As Worksheet
+Public Function GetSheet( _
+    ByVal book_path As String, _
+    ByVal sheet_name As String, _
+    ByVal is_readonly As Boolean, _
+    ByVal is_visible As Boolean _
+) As Worksheet
+    
     Dim wb As Workbook
     Dim ws As Worksheet
     Application.ScreenUpdating = False
-    'Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, readonly:=readonly, CorruptLoad:=xlRepairFile)
-    Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, readonly:=readonly)
-    ActiveWindow.visible = visible
+    
+    If IsOpenWorkbook(book_path) = True Then
+        '既に開いている
+        Set wb = Workbooks(book_path)
+    Else
+        Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, readonly:=is_readonly)
+    End If
+    
+    wb.Activate
+    ActiveWindow.visible = is_visible
+    
+    If Common.IsExistSheet(wb, sheet_name) = False Then
+        Err.Raise 53, , "[GetSheet] 指定されたシートが存在しません (book_path=" & book_path & ", sheet_name=" & sheet_name & ")"
+    End If
+    
     Set GetSheet = wb.Worksheets(sheet_name)
+
 End Function
 
 '-------------------------------------------------------------
@@ -871,6 +913,12 @@ Public Function DeleteEmptyArray(ByRef arr() As String) As String()
     Dim i As Integer
     Dim count As Integer
     Dim wk As String
+    
+    If IsEmptyArray(arr) = True Then
+        DeleteEmptyArray = result
+        Exit Function
+    End If
+    
     count = 0
     For i = LBound(arr) To UBound(arr)
         wk = Replace(Replace(Replace(arr(i), vbCrLf, ""), vbCr, ""), vbLf, "")
@@ -954,6 +1002,11 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     Dim j As Long: j = 0
     Dim filtered_list() As String
     Dim ext As String: ext = Replace(in_ext, "*", "")
+    
+    If IsEmptyArray(path_list) = True Then
+        FilterFileListByExtension = path_list
+        Exit Function
+    End If
       
     For i = 0 To UBound(path_list)
         If Right(path_list(i), Len(ext)) = ext Then
@@ -1586,13 +1639,14 @@ End Function
 
 '-------------------------------------------------------------
 'シートの存在チェック
-' sheet_name : IN : シート名
+' wb : I : ワークブック
+' sheet_name : I : シート名
 ' Ret : True/False (True=存在する)
 '-------------------------------------------------------------
-Public Function IsExistSheet(ByVal sheet_name As String) As Boolean
+Public Function IsExistSheet(ByRef wb As Workbook, ByVal sheet_name As String) As Boolean
     Dim ws As Worksheet
     
-    For Each ws In Worksheets
+    For Each ws In wb.Worksheets
         If ws.name = sheet_name Then
             IsExistSheet = True
             Exit Function
@@ -1604,25 +1658,27 @@ End Function
 
 '-------------------------------------------------------------
 'シートを削除する
-' sheet_name : IN : シート名
+' wb : I : ワークブック
+' sheet_name : I : シート名
 '-------------------------------------------------------------
-Public Sub DeleteSheet(ByVal sheet_name As String)
-    If IsExistSheet(sheet_name) = False Then
+Public Sub DeleteSheet(ByRef wb As Workbook, ByVal sheet_name As String)
+    If IsExistSheet(wb, sheet_name) = False Then
         Exit Sub
     End If
 
     Application.DisplayAlerts = False
-    Sheets(sheet_name).Delete
+    wb.Sheets(sheet_name).Delete
     Application.DisplayAlerts = True
 End Sub
 
 '-------------------------------------------------------------
 'シートを追加する
-' sheet_name : IN : シート名
+' wb : I : ワークブック
+' sheet_name : I : シート名
 '-------------------------------------------------------------
-Public Sub AddSheet(ByVal sheet_name As String)
-    DeleteSheet sheet_name
-    Worksheets.Add.name = sheet_name
+Public Sub AddSheet(ByRef wb As Workbook, ByVal sheet_name As String)
+    DeleteSheet wb, sheet_name
+    wb.Worksheets.Add.name = sheet_name
 End Sub
 
 '-------------------------------------------------------------
@@ -1630,10 +1686,18 @@ End Sub
 ' book_name : IN : ブック名(Excelファイル名)
 '-------------------------------------------------------------
 Public Sub ActiveBook(ByVal book_name As String)
+    If IsOpenWorkbook(book_name) = False Then
+        Err.Raise 53, , "[ActiveBook] ブックが開かれていません (book_name=" & book_name & ")"
+    End If
+    
     Dim wb As Workbook
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
+
+
+
 
 
 
