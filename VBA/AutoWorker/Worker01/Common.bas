@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.20"
+Public Const VERSION = "1.0.22"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -157,6 +157,11 @@ End Function
 Public Function RunGit(ByVal repo_path As String, ByVal command As String) As String()
     Dim err_msg As String: err_msg = ""
     Dim std_out() As String
+    
+    If IsExistsFile(GIT_BASH) = False Then
+        err_msg = "[RunGit] gitÇ™å©Ç¬Ç©ÇËÇ‹ÇπÇÒ (" & GIT_BASH & ")"
+        GoTo FINISH_3
+    End If
     
     If IsExistsFolder(repo_path) = False Then
         If InStr(command, "git clone") = 0 Then
@@ -1624,6 +1629,14 @@ Public Function IsEmptyArray(arr As Variant) As Boolean
 End Function
 
 '-------------------------------------------------------------
+'nïbë“Ç¬
+' sec : I : ë“Ç¬éûä‘(ïb) Å¶è¨êîÇ‡â¬
+'-------------------------------------------------------------
+Public Sub WaitSec(ByVal sec As Double)
+    Application.WAIT [Now()] + sec / 86400
+End Sub
+
+'-------------------------------------------------------------
 'åªç›ì˙éûÇï∂éöóÒÇ≈ï‘Ç∑
 ' Ret :Ex."20230326123456"
 '-------------------------------------------------------------
@@ -1694,11 +1707,5 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
-
-
-
-
-
-
 
 

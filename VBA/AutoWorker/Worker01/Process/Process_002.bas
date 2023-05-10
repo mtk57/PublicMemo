@@ -178,7 +178,28 @@ Private Sub DoPush(ByRef target As ParamTarget)
     
     'タグを付ける
     cmd = "git push --tags --set-upstream origin " & target.GetBranch()
+    
+On Error Resume Next
     git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+    
+    Dim err_msg As String: err_msg = Err.Description
+    Err.Clear
+On Error GoTo 0
+
+    If err_msg = "" Then
+        '成功
+    ElseIf InStr(err_msg, "exit code=1") = 0 Then
+        'exit code=1以外は上位に再度エラー通知
+        Err.Raise 53, , "[DoPush] git pushでエラー (err_msg=" & err_msg & ")"
+    Else
+        'exit code=1は続行できる可能性が高いので確認
+        If Common.ShowYesNoMessageBox( _
+            "git pushで以下のエラーが発生しました。処理を続行しますか?" & vbCrLf & _
+            "err_msg=" & err_msg _
+            ) = False Then
+            Err.Raise 53, , "[DoPush] git pushでエラー (err_msg=" & err_msg & ")"
+        End If
+    End If
     
     Common.WriteLog "DoPush E"
 End Sub
