@@ -467,6 +467,12 @@ Private Sub MoveBaseFolder( _
     Dim renamed_dir As String: renamed_dir = main_param.GetMoveBaseDirName() & "_" & GetProjectName(vbprj_path)
     Dim renamed_path As String: renamed_path = Common.RenameFolder(base_dir, renamed_dir)
     
+    If Common.IsExistsFolder(main_param.GetDestDirPath() & SEP & renamed_dir) = True Then
+        '移動先に同名フォルダがある場合はユニークなフォルダ名にする
+        renamed_dir = renamed_dir & "_" & Common.GetNowTimeString()
+        Common.WaitSec 1
+    End If
+    
     Common.MoveFolder renamed_path, main_param.GetDestDirPath() & SEP & renamed_dir
     Common.DeleteFolder in_dest_path
     

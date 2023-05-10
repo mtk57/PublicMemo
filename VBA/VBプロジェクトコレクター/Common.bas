@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.20"
+Public Const VERSION = "1.0.21"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -1622,6 +1622,14 @@ Public Function IsEmptyArray(arr As Variant) As Boolean
     End If
     On Error GoTo 0
 End Function
+
+'-------------------------------------------------------------
+'n•b‘Ò‚Â
+' sec : I : ‘Ò‚ÂŠÔ(•b) ¦¬”‚à‰Â
+'-------------------------------------------------------------
+Public Sub WaitSec(ByVal sec As Double)
+    Application.WAIT [Now()] + sec / 86400
+End Sub
 
 '-------------------------------------------------------------
 'Œ»İ“ú‚ğ•¶š—ñ‚Å•Ô‚·
