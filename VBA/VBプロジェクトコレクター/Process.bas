@@ -22,6 +22,8 @@ Public Sub Run()
     
     SEP = Application.PathSeparator
     DQ = Chr(34)
+    
+    Erase vbprj_files
 
     'パラメータのチェックと収集を行う
     CheckAndCollectParam

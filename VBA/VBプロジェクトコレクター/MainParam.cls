@@ -75,6 +75,9 @@ Public Sub InitForExternal( _
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
     
+    vbprj_file_name = ""
+    src_dir_path = ""
+    
     dst_dir_path = dst_dir
     
     is_out_sheet_s = "NO"

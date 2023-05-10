@@ -17,7 +17,7 @@ Private Const START_ROW_ = 21
 
 'コンストラクタ
 Private Sub Class_Initialize()
-    'Do nothing
+    Erase vbprj_file_paths
 End Sub
 
 '初期化

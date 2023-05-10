@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.19"
+Public Const VERSION = "1.0.20"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -156,13 +156,12 @@ End Function
 '-------------------------------------------------------------
 Public Function RunGit(ByVal repo_path As String, ByVal command As String) As String()
     Dim err_msg As String: err_msg = ""
-    Dim cmd_result As String: cmd_result = ""
-    Dim is_lf As Boolean: is_lf = True
+    Dim std_out() As String
     
     If IsExistsFolder(repo_path) = False Then
         If InStr(command, "git clone") = 0 Then
             err_msg = "[RunGit] 指定されたフォルダが存在しません (repo_path=" & repo_path & ")"
-            GoTo FINISH
+            GoTo FINISH_3
         End If
     End If
     
@@ -190,37 +189,35 @@ Public Function RunGit(ByVal repo_path As String, ByVal command As String) As St
     'プロセスの戻り値を取得する
     If objExec.ExitCode <> 0 Then
         err_msg = "[RunGit] プロセスの戻り値が0以外です (exit code=" & objExec.ExitCode & ")"
-        GoTo FINISH
+        
+        If IsEmptyFile(temp) = True Then
+            GoTo FINISH_2
+        Else
+            GoTo FINISH
+        End If
+        
     End If
     
     If IsEmptyFile(temp) = True Then
-        GoTo FINISH
+        GoTo FINISH_2
     End If
-    
-    If IsUTF8(temp) = False Then
-        is_lf = False
-        cmd_result = ReadTextFileBySJIS(temp)
-    Else
-        is_lf = True
-        cmd_result = ReadTextFileByUTF8(temp)
-    End If
-    
-    DeleteFile (temp)
     
 FINISH:
-    Dim std_out() As String
-    
-    If is_lf = True Then
-        std_out = Split(cmd_result, vbLf)
+    If IsUTF8(temp) = False Then
+        std_out = Split(ReadTextFileBySJIS(temp), vbCrLf)
     Else
-        std_out = Split(cmd_result, vbCrLf)
+        std_out = Split(ReadTextFileByUTF8(temp), vbLf)
     End If
 
+FINISH_2:
+    DeleteFile (temp)
+    
+FINISH_3:
     Set objShell = Nothing
     Set objExec = Nothing
     
     If err_msg <> "" Then
-        Err.Raise 53, , err_msg
+        Err.Raise 53, , err_msg & vbCrLf & "std_out=" & Join(std_out, ",")
     End If
 
     RunGit = std_out
@@ -916,6 +913,12 @@ Public Function DeleteEmptyArray(ByRef arr() As String) As String()
     Dim i As Integer
     Dim count As Integer
     Dim wk As String
+    
+    If IsEmptyArray(arr) = True Then
+        DeleteEmptyArray = result
+        Exit Function
+    End If
+    
     count = 0
     For i = LBound(arr) To UBound(arr)
         wk = Replace(Replace(Replace(arr(i), vbCrLf, ""), vbCr, ""), vbLf, "")
@@ -999,6 +1002,11 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     Dim j As Long: j = 0
     Dim filtered_list() As String
     Dim ext As String: ext = Replace(in_ext, "*", "")
+    
+    If IsEmptyArray(path_list) = True Then
+        FilterFileListByExtension = path_list
+        Exit Function
+    End If
       
     For i = 0 To UBound(path_list)
         If Right(path_list(i), Len(ext)) = ext Then
@@ -1686,6 +1694,8 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
+
 
 
 
