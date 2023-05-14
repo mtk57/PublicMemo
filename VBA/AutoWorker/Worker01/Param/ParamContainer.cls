@@ -94,6 +94,10 @@ Public Function GetDestDirPath() As String
     GetDestDirPath = common_param.GetDestDirPath()
 End Function
 
+Public Function GetIgnoreFiles() As String
+    GetIgnoreFiles = common_param.GetIgnoreFiles()
+End Function
+
 Public Function IsDebugLog() As Boolean
     IsDebugLog = common_param.IsDebugLog()
 End Function

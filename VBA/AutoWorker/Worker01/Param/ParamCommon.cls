@@ -14,6 +14,7 @@ Private HEADER As String
 'ÉÅÉìÉoÅ[ïœêî
 Private external_path As String
 Private dst_dir_path As String
+Private ignore_files As String
 Private is_debug_log As Boolean
 Private is_debug_log_s As String
 
@@ -23,6 +24,7 @@ Private Sub Class_Initialize()
 
     external_path = ""
     dst_dir_path = ""
+    ignore_files = ""
     is_debug_log = False
 End Sub
 
@@ -35,7 +37,8 @@ Public Sub Init()
     
     external_path = sheet.Range(CLM & i).value
     dst_dir_path = sheet.Range(CLM & i + 1).value
-    is_debug_log_s = sheet.Range(CLM & i + 2).value
+    ignore_files = sheet.Range(CLM & i + 2).value
+    is_debug_log_s = sheet.Range(CLM & i + 3).value
 End Sub
 
 'åüèÿ
@@ -71,6 +74,10 @@ Public Function GetDestDirPath() As String
     GetDestDirPath = dst_dir_path
 End Function
 
+Public Function GetIgnoreFiles() As String
+    GetIgnoreFiles = ignore_files
+End Function
+
 Public Function IsDebugLog() As Boolean
     IsDebugLog = is_debug_log
 End Function
@@ -82,6 +89,7 @@ Public Function GetAllValue() As String
     ret = HEADER & _
           "external_path=(" & external_path & "), " & _
           "dst_dir_path=(" & dst_dir_path & "), " & _
+          "ignore_files=(" & ignore_files & "), " & _
           "is_debug_log=(" & is_debug_log_s & ")"
           
     GetAllValue = ret

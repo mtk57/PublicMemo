@@ -6,6 +6,7 @@ Option Explicit
 ' contents : I : 読み込んだファイルの内容
 ' Ret : 参照しているファイルのリスト
 Public Function ParseVB6Project( _
+    ByRef prms As ParamContainer, _
     ByVal vbp_path As String, _
     ByRef contents() As String _
 ) As String()
@@ -67,15 +68,22 @@ End Function
 ' contents : I : 読み込んだファイルの内容
 ' Ret : 参照しているファイルのリスト
 Public Function ParseVBNETProject( _
+    ByRef prms As ParamContainer, _
     ByVal vbproj_path As String, _
     ByRef contents() As String _
 ) As String()
     Common.WriteLog "ParseVBNETProject S"
 
-    Dim i, cnt As Integer
+    Dim i As Long
+    Dim j As Long
+    Dim cnt As Long
     Dim filelist() As String
     
     Dim base_path As String: base_path = Common.GetFolderNameFromPath(vbproj_path)
+
+    '除外ファイルリストを作成
+    Dim ignore_files() As String
+    ignore_files = Split(prms.GetIgnoreFiles(), ",")
 
     cnt = 0
 
@@ -88,7 +96,14 @@ Public Function ParseVBNETProject( _
             GoTo CONTINUE
         End If
         
-        ReDim Preserve filelist(cnt)
+        If Common.IsEmptyArray(ignore_files) = False Then
+            For j = LBound(ignore_files) To UBound(ignore_files)
+                If InStr(contents(i), ignore_files(j)) > 0 Then
+                    '除外ファイルを含むので無視
+                    GoTo CONTINUE
+                End If
+            Next j
+        End If
         
         Dim path As String
         
@@ -104,8 +119,23 @@ Public Function ParseVBNETProject( _
         
         path = Replace(path, """>", "")
         
+        Dim abs_path As String: abs_path = Common.GetAbsolutePathName(base_path, path)
+        
+        'ビルド対象外ファイルは無視する
+        If Common.GetFileExtension(abs_path) <> "vb" And _
+           Common.GetFileExtension(abs_path) <> "resx" And _
+           Common.GetFileExtension(abs_path) <> "config" Then
+           
+           Common.WriteLog "[ParseVBNETProject] ★★ビルド対象外ファイルが記載されています。確認してください。" & _
+                           "【vbproj】=" & vbproj_path & _
+                           ", " & _
+                           "【ビルド対象外ファイル】=" & abs_path
+           GoTo CONTINUE
+        End If
+        
         '絶対パスに変換する
-        filelist(cnt) = Common.GetAbsolutePathName(base_path, path)
+        ReDim Preserve filelist(cnt)
+        filelist(cnt) = abs_path
         cnt = cnt + 1
         
 CONTINUE:

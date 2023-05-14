@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.23"
+Public Const VERSION = "1.0.24"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -26,6 +26,34 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'文字列配列を連結して文字列を返す
+' ary : I : 文字列配列
+' delim : I : 区切り文字(1文字)
+' with_dbl_quot : I : ダブルクォーテーションで囲むか否か (True=囲む)
+' Ret : 区切り文字で連結後の文字列
+'-------------------------------------------------------------
+Public Function JoinFromArray(ByRef ary() As String, ByVal delim As String, ByVal with_dbl_quot As Boolean) As String
+    If IsEmptyArray(ary) = True Or delim = "" Then
+        JoinFromArray = ""
+        Exit Function
+    End If
+
+    Dim ret As String: ret = ""
+    Dim i As Long
+    
+    For i = LBound(ary) To UBound(ary)
+        If with_dbl_quot = True Then
+            ret = ret & Chr(34) & ary(i) & Chr(34) & delim
+        Else
+            ret = ret & ary(i) & delim
+        End If
+    Next i
+    
+    JoinFromArray = Left(ret, Len(ret) - 1)
+
+End Function
 
 '-------------------------------------------------------------
 'ブックが開いているか否かを返す

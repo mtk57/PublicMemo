@@ -97,7 +97,7 @@ End Function
 'タグをzipで保存する
 Private Sub DoArchive(ByVal target As ParamTarget, ByVal tag As String)
     Common.WriteLog "DoArchive S"
-    Common.WriteLog "tag=" & tag
+    Common.WriteLog "★tag=" & tag
 
     If prms.IsIgnoreNotRef() = False Then
         GoTo FINISH
@@ -159,11 +159,28 @@ FINISH:
         cmd = "git archive " & tag & " -o " & zip_file
     Else
         'git archive --format=zip --output=<出力ファイル名>.zip <タグ名> <ファイルパス>
-        Dim files As String: files = Join(ref_file_list, " ")
+        Dim files As String: files = Common.JoinFromArray(ref_file_list, " ", True)
         cmd = "git archive --format=zip --output=" & zip_file & " " & tag & " " & files
     End If
     
+On Error Resume Next
     git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+    
+    Dim err_msg As String: err_msg = Err.Description
+    Err.Clear
+On Error GoTo 0
+
+    If err_msg = "" Then
+        '成功
+    Else
+        Common.WriteLog "[DoArchive] ★★エラー! err_msg=" & err_msg
+        If Common.ShowYesNoMessageBox( _
+            "git archiveでエラーが発生しました。処理を続行しますか?" & vbCrLf & _
+            "err_msg=" & err_msg _
+            ) = False Then
+            Err.Raise 53, , "[DoArchive] git archiveでエラー (err_msg=" & err_msg & ")"
+        End If
+    End If
 
     Common.WriteLog "DoArchive E"
 End Sub
@@ -179,6 +196,7 @@ Private Function GetRefFileListForVB6project( _
 
     'vbpファイルに記載されているファイルをリストに追加
     ref_files = WorkerCommon.ParseVB6Project( _
+                    prms, _
                     prms.GetGitDirPath() & SEP & Replace(vbprj_path, "/", "\"), _
                     contents _
                 )
@@ -205,8 +223,9 @@ Private Function GetRefFileListForVBdotNetProject( _
     
     Dim ref_files() As String
 
-    'vbpファイルに記載されているファイルをリストに追加
+    'vbprojファイルに記載されているファイルをリストに追加
     ref_files = WorkerCommon.ParseVBNETProject( _
+                    prms, _
                     prms.GetGitDirPath() & SEP & Replace(vbprj_path, "/", "\"), _
                     contents _
                 )
