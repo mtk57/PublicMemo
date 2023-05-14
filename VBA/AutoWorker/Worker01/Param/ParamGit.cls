@@ -20,7 +20,6 @@ Private is_update_remote As Boolean
 Private is_update_remote_s As String
 Private is_delete_exist_branch As Boolean
 Private is_delete_exist_branch_s As String
-Private collect_step As String
 Private is_ignore_not_ref As Boolean
 Private is_ignore_not_ref_s As String
 
@@ -34,7 +33,6 @@ Private Sub Class_Initialize()
     base_branch = ""
     is_update_remote = False
     is_delete_exist_branch = False
-    collect_step = ""
     is_ignore_not_ref = False
 End Sub
 
@@ -51,8 +49,7 @@ Public Sub Init()
     base_branch = sheet.Range(CLM & i + 3).value
     is_update_remote_s = sheet.Range(CLM & i + 4).value
     is_delete_exist_branch_s = sheet.Range(CLM & i + 5).value
-    collect_step = sheet.Range(CLM & i + 6).value
-    is_ignore_not_ref_s = sheet.Range(CLM & i + 7).value
+    is_ignore_not_ref_s = sheet.Range(CLM & i + 6).value
 End Sub
 
 '検証
@@ -79,10 +76,6 @@ Public Sub Validate()
         is_delete_exist_branch = False
     Else
         is_delete_exist_branch = True
-    End If
-    
-    If collect_step = "" Then
-        collect_step = "STEP1.?"
     End If
 
     If is_ignore_not_ref_s = "NO" Or is_ignore_not_ref_s = "" Then
@@ -140,13 +133,6 @@ Public Function IsDeleteExistBranch() As Boolean
 End Function
 
 '-------------------------------------------------
-'タグ収集するSTEP
-'-------------------------------------------------
-Public Function GetCollectStep() As String
-    GetCollectStep = collect_step
-End Function
-
-'-------------------------------------------------
 'VBプロジェクト未参照ファイルを除外
 '-------------------------------------------------
 Public Function IsIgnoreNotRef() As Boolean
@@ -163,7 +149,6 @@ Public Function GetAllValue() As String
           "base_branch=(" & base_branch & "), " & _
           "is_update_remote=(" & is_update_remote_s & "), " & _
           "is_delete_exist_branch=(" & is_delete_exist_branch_s & "), " & _
-          "collect_step=(" & collect_step & "), " & _
           "is_ignore_not_ref=(" & is_ignore_not_ref_s & ")"
           
     GetAllValue = ret

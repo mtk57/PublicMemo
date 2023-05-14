@@ -78,7 +78,6 @@ Private Function GetTargetTagList(ByRef target As ParamTarget) As String()
     Dim git_result() As String
     
     Dim find_word As String: find_word = target.GetTag()
-    find_word = Replace(find_word, "STEP1.1", prms.GetCollectStep())
     
     'É^ÉOÇåüçı
     cmd = "git tag --list " & find_word

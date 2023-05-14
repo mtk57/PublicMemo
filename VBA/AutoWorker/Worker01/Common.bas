@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.22"
+Public Const VERSION = "1.0.23"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -60,7 +60,7 @@ End Function
 '-------------------------------------------------------------
 Public Function IsEmptyFile(ByVal path As String) As Boolean
     If IsExistsFile(path) = False Then
-        Err.Raise 53, , "[RemoveLinesWithKeyword] 指定されたファイルが存在しません (path=" & path & ")"
+        Err.Raise 53, , "[IsEmptyFile] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
     IsEmptyFile = (FileLen(path) = 0)

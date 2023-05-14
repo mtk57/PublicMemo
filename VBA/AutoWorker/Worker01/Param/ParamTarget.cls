@@ -19,6 +19,7 @@ Private lot As String
 Private phase As String
 Private pid As String
 Private ticket_num As String
+Private step As String
 Private branch As String
 Private commit As String
 Private tag As String
@@ -33,6 +34,7 @@ Private Sub Class_Initialize()
     phase = ""
     pid = ""
     ticket_num = ""
+    step = ""
     branch = ""
     commit = ""
     tag = ""
@@ -52,6 +54,7 @@ Public Sub Init(ByVal row As Integer)
     Dim C6 As String: C6 = Define.TARGET_PARAM_CLM_6
     Dim C7 As String: C7 = Define.TARGET_PARAM_CLM_7
     Dim C8 As String: C8 = Define.TARGET_PARAM_CLM_8
+    Dim C9 As String: C9 = Define.TARGET_PARAM_CLM_9
     
     is_enable_s = sheet.Range(C0 & row).value
     vbprj_file_path = sheet.Range(C1 & row).value
@@ -59,9 +62,10 @@ Public Sub Init(ByVal row As Integer)
     phase = sheet.Range(C3 & row).value
     pid = sheet.Range(C4 & row).value
     ticket_num = sheet.Range(C5 & row).value
-    branch = sheet.Range(C6 & row).value
-    commit = sheet.Range(C7 & row).value
-    tag = sheet.Range(C8 & row).value
+    step = sheet.Range(C6 & row).value
+    branch = sheet.Range(C7 & row).value
+    commit = sheet.Range(C8 & row).value
+    tag = sheet.Range(C9 & row).value
 End Sub
 
 'åüèÿ
@@ -96,6 +100,10 @@ Public Sub Validate(ByVal row As Integer)
         Err.Raise 53, , HEADER & "ticket_numÇ™éwíËÇ≥ÇÍÇƒÇ¢Ç‹ÇπÇÒ(row=" & row & ")"
     End If
     
+    If step = "" Then
+        Err.Raise 53, , HEADER & "stepÇ™éwíËÇ≥ÇÍÇƒÇ¢Ç‹ÇπÇÒ(row=" & row & ")"
+    End If
+    
     If branch = "" Then
         Err.Raise 53, , HEADER & "branchÇ™éwíËÇ≥ÇÍÇƒÇ¢Ç‹ÇπÇÒ(row=" & row & ")"
     End If
@@ -121,10 +129,6 @@ Public Function GetVBPrjFilePath() As String
     GetVBPrjFilePath = vbprj_file_path
 End Function
 
-Public Function GetTicketNum() As String
-    GetTicketNum = ticket_num
-End Function
-
 Public Function GetLot() As String
     GetLot = lot
 End Function
@@ -135,6 +139,14 @@ End Function
 
 Public Function GetPID() As String
     GetPID = pid
+End Function
+
+Public Function GetTicketNum() As String
+    GetTicketNum = ticket_num
+End Function
+
+Public Function GetStep() As String
+    GetStep = step
 End Function
 
 Public Function GetBranch() As String
@@ -159,6 +171,7 @@ Public Function GetAllValue() As String
           "phase=(" & phase & "), " & _
           "pid=(" & pid & "), " & _
           "ticket_num=(" & ticket_num & "), " & _
+          "step=(" & step & "), " & _
           "branch=(" & branch & "), " & _
           "commit=(" & commit & "), " & _
           "tag=(" & tag & ")"

@@ -61,7 +61,7 @@ Private Sub CreateFeatureBranch(ByRef target As ParamTarget)
     If WorkerCommon.IsExistBranch(prms, target.GetBranch()) = True Then
         If prms.IsDeleteExistBranch() = False Then
             'featureブランチが既に存在する場合はエラーとする
-            Err.Raise 53, , "ブランチが既に存在します。(" & target.GetBranch() & ")"
+            Err.Raise 53, , "[CreateFeatureBranch] ブランチが既に存在します。(" & target.GetBranch() & ")"
         Else
             'featureブランチを削除
             cmd = "git branch --delete " & target.GetBranch()
@@ -107,7 +107,7 @@ Private Sub DoCopy(ByRef target As ParamTarget)
     End If
     
     If is_match = False Then
-        Err.Raise 53, , "VBプロジェクトファイルが見つかりません。path=(" & prms.GetDestDirPath() & ")"
+        Err.Raise 53, , "[DoCopy] VBプロジェクトファイルが見つかりません。path=(" & prms.GetDestDirPath() & ")"
     End If
     
     '起点フォルダをリネームして、Gitフォルダにコピー
@@ -157,6 +157,11 @@ Private Sub DoTag(ByRef target As ParamTarget)
     
     Dim cmd As String
     Dim git_result() As String
+    
+    'Run_002の場合はSTEP1.1以外はエラーとする
+    If InStr(target.GetTag(), "STEP1.1") = 0 Then
+        Err.Raise 53, , "[DoTag] STEP1.1が指定されていません。 (tag=" & target.GetTag() & ")"
+    End If
     
     'タグを付ける
     cmd = "git tag " & target.GetTag() & " HEAD"

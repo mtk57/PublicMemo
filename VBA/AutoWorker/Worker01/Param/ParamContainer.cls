@@ -126,10 +126,6 @@ Public Function IsDeleteExistBranch() As Boolean
     IsDeleteExistBranch = git_param.IsDeleteExistBranch()
 End Function
 
-Public Function GetCollectStep() As String
-    GetCollectStep = git_param.GetCollectStep()
-End Function
-
 '-------------------------------------------------
 'VBプロジェクト未参照ファイルを除外
 '-------------------------------------------------

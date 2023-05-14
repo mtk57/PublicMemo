@@ -319,7 +319,7 @@ Public Sub SwitchDevelopBranch(ByRef prms As ParamContainer)
     
     'developブランチが存在しない場合はエラーとする
     If IsExistBranch(prms, prms.GetBaseBranch()) = False Then
-        Err.Raise 53, , "ブランチが存在しません。(" & prms.GetBaseBranch() & ")"
+        Err.Raise 53, , "[SwitchDevelopBranch] ブランチが存在しません。(" & prms.GetBaseBranch() & ")"
     End If
     
     'カレントブランチを確認する
