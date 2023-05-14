@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.24"
+Public Const VERSION = "1.0.25"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -205,7 +205,7 @@ Public Function RunGit(ByVal repo_path As String, ByVal command As String) As St
     Dim run_cmd As String: run_cmd = GIT_BASH & _
                                      " --login -i -c & cd " & repo_path & " & " & _
                                      command & _
-                                     " > " & temp
+                                     " > " & temp & " 2>&1"
     WriteLog "[RunGit] run_cmd=" & run_cmd
     
     'コマンド実行
