@@ -362,6 +362,18 @@ echo ABC >> out.log
 Win100VS2019
 "C:\Program Files (x86)\Microsoft Visual Studio¥2019\Professional\MSBuild¥Current\Bin\MSBuild.exe"
 
+---------------------------------------
+■標準出力、標準エラー出力
 
+https://maku77.github.io/windows/io/redirect-stdout-and-stderr.html
 
+1.stdout と stderr への出力を別々にファイルに保存する
+  Ex.my.exe > stdout.txt 2> stderr.txt
+
+2.stdout と stderr への出力をまとめて1つのファイルへ保存する
+  Ex1.my.exe > log.txt 2>&1    '標準エラーを標準出力にマージする
+  Ex2.my.exe > log.txt 1>&2    '標準出力を標準エラーにマージする
+
+3.エラーを表示しない
+  Ex.my.exe 2> nul
 
