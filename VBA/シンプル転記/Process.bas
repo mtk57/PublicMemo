@@ -210,7 +210,7 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
         End If
         
         '“]‹L
-        Set trans_rng = Range(sub_param.GetDstTranClm() & found_row)
+        Set trans_rng = ws.Range(sub_param.GetDstTranClm() & found_row)
         trans_rng.value = copy_data.GetValue()
         
 CONTINUE_ROW:

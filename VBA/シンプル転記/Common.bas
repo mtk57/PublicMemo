@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.19"
+Public Const VERSION = "1.0.25"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -26,6 +26,34 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'文字列配列を連結して文字列を返す
+' ary : I : 文字列配列
+' delim : I : 区切り文字(1文字)
+' with_dbl_quot : I : ダブルクォーテーションで囲むか否か (True=囲む)
+' Ret : 区切り文字で連結後の文字列
+'-------------------------------------------------------------
+Public Function JoinFromArray(ByRef ary() As String, ByVal delim As String, ByVal with_dbl_quot As Boolean) As String
+    If IsEmptyArray(ary) = True Or delim = "" Then
+        JoinFromArray = ""
+        Exit Function
+    End If
+
+    Dim ret As String: ret = ""
+    Dim i As Long
+    
+    For i = LBound(ary) To UBound(ary)
+        If with_dbl_quot = True Then
+            ret = ret & Chr(34) & ary(i) & Chr(34) & delim
+        Else
+            ret = ret & ary(i) & delim
+        End If
+    Next i
+    
+    JoinFromArray = Left(ret, Len(ret) - 1)
+
+End Function
 
 '-------------------------------------------------------------
 'ブックが開いているか否かを返す
@@ -60,7 +88,7 @@ End Function
 '-------------------------------------------------------------
 Public Function IsEmptyFile(ByVal path As String) As Boolean
     If IsExistsFile(path) = False Then
-        Err.Raise 53, , "[RemoveLinesWithKeyword] 指定されたファイルが存在しません (path=" & path & ")"
+        Err.Raise 53, , "[IsEmptyFile] 指定されたファイルが存在しません (path=" & path & ")"
     End If
     
     IsEmptyFile = (FileLen(path) = 0)
@@ -156,13 +184,17 @@ End Function
 '-------------------------------------------------------------
 Public Function RunGit(ByVal repo_path As String, ByVal command As String) As String()
     Dim err_msg As String: err_msg = ""
-    Dim cmd_result As String: cmd_result = ""
-    Dim is_lf As Boolean: is_lf = True
+    Dim std_out() As String
+    
+    If IsExistsFile(GIT_BASH) = False Then
+        err_msg = "[RunGit] gitが見つかりません (" & GIT_BASH & ")"
+        GoTo FINISH_3
+    End If
     
     If IsExistsFolder(repo_path) = False Then
         If InStr(command, "git clone") = 0 Then
             err_msg = "[RunGit] 指定されたフォルダが存在しません (repo_path=" & repo_path & ")"
-            GoTo FINISH
+            GoTo FINISH_3
         End If
     End If
     
@@ -173,7 +205,7 @@ Public Function RunGit(ByVal repo_path As String, ByVal command As String) As St
     Dim run_cmd As String: run_cmd = GIT_BASH & _
                                      " --login -i -c & cd " & repo_path & " & " & _
                                      command & _
-                                     " > " & temp
+                                     " > " & temp & " 2>&1"
     WriteLog "[RunGit] run_cmd=" & run_cmd
     
     'コマンド実行
@@ -190,37 +222,35 @@ Public Function RunGit(ByVal repo_path As String, ByVal command As String) As St
     'プロセスの戻り値を取得する
     If objExec.ExitCode <> 0 Then
         err_msg = "[RunGit] プロセスの戻り値が0以外です (exit code=" & objExec.ExitCode & ")"
-        GoTo FINISH
+        
+        If IsEmptyFile(temp) = True Then
+            GoTo FINISH_2
+        Else
+            GoTo FINISH
+        End If
+        
     End If
     
     If IsEmptyFile(temp) = True Then
-        GoTo FINISH
+        GoTo FINISH_2
     End If
-    
-    If IsUTF8(temp) = False Then
-        is_lf = False
-        cmd_result = ReadTextFileBySJIS(temp)
-    Else
-        is_lf = True
-        cmd_result = ReadTextFileByUTF8(temp)
-    End If
-    
-    DeleteFile (temp)
     
 FINISH:
-    Dim std_out() As String
-    
-    If is_lf = True Then
-        std_out = Split(cmd_result, vbLf)
+    If IsUTF8(temp) = False Then
+        std_out = Split(ReadTextFileBySJIS(temp), vbCrLf)
     Else
-        std_out = Split(cmd_result, vbCrLf)
+        std_out = Split(ReadTextFileByUTF8(temp), vbLf)
     End If
 
+FINISH_2:
+    DeleteFile (temp)
+    
+FINISH_3:
     Set objShell = Nothing
     Set objExec = Nothing
     
     If err_msg <> "" Then
-        Err.Raise 53, , err_msg
+        Err.Raise 53, , err_msg & vbCrLf & "std_out=" & Join(std_out, ",")
     End If
 
     RunGit = std_out
@@ -916,6 +946,12 @@ Public Function DeleteEmptyArray(ByRef arr() As String) As String()
     Dim i As Integer
     Dim count As Integer
     Dim wk As String
+    
+    If IsEmptyArray(arr) = True Then
+        DeleteEmptyArray = result
+        Exit Function
+    End If
+    
     count = 0
     For i = LBound(arr) To UBound(arr)
         wk = Replace(Replace(Replace(arr(i), vbCrLf, ""), vbCr, ""), vbLf, "")
@@ -999,6 +1035,11 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     Dim j As Long: j = 0
     Dim filtered_list() As String
     Dim ext As String: ext = Replace(in_ext, "*", "")
+    
+    If IsEmptyArray(path_list) = True Then
+        FilterFileListByExtension = path_list
+        Exit Function
+    End If
       
     For i = 0 To UBound(path_list)
         If Right(path_list(i), Len(ext)) = ext Then
@@ -1616,6 +1657,14 @@ Public Function IsEmptyArray(arr As Variant) As Boolean
 End Function
 
 '-------------------------------------------------------------
+'n秒待つ
+' sec : I : 待つ時間(秒) ※小数も可
+'-------------------------------------------------------------
+Public Sub WaitSec(ByVal sec As Double)
+    Application.WAIT [Now()] + sec / 86400
+End Sub
+
+'-------------------------------------------------------------
 '現在日時を文字列で返す
 ' Ret :Ex."20230326123456"
 '-------------------------------------------------------------
@@ -1686,8 +1735,6 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
-
-
 
 
 
