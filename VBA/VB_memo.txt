@@ -377,3 +377,17 @@ https://maku77.github.io/windows/io/redirect-stdout-and-stderr.html
 3.エラーを表示しない
   Ex.my.exe 2> nul
 
+---------------------------------------
+■VB6のRESファイルフォーマットについて
+
+ネットに情報がないので、以下のプログラムを参考にするしかない。
+https://www.vbforums.com/showthread.php?802399-VB6-ResDecomp-Class-Decompiles-RES-Files
+ResDecomp
+
+---------------------------------------
+■\演算子について
+
+整数除算演算子　※整数同士の割り算に使う。
+Ex. 10 \ 3 = 3
+
+
