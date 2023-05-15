@@ -381,6 +381,7 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
     Dim dst_file_path() As String
     Dim i As Integer
     Dim cnt As Integer: cnt = 0
+    Dim err_msg As String: err_msg = ""
     
     Common.DeleteFolder in_dest_path
     
@@ -395,9 +396,19 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
         End If
         
         If Common.IsExistsFile(src) = False Then
-            Err.Raise 53, , "VBプロジェクトに記載されたファイルが存在しません" & vbCrLf & _
-                            "VB Project=" & vbprj_path & vbCrLf & _
-                            "Not found=" & src
+            err_msg = "VBプロジェクトに記載されたファイルが存在しません" & vbCrLf & _
+                      "VB Project path=" & vbprj_path & vbCrLf & _
+                      "Not found=" & src
+            Common.WriteLog "[CopyProjectFiles] ★★エラー! err_msg=" & err_msg
+            
+            If Common.ShowYesNoMessageBox( _
+                "[CopyProjectFiles]でエラーが発生しました。処理を続行しますか?" & vbCrLf & _
+                "err_msg=" & err_msg _
+                ) = False Then
+                Err.Raise 53, , "[CopyProjectFiles] エラー! (err_msg=" & err_msg & ")"
+            End If
+            
+            GoTo CONTINUE
         End If
         
         Dim dst As String: dst = in_dest_path & SEP & dst_base_path & Replace(src, base_path, "")
