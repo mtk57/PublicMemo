@@ -1,0 +1,6 @@
+Dim pattern As New Regex("^(?<access>[Pp][Rr][Ii][Vv][Aa][Tt][Ee]|[Ff][Rr][Ii][Ee][Nn][Dd]|[Pp][U][Bb][Ll][Ii][Cc])\s*[Ss][Uu][Bb]\s+(?<name>[A-Za-z0-9_]+)\s*((?<parameters>.*?))$")
+Dim matches As MatchCollection = pattern.Matches(module.Code)
+
+For Each match As Match In matches
+Debug.Print match.Groups("name").Value
+Next
