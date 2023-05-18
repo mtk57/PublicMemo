@@ -267,8 +267,19 @@ Private Function ParseVB6Project(ByRef contents() As String) As String()
         End If
         
         '絶対パスに変換する
-        filelist(cnt) = Common.GetAbsolutePathName(base_path, path)
+        Dim abs_path As String: abs_path = Common.GetAbsolutePathName(base_path, path)
+        filelist(cnt) = abs_path
         cnt = cnt + 1
+        
+        If Common.GetFileExtension(abs_path) = "frm" Then
+            Dim frx_path As String: frx_path = Replace(abs_path, ".frm", ".frx")
+            If Common.IsExistsFile(frx_path) = True Then
+                'frxはvbpに記載されていないのでfrm検知時に存在チェックを行い、存在すればリストに追加する
+                 ReDim Preserve filelist(cnt)
+                 filelist(cnt) = frx_path
+                 cnt = cnt + 1
+            End If
+        End If
         
 CONTINUE:
     Next i
