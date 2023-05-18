@@ -1,7 +1,6 @@
-Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.25"
+Public Const VERSION = "1.0.26"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -26,6 +25,16 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'自身のフォルダパスを返す
+' Ret : フォルダパス
+'-------------------------------------------------------------
+Public Function GetMyDir() As String
+    Dim currentProject As Workbook
+    Set currentProject = ThisWorkbook
+    GetMyDir = currentProject.path
+End Function
 
 '-------------------------------------------------------------
 '文字列配列を連結して文字列を返す
@@ -971,12 +980,20 @@ End Function
 ' is_subdir : IN : サブフォルダ含むか (True=含む)
 ' Ret : ファイルリスト(絶対パスのリスト)
 '-------------------------------------------------------------
-Public Function CreateFileList(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean) As String()
+Public Function CreateFileList( _
+    ByVal path As String, _
+    ByVal ext As String, _
+    ByVal is_subdir As Boolean _
+) As String()
     Dim list() As String: list = CreateFileListMain(path, ext, is_subdir)
     CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), ext)
 End Function
 
-Private Function CreateFileListMain(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean) As String()
+Private Function CreateFileListMain( _
+    ByVal path As String, _
+    ByVal ext As String, _
+    ByVal is_subdir As Boolean _
+) As String()
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
