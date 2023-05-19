@@ -51,7 +51,6 @@ Public Sub Run()
         If Common.IsExistsFolder(dst_path) = True Then
             '移動先に同名フォルダがある場合はユニークなフォルダ名にする
             dst_path = dst_path & "_" & Common.GetNowTimeString()
-            Common.WaitSec 1
         End If
         
         CopyProjectFiles dst_path, copy_files, vbproj_path
@@ -499,11 +498,9 @@ Private Sub MoveBaseFolder( _
     If Common.IsExistsFolder(main_param.GetDestDirPath() & SEP & renamed_dir) = True Then
         '移動先に同名フォルダがある場合はユニークなフォルダ名にする
         renamed_dir = renamed_dir & "_" & Common.GetNowTimeString()
-        Common.WaitSec 1
     End If
     
     Common.MoveFolder renamed_path, main_param.GetDestDirPath() & SEP & renamed_dir
-    Common.WaitSec 1
     Common.DeleteFolder in_dest_path
     
     Common.WriteLog "MoveBaseFolder E"

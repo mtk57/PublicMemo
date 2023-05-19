@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.25"
+Public Const VERSION = "1.0.27"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -25,7 +25,37 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
 Private logfile_num As Integer
 Private is_log_opened As Boolean
 
-Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'正規表現でパターンマッチングを行う
+' test_str : I : 対象文字列
+' ptn : I : 検索パターン
+' is_ignore_case : I : 大文字小文字を区別するか(True=する)
+' Ret : True/False (True=一致)
+'-------------------------------------------------------------
+Public Function IsMatchByRegExp( _
+    ByVal test_str As String, _
+    ByVal ptn As String, _
+    ByVal is_ignore_case As Boolean _
+) As Boolean
+    Dim reg As New VBScript_RegExp_55.RegExp
+    reg.Global = True
+    reg.ignoreCase = is_ignore_case
+    reg.Pattern = ptn
+    
+    IsMatchByRegExp = reg.Test(test_str)
+End Function
+
+'-------------------------------------------------------------
+'自身のフォルダパスを返す
+' Ret : フォルダパス
+'-------------------------------------------------------------
+Public Function GetMyDir() As String
+    Dim currentProject As Workbook
+    Set currentProject = ThisWorkbook
+    GetMyDir = currentProject.path
+End Function
 
 '-------------------------------------------------------------
 '文字列配列を連結して文字列を返す
@@ -971,12 +1001,20 @@ End Function
 ' is_subdir : IN : サブフォルダ含むか (True=含む)
 ' Ret : ファイルリスト(絶対パスのリスト)
 '-------------------------------------------------------------
-Public Function CreateFileList(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean) As String()
+Public Function CreateFileList( _
+    ByVal path As String, _
+    ByVal ext As String, _
+    ByVal is_subdir As Boolean _
+) As String()
     Dim list() As String: list = CreateFileListMain(path, ext, is_subdir)
     CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), ext)
 End Function
 
-Private Function CreateFileListMain(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean) As String()
+Private Function CreateFileListMain( _
+    ByVal path As String, _
+    ByVal ext As String, _
+    ByVal is_subdir As Boolean _
+) As String()
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -1395,9 +1433,29 @@ Public Sub MoveFolder(ByVal src_path As String, ByVal dst_path As String)
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
 
-    fso.MoveFolder src_path, dst_path
+    Dim err_msg As String
+    Dim retry As Integer
+    For retry = 0 To 3
+
+On Error Resume Next
+        fso.MoveFolder src_path, dst_path
+    
+        err_msg = Err.Description
+        Err.Clear
+On Error GoTo 0
+
+        If err_msg = "" Then
+            Exit For
+        End If
+
+    Next retry
     
     Set fso = Nothing
+    
+    If err_msg <> "" Then
+        Err.Raise 53, , "[MoveFolder] エラー! (err_msg=" & err_msg & ")"
+    End If
+    
 End Sub
 
 '-------------------------------------------------------------
@@ -1735,7 +1793,5 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
-
-
 
 
