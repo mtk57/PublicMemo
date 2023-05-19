@@ -47,6 +47,13 @@ Public Sub Run()
         
         'VBプロジェクトファイルが参照しているファイルを同じフォルダ構成のままコピーする
         Dim dst_path As String: dst_path = main_param.GetDestDirPath() & SEP & GetProjectName(vbproj_path)
+        
+        If Common.IsExistsFolder(dst_path) = True Then
+            '移動先に同名フォルダがある場合はユニークなフォルダ名にする
+            dst_path = dst_path & "_" & Common.GetNowTimeString()
+            Common.WaitSec 1
+        End If
+        
         CopyProjectFiles dst_path, copy_files, vbproj_path
         
         'コピーBATファイルを作成する
