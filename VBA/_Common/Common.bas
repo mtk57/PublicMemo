@@ -1433,9 +1433,29 @@ Public Sub MoveFolder(ByVal src_path As String, ByVal dst_path As String)
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
 
-    fso.MoveFolder src_path, dst_path
+    Dim err_msg As String
+    Dim retry As Integer
+    For retry = 0 To 3
+
+On Error Resume Next
+        fso.MoveFolder src_path, dst_path
+    
+        err_msg = Err.Description
+        Err.Clear
+On Error GoTo 0
+
+        If err_msg = "" Then
+            Exit For
+        End If
+
+    Next retry
     
     Set fso = Nothing
+    
+    If err_msg <> "" Then
+        Err.Raise 53, , "[MoveFolder] ÉGÉâÅ[! (err_msg=" & err_msg & ")"
+    End If
+    
 End Sub
 
 '-------------------------------------------------------------
