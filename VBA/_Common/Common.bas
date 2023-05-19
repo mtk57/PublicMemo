@@ -1,6 +1,7 @@
+Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.26"
+Public Const VERSION = "1.0.27"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -24,7 +25,27 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
 Private logfile_num As Integer
 Private is_log_opened As Boolean
 
-Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'正規表現でパターンマッチングを行う
+' test_str : I : 対象文字列
+' ptn : I : 検索パターン
+' is_ignore_case : I : 大文字小文字を区別するか(True=する)
+' Ret : True/False (True=一致)
+'-------------------------------------------------------------
+Public Function IsMatchByRegExp( _
+    ByVal test_str As String, _
+    ByVal ptn As String, _
+    ByVal is_ignore_case As Boolean _
+) As Boolean
+    Dim reg As New VBScript_RegExp_55.RegExp
+    reg.Global = True
+    reg.ignoreCase = is_ignore_case
+    reg.Pattern = ptn
+    
+    IsMatchByRegExp = reg.Test(test_str)
+End Function
 
 '-------------------------------------------------------------
 '自身のフォルダパスを返す
