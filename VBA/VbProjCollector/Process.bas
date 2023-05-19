@@ -503,6 +503,7 @@ Private Sub MoveBaseFolder( _
     End If
     
     Common.MoveFolder renamed_path, main_param.GetDestDirPath() & SEP & renamed_dir
+    Common.WaitSec 1
     Common.DeleteFolder in_dest_path
     
     Common.WriteLog "MoveBaseFolder E"
