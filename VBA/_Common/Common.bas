@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.27"
+Public Const VERSION = "1.0.28"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -1447,6 +1447,8 @@ On Error GoTo 0
         If err_msg = "" Then
             Exit For
         End If
+        
+        WaitSec 1
 
     Next retry
     
