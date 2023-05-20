@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.25"
+Public Const VERSION = "1.0.31"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -21,11 +21,92 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
     ByVal lpFileName As String _
 ) As Long
 
+Private Type SYSTEMTIME
+    wYear As Integer
+    wMonth As Integer
+    wDayOfWeek As Integer
+    wDay As Integer
+    wHour As Integer
+    wMinute As Integer
+    wSecond As Integer
+    wMilliseconds As Integer
+End Type
+ 
+'// 64bit版Office
+#If VBA7 Then
+    Declare PtrSafe Sub GetLocalTime Lib "kernel32" (lpSystemTime As SYSTEMTIME)
+'// 32bit版Office
+#Else
+    'Declare Sub GetLocalTime Lib "kernel32" (lpSystemTime As SYSTEMTIME)
+#End If
+
 'ログファイル番号
 Private logfile_num As Integer
 Private is_log_opened As Boolean
 
-Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'フォルダパスから最後のフォルダ名を返す
+' path : I : フォルダパス(絶対パス)
+' Ret : 最後のフォルダ名
+'        例: "C:\abc\def\xyz" → "xyz"
+'-------------------------------------------------------------
+Public Function GetLastFolderName(ByVal path As String) As String
+    Dim last As String
+    last = Right(path, Len(path) - InStrRev(path, Application.PathSeparator))
+    GetLastFolderName = last
+End Function
+
+'-------------------------------------------------------------
+'フォルダパスの末尾に現在日時の文字列を付与して返す
+' path : I : フォルダパス(絶対パス)
+' Ret : 末尾に現在日時の文字列を付与したファイルパス
+'-------------------------------------------------------------
+Public Function ChangeUniqueDirPath(ByVal path As String) As String
+    If IsExistsFolder(path) = False Then
+        Err.Raise 53, , "[ChangeUniqueDirPath] 指定されたフォルダが存在しません (path=" & path & ")"
+    End If
+    
+    Dim new_path As String
+    new_path = path & "_" & GetNowTimeString()
+    If IsExistsFolder(new_path) = True Then
+        WaitSec 1
+        new_path = path & "_" & GetNowTimeString()
+    End If
+
+    ChangeUniqueDirPath = new_path
+End Function
+
+'-------------------------------------------------------------
+'正規表現でパターンマッチングを行う
+' test_str : I : 対象文字列
+' ptn : I : 検索パターン
+' is_ignore_case : I : 大文字小文字を区別するか(True=する)
+' Ret : True/False (True=一致)
+'-------------------------------------------------------------
+Public Function IsMatchByRegExp( _
+    ByVal test_str As String, _
+    ByVal ptn As String, _
+    ByVal is_ignore_case As Boolean _
+) As Boolean
+    Dim reg As New VBScript_RegExp_55.RegExp
+    reg.Global = True
+    reg.ignoreCase = is_ignore_case
+    reg.Pattern = ptn
+    
+    IsMatchByRegExp = reg.Test(test_str)
+End Function
+
+'-------------------------------------------------------------
+'自身のフォルダパスを返す
+' Ret : フォルダパス
+'-------------------------------------------------------------
+Public Function GetMyDir() As String
+    Dim currentProject As Workbook
+    Set currentProject = ThisWorkbook
+    GetMyDir = currentProject.path
+End Function
 
 '-------------------------------------------------------------
 '文字列配列を連結して文字列を返す
@@ -302,10 +383,33 @@ Public Function RenameFolder(ByVal path As String, ByVal rename As String) As St
     Dim folder As Object
     Set folder = fso.GetFolder(path)
     
-    folder.name = rename
-    RenameFolder = folder.path
+    Dim err_msg As String
+    Dim retry As Integer
+    For retry = 0 To 3
+
+On Error Resume Next
+        folder.name = rename
+    
+        err_msg = Err.Description
+        Err.Clear
+On Error GoTo 0
+
+        If err_msg = "" Then
+            Exit For
+        End If
+        
+        WaitSec 1
+
+    Next retry
     
     Set fso = Nothing
+    
+    If err_msg <> "" Then
+        Err.Raise 53, , "[RenameFolder] エラー! (err_msg=" & err_msg & ")"
+    End If
+
+    RenameFolder = folder.path
+
 End Function
 
 '-------------------------------------------------------------
@@ -971,12 +1075,20 @@ End Function
 ' is_subdir : IN : サブフォルダ含むか (True=含む)
 ' Ret : ファイルリスト(絶対パスのリスト)
 '-------------------------------------------------------------
-Public Function CreateFileList(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean) As String()
+Public Function CreateFileList( _
+    ByVal path As String, _
+    ByVal ext As String, _
+    ByVal is_subdir As Boolean _
+) As String()
     Dim list() As String: list = CreateFileListMain(path, ext, is_subdir)
     CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), ext)
 End Function
 
-Private Function CreateFileListMain(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean) As String()
+Private Function CreateFileListMain( _
+    ByVal path As String, _
+    ByVal ext As String, _
+    ByVal is_subdir As Boolean _
+) As String()
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -1395,9 +1507,31 @@ Public Sub MoveFolder(ByVal src_path As String, ByVal dst_path As String)
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
 
-    fso.MoveFolder src_path, dst_path
+    Dim err_msg As String
+    Dim retry As Integer
+    For retry = 0 To 3
+
+On Error Resume Next
+        fso.MoveFolder src_path, dst_path
+    
+        err_msg = Err.Description
+        Err.Clear
+On Error GoTo 0
+
+        If err_msg = "" Then
+            Exit For
+        End If
+        
+        WaitSec 1
+
+    Next retry
     
     Set fso = Nothing
+    
+    If err_msg <> "" Then
+        Err.Raise 53, , "[MoveFolder] エラー! (err_msg=" & err_msg & ")"
+    End If
+    
 End Sub
 
 '-------------------------------------------------------------
@@ -1665,10 +1799,26 @@ Public Sub WaitSec(ByVal sec As Double)
 End Sub
 
 '-------------------------------------------------------------
-'現在日時を文字列で返す
-' Ret :Ex."20230326123456"
+'現在日時をミリ秒単位の文字列で返す
+' Ret :Ex."20230326123456001"
 '-------------------------------------------------------------
 Public Function GetNowTimeString() As String
+    Dim t As SYSTEMTIME
+
+    Call GetLocalTime(t)
+    
+    Dim yyyy As String: yyyy = Format(t.wYear, "0000")
+    Dim mm As String: mm = Format(t.wMonth, "00")
+    Dim dd As String: dd = Format(t.wDay, "00")
+    Dim hh As String: hh = Format(t.wHour, "00")
+    Dim mn As String: mn = Format(t.wMinute, "00")
+    Dim ss As String: ss = Format(t.wSecond, "00")
+    Dim fff As String: fff = Format(t.wMilliseconds, "000")
+    
+    GetNowTimeString = yyyy & mm & dd & hh & mn & ss & fff
+End Function
+
+Public Function GetNowTimeString_OLD() As String
     Dim str_date As String
     Dim str_time As String
     
