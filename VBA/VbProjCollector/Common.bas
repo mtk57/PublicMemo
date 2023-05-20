@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.28"
+Public Const VERSION = "1.0.29"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -26,6 +26,38 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'フォルダパスから最後のフォルダ名を返す
+' path : I : フォルダパス(絶対パス)
+' Ret : 最後のフォルダ名
+'        例: "C:\abc\def\xyz" → "xyz"
+'-------------------------------------------------------------
+Public Function GetLastFolderName(ByVal path As String) As String
+    Dim last As String
+    last = Right(path, Len(path) - InStrRev(path, Application.PathSeparator) - 1)
+    GetLastFolderName = last
+End Function
+
+'-------------------------------------------------------------
+'フォルダパスの末尾に現在日時の文字列を付与して返す
+' path : I : フォルダパス(絶対パス)
+' Ret : 末尾に現在日時の文字列を付与したファイルパス
+'-------------------------------------------------------------
+Public Function ChangeUniqueDirPath(ByVal path As String) As String
+    If IsExistsFolder(path) = False Then
+        Err.Raise 53, , "[ChangeUniqueDirPath] 指定されたフォルダが存在しません (path=" & path & ")"
+    End If
+    
+    Dim new_path As String
+    new_path = path & "_" & GetNowTimeString()
+    If IsExistsFolder(new_path) = True Then
+        WaitSec 1
+        new_path = path & "_" & GetNowTimeString()
+    End If
+
+    ChangeUniqueDirPath = new_path
+End Function
 
 '-------------------------------------------------------------
 '正規表現でパターンマッチングを行う

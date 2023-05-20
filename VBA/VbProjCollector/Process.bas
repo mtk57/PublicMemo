@@ -50,7 +50,7 @@ Public Sub Run()
         
         If Common.IsExistsFolder(dst_path) = True Then
             '移動先に同名フォルダがある場合はユニークなフォルダ名にする
-            dst_path = dst_path & "_" & Common.GetNowTimeString()
+            dst_path = Common.ChangeUniqueDirPath(dst_path)
         End If
         
         CopyProjectFiles dst_path, copy_files, vbproj_path
@@ -497,7 +497,9 @@ Private Sub MoveBaseFolder( _
     
     If Common.IsExistsFolder(main_param.GetDestDirPath() & SEP & renamed_dir) = True Then
         '移動先に同名フォルダがある場合はユニークなフォルダ名にする
-        renamed_dir = renamed_dir & "_" & Common.GetNowTimeString()
+        renamed_dir = Common.GetLastFolderName( _
+                            Common.ChangeUniqueDirPath( _
+                                main_param.GetDestDirPath() & SEP & renamed_dir))
     End If
     
     Common.MoveFolder renamed_path, main_param.GetDestDirPath() & SEP & renamed_dir
@@ -758,7 +760,8 @@ Private Sub CreateBuildBatFile(ByRef vbprj_files() As String)
     contents(contents_cnt + SECOND_ROW_CNT) = "pause"
     
     'ファイルに出力する
-    Common.CreateSJISTextFile contents, main_param.GetDestDirPath() & SEP & "Build_" & Common.GetNowTimeString() & ".bat"
+    Dim bat_path As String: bat_path = main_param.GetDestDirPath() & SEP & "Build_" & Common.GetNowTimeString() & ".bat"
+    Common.CreateSJISTextFile contents, bat_path
     
     Common.WriteLog "CreateBuildBatFile E"
 End Sub
