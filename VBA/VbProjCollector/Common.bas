@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.29"
+Public Const VERSION = "1.0.30"
 
 Public Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -35,7 +35,7 @@ Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
 '-------------------------------------------------------------
 Public Function GetLastFolderName(ByVal path As String) As String
     Dim last As String
-    last = Right(path, Len(path) - InStrRev(path, Application.PathSeparator) - 1)
+    last = Right(path, Len(path) - InStrRev(path, Application.PathSeparator))
     GetLastFolderName = last
 End Function
 
@@ -364,10 +364,33 @@ Public Function RenameFolder(ByVal path As String, ByVal rename As String) As St
     Dim folder As Object
     Set folder = fso.GetFolder(path)
     
-    folder.name = rename
-    RenameFolder = folder.path
+    Dim err_msg As String
+    Dim retry As Integer
+    For retry = 0 To 3
+
+On Error Resume Next
+        folder.name = rename
+    
+        err_msg = Err.Description
+        Err.Clear
+On Error GoTo 0
+
+        If err_msg = "" Then
+            Exit For
+        End If
+        
+        WaitSec 1
+
+    Next retry
     
     Set fso = Nothing
+    
+    If err_msg <> "" Then
+        Err.Raise 53, , "[RenameFolder] ÉGÉâÅ[! (err_msg=" & err_msg & ")"
+    End If
+
+    RenameFolder = folder.path
+
 End Function
 
 '-------------------------------------------------------------
