@@ -8,5 +8,7 @@
 ●ダブルクォーテーションで囲まれた文字列だけを検索する
 \"([^\"]*)\"
 
-
+-----------------------------------------
+●VBのFunction/Subの定義(ただし引数は含まない)
+^(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+.*\(
 
