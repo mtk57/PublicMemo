@@ -20,8 +20,7 @@ Private dst_dir_path As String
 Private ignore_files As String
 Private ignore_keywords As String
 Private base_dir As String
-Private is_if_insert As Boolean
-Private is_if_insert_s As String
+Private insert_seq As String
 
 Private Const CLM_ = "L"
 Private Const ROW_ = 6
@@ -36,7 +35,7 @@ Private Sub Class_Initialize()
     ignore_files = ""
     ignore_keywords = ""
     base_dir = ""
-    is_if_insert = False
+    insert_seq = False
 End Sub
 
 '初期化
@@ -52,7 +51,7 @@ Public Sub Init()
     ignore_files = main_sheet.Range(CLM_ & ROW_ + 6).value
     ignore_keywords = main_sheet.Range(CLM_ & ROW_ + 7).value
     base_dir = main_sheet.Range(CLM_ & ROW_ + 8).value
-    is_if_insert_s = main_sheet.Range(CLM_ & ROW_ + 9).value
+    insert_seq = main_sheet.Range(CLM_ & ROW_ + 9).value
 End Sub
 
 '検証
@@ -84,10 +83,8 @@ Public Sub Validate()
         Err.Raise 53, , "出力先フォルダパスが指定されていません"
     End If
     
-    If is_if_insert_s = "" Or is_if_insert_s = "NO" Then
-        is_if_insert = False
-    Else
-        is_if_insert = True
+    If insert_seq = "" Then
+        insert_seq = "しない"
     End If
 End Sub
 
@@ -127,8 +124,8 @@ Public Function GetBaseDir() As String
     GetBaseDir = base_dir
 End Function
 
-Public Function IsIfInsert() As Boolean
-    IsIfInsert = is_if_insert
+Public Function GetInsertSeq() As Boolean
+    GetInsertSeq = insert_seq
 End Function
 
 Public Function GetAllValue() As String
@@ -143,7 +140,7 @@ Public Function GetAllValue() As String
           "ignore_files=(" & ignore_files & "), " & _
           "ignore_keywords=(" & ignore_keywords & "), " & _
           "base_dir=(" & base_dir & ")," & _
-          "is_if_insert=(" & is_if_insert_s & ")"
+          "insert_seq=(" & insert_seq & ")"
 
     GetAllValue = ret
 End Function

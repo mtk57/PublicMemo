@@ -317,7 +317,7 @@ Private Sub InsertCode(ByVal target_path As String)
         Exit Sub
     End If
     
-    Const METHOD_START = "(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+.*\("
+    Const METHOD_START = "(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+.*"
 
     Dim new_contents() As String
     ReDim new_contents(0)
@@ -332,6 +332,12 @@ Private Sub InsertCode(ByVal target_path As String)
         End If
         
         If Common.IsMatchByRegExp(line, METHOD_START, True) = True Then
+        
+            If IsExistIgnoreMethodWord(line) = True Then
+                '除外ワードを含むので次の行へ
+                GoTo NOT_METHOD
+            End If
+            
             '関数定義の開始行を発見
             i = i + InsertCodeForMethod( _
                         target_path, _
@@ -561,10 +567,11 @@ Private Function GetMethodExitLine(ByVal method_name As String, ByVal seq As Lon
 End Function
 
 '関数名を返す
+'Function,Subのすぐ後ろに関数名がある場合のみ想定。複数行は未対応。
 Private Function GetMethodName(ByVal line As String) As String
     Common.WriteLog "GetMethodName S"
     
-    Const METHOD = "\s*(Function|Sub)\s+.*\("
+    Const METHOD = "\s*(Function|Sub)\s+.*"
     
     Dim list() As String
     list = Common.GetMatchByRegExp(line, METHOD, True)
@@ -572,10 +579,57 @@ Private Function GetMethodName(ByVal line As String) As String
     list = Common.DeleteEmptyArray(list)
     list = Split(list(0), " ")
     
-    Dim last As Integer: last = UBound(list)
-    GetMethodName = Replace(list(last), "(", "")
+    Dim method_name As String
+    
+    Dim i As Long
+    For i = 0 To UBound(list)
+        If list(i) = "Sub" Or list(i) = "Function" Then
+            method_name = list(i + 1)
+            
+            '括弧以降を除去
+            GetMethodName = Replace( _
+                                method_name, _
+                                Common.GetStringByKeyword(method_name, "("), _
+                                "" _
+                            )
+            
+            Common.WriteLog "GetMethodName E1"
+            Exit Function
+        End If
+    Next
+    
+    Err.Raise 53, , "関数名が見つかりません (" & line & ")"
     
     Common.WriteLog "GetMethodName E"
+End Function
+
+'関数定義に不要はワードがあるか返す
+Private Function IsExistIgnoreMethodWord(ByVal line As String) As Boolean
+    Common.WriteLog "IsExistIgnoreMethodWord S"
+
+    Const IGNORE_WORDS = "Declare,PtrSafe,Lib,Alias"
+
+    Dim list() As String
+    Dim ignores() As String
+    list = Split(line, " ")
+    ignores = Split(IGNORE_WORDS, ",")
+    
+    Dim i As Long
+    Dim j As Long
+    For i = 0 To UBound(list)
+        For j = 0 To UBound(ignores)
+            If list(i) = ignores(j) Then
+                '除外ワード発見
+                IsExistIgnoreMethodWord = True
+                Common.WriteLog "IsExistIgnoreMethodWord E1"
+                Exit Function
+            End If
+        Next j
+    Next i
+    
+    IsExistIgnoreMethodWord = False
+    
+    Common.WriteLog "IsExistIgnoreMethodWord E"
 End Function
 
 '対象ファイルを読み込んで内容を配列で返す
