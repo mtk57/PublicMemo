@@ -369,17 +369,14 @@ Private Function InsertCodeForMethod( _
     Common.WriteLog "InsertCodeForMethod S"
     
     Const METHOD_END = "End\s(Function|Sub)"
+    Const METHOD_EXIT = "Exit\s(Function|Sub)"
     
     Dim i As Long
     Dim line As String: line = contents(start)  '解析中の行データ
-    Dim start_clm As Long   '関数定義(開始行)の桁(1始まり)
-    Dim end_clm As Long     '関数定義(終了行)の桁(1始まり)
     Dim method_name As String: method_name = GetMethodName(line)
     Dim cnt As Long     '解析を進めた行数。ただし開始行および追加行は含まない。
     Dim offset As Long  '関数開始位置のオフセット行数(関数の引数が複数行の場合は2行以上になる)
-
-    '桁位置を保持
-    start_clm = Common.FindFirstCasePosition(line)
+    Dim seq As Long: seq = 1    '関数途中終了時を区別するための連番
 
     Common.AppendArray new_contents, line
     cnt = cnt + 1
@@ -403,16 +400,20 @@ Private Function InsertCodeForMethod( _
             GoTo METHOD_BODY
         End If
         
+        If Common.IsMatchByRegExp(line, METHOD_EXIT, True) = True Then
+            '関数の途中終了行を発見
+            
+            Common.AppendArray new_contents, GetMethodExitLine(method_name, seq)
+            Common.AppendArray new_contents, line
+            cnt = cnt + 1
+            
+            seq = seq + 1
+            
+            GoTo CONTINUE
+        End If
+        
         If Common.IsMatchByRegExp(line, METHOD_END, True) = True Then
             '関数定義の終了行を発見
-            
-            '桁位置を保持
-            end_clm = Common.FindFirstCasePosition(line)
-            
-            If start_clm <> end_clm Then
-                '開始桁と異なるので次の行へ
-                GoTo METHOD_BODY
-            End If
             
             Common.AppendArray new_contents, GetMethodEndLine(method_name)
             Common.AppendArray new_contents, line
@@ -426,6 +427,7 @@ METHOD_BODY:
         Common.AppendArray new_contents, line
         cnt = cnt + 1
         
+CONTINUE:
     Next i
 
 FINISH:
@@ -548,6 +550,14 @@ Private Function GetMethodEndLine(ByVal method_name As String) As String
     Common.WriteLog "GetMethodEndLine S"
     GetMethodEndLine = Replace(main_param.GetInsertWord(), "＠", method_name & " END")
     Common.WriteLog "GetMethodEndLine E"
+End Function
+
+'関数途中直前に挿入するコードを作成する
+Private Function GetMethodExitLine(ByVal method_name As String, ByVal seq As Long) As String
+    Common.WriteLog "GetMethodExitLine S"
+    Common.WriteLog "seq=" & seq
+    GetMethodExitLine = Replace(main_param.GetInsertWord(), "＠", method_name & " END " & seq)
+    Common.WriteLog "GetMethodExitLine E"
 End Function
 
 '関数名を返す

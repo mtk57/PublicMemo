@@ -1,14 +1,15 @@
 Code Inserter																																																	
-ver.	0.5.0										注意!  ⑥出力先フォルダは実行前に削除します!																																						
+ver.	1.0.2										注意!  ⑥出力先フォルダは実行前に削除します!																																						
 											★=MUST																																						
 																																																	
 Main Param																																memo																	
-	①ファイル検索フォルダパス(絶対パス)　★										C:\_git\PublicMemo\VBA\CodeInserter\testdata\src\src_VB6																					末尾に"\"禁止。																	
-	②デバッグログ出力										NO																					未指定の場合は出力しない。																	
+	①ファイル検索フォルダパス(絶対パス)　★										C:\_git\PublicMemo\VBA\CodeInserter\testdata\src																					末尾に"\"禁止。																	
+	②デバッグログ出力										YES																					未指定の場合は出力しない。																	
 	③対象ファイル拡張子										VB6系																					未指定の場合はVB6系とする。VB6系=bas, frm, cls, ctl																	
 	④サブフォルダも含むか										YES																					未指定の場合はYESとする。																	
 	⑤挿入文字列　★										WriteLogSimple "＠"  'for DEBUG																					全角の"@"は関数名で置換。末尾の" Start", " End"はツールが入れる。例:「WriteLogSimple "FuncA Start"」																	
 	⑥出力先フォルダパス(絶対パス)　★										C:\_git\PublicMemo\VBA\CodeInserter\testdata\dst																					末尾に"\"禁止。存在しない場合は自動で作成する。																	
 	⑦除外ファイル名																															複数指定時は半角カンマで区切る。																	
 	⑧除外キーワード																															複数指定時は半角カンマで区切る。																	
-	⑨起点フォルダ名										src_VB6																					未指定の場合は何もしない。指定された場合、そのフォルダ配下を⑥に作成する。																	
+	⑨起点フォルダ名										src_VB6																					未指定の場合は何もしない。指定された場合⑥に作成する。																	
+	⑩If文の直後に連番を挿入										NO																					未指定の場合はNOとする。								まだ未サポート									
