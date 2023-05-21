@@ -382,18 +382,20 @@ Private Function InsertCodeForMethod( _
     start_clm = Common.FindFirstCasePosition(line)
 
     Common.AppendArray new_contents, line
+    cnt = cnt + 1
     
     '関数開始定義の終了行を取得する
     offset = GetMethodStartOffset(target_path, start, contents)
     
     If offset > 0 Then
-        For i = 0 To offset
-            Common.AppendArray new_contents, contents(start + 1 + i)
+        For i = 0 To offset - 1
+            Common.AppendArray new_contents, contents(start + i + 1)
         Next i
+        cnt = cnt + offset - 1
     End If
     Common.AppendArray new_contents, GetMethodStartLine(method_name)
     
-    For i = start + offset To UBound(contents)
+    For i = start + offset + 1 To UBound(contents)
         line = contents(i)
         
         If Common.IsCommentCode(line, Common.GetFileExtension(target_path)) = True Then
@@ -438,11 +440,11 @@ End Function
 '  2."Sub"があればSubモードON, "Function"があればFunctionモードON   ※このメソッドに渡す前に正規表現でヒットした文字列を渡しているので無いことは有り得ない。
 '  3.行ループ開始
 '  4.  列ループ開始
-'  4-1.  列終端に"_"があれば行ループ続行。なければ処理終了。行ループした回数を終了行とする。
-'  4-2.  "("があれば括弧カウンタ++、")"があれば括弧カウンタ--
+'  4-1.  列終端に"_"があれば行ループ続行。なければ処理終了する。行ループした回数を終了行とする。
+'  4-2.  "("があれば括弧カウンタ++、")"があれば括弧カウンタ--する。
 '  4-3.  括弧カウンタが0になった && SubモードならSubの終わりと判断し処理終了。行ループした回数を終了行とする。
-'  4-4.  括弧カウンタが0になった && FunctionモードならFunctionの引数の終わりと判断するが戻り値がある可能性があるので戻り値モードONして処理続行。
-'  4-5.  戻り値モード && " As "があれば戻り値がある。列終端に"_"がなければ処理終了。行ループした回数を終了行とする。
+'  4-4.  括弧カウンタが0になった && FunctionモードならFunctionの引数の終わりと判断するが、戻り値がある可能性があるので戻り値モードONして処理続行する。
+'  4-5.  戻り値モードON && " As "があれば戻り値がある。列終端に"_"がなければ処理終了。行ループした回数を終了行とする。
 '
 '  - 複数行の場合、"_"以降の列にコメントや" "は付けられない。
 '  - 複数行の場合、コメントは一切付けられない。
@@ -457,36 +459,81 @@ Private Function GetMethodStartOffset( _
 ) As Long
     Common.WriteLog "GetMethodStartOffset S"
     
-    Dim r As Long
-    Dim c As Long
+    Dim offset As Long: offset = 0
+    Dim r As Long       'Row
+    Dim c As Long       'Column
     Dim line As String
-    
+    Dim ch As String    'Character
+    Dim kc As Long: kc = -1      '括弧カウンタ(-1:1つ目の"("が未発見、-2:戻り値より前の括弧は全ての対応確認済(戻り値モードON))
+    Dim mode As String: mode = GetMethodType(contents(start))   '関数モード("Sub" or "Function")
     
     For r = start To UBound(contents)
-        line = contents(i)
+        line = contents(r)
         
-        If Common.IsCommentCode(line, Common.GetFileExtension(target_path)) = True Or _
-           Right(line, 1) = "_" Then
-            'コメント行 or 複数行なので次の行へ
-            GoTo CONTINUE
+        If Right(line, 1) <> "_" Then
+            '複数行では無いので処理終了
+            GoTo FINISH
         End If
         
-        Dim tmp As String: tmp = Common.RemoveRightComment(line, Common.GetFileExtension(target_path))
+        For c = 1 To Len(line)
+            ch = Mid(line, c, 1)    '1文字取得
         
-        If Right(RTrim(tmp), 1) = ")" Or InStr(tmp, "As") > 0 Then
-            '関数開始定義の終了行を発見
-            GetMethodStartOffset = i
-            Common.WriteLog "GetMethodStartOffset E1"
-            Exit Function
-        End If
+            '戻り値より前の括弧をチェック
+            If ch = "(" Then
+                If kc = -1 Then
+                    kc = 0
+                End If
+                If kc >= 0 Then
+                    kc = kc + 1
+                End If
+            ElseIf ch = ")" Then
+                If kc >= 1 Then
+                    kc = kc - 1
+                End If
+            End If
+            
+            If kc = 0 Then
+                '戻り値より前の括弧は全ての対応確認済
+                If mode = "Sub" Then
+                    'Subの場合は処理終了
+                    GoTo FINISH
+                End If
+                kc = -2 '戻り値モードON
+            End If
+            
+        Next c
 
-CONTINUE:
+        offset = offset + 1
         
     Next r
 
-    '関数開始定義の終了行が見つからない!
-    GetMethodStartOffset = 0
+    Err.Raise 53, , "関数開始定義の終了行が見つかりません (" & target_path & ")"
+    
+FINISH:
+    GetMethodStartOffset = offset
     Common.WriteLog "GetMethodStartOffset E"
+End Function
+
+Private Function GetMethodType(ByVal line As String) As String
+    Common.WriteLog "GetMethodType S"
+    
+    Dim i As Long
+    Dim start_rows() As String
+    start_rows = Split(line, " ")
+    GetMethodType = ""
+    
+    For i = 0 To UBound(start_rows)
+        If start_rows(i) = "Sub" Or start_rows(i) = "Function" Then
+            GetMethodType = start_rows(i)
+            Exit For
+        End If
+    Next i
+    
+    If GetMethodType = "" Then
+        Err.Raise 53, , "関数開始定義が不正です (line=" & line & ")"
+    End If
+        
+    Common.WriteLog "GetMethodType E"
 End Function
 
 '関数開始直後に挿入するコードを作成する
