@@ -1,6 +1,9 @@
-hoge
+Private Declare PtrSafe Function GetPrivateProfileString Lib _
+    "kernel32" Alias "GetPrivateProfileStringA" ( _
+) As Long
 
-fuga
+Private Declare PtrSafe Function GetPrivateProfileString Lib "kernel32" Alias "GetPrivateProfileStringA" ( _
+) As Long
 
 'Sub Sub0()
 'End Sub
