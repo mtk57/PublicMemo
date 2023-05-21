@@ -36,8 +36,8 @@ Public Sub Run()
         Dim targer_path As String: targer_path = target_files(i)
         Common.WriteLog "i=" & i & ":[" & targer_path & "]"
     
-        '対象ファイルの関数の先頭と最後にログを埋め込む
-        InsertLog targer_path
+        '対象ファイルの関数の先頭と最後にコードを埋め込む
+        InsertCode targer_path
     Next i
 
     Common.WriteLog "Run E"
@@ -136,9 +136,17 @@ Private Sub CopyTargetFiles()
             GoTo CONTINUE
         End If
         
-        'TODO: 除外ファイルは除外する
+        If IsIgnoreFile(src) = True Then
+            '除外ファイルは除外する
+            Common.WriteLog "除外=" & src
+            GoTo CONTINUE
+        End If
         
-        'TODO: 除外キーワードを含むファイル名は除外する
+        If IsIgnoreKeyword(src) = True Then
+            '除外キーワードを含むので除外する
+            Common.WriteLog "除外=" & src
+            GoTo CONTINUE
+        End If
         
         Dim dst As String: dst = main_param.GetDestDirPath() & SEP & dst_base_path & Replace(src, base_path, "")
         Dim path As String: path = Common.GetFolderNameFromPath(dst)
@@ -171,6 +179,72 @@ CONTINUE:
     
     Common.WriteLog "CopyTargetFiles E"
 End Sub
+
+'除外ファイルかを返す
+Private Function IsIgnoreFile(ByVal path As String) As Boolean
+    Common.WriteLog "IsIgnoreFile S"
+    
+    If main_param.GetIgnoreFiles() = "" Then
+        IsIgnoreFile = False
+        Common.WriteLog "IsIgnoreFile E1"
+        Exit Function
+    End If
+
+    '除外ファイルリストを作成
+    Dim ignore_files() As String
+    ignore_files = Split(main_param.GetIgnoreFiles(), ",")
+
+    If Common.IsEmptyArray(ignore_files) = True Then
+        IsIgnoreFile = False
+        Common.WriteLog "IsIgnoreFile E2"
+        Exit Function
+    End If
+
+    Dim i As Long
+    For i = LBound(ignore_files) To UBound(ignore_files)
+        If Common.GetFileName(path) = ignore_files(i) Then
+            IsIgnoreFile = True
+            Common.WriteLog "IsIgnoreFile E3"
+            Exit Function
+        End If
+    Next i
+    
+    IsIgnoreFile = False
+    Common.WriteLog "IsIgnoreFile E"
+End Function
+
+'除外キーワードを含むかを返す
+Private Function IsIgnoreKeyword(ByVal path As String) As Boolean
+    Common.WriteLog "IsIgnoreKeyword S"
+    
+    If main_param.GetIgnoreKeywords() = "" Then
+        IsIgnoreKeyword = False
+        Common.WriteLog "IsIgnoreKeyword E1"
+        Exit Function
+    End If
+
+    '除外ファイルリストを作成
+    Dim ignore_keywords() As String
+    ignore_keywords = Split(main_param.GetIgnoreKeywords(), ",")
+
+    If Common.IsEmptyArray(ignore_keywords) = True Then
+        IsIgnoreKeyword = False
+        Common.WriteLog "IsIgnoreKeyword E2"
+        Exit Function
+    End If
+
+    Dim i As Long
+    For i = LBound(ignore_keywords) To UBound(ignore_keywords)
+        If InStr(Common.GetFileName(path), ignore_keywords(i)) > 0 Then
+            IsIgnoreKeyword = True
+            Common.WriteLog "IsIgnoreKeyword E3"
+            Exit Function
+        End If
+    Next i
+    
+    IsIgnoreKeyword = False
+    Common.WriteLog "IsIgnoreKeyword E"
+End Function
 
 '起点フォルダを移動する
 Private Sub MoveBaseFolder()
@@ -232,71 +306,222 @@ Private Sub MoveBaseFolder()
     Common.WriteLog "MoveBaseFolder E"
 End Sub
 
-'対象ファイルの関数の先頭と最後にログを埋め込む
-Private Sub InsertLog(ByVal target_path As String)
-    Common.WriteLog "InsertLog S"
+'対象ファイルの関数の先頭と最後にコードを埋め込む
+Private Sub InsertCode(ByVal target_path As String)
+    Common.WriteLog "InsertCode S"
     
     Dim contents() As String: contents = GetTargetContents(target_path)
     
     If Common.IsEmptyArray(contents) = True Then
-        Common.WriteLog "InsertLog E1"
+        Common.WriteLog "InsertCode E1"
         Exit Sub
     End If
     
-    Const METHOD_START = "^(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+.*\("
-    Const FUNC_END = "^End Function"
-    Const SUB_END = "^End Sub"
-    
+    Const METHOD_START = "(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+.*\("
+
     Dim new_contents() As String
-    Dim now_row As String
+    ReDim new_contents(0)
     Dim i As Long
-    Dim mehod_name As String
-    Dim offset As Long
-    Dim is_start As Boolean: is_start = False
-    Dim suffix As String
-    Dim is_found_method As Boolean
-    
-    Dim cnt As Long: cnt = UBound(contents)
-    
+ 
     For i = LBound(contents) To UBound(contents)
-        now_row = contents(i)
-    
-        '新しい配列に現在行をコピーする
-        offset = 1
-        ReDim Preserve new_contents(cnt + offset)
-        new_contents(cnt + offset) = now_row
-    
-        '正規表現で関数(Function or Sub)の始まり or 終わりを見つける
-        If Common.IsMatchByRegExp(now_row, METHOD_START, True) = True Then
-            is_found_method = True
-        ElseIf Common.IsMatchByRegExp(now_row, FUNC_END, True) = True Then
-            is_start = False
-        ElseIf Common.IsMatchByRegExp(now_row, SUB_END, True) = True Then
-            is_start = False
-        Else
-            '関数の開始or終了行ではないので次行へ
+        Dim line As String: line = contents(i)
+        
+        If Common.IsCommentCode(line, Common.GetFileExtension(target_path)) = True Then
+            'コメント行なので次の行へ
+            GoTo NOT_METHOD
+        End If
+        
+        If Common.IsMatchByRegExp(line, METHOD_START, True) = True Then
+            '関数定義の開始行を発見
+            i = i + InsertCodeForMethod( _
+                        target_path, _
+                        i, _
+                        contents, _
+                        new_contents _
+                    )
+            
             GoTo CONTINUE
         End If
-        
-        '新しい配列に1行追加して、ログの行を追加する
-        If is_start = True Then
-            suffix = " START"
-        Else
-            suffix = " END"
-        End If
-        offset = 2
-        new_contents(cnt + offset) = Replace(main_param.GetInsertWord(), "＠", mehod_name & suffix)
+            
+NOT_METHOD:
+        '関数定義以外の行
+        Common.AppendArray new_contents, line
         
 CONTINUE:
-        cnt = cnt + offset
+    
     Next i
     
     '最後にファイルに出力する
     Common.CreateSJISTextFile new_contents, target_path
     
-    Common.WriteLog "InsertLog E"
+FINISH:
+    Common.WriteLog "InsertCode E"
+
 End Sub
 
+'関数にコードを挿入する
+Private Function InsertCodeForMethod( _
+    ByVal target_path As String, _
+    ByVal start As Long, _
+    ByRef contents() As String, _
+    ByRef new_contents() As String _
+) As Long
+    Common.WriteLog "InsertCodeForMethod S"
+    
+    Const METHOD_END = "End\s(Function|Sub)"
+    
+    Dim i As Long
+    Dim line As String: line = contents(start)  '解析中の行データ
+    Dim start_clm As Long   '関数定義(開始行)の桁(1始まり)
+    Dim end_clm As Long     '関数定義(終了行)の桁(1始まり)
+    Dim method_name As String: method_name = GetMethodName(line)
+    Dim cnt As Long     '解析を進めた行数。ただし開始行および追加行は含まない。
+    Dim offset As Long  '関数開始位置のオフセット行数(関数の引数が複数行の場合は2行以上になる)
+
+    '桁位置を保持
+    start_clm = Common.FindFirstCasePosition(line)
+
+    Common.AppendArray new_contents, line
+    
+    '関数開始定義の終了行を取得する
+    offset = GetMethodStartOffset(target_path, start, contents)
+    
+    If offset > 0 Then
+        For i = 0 To offset
+            Common.AppendArray new_contents, contents(start + 1 + i)
+        Next i
+    End If
+    Common.AppendArray new_contents, GetMethodStartLine(method_name)
+    
+    For i = start + offset To UBound(contents)
+        line = contents(i)
+        
+        If Common.IsCommentCode(line, Common.GetFileExtension(target_path)) = True Then
+            'コメント行なので次の行へ
+            GoTo METHOD_BODY
+        End If
+        
+        If Common.IsMatchByRegExp(line, METHOD_END, True) = True Then
+            '関数定義の終了行を発見
+            
+            '桁位置を保持
+            end_clm = Common.FindFirstCasePosition(line)
+            
+            If start_clm <> end_clm Then
+                '開始桁と異なるので次の行へ
+                GoTo METHOD_BODY
+            End If
+            
+            Common.AppendArray new_contents, GetMethodEndLine(method_name)
+            Common.AppendArray new_contents, line
+            cnt = cnt + 1
+            
+            GoTo FINISH
+        End If
+
+METHOD_BODY:
+        '関数定義の本体
+        Common.AppendArray new_contents, line
+        cnt = cnt + 1
+        
+    Next i
+
+FINISH:
+    InsertCodeForMethod = cnt
+    Common.WriteLog "InsertCodeForMethod E"
+End Function
+
+'関数開始定義の終了行を取得する
+'
+' <考え方>
+'  1." "でSplit
+'  2."Sub"があればSubモードON, "Function"があればFunctionモードON   ※このメソッドに渡す前に正規表現でヒットした文字列を渡しているので無いことは有り得ない。
+'  3.行ループ開始
+'  4.  列ループ開始
+'  4-1.  列終端に"_"があれば行ループ続行。なければ処理終了。行ループした回数を終了行とする。
+'  4-2.  "("があれば括弧カウンタ++、")"があれば括弧カウンタ--
+'  4-3.  括弧カウンタが0になった && SubモードならSubの終わりと判断し処理終了。行ループした回数を終了行とする。
+'  4-4.  括弧カウンタが0になった && FunctionモードならFunctionの引数の終わりと判断するが戻り値がある可能性があるので戻り値モードONして処理続行。
+'  4-5.  戻り値モード && " As "があれば戻り値がある。列終端に"_"がなければ処理終了。行ループした回数を終了行とする。
+'
+'  - 複数行の場合、"_"以降の列にコメントや" "は付けられない。
+'  - 複数行の場合、コメントは一切付けられない。
+'  - 引数も戻り値も無いFunctionを作成可能
+'  - 戻り値が配列の場合"()"で終わるので、Functionモード時の括弧カウンタには注意が必要。
+'  - 上記の<考え方>は正常ケースのみ(つまり正常にビルドできるコード)。
+'
+Private Function GetMethodStartOffset( _
+    ByVal target_path As String, _
+    ByVal start As Long, _
+    ByRef contents() As String _
+) As Long
+    Common.WriteLog "GetMethodStartOffset S"
+    
+    Dim r As Long
+    Dim c As Long
+    Dim line As String
+    
+    
+    For r = start To UBound(contents)
+        line = contents(i)
+        
+        If Common.IsCommentCode(line, Common.GetFileExtension(target_path)) = True Or _
+           Right(line, 1) = "_" Then
+            'コメント行 or 複数行なので次の行へ
+            GoTo CONTINUE
+        End If
+        
+        Dim tmp As String: tmp = Common.RemoveRightComment(line, Common.GetFileExtension(target_path))
+        
+        If Right(RTrim(tmp), 1) = ")" Or InStr(tmp, "As") > 0 Then
+            '関数開始定義の終了行を発見
+            GetMethodStartOffset = i
+            Common.WriteLog "GetMethodStartOffset E1"
+            Exit Function
+        End If
+
+CONTINUE:
+        
+    Next r
+
+    '関数開始定義の終了行が見つからない!
+    GetMethodStartOffset = 0
+    Common.WriteLog "GetMethodStartOffset E"
+End Function
+
+'関数開始直後に挿入するコードを作成する
+Private Function GetMethodStartLine(ByVal method_name As String) As String
+    Common.WriteLog "GetMethodStartLine S"
+    GetMethodStartLine = Replace(main_param.GetInsertWord(), "＠", method_name & " START")
+    Common.WriteLog "GetMethodStartLine E"
+End Function
+
+'関数終了直前に挿入するコードを作成する
+Private Function GetMethodEndLine(ByVal method_name As String) As String
+    Common.WriteLog "GetMethodEndLine S"
+    GetMethodEndLine = Replace(main_param.GetInsertWord(), "＠", method_name & " END")
+    Common.WriteLog "GetMethodEndLine E"
+End Function
+
+'関数名を返す
+Private Function GetMethodName(ByVal line As String) As String
+    Common.WriteLog "GetMethodName S"
+    
+    Const METHOD = "\s*(Function|Sub)\s+.*\("
+    
+    Dim list() As String
+    list = Common.GetMatchByRegExp(line, METHOD, True)
+    
+    list = Common.DeleteEmptyArray(list)
+    list = Split(list(0), " ")
+    
+    Dim last As Integer: last = UBound(list)
+    GetMethodName = Replace(list(last), "(", "")
+    
+    Common.WriteLog "GetMethodName E"
+End Function
+
+'対象ファイルを読み込んで内容を配列で返す
 Private Function GetTargetContents(ByVal path As String) As String()
     Common.WriteLog "GetTargetContents S"
     
@@ -332,17 +557,4 @@ Private Function GetTargetContents(ByVal path As String) As String()
     Common.WriteLog "GetTargetContents E"
 End Function
 
-Private Function InsertCodeForMethod( _
-    ByRef contents() As String, _
-    ByVal start_row As Long, _
-    ByVal end_row As Long _
-) As String()
-    Common.WriteLog "InsertCodeForMethod S"
 
-
-
-
-
-
-    Common.WriteLog "InsertCodeForMethod E"
-End Function
