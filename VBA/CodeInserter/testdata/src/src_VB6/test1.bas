@@ -6,6 +6,15 @@ fuga
 'End Sub
 
 Function Function0_1(ByVal arg As String) As String
+
+	Exit Function
+
+End Function
+
+Sub Sub0_1(ByVal arg As String) As String
+
+	Exit Sub
+
 End Function
 
 Function Function0_2(ByVal arg As String) As String 'hoge
@@ -73,7 +82,7 @@ Sub Sub0(ByVal arg As String. _
 
 	Dim a As Long
 	If True Then
-		End Sub
+		Exit Sub
 	End If
 
 End Sub
