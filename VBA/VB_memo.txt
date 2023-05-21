@@ -390,4 +390,16 @@ ResDecomp
 整数除算演算子　※整数同士の割り算に使う。
 Ex. 10 \ 3 = 3
 
+---------------------------------------
+■Functionの構文
+
+https://learn.microsoft.com/ja-jp/office/vba/language/reference/user-interface-help/function-statement
+
+[Public] | Private | Friend][ Static ] 関数名 [ ( arglist ) ] [ As type ]
+[ statements ]
+[ name=式 ]
+[ Exit Function ]
+[ statements ]
+[ name=式 ]
+End Function
 
