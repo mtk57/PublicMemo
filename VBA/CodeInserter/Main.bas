@@ -16,7 +16,7 @@ On Error GoTo ErrorHandler
     Dim msg As String: msg = "ê≥èÌÇ…èIóπÇµÇ‹ÇµÇΩ"
 
     If IsEnableDebugLog() = True Then
-        Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "VbCodeInserter.log"
+        Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "CodeInserter.log"
     End If
 
     Common.WriteLog "------------------------------------"
