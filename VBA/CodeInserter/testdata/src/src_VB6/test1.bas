@@ -9,6 +9,8 @@ Function Function0_1(ByVal arg As String) As String
 
 	Exit Function
 
+	Exit Function
+
 End Function
 
 Sub Sub0_1(ByVal arg As String) As String

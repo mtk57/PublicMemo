@@ -8,13 +8,18 @@ fuga
 
 Function Function0_1(ByVal arg As String) As String
 WriteLogSimple "Function0_1 START"  'for DEBUG
+
 WriteLogSimple "Function0_1 END 1"  'for DEBUG
+	Exit Function
+
+WriteLogSimple "Function0_1 END 2"  'for DEBUG
 	Exit Function
 
 WriteLogSimple "Function0_1 END"  'for DEBUG
 End Function
 Sub Sub0_1(ByVal arg As String) As String
 WriteLogSimple "Sub0_1 START"  'for DEBUG
+
 WriteLogSimple "Sub0_1 END 1"  'for DEBUG
 	Exit Sub
 
@@ -112,6 +117,7 @@ WriteLogSimple "Sub0 START"  'for DEBUG
 
 	Dim a As Long
 	If True Then
+WriteLogSimple "Sub0 END 1"  'for DEBUG
 		Exit Sub
 	End If
 
