@@ -1,9 +1,9 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.31"
+Private Const VERSION = "1.1.1"
 
-Public Declare PtrSafe Function GetPrivateProfileString Lib _
+Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
     ByVal lpApplicationName As String, _
     ByVal lpKeyName As Any, _
@@ -13,13 +13,18 @@ Public Declare PtrSafe Function GetPrivateProfileString Lib _
     ByVal lpFileName As String _
 ) As Long
 
-Public Declare PtrSafe Function WritePrivateProfileString Lib _
+Private Declare PtrSafe Function WritePrivateProfileString Lib _
     "kernel32" Alias "WritePrivateProfileStringA" ( _
     ByVal lpApplicationName As String, _
     ByVal lpKeyName As Any, _
     ByVal lpString As Any, _
     ByVal lpFileName As String _
 ) As Long
+
+Private Declare PtrSafe Sub GetLocalTime Lib _
+    "kernel32" ( _
+    lpSystemTime As SYSTEMTIME _
+)
 
 Private Type SYSTEMTIME
     wYear As Integer
@@ -31,20 +36,133 @@ Private Type SYSTEMTIME
     wSecond As Integer
     wMilliseconds As Integer
 End Type
- 
-'// 64bit版Office
-#If VBA7 Then
-    Declare PtrSafe Sub GetLocalTime Lib "kernel32" (lpSystemTime As SYSTEMTIME)
-'// 32bit版Office
-#Else
-    'Declare Sub GetLocalTime Lib "kernel32" (lpSystemTime As SYSTEMTIME)
-#End If
 
 'ログファイル番号
 Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'右のコメントを削除して返す
+' str : I : 文字列
+' ext : I : 拡張子(Ex. "bas", "vb") ※VB系のみサポート
+' Ret : コメントがあれば削除して返す。なければ元の文字列を返す
+' Ex. "abc 'def" → "abc"
+'-------------------------------------------------------------
+Public Function RemoveRightComment(ByVal str As String, ByVal ext As String) As String
+    Dim pos As Long
+    Dim ret As String
+    
+    If ext = "bas" Or _
+       ext = "frm" Or _
+       ext = "cls" Or _
+       ext = "ctl" Or _
+       ext = "vb" Then
+        pos = InStr(str, "'")
+        
+        If pos = 0 Then
+            ret = str
+        Else
+            ret = RTrim(Mid(str, 1, pos - 1))
+        End If
+    Else
+        Err.Raise 53, , "[RemoveRightComment] 指定された拡張子は未サポートです (ext=" & ext & ")"
+    End If
+    
+    RemoveRightComment = ret
+
+End Function
+
+'-------------------------------------------------------------
+'最初に見つかった英字の位置を返す
+' str : I : 文字列
+' Ret : 英字の位置(見つからない場合は0を返す)
+'-------------------------------------------------------------
+Public Function FindFirstCasePosition(ByVal str As String) As Long
+    Dim i As Long
+    Dim char As String
+    
+    For i = 1 To Len(str)
+        char = Mid(str, i, 1)
+        If char Like "[A-Za-z]" Then
+            FindFirstCasePosition = i
+            Exit Function
+        End If
+    Next i
+    
+    FindFirstCasePosition = 0
+End Function
+
+'-------------------------------------------------------------
+'コメント行かを判定する
+' line : I : 行データ
+' ext : I : 拡張子(Ex. "bas", "vb") ※VB系のみサポート
+' Ret : True/False(True=コメント行)
+'-------------------------------------------------------------
+Public Function IsCommentCode(ByVal line As String, ByVal ext As String) As Boolean
+    If line = "" Or ext = "" Then
+        IsCommentCode = False
+        Exit Function
+    End If
+    
+    If ext = "bas" Or _
+       ext = "frm" Or _
+       ext = "cls" Or _
+       ext = "ctl" Or _
+       ext = "vb" Then
+        If Left(LTrim(line), 1) = "'" Or _
+           Left(LTrim(line), 4) = "REM " Then
+           IsCommentCode = True
+           Exit Function
+        End If
+    Else
+        Err.Raise 53, , "[IsCommentCode] 指定された拡張子は未サポートです (ext=" & ext & ")"
+    End If
+    
+    IsCommentCode = False
+
+End Function
+
+'-------------------------------------------------------------
+'フォルダパスに指定フォルダ名があるかチェックし、あればそのフォルダまでのパスを返す
+' path : I : フォルダパス(絶対パス)
+' keyword : I : キーワード
+' Ret : キーワードまでのパス(キーワードが見つからない場合は空を返す)
+'-------------------------------------------------------------
+Public Function GetFolderPathByKeyword( _
+    path As String, _
+    keyword As String _
+) As String
+    If path = "" Or keyword = "" Then
+        GetFolderPathByKeyword = ""
+        Exit Function
+    End If
+
+    Dim SEP As String: SEP = Application.PathSeparator
+    Dim path_ary() As String
+    Dim ret_ary() As String
+    Dim i As Integer
+    Dim j As Integer
+    
+    path_ary = Split(path, SEP)
+
+    For i = UBound(path_ary) To 0 Step -1
+        If path_ary(i) = keyword Then
+        
+            ReDim Preserve ret_ary(i)
+            
+            For j = LBound(ret_ary) To UBound(ret_ary)
+                ret_ary(j) = path_ary(j)
+            Next j
+        
+            GetFolderPathByKeyword = Join(ret_ary, SEP)
+            Exit Function
+        End If
+    Next i
+    
+    GetFolderPathByKeyword = ""
+End Function
 
 '-------------------------------------------------------------
 'フォルダパスから最後のフォルダ名を返す
@@ -79,11 +197,47 @@ Public Function ChangeUniqueDirPath(ByVal path As String) As String
 End Function
 
 '-------------------------------------------------------------
+'正規表現でパターンマッチングした結果を返す
+' test_str : I : 対象文字列
+' ptn : I : 検索パターン
+' is_ignore_case : I : 大文字小文字を区別するか(True=する)
+' Ret : マッチした文字列リスト
+' Note:
+'  - 参照設定に以下を追加する
+'    Microsoft VBScript Regular Expression 5.5
+'-------------------------------------------------------------
+Public Function GetMatchByRegExp( _
+    ByVal test_str As String, _
+    ByVal ptn As String, _
+    ByVal is_ignore_case As Boolean _
+) As String()
+    Dim reg As New VBScript_RegExp_55.RegExp
+    Dim mc As MatchCollection
+    Dim m As Match
+    Dim list() As String
+    ReDim list(0)
+    
+    reg.Global = True
+    reg.ignoreCase = is_ignore_case
+    reg.Pattern = ptn
+    
+    Set mc = reg.Execute(test_str)
+    For Each m In mc
+        Common.AppendArray list, m.value
+    Next
+    
+    GetMatchByRegExp = list
+End Function
+
+'-------------------------------------------------------------
 '正規表現でパターンマッチングを行う
 ' test_str : I : 対象文字列
 ' ptn : I : 検索パターン
 ' is_ignore_case : I : 大文字小文字を区別するか(True=する)
 ' Ret : True/False (True=一致)
+' Note:
+'  - 参照設定に以下を追加する
+'    Microsoft VBScript Regular Expression 5.5
 '-------------------------------------------------------------
 Public Function IsMatchByRegExp( _
     ByVal test_str As String, _
@@ -1232,9 +1386,14 @@ End Function
 ' value : IN : 追加する文字列
 '-------------------------------------------------------------
 Public Sub AppendArray(ByRef ary() As String, ByVal value As String)
-    Dim cnt As Integer: cnt = UBound(ary) + 1
-    ReDim Preserve ary(cnt)
-    ary(cnt) = value
+    If IsEmptyArray(ary) = True Then
+        ReDim Preserve ary(0)
+        ary(0) = value
+    Else
+        Dim cnt As Integer: cnt = UBound(ary) + 1
+        ReDim Preserve ary(cnt)
+        ary(cnt) = value
+    End If
 End Sub
 
 '-------------------------------------------------------------
@@ -1748,7 +1907,7 @@ Public Function ReadTextFileBySJIS(ByVal path As String) As String
     'ワークファイルを削除する
     DeleteFile wk
     
-    ReadTextFileBySJIS = contents
+    ReadTextFileBySJIS = RTrim(contents)
 End Function
 
 '-------------------------------------------------------------
