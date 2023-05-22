@@ -20,6 +20,7 @@ WriteLogSimple "Function0_1 END 2"  'for DEBUG
 
 WriteLogSimple "Function0_1 END"  'for DEBUG
 End Function
+
 Sub Sub0_1(ByVal arg As String) As String
 WriteLogSimple "Sub0_1 START"  'for DEBUG
 
@@ -28,10 +29,12 @@ WriteLogSimple "Sub0_1 END 1"  'for DEBUG
 
 WriteLogSimple "Sub0_1 END"  'for DEBUG
 End Function
+
 Function Function0_2(ByVal arg As String) As String 'hoge
 WriteLogSimple "Function0_2 START"  'for DEBUG
 WriteLogSimple "Function0_2 END"  'for DEBUG
 End Function
+
 Function Function0_3(ByVal arg As String _
 ) As String 'hoge
 WriteLogSimple "Function0_3 START"  'for DEBUG
@@ -80,6 +83,7 @@ Function Function0_10()
 WriteLogSimple "Function0_10 START"  'for DEBUG
 WriteLogSimple "Function0_10 END"  'for DEBUG
 End Function
+
 Function Function0_10( _
 )
 WriteLogSimple "Function0_10 START"  'for DEBUG
@@ -98,10 +102,12 @@ Sub Sub0_1(ByVal arg As String)
 WriteLogSimple "Sub0_1 START"  'for DEBUG
 WriteLogSimple "Sub0_1 END"  'for DEBUG
 End Sub
+
 Sub Sub0_2(ByVal arg As String)	'hoge
 WriteLogSimple "Sub0_2 START"  'for DEBUG
 WriteLogSimple "Sub0_2 END"  'for DEBUG
 End Sub
+
 Sub Sub0_3(ByVal arg As String _
 )
 WriteLogSimple "Sub0_3 START"  'for DEBUG
@@ -131,25 +137,31 @@ Sub Sub1()
 WriteLogSimple "Sub1 START"  'for DEBUG
 WriteLogSimple "Sub1 END"  'for DEBUG
 End Sub
+
 Private Sub Sub2()
 WriteLogSimple "Sub2 START"  'for DEBUG
 WriteLogSimple "Sub2 END"  'for DEBUG
 End Sub
+
 Public Sub Sub3()
 WriteLogSimple "Sub3 START"  'for DEBUG
 WriteLogSimple "Sub3 END"  'for DEBUG
 End Sub
+
 Public Sub Sub4(ByVal arg As String)
 WriteLogSimple "Sub4 START"  'for DEBUG
 WriteLogSimple "Sub4 END"  'for DEBUG
 End Sub
+
 Public Sub Sub5(arg As String)
 WriteLogSimple "Sub5 START"  'for DEBUG
 WriteLogSimple "Sub5 END"  'for DEBUG
 End Sub
+
 Public Sub Sub6(arg)
 WriteLogSimple "Sub6 START"  'for DEBUG
 WriteLogSimple "Sub6 END"  'for DEBUG
 End Sub
+
 
 
