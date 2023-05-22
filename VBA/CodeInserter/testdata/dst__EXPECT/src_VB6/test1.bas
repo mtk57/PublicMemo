@@ -1,4 +1,3 @@
-
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
 ) As Long
