@@ -344,7 +344,7 @@ Private Sub InsertCode(ByVal target_path As String)
                         i, _
                         contents, _
                         new_contents _
-                    )
+                    ) - 1
             
             GoTo CONTINUE
         End If
@@ -374,8 +374,9 @@ Private Function InsertCodeForMethod( _
 ) As Long
     Common.WriteLog "InsertCodeForMethod S"
     
-    Const METHOD_END = "End\s(Function|Sub)"
-    Const METHOD_EXIT = "Exit\s(Function|Sub)"
+    Const METHOD_END = "End\s(Function|Sub)$"
+    Const METHOD_EXIT = "Exit\s(Function|Sub)$"
+    Const METHOD_APP_END = "^(\t|\s)*\bEnd$"
     
     Dim i As Long
     Dim line As String: line = contents(start)  '解析中の行データ
@@ -383,6 +384,7 @@ Private Function InsertCodeForMethod( _
     Dim cnt As Long     '解析を進めた行数。ただし開始行および追加行は含まない。
     Dim offset As Long  '関数開始位置のオフセット行数(関数の引数が複数行の場合は2行以上になる)
     Dim seq As Long: seq = 1    '関数途中終了時を区別するための連番
+    Dim ext As String: ext = Common.GetFileExtension(target_path)
 
     Common.AppendArray new_contents, line
     cnt = cnt + 1
@@ -394,19 +396,23 @@ Private Function InsertCodeForMethod( _
         For i = 0 To offset - 1
             Common.AppendArray new_contents, contents(start + i + 1)
         Next i
-        cnt = cnt + offset - 1
+        cnt = cnt + 1 + offset - 1
     End If
     Common.AppendArray new_contents, GetMethodStartLine(method_name)
     
     For i = start + offset + 1 To UBound(contents)
         line = contents(i)
         
-        If Common.IsCommentCode(line, Common.GetFileExtension(target_path)) = True Then
+        If Common.IsCommentCode(line, ext) = True Then
             'コメント行なので次の行へ
             GoTo METHOD_BODY
         End If
         
-        If Common.IsMatchByRegExp(line, METHOD_EXIT, True) = True Then
+        '右コメントを除去しておく
+        Dim del_comment_line As String: del_comment_line = Common.RemoveRightComment(line, ext)
+        
+        If Common.IsMatchByRegExp(del_comment_line, METHOD_APP_END, True) = True Or _
+           Common.IsMatchByRegExp(del_comment_line, METHOD_EXIT, True) = True Then
             '関数の途中終了行を発見
             
             Common.AppendArray new_contents, GetMethodExitLine(method_name, seq)
@@ -418,7 +424,7 @@ Private Function InsertCodeForMethod( _
             GoTo CONTINUE
         End If
         
-        If Common.IsMatchByRegExp(line, METHOD_END, True) = True Then
+        If Common.IsMatchByRegExp(del_comment_line, METHOD_END, True) = True Then
             '関数定義の終了行を発見
             
             Common.AppendArray new_contents, GetMethodEndLine(method_name)
