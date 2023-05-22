@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.1.0"
+Private Const VERSION = "1.1.1"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -1386,9 +1386,14 @@ End Function
 ' value : IN : 追加する文字列
 '-------------------------------------------------------------
 Public Sub AppendArray(ByRef ary() As String, ByVal value As String)
-    Dim cnt As Integer: cnt = UBound(ary) + 1
-    ReDim Preserve ary(cnt)
-    ary(cnt) = value
+    If IsEmptyArray(ary) = True Then
+        ReDim Preserve ary(0)
+        ary(0) = value
+    Else
+        Dim cnt As Integer: cnt = UBound(ary) + 1
+        ReDim Preserve ary(cnt)
+        ary(cnt) = value
+    End If
 End Sub
 
 '-------------------------------------------------------------
@@ -1902,7 +1907,7 @@ Public Function ReadTextFileBySJIS(ByVal path As String) As String
     'ワークファイルを削除する
     DeleteFile wk
     
-    ReadTextFileBySJIS = contents
+    ReadTextFileBySJIS = RTrim(contents)
 End Function
 
 '-------------------------------------------------------------

@@ -320,7 +320,6 @@ Private Sub InsertCode(ByVal target_path As String)
     Const METHOD_START = "(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+.*"
 
     Dim new_contents() As String
-    ReDim new_contents(0)
     Dim i As Long
  
     For i = LBound(contents) To UBound(contents)
