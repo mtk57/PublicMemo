@@ -11,5 +11,5 @@
 
 
 C:\_git\PublicMemo\VBA\WithParser\testdata\src\with_sample.bas(2,4)  [UTF-8]:     With MyObject 
-C:\_git\PublicMemo\VBA\WithParser\testdata\src\with_sample.bas(5,5)  [UTF-8]:      With .Font 
+C:\_git\PublicMemo\VBA\WithParser\testdata\src\with_sample.bas(8,5)  [UTF-8]:      With .Font 
 2 個が検索されました。
