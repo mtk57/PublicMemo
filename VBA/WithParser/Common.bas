@@ -44,6 +44,32 @@ Private is_log_opened As Boolean
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
 
 '-------------------------------------------------------------
+'String配列を昇順ソートして重複行を削除して返す
+' arr : I : 配列
+' Ret : 昇順ソートして重複行を削除した配列
+'-------------------------------------------------------------
+Public Function SortAndDistinctArray(ByRef arr() As String) As String()
+    Dim dict As Object
+    Set dict = CreateObject("Scripting.Dictionary")
+    Dim i As Long
+    For i = LBound(arr) To UBound(arr)
+        If Not dict.Exists(arr(i)) Then
+            dict.Add arr(i), 1
+        End If
+    Next i
+    Dim result() As String
+    ReDim result(0 To dict.count - 1)
+    Dim key As Variant
+    i = 0
+    For Each key In dict.Keys()
+        result(i) = key
+        i = i + 1
+    Next key
+    Set dict = Nothing
+    SortAndDistinctArray = result
+End Function
+
+'-------------------------------------------------------------
 '右のコメントを削除して返す
 ' str : I : 文字列
 ' ext : I : 拡張子(Ex. "bas", "vb") ※VB系のみサポート
