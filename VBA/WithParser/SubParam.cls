@@ -51,6 +51,8 @@ Private Sub CollectParam()
             If empty_row_cnt >= LIMIT_EMPTY_ROWS Then
                 Exit Do
             End If
+            
+            GoTo CONTINUE
         Else
             is_before_empty_row = False
         End If
@@ -58,6 +60,7 @@ Private Sub CollectParam()
         ReDim Preserve grep_results(i)
         grep_results(i) = line
         
+CONTINUE:
         i = i + 1
     Loop
 End Sub
