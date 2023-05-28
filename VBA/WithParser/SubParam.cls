@@ -78,13 +78,13 @@ Public Function GetGrepResults() As String()
     GetGrepResults = grep_results
 End Function
 
-Public Function GetGrepResultsCount() As Integer
+Public Function GetGrepResultsCount() As Long
     If Common.IsEmptyArray(grep_results) = True Then
         GetGrepResultsCount = 0
         Exit Function
     End If
     
-    Dim cnt As Integer: cnt = UBound(grep_results)
+    Dim cnt As Long: cnt = UBound(grep_results)
     cnt = cnt + 1
     GetGrepResultsCount = cnt
 End Function

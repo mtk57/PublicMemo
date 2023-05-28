@@ -104,8 +104,20 @@ Private Sub ParseCode( _
     'With～End Withまでのコードを取得する
     GetWithCodes result
 
+    If result.GetWithCodesCount() = 0 Then
+        'Withは検出したがEnd Withが検出出来なかった場合(桁位置がズレている可能性大)
+        Common.WriteLog "ParseCode E1"
+        Exit Sub
+    End If
+
     '1行ずつパースして、結果オブジェクトを作成する
     ParseWithCode result
+    
+    If result.GetWithMembersCount() = 0 Then
+        'With～End Withは検出したがメソッド・プロパティが未使用の場合
+        Common.WriteLog "ParseCode E2"
+        Exit Sub
+    End If
     
     ReDim Preserve results(result_cnt)
     Set results(result_cnt) = result
@@ -129,6 +141,7 @@ Private Sub GetWithCodes( _
     Dim ext As String: ext = result.GetExtension()
     Dim is_find As Boolean: is_find = False
     Dim clm_wk As Long
+    Dim first_clm As Long: first_clm = 0
     Dim is_ignore As Boolean: is_ignore = False
     
     'ファイルパスのファイルを開く
@@ -151,7 +164,13 @@ Private Sub GetWithCodes( _
             'Withを検出
             
             clm_wk = Common.FindFirstCasePosition(line)
-            If clm_wk <> result.GetClmNum() + 1 Then
+            
+            If first_clm = 0 Then
+                '最初に検出したWithの桁位置を保持しておく
+                first_clm = clm_wk
+            End If
+            
+            If clm_wk <> first_clm Then
                 '入れ子のWithを検出したので無視
                 is_ignore = True
                 GoTo CONTINUE
@@ -168,7 +187,7 @@ Private Sub GetWithCodes( _
             End If
         
             clm_wk = Common.FindFirstCasePosition(line)
-            If clm_wk = result.GetClmNum() + 1 Then
+            If clm_wk = first_clm Then
                 'Grep結果のWithに対応するEnd Withを発見したので終了
                 ReDim Preserve with_codes(cnt)
                 with_codes(cnt) = line
@@ -195,7 +214,20 @@ CONTINUE:
     Next i
     
     If is_find = False Then
-        Err.Raise 53, , "Grep結果のWithに対応するEnd Withが見つかりません (target=" & result.GetTarget() & ")"
+        Dim err_msg As String
+    
+        err_msg = "Grep結果のWithに対応するEnd Withが見つかりません (target=" & result.GetTarget() & ")"
+    
+        If Common.ShowYesNoMessageBox( _
+            "[GetWithCodes]でエラーが発生しました。処理を続行しますか?" & vbCrLf & _
+            "err_msg=" & err_msg _
+            ) = False Then
+            Err.Raise 53, , "[GetWithCodes] エラー! (err_msg=" & err_msg & ")"
+        End If
+        
+        Common.WriteLog err_msg
+        Common.WriteLog "GetWithCodes E1"
+        Exit Sub
     End If
     
     result.SetWithCodes with_codes
@@ -209,9 +241,10 @@ Private Sub ParseWithCode( _
 )
     Common.WriteLog "ParseWithCode S"
     
-    Const MEMBER = "\.[a-zA-Z][a-zA-Z0-9_]*"
+    Const MEMBER = "(\s|\()\.[a-zA-Z][a-zA-Z0-9_]*"
     
     Dim i As Long
+    Dim j As Long
     Dim with_codes() As String
     Dim with_class As String
     Dim temp_ary() As String
@@ -222,6 +255,8 @@ Private Sub ParseWithCode( _
     
     For i = 0 To UBound(with_codes)
         line = with_codes(i)
+        
+        Common.WriteLog "[" & i & "]=" & line
         
         If i = 0 Then
             with_class = Trim(Replace(line, "With", ""))
@@ -234,11 +269,20 @@ Private Sub ParseWithCode( _
             GoTo CONTINUE
         End If
         
+        For j = 0 To UBound(temp_ary)
+            temp_ary(j) = Replace(Trim(temp_ary(j)), "(", "")
+        Next j
+        
         with_members = Common.MergeArray(with_members, temp_ary)
     
 CONTINUE:
     
     Next i
+    
+    If Common.IsEmptyArray(with_members) = True Then
+        Common.WriteLog "ParseWithCode E1"
+        Exit Sub
+    End If
     
     result.SetWithClass with_class
     result.SetWithMembers Common.SortAndDistinctArray(Common.DeleteEmptyArray(with_members))
@@ -249,6 +293,11 @@ End Sub
 'シートに結果を出力する
 Private Sub OutputSheet()
     Common.WriteLog "OutputSheet S"
+    
+    If Common.IsEmptyArray(results) = True Then
+        Common.WriteLog "OutputSheet E1"
+        Exit Sub
+    End If
     
     'シートを追加
     Dim sheet_name As String: sheet_name = Common.GetNowTimeString()
@@ -278,6 +327,10 @@ Private Sub OutputSheet()
     For i = 0 To UBound(results)
         Set result = results(i)
         
+        If result.GetWithMembersCount() = 0 Then
+            GoTo CONTINUE
+        End If
+        
         '結果オブジェクトの内容を記載
         members = result.GetWithMembers()
         
@@ -304,6 +357,7 @@ Private Sub OutputSheet()
         
         offset_row = offset_row + UBound(members)
         
+CONTINUE:
     Next i
     
     Common.WriteLog "OutputSheet E"

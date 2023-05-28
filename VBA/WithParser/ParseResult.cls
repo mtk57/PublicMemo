@@ -147,12 +147,34 @@ Public Function GetWithCodes() As String()
     GetWithCodes = with_codes
 End Function
 
+Public Function GetWithCodesCount() As Long
+    If Common.IsEmptyArray(with_codes) = True Then
+        GetWithCodesCount = 0
+        Exit Function
+    End If
+    
+    Dim cnt As Long: cnt = UBound(with_codes)
+    cnt = cnt + 1
+    GetWithCodesCount = cnt
+End Function
+
 Public Function GetWithClass() As String
     GetWithClass = with_class
 End Function
 
 Public Function GetWithMembers() As String()
     GetWithMembers = with_members
+End Function
+
+Public Function GetWithMembersCount() As Long
+    If Common.IsEmptyArray(with_members) = True Then
+        GetWithMembersCount = 0
+        Exit Function
+    End If
+    
+    Dim cnt As Long: cnt = UBound(with_members)
+    cnt = cnt + 1
+    GetWithMembersCount = cnt
 End Function
 
 '--------------------
