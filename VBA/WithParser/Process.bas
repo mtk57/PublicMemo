@@ -261,8 +261,9 @@ Private Sub OutputSheet()
     
     '列名を追加
     ws.Range("A3").value = "GREP結果"
-    ws.Range("B3").value = "クラス"
-    ws.Range("C3").value = "メソッド/プロパティ"
+    ws.Range("B3").value = "ファイルパス"
+    ws.Range("C3").value = "クラス"
+    ws.Range("D3").value = "メソッド/プロパティ"
     
     
     Const START_ROW = 4
@@ -278,13 +279,27 @@ Private Sub OutputSheet()
         Set result = results(i)
         
         '結果オブジェクトの内容を記載
-        ws.Cells(row + i + offset_row, 1).value = result.GetTarget()
-        ws.Cells(row + i + offset_row, 2).value = result.GetWithClass()
-        
         members = result.GetWithMembers()
         
         For j = 0 To UBound(members)
-            ws.Cells(row + i + offset_row + j, 3).value = members(j)
+            
+            If j = 0 Then
+                ws.Cells(row + i + offset_row + j, 1).Font.Color = RGB(0, 0, 0)
+                ws.Cells(row + i + offset_row + j, 2).Font.Color = RGB(0, 0, 0)
+                ws.Cells(row + i + offset_row + j, 3).Font.Color = RGB(0, 0, 0)
+                ws.Cells(row + i + offset_row + j, 4).Font.Color = RGB(0, 0, 0)
+            Else
+                ws.Cells(row + i + offset_row + j, 1).Font.Color = RGB(192, 192, 192)
+                ws.Cells(row + i + offset_row + j, 2).Font.Color = RGB(192, 192, 192)
+                ws.Cells(row + i + offset_row + j, 3).Font.Color = RGB(192, 192, 192)
+                ws.Cells(row + i + offset_row + j, 4).Font.Color = RGB(0, 0, 0)
+            End If
+        
+            ws.Cells(row + i + offset_row + j, 1).value = result.GetTarget()
+            ws.Cells(row + i + offset_row + j, 2).value = result.GetFilePath()
+            ws.Cells(row + i + offset_row + j, 3).value = result.GetWithClass()
+            ws.Cells(row + i + offset_row + j, 4).value = members(j)
+
         Next j
         
         offset_row = offset_row + UBound(members)
