@@ -81,7 +81,7 @@ Private Sub ParseForSakura()
     pos_wk = Mid(path_wk, InStrRev(path_wk, "("), Len(path_wk))
     
     '行・列を取得
-    pos_list = Common.DeleteEmptyArray(Common.GetMatchByRegExp(pos_wk, "\d", True))
+    pos_list = Common.DeleteEmptyArray(Common.GetMatchByRegExp(pos_wk, "\d*", True))
     If UBound(pos_list) < 1 Then
         Err.Raise 53, , "GREP結果の行列フォーマットが不正です (target=" & target & ")"
     End If
