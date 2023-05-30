@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.1.1"
+Private Const VERSION = "1.1.2"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -44,6 +44,54 @@ Private is_log_opened As Boolean
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
 
 '-------------------------------------------------------------
+'フォルダが空かどうかを返す
+' path : I : フォルダパス(絶対パス)
+' Ret : True/False (True=空, False=空では無い)
+'-------------------------------------------------------------
+Public Function IsEmptyFolder(ByVal path As String) As Boolean
+    If IsExistsFolder(path) = False Then
+        Err.Raise 53, , "[IsEmptyFolder] 指定されたフォルダが存在しません (path=" & path & ")"
+    End If
+    
+    Dim fso As Object
+    Dim folder As Object
+    
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set folder = fso.GetFolder(path)
+    
+    IsEmptyFolder = folder.files.count = 0 And folder.SubFolders.count = 0
+    
+    Set fso = Nothing
+    Set folder = Nothing
+End Function
+
+'-------------------------------------------------------------
+'String配列を昇順ソートして重複行を削除して返す
+' arr : I : 配列
+' Ret : 昇順ソートして重複行を削除した配列
+'-------------------------------------------------------------
+Public Function SortAndDistinctArray(ByRef arr() As String) As String()
+    Dim dict As Object
+    Set dict = CreateObject("Scripting.Dictionary")
+    Dim i As Long
+    For i = LBound(arr) To UBound(arr)
+        If Not dict.Exists(arr(i)) Then
+            dict.Add arr(i), 1
+        End If
+    Next i
+    Dim result() As String
+    ReDim result(0 To dict.count - 1)
+    Dim key As Variant
+    i = 0
+    For Each key In dict.Keys()
+        result(i) = key
+        i = i + 1
+    Next key
+    Set dict = Nothing
+    SortAndDistinctArray = result
+End Function
+
+'-------------------------------------------------------------
 '右のコメントを削除して返す
 ' str : I : 文字列
 ' ext : I : 拡張子(Ex. "bas", "vb") ※VB系のみサポート
@@ -70,7 +118,7 @@ Public Function RemoveRightComment(ByVal str As String, ByVal ext As String) As 
         Err.Raise 53, , "[RemoveRightComment] 指定された拡張子は未サポートです (ext=" & ext & ")"
     End If
     
-    RemoveRightComment = ret
+    RemoveRightComment = RTrim(ret)
 
 End Function
 
@@ -2044,5 +2092,7 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
+
 
 

@@ -135,11 +135,24 @@ End Sub
 Private Sub DeleteDestFolder()
     Common.WriteLog "DeleteDestFolder S"
 
-    If Common.IsExistsFolder(main_param.GetDestDirPath()) = True Then
-        Common.DeleteFolder main_param.GetDestDirPath()
+    Dim dst_path As String: dst_path = main_param.GetDestDirPath()
+
+    If Common.IsExistsFolder(dst_path) = True And _
+       Common.IsEmptyFolder(dst_path) = False Then
+        If Common.ShowYesNoMessageBox( _
+            "コピー先フォルダが空ではありません。" & vbCrLf & _
+            "処理を続けますか？" & vbCrLf & _
+            "（続けるとフォルダは削除されます!）" _
+            ) = False Then
+            Err.Raise 53, , "コピー先フォルダが空では無いので処理をキャンセルしました。(" & dst_path & ")"
+        End If
+    End If
+
+    If Common.IsExistsFolder(dst_path) = True Then
+        Common.DeleteFolder dst_path
     End If
     
-    Common.CreateFolder main_param.GetDestDirPath()
+    Common.CreateFolder dst_path
 
     Common.WriteLog "DeleteDestFolder E"
 End Sub
