@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.1.2"
+Private Const VERSION = "1.1.3"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -42,6 +42,28 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'フォルダが空かどうかを返す
+' path : I : フォルダパス(絶対パス)
+' Ret : True/False (True=空, False=空では無い)
+'-------------------------------------------------------------
+Public Function IsEmptyFolder(ByVal path As String) As Boolean
+    If IsExistsFolder(path) = False Then
+        Err.Raise 53, , "[IsEmptyFolder] 指定されたフォルダが存在しません (path=" & path & ")"
+    End If
+    
+    Dim fso As Object
+    Dim folder As Object
+    
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set folder = fso.GetFolder(path)
+    
+    IsEmptyFolder = folder.files.count = 0 And folder.SubFolders.count = 0
+    
+    Set fso = Nothing
+    Set folder = Nothing
+End Function
 
 '-------------------------------------------------------------
 'String配列を昇順ソートして重複行を削除して返す
@@ -239,13 +261,13 @@ Public Function GetMatchByRegExp( _
 ) As String()
     Dim reg As New VBScript_RegExp_55.RegExp
     Dim mc As MatchCollection
-    Dim m As match
+    Dim m As Match
     Dim list() As String
     ReDim list(0)
     
     reg.Global = True
     reg.ignoreCase = is_ignore_case
-    reg.pattern = ptn
+    reg.Pattern = ptn
     
     Set mc = reg.Execute(test_str)
     For Each m In mc
@@ -273,7 +295,7 @@ Public Function IsMatchByRegExp( _
     Dim reg As New VBScript_RegExp_55.RegExp
     reg.Global = True
     reg.ignoreCase = is_ignore_case
-    reg.pattern = ptn
+    reg.Pattern = ptn
     
     IsMatchByRegExp = reg.Test(test_str)
 End Function
@@ -2070,5 +2092,7 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
+
 
 
