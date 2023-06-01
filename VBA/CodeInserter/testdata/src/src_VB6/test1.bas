@@ -8,6 +8,7 @@ Private Declare PtrSafe Function GetPrivateProfileString Lib "kernel32" Alias "G
 'Sub Sub0()
 'End Sub
 
+'Function Function0_1(ByVal arg As String) As String
 Function Function0_1(ByVal arg As String) As String
 
 	Exit Function
