@@ -11,13 +11,13 @@ Option Explicit
 
 'メンバー変数
 
-Private is_enable As String
+Private enable As String
 Private type_vb6 As String
 Private property_vb6 As String
 Private type_vbnet As String
 Private property_vbnet As String
 Private value_vbnet As String
-Private is_apply_twips_per_pixel As bool
+Private is_apply_twips_per_pixel As Boolean
 Private is_apply_twips_per_pixel_s As String
 
 Private Const CLM_ = "L"
@@ -25,7 +25,7 @@ Private Const ROW_ = 7
 
 'コンストラクタ
 Private Sub Class_Initialize()
-    is_enable = ""
+    enable = ""
     type_vb6 = ""
     property_vb6 = ""
     type_vbnet = ""
@@ -39,7 +39,7 @@ Public Sub Init(ByVal row As Long)
     Dim sub_sheet As Worksheet
     Set sub_sheet = ThisWorkbook.Sheets("sub")
 
-    is_enable = sub_sheet.Range("B" & row).value
+    enable = sub_sheet.Range("B" & row).value
     type_vb6 = sub_sheet.Range("C" & row).value
     property_vb6 = sub_sheet.Range("D" & row).value
     type_vbnet = sub_sheet.Range("E" & row).value
@@ -50,16 +50,16 @@ End Sub
 
 '検証
 Public Sub Validate()
-    If is_enable = "" Or _
-       is_enable = "Stopper" Then
-       is_enable = "Stopper"
-    ElseIf is_enable = "Enable" Then
-        is_enable = "Enable"
+    If enable = "" Or _
+       enable = "Stopper" Then
+       enable = "Stopper"
+    ElseIf enable = "Enable" Then
+        enable = "Enable"
     Else
-        is_enable = "Disable"
+        enable = "Disable"
     End If
 
-    If is_enable = "Disable" Or is_enable = "Stopper" Then
+    If enable = "Disable" Or enable = "Stopper" Then
         Exit Sub
     End If
 
@@ -95,8 +95,8 @@ End Sub
 '=========================================
 'Getter
 '=========================================
-Public Function GetIsEnable() As String
-    GetIsEnable = is_enable
+Public Function GetEnable() As String
+    GetEnable = enable
 End Function
 
 Public Function GetTypeVB6() As String
@@ -123,33 +123,17 @@ Public Function GetIsApplyTwipsPerPixel() As Boolean
     GetIsApplyTwipsPerPixel = is_apply_twips_per_pixel
 End Function
 
-'=========================================
-'Setter
-'=========================================
-Public Sub SetIsEnable(ByVal val As String)
-    is_enable = val
-End Sub
+Public Function GetAllValue() As String
+    Dim ret As String
+    
+    ret = "[Sub Param] " & _
+          "enable=(" & enable & "), " & _
+          "type_vb6=(" & type_vb6 & "), " & _
+          "property_vb6=(" & property_vb6 & "), " & _
+          "type_vbnet=(" & type_vbnet & "), " & _
+          "property_vbnet=(" & property_vbnet & "), " & _
+          "value_vbnet=(" & value_vbnet & "), " & _
+          "is_apply_twips_per_pixel=(" & is_apply_twips_per_pixel_s & ")"
 
-Public Sub SetTypeVB6(ByVal val As String)
-    type_vb6 = val
-End Sub
-
-Public Sub SetPropertyVB6(ByVal val As String)
-    property_vb6 = val
-End Sub
-
-Public Sub SetTypeVBdotNet(ByVal val As String)
-    type_vbnet = val
-End Sub
-
-Public Sub SetPropertyVBdotNet(ByVal val As String)
-    property_vbnet = val
-End Sub
-
-Public Sub SetValueVBdotNet(ByVal val As String)
-    value_vbnet = val
-End Sub
-
-Public Sub SetIsApplyTwipsPerPixel(ByVal val As Boolean)
-    is_apply_twips_per_pixel = val
-End Sub
+    GetAllValue = ret
+End Function
