@@ -1,0 +1,54 @@
+										
+	テストデータ									
+	VERSION 5.00									
+	Begin VB.Form Form1									
+	  BeginProperty Pics									
+	    BeginProperty Pic									
+	      Name = "Pic1"									
+	    EndProperty									
+	    Name = "Pics"									
+	  EndProperty									
+	  Name = "Form1"									
+	  Begin Frame Parent									
+	    Name = "P"									
+	    Begin VB.Button Btn1									
+	      Name = "B1"									
+	      BeginProperty Child									
+	        Name = "Child"									
+	      EndProperty									
+	    End									
+	  End									
+	  Terminator = "owari"									
+	End									
+										
+	探索ロジック									
+	メンドイのEndの検知は無視する									
+	再帰用メソッド(階層名、結合パス)									
+		現在の階層にあるプロパティ(Key = Value)を列挙して、結合パスの末尾にデリミタ付きで結合する								→別関数
+		現在の階層にあるサブ階層("Begin" or "BeginProperty"で始まる)を列挙する。								→別関数
+										
+		列挙したサブ階層数分ループ								
+			再帰用メソッド(階層名、結合パス)							
+										
+										
+										
+	これにより以下のようなパス一覧が出来る									
+	VB.Form Form1/Name = "Form1"									
+	VB.Form Form1/Terminator = "owari"									
+	VB.Form Form1/Pics/Name = "Pics"									
+	VB.Form Form1/Pics/Pic/Name = "Pic1"									
+	VB.Form Form1/Frame Parent/Name = "P"									
+	VB.Form Form1/Frame Parent/VB.Button Btn1/Name = "B1"									
+	VB.Form Form1/Frame Parent/VB.Button Btn1/Child/Name = "Child"									
+										
+	あとは"/"で分解して、シートに書いて、灰色にする。									
+	末尾のプロパティは縦に全て並べたいので最後に"="で分解して列を移動する。									
+										
+	最終結果イメージ									
+	VB.Form Form1				Name	"Form1"				
+	VB.Form Form1				Terminator	"owari"				
+	VB.Form Form1	Pics			Name	"Pics"				
+	VB.Form Form1	Pics	Pic		Name	"Pic1"				
+	VB.Form Form1	Frame Parent			Name	"P"				
+	VB.Form Form1	Frame Parent	VB.Button Btn1		Name	"B1"				
+	VB.Form Form1	Frame Parent	VB.Button Btn1	Child	Name	"Child"				
