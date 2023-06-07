@@ -403,3 +403,26 @@ https://learn.microsoft.com/ja-jp/office/vba/language/reference/user-interface-h
 [ name=式 ]
 End Function
 
+---------------------------------------
+■再帰コード例
+Sub RecursivelySearchFolder(ByVal sRootFolder As String)
+    ' ルートフォルダのファイルとサブフォルダを取得する
+    Dim fso As New Scripting.FileSystemObject
+    Dim ds As Scripting.Directory
+    Set ds = fso.GetFolder(sRootFolder)
+
+    ' ファイルとサブフォルダをループで処理する
+    For Each f In ds.Files
+        ' ファイル名を出力する
+        Debug.Print f.Name
+    Next
+
+    For Each d In ds.SubFolders
+        ' サブフォルダ名を出力する
+        Debug.Print d.Name
+        ' サブフォルダを再帰的に探索する
+        RecursivelySearchFolder d.Path
+    Next
+End Sub
+
+
