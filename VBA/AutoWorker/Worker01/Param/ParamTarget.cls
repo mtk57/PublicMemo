@@ -12,6 +12,8 @@ Option Explicit
 Private HEADER As String
 
 'メンバー変数
+Private proc_type As PROCESS_TYPE
+
 Private is_enable As Boolean
 Private is_enable_s As String
 Private vbprj_file_path As String
@@ -28,6 +30,7 @@ Private tag As String
 Private Sub Class_Initialize()
     HEADER = "[Target Param] "
     
+    proc_type = UNKNOWN
     is_enable = False
     vbprj_file_path = ""
     lot = ""
@@ -76,12 +79,21 @@ Public Sub Validate(ByVal row As Integer)
         is_enable = False
     End If
 
-    If vbprj_file_path = "" Then
-        Err.Raise 53, , HEADER & "VBプロジェクトファイルが指定されていません(row=" & row & ")"
+    If is_enable = False Then
+        Exit Sub
     End If
+
+    If proc_type <> PROCESS_TYPE.DELETE_BRANCH And _
+       proc_type <> PROCESS_TYPE.DELETE_TAG Then
     
-    If Common.IsExistsFile(vbprj_file_path) = False Then
-        Err.Raise 53, , HEADER & "VBプロジェクトファイルが見つかりません(vbprj_file_path=" & vbprj_file_path & ", row=" & row & ")"
+        If vbprj_file_path = "" Then
+            Err.Raise 53, , HEADER & "VBプロジェクトファイルが指定されていません(row=" & row & ")"
+        End If
+        
+        If Common.IsExistsFile(vbprj_file_path) = False Then
+            Err.Raise 53, , HEADER & "VBプロジェクトファイルが見つかりません(vbprj_file_path=" & vbprj_file_path & ", row=" & row & ")"
+        End If
+    
     End If
     
     If lot = "" Then
@@ -120,6 +132,10 @@ End Sub
 '=========================================
 'Getter
 '=========================================
+
+Public Function GetProcessType() As PROCESS_TYPE
+    GetProcessType = proc_type
+End Function
 
 Public Function IsEnable() As Boolean
     IsEnable = is_enable
@@ -179,5 +195,10 @@ Public Function GetAllValue() As String
     GetAllValue = ret
 End Function
 
-
+'---------------------------
+' Setter
+'---------------------------
+Public Sub SetProcessType(ByVal type_ As PROCESS_TYPE)
+    proc_type = type_
+End Sub
 

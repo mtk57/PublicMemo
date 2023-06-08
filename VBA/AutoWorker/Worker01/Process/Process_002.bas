@@ -15,6 +15,7 @@ Public Sub Run()
 
     Set prms = New ParamContainer
     
+    prms.SetProcessType PROCESS_TYPE.PROC_002
     prms.Init
     prms.Validate
     

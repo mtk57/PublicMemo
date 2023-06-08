@@ -12,6 +12,8 @@ Option Explicit
 Private HEADER As String
 
 'ÉÅÉìÉoÅ[ïœêî
+Private proc_type As PROCESS_TYPE
+
 Private external_path As String
 Private dst_dir_path As String
 Private ignore_files As String
@@ -22,6 +24,7 @@ Private is_debug_log_s As String
 Private Sub Class_Initialize()
     HEADER = "[Common Param] "
 
+    proc_type = UNKNOWN
     external_path = ""
     dst_dir_path = ""
     ignore_files = ""
@@ -66,6 +69,10 @@ End Sub
 'Getter
 '=========================================
 
+Public Function GetProcessType() As PROCESS_TYPE
+    GetProcessType = proc_type
+End Function
+
 Public Function GetExternalPath() As String
     GetExternalPath = external_path
 End Function
@@ -95,3 +102,9 @@ Public Function GetAllValue() As String
     GetAllValue = ret
 End Function
 
+'---------------------------
+' Setter
+'---------------------------
+Public Sub SetProcessType(ByVal type_ As PROCESS_TYPE)
+    proc_type = type_
+End Sub

@@ -12,6 +12,8 @@ Option Explicit
 Private HEADER As String
 
 'メンバー変数
+Private proc_type As PROCESS_TYPE
+
 Private git_url As String
 Private git_path As String
 Private base_folder As String
@@ -27,6 +29,7 @@ Private is_ignore_not_ref_s As String
 Private Sub Class_Initialize()
     HEADER = "[Git Param] "
 
+    proc_type = UNKNOWN
     git_url = ""
     git_path = ""
     base_folder = ""
@@ -89,6 +92,10 @@ End Sub
 '=========================================
 'Getter
 '=========================================
+
+Public Function GetProcessType() As PROCESS_TYPE
+    GetProcessType = proc_type
+End Function
 
 '-------------------------------------------------
 'GitリポジトリURL
@@ -154,5 +161,11 @@ Public Function GetAllValue() As String
     GetAllValue = ret
 End Function
 
+'---------------------------
+' Setter
+'---------------------------
+Public Sub SetProcessType(ByVal type_ As PROCESS_TYPE)
+    proc_type = type_
+End Sub
 
 

@@ -98,7 +98,7 @@ On Error GoTo ErrorHandler
     Common.WriteLog "ÅöStart"
 
     Worksheets("params").Activate
-    Process_Delete.Run DELETE_ENUM.TYPE_BRANCH
+    Process_Delete.Run PROCESS_TYPE.DELETE_BRANCH
 
     Common.WriteLog "ÅöEnd"
     GoTo FINISH
@@ -134,7 +134,7 @@ On Error GoTo ErrorHandler
     Common.WriteLog "ÅöStart"
 
     Worksheets("params").Activate
-    Process_Delete.Run DELETE_ENUM.TYPE_TAG
+    Process_Delete.Run PROCESS_TYPE.DELETE_TAG
 
     Common.WriteLog "ÅöEnd"
     GoTo FINISH

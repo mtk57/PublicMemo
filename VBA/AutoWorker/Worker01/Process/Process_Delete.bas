@@ -7,7 +7,7 @@ Private DQ As String
 
 Private Const FOR_TEST = True
 
-Public Sub Run(ByVal delete_type As DELETE_ENUM)
+Public Sub Run(ByVal type_ As PROCESS_TYPE)
     Common.WriteLog "Run S"
     
     SEP = Application.PathSeparator
@@ -17,6 +17,7 @@ Public Sub Run(ByVal delete_type As DELETE_ENUM)
 
     Set prms = New ParamContainer
     
+    prms.SetProcessType type_
     prms.Init
     prms.Validate
     
@@ -31,9 +32,9 @@ Public Sub Run(ByVal delete_type As DELETE_ENUM)
     
         Set target = targetlist(i)
     
-        If delete_type = TYPE_BRANCH Then
+        If type_ = DELETE_BRANCH Then
             DeleteBranch target
-        ElseIf delete_type = TYPE_TAG Then
+        ElseIf type_ = DELETE_TAG Then
             DeleteTag target
         End If
         

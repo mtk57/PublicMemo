@@ -12,6 +12,8 @@ Option Explicit
 Private HEADER As String
 
 'メンバー変数
+Private proc_type As PROCESS_TYPE
+
 Private common_param As ParamCommon
 Private git_param As ParamGit
 Private target_list() As ParamTarget
@@ -19,13 +21,14 @@ Private target_list() As ParamTarget
 'コンストラクタ
 Private Sub Class_Initialize()
     HEADER = "[ParamContainer] "
+    proc_type = UNKNOWN
+
+    Set common_param = New ParamCommon
+    Set git_param = New ParamGit
 End Sub
 
 '初期化
 Public Sub Init()
-    Set common_param = New ParamCommon
-    Set git_param = New ParamGit
-    
     common_param.Init
     git_param.Init
     
@@ -53,6 +56,7 @@ Private Sub CollectTarget()
         Set target = New ParamTarget
         
         target.Init row + i
+        target.SetProcessType proc_type
         target.Validate row + i
         
         If target.IsEnable = True Then
@@ -74,13 +78,15 @@ End Sub
 Public Sub Validate()
     common_param.Validate
     git_param.Validate
-    
-    
 End Sub
 
 '=========================================
 'Getter
 '=========================================
+
+Public Function GetProcessType() As PROCESS_TYPE
+    GetProcessType = proc_type
+End Function
 
 Public Function GetCommonParam() As ParamCommon
     GetCommonParam = common_param
@@ -174,5 +180,14 @@ Public Function GetAllValue() As String
     GetAllValue = ret
 End Function
 
+'---------------------------
+' Setter
+'---------------------------
+Public Sub SetProcessType(ByVal type_ As PROCESS_TYPE)
+    proc_type = type_
+
+    common_param.SetProcessType proc_type
+    git_param.SetProcessType proc_type
+End Sub
 
 

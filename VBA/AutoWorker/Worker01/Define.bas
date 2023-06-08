@@ -24,8 +24,12 @@ Public Const TARGET_PARAM_CLM_8 = "J"
 Public Const TARGET_PARAM_CLM_9 = "K"
 Public Const TARGET_PARAM_ROW = 22
 
-Public Enum DELETE_ENUM
-    TYPE_BRANCH
-    TYPE_TAG
+Public Enum PROCESS_TYPE
+    UNKNOWN
+    PROC_001
+    PROC_002
+    PROC_003
+    DELETE_BRANCH
+    DELETE_TAG
 End Enum
 
