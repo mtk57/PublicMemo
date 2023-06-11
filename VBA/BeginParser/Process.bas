@@ -585,6 +585,10 @@ Private Sub OutputSheet()
         For j = 0 To UBound(members)
             Dim items() As String: items = Split(members(j), "/")
             
+            If Common.IsEmptyArray(items) = True Then
+                GoTo CONTINUE_J
+            End If
+            
             cnt = UBound(items)
             
             key_ = ""
@@ -603,6 +607,11 @@ Private Sub OutputSheet()
             ws.Cells(row + i + offset_row + j, 2).value = result.GetFilePath()
             
             key_val = Split(items(cnt), "=")
+            
+            If Common.IsEmptyArray(key_val) = True Or UBound(key_val) = 0 Then
+                GoTo CONTINUE_J
+            End If
+            
             key_ = Trim(key_val(0))
             val_ = Trim(key_val(1))
             
@@ -677,6 +686,8 @@ Private Sub OutputSheet()
             ws.Cells(row + i + offset_row + j, 12).value = k7
             ws.Cells(row + i + offset_row + j, 13).value = k8
             ws.Cells(row + i + offset_row + j, 14).value = k9
+        
+CONTINUE_J:
         Next j
         
         offset_row = offset_row + UBound(members)
