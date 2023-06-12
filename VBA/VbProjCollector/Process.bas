@@ -299,6 +299,14 @@ Private Function ParseVB6Project(ByRef contents() As String) As String()
                  filelist(cnt) = frx_path
                  cnt = cnt + 1
             End If
+        ElseIf Common.GetFileExtension(abs_path) = "ctl" Then
+            Dim ctx_path As String: ctx_path = Replace(abs_path, ".ctl", ".ctx")
+            If Common.IsExistsFile(ctx_path) = True Then
+                'ctxはvbpに記載されていないのでctl検知時に存在チェックを行い、存在すればリストに追加する
+                 ReDim Preserve filelist(cnt)
+                 filelist(cnt) = ctx_path
+                 cnt = cnt + 1
+            End If
         End If
         
 CONTINUE:

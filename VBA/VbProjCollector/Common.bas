@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.1.3"
+Private Const VERSION = "1.1.4"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -154,13 +154,16 @@ Public Function IsCommentCode(ByVal line As String, ByVal ext As String) As Bool
         Exit Function
     End If
     
+    Dim wk As String
+    wk = Replace(line, vbTab, " ")
+    
     If ext = "bas" Or _
        ext = "frm" Or _
        ext = "cls" Or _
        ext = "ctl" Or _
        ext = "vb" Then
-        If Left(LTrim(line), 1) = "'" Or _
-           Left(LTrim(line), 4) = "REM " Then
+        If Left(LTrim(wk), 1) = "'" Or _
+           Left(LTrim(wk), 4) = "REM " Then
            IsCommentCode = True
            Exit Function
         End If
@@ -2092,6 +2095,8 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
+
 
 
 
