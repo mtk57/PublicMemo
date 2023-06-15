@@ -288,7 +288,8 @@ End Function
 'タグの存在チェック
 Public Function IsExistTag( _
     ByRef prms As ParamContainer, _
-    ByVal tag As String _
+    ByVal tag As String, _
+    ByVal is_local As Boolean _
 ) As Boolean
     Common.WriteLog "IsExistTag S"
     
@@ -297,13 +298,26 @@ Public Function IsExistTag( _
     Dim cmd As String
     Dim git_result() As String
     
-    cmd = "git tag --list " & tag
+    If is_local = True Then
+        cmd = "git tag --list " & tag
+    Else
+        cmd = "git ls-remote --tags origin " & tag
+    End If
+    
     git_result = Common.RunGit(repo_path, cmd)
     git_result = Common.DeleteEmptyArray(git_result)
     
     IsExistTag = False
     If Common.IsEmptyArray(git_result) = False Then
-        IsExistTag = True
+        
+        Dim i As Long
+        For i = 0 To UBound(git_result)
+            If InStr(git_result(i), tag) > 0 Then
+                IsExistTag = True
+                Exit For
+            End If
+        Next i
+        
     End If
     
     Common.WriteLog "IsExistTag E"

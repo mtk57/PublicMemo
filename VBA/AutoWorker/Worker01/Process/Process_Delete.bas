@@ -28,6 +28,8 @@ Public Sub Run(ByVal type_ As PROCESS_TYPE)
     Dim targetlist() As ParamTarget
     targetlist = prms.GetTargetList()
     
+    WorkerCommon.SwitchDevelopBranch prms
+    
     For i = LBound(targetlist) To UBound(targetlist)
     
         Set target = targetlist(i)
@@ -51,15 +53,15 @@ Private Sub DeleteBranch(ByRef target As ParamTarget)
         Exit Sub
     End If
     
-    If Common.ShowYesNoMessageBox("[For TEST] ブランチの削除をを実行します。(" & target.GetBranch() & ")") = False Then
-        Exit Sub
-    End If
+    'If Common.ShowYesNoMessageBox("[For TEST] ブランチの削除をを実行します。(" & target.GetBranch() & ")") = False Then
+    '    Exit Sub
+    'End If
     
     Dim cmd As String
     Dim git_result() As String
     
-    cmd = "git switch " & prms.GetBaseBranch()
-    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+    'cmd = "git switch " & prms.GetBaseBranch()
+    'git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
     
     'ローカルブランチを削除する
     If WorkerCommon.IsExistLocalBranch(prms, target.GetBranch()) = True Then
@@ -84,22 +86,23 @@ Private Sub DeleteTag(ByRef target As ParamTarget)
         Exit Sub
     End If
     
-    If Common.ShowYesNoMessageBox("[For TEST] タグの削除をを実行します。(" & target.GetTag() & ")") = False Then
-        Exit Sub
-    End If
+    'If Common.ShowYesNoMessageBox("[For TEST] タグの削除をを実行します。(" & target.GetTag() & ")") = False Then
+    '    Exit Sub
+    'End If
     
     Dim cmd As String
     Dim git_result() As String
     
-    If WorkerCommon.IsExistTag(prms, target.GetTag()) = True Then
+    If WorkerCommon.IsExistTag(prms, target.GetTag(), True) = True Then
         'ローカルタグを削除する
         cmd = "git tag -d " & target.GetTag()
         git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
-    
+    End If
+
+    If WorkerCommon.IsExistTag(prms, target.GetTag(), False) = True Then
         'リモートタグを削除する
         cmd = "git push origin :refs/tags/" & target.GetTag()
         git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
-    
     End If
 
     Common.WriteLog "DeleteTag E"
