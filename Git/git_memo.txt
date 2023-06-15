@@ -121,6 +121,10 @@ $ git pull
 $ git ls-tree -r --name-only <タグ名> | grep <検索したいファイル名>  #grepが使えない場合はfindstrを使う
 
 ------------
+■リモートにタグがあるか検索
+$ git ls-remote --tags origin <タグ名>
+
+------------
 ■タグのファイルの内容を表示
 $ git show <タグ名>:<ファイルパス>
 
