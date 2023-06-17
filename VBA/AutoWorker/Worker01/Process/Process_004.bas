@@ -37,8 +37,8 @@ Public Sub Run()
     
         If WorkerCommon.IsExistBranch(prms, target.GetBranch()) = False Then
             msg = "ブランチが見つかりません。(" & target.GetBranch() & ")"
-        ElseIf InStr(target.GetTag(), "STEP1.8") = 0 Then
-            msg = "タグにSTEP1.8が指定されていません。 (tag=" & target.GetTag() & ")"
+        ElseIf InStr(target.GetTag(), "STEP1.5") = 0 Then
+            msg = "タグにSTEP1.5が指定されていません。 (tag=" & target.GetTag() & ")"
         End If
 
         If msg <> "" Then
