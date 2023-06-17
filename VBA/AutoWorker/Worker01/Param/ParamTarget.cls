@@ -83,7 +83,9 @@ Public Sub Validate(ByVal row As Integer)
         Exit Sub
     End If
 
-    If proc_type <> PROCESS_TYPE.DELETE_BRANCH And _
+    If proc_type <> PROCESS_TYPE.PROC_003 And _
+       proc_type <> PROCESS_TYPE.PROC_004 And _
+       proc_type <> PROCESS_TYPE.DELETE_BRANCH And _
        proc_type <> PROCESS_TYPE.DELETE_TAG Then
     
         If vbprj_file_path = "" Then

@@ -3,9 +3,10 @@ Option Explicit
 
 Private Const RUN_001 = "RUN_001"
 Private Const RUN_002 = "RUN_002"
+Private Const RUN_003 = "RUN_003"
+Private Const RUN_004 = "RUN_004"
 Private Const DEL_BRANCH = "Delete Branch"
 Private Const DEL_TAG = "Delete Tag"
-Private Const COLL_TAG = "Collect Tag"
 
 Public Sub Run001_Click()
 On Error GoTo ErrorHandler
@@ -175,9 +176,9 @@ Private Sub VisibleProcessingMessage(ByVal is_visible As Boolean)
     End If
 End Sub
 
-Public Sub CollectTag_Click()
+Public Sub Run003_Click()
 On Error GoTo ErrorHandler
-    If Common.ShowYesNoMessageBox("[" & COLL_TAG & "]を実行します") = False Then
+    If Common.ShowYesNoMessageBox("[" & RUN_003 & "]を実行します") = False Then
         Exit Sub
     End If
 
@@ -187,7 +188,7 @@ On Error GoTo ErrorHandler
     Dim msg As String: msg = "正常に終了しました"
 
     If IsEnableDebugLog() = True Then
-        Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "AutoRun_" & COLL_TAG & ".log"
+        Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "AutoRun_" & RUN_003 & ".log"
     End If
 
     Common.WriteLog "------------------------------------"
@@ -195,6 +196,42 @@ On Error GoTo ErrorHandler
 
     Worksheets("params").Activate
     Process_003.Run
+
+    Common.WriteLog "★End"
+    GoTo FINISH
+
+ErrorHandler:
+    msg = "エラーが発生しました(" & Err.Description & ")"
+
+FINISH:
+    Common.WriteLog msg
+    Common.CloseLog
+    Application.DisplayAlerts = True
+    VisibleProcessingMessage False
+    Worksheets("main").Activate
+    MsgBox msg
+End Sub
+
+Public Sub Run004_Click()
+On Error GoTo ErrorHandler
+    If Common.ShowYesNoMessageBox("[" & RUN_004 & "]を実行します") = False Then
+        Exit Sub
+    End If
+
+    VisibleProcessingMessage True
+    Application.DisplayAlerts = False
+    
+    Dim msg As String: msg = "正常に終了しました"
+
+    If IsEnableDebugLog() = True Then
+        Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "AutoRun_" & RUN_004 & ".log"
+    End If
+
+    Common.WriteLog "------------------------------------"
+    Common.WriteLog "★Start"
+
+    Worksheets("params").Activate
+    Process_004.Run
 
     Common.WriteLog "★End"
     GoTo FINISH

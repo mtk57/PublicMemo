@@ -326,9 +326,12 @@ End Function
 'VBプロジェクト名を返す
 Public Function GetProjectName(ByVal vbprj_file_path As String) As String
     Common.WriteLog "GetProjectName S"
+    
     Dim vbprj_file_name As String: vbprj_file_name = Common.GetFileName(vbprj_file_path)
     Dim ext As String: ext = Common.GetFileExtension(vbprj_file_name)
+    
     GetProjectName = Replace(vbprj_file_name, "." & ext, "")
+    
     Common.WriteLog "GetProjectName E"
 End Function
 
@@ -371,7 +374,7 @@ Public Sub SwitchDevelopBranch(ByRef prms As ParamContainer)
     git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
     
     If git_result(0) = prms.GetBaseBranch() Then
-        Common.WriteLog "CheckoutBranch E1"
+        Common.WriteLog "SwitchDevelopBranch E1"
         Exit Sub
     End If
     
@@ -411,4 +414,45 @@ Public Sub DoPull(ByRef prms As ParamContainer)
     Common.WriteLog "DoPull E"
 End Sub
 
-
+Public Sub SwitchBranch(ByRef prms As ParamContainer, ByVal target As ParamTarget)
+    Common.WriteLog "SwitchBranch S"
+    
+    Dim cmd As String
+    Dim git_result() As String
+    
+    '対象ブランチが存在しない場合はエラーとする
+    If IsExistBranch(prms, target.GetBranch()) = False Then
+        Err.Raise 53, , "[SwitchBranch] ブランチが存在しません。(" & target.GetBranch() & ")"
+    End If
+    
+    'カレントブランチを確認する
+    cmd = "git branch --show-current"
+    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+    
+    If git_result(0) = target.GetBranch() Then
+        Common.WriteLog "SwitchBranch E1"
+        Exit Sub
+    End If
+    
+    'ローカルブランチがあるか確認する
+    Dim is_exist_local As Boolean: is_exist_local = False
+    
+    cmd = "git branch --list " & target.GetBranch()
+    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+    
+    If Common.IsEmptyArray(git_result) = False Then
+        is_exist_local = True
+    End If
+    
+    If is_exist_local = True Then
+        'ローカルブランチがあるのでswitchで切り替え
+        cmd = "git switch " & target.GetBranch()
+        git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+    Else
+        'ローカルブランチがないので作成して切り替え
+        cmd = "git checkout -b " & target.GetBranch()
+        git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+    End If
+    
+    Common.WriteLog "SwitchBranch E"
+End Sub
