@@ -1,9 +1,9 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Public Const VERSION = "1.0.25"
+Private Const VERSION = "1.1.5"
 
-Public Declare PtrSafe Function GetPrivateProfileString Lib _
+Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
     ByVal lpApplicationName As String, _
     ByVal lpKeyName As Any, _
@@ -13,7 +13,7 @@ Public Declare PtrSafe Function GetPrivateProfileString Lib _
     ByVal lpFileName As String _
 ) As Long
 
-Public Declare PtrSafe Function WritePrivateProfileString Lib _
+Private Declare PtrSafe Function WritePrivateProfileString Lib _
     "kernel32" Alias "WritePrivateProfileStringA" ( _
     ByVal lpApplicationName As String, _
     ByVal lpKeyName As Any, _
@@ -21,11 +21,297 @@ Public Declare PtrSafe Function WritePrivateProfileString Lib _
     ByVal lpFileName As String _
 ) As Long
 
+Private Declare PtrSafe Sub GetLocalTime Lib _
+    "kernel32" ( _
+    lpSystemTime As SYSTEMTIME _
+)
+
+Private Type SYSTEMTIME
+    wYear As Integer
+    wMonth As Integer
+    wDayOfWeek As Integer
+    wDay As Integer
+    wHour As Integer
+    wMinute As Integer
+    wSecond As Integer
+    wMilliseconds As Integer
+End Type
+
 'ログファイル番号
 Private logfile_num As Integer
 Private is_log_opened As Boolean
 
-Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'フォルダが空かどうかを返す
+' path : I : フォルダパス(絶対パス)
+' Ret : True/False (True=空, False=空では無い)
+'-------------------------------------------------------------
+Public Function IsEmptyFolder(ByVal path As String) As Boolean
+    If IsExistsFolder(path) = False Then
+        Err.Raise 53, , "[IsEmptyFolder] 指定されたフォルダが存在しません (path=" & path & ")"
+    End If
+    
+    Dim fso As Object
+    Dim folder As Object
+    
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    Set folder = fso.GetFolder(path)
+    
+    IsEmptyFolder = folder.Files.count = 0 And folder.SubFolders.count = 0
+    
+    Set fso = Nothing
+    Set folder = Nothing
+End Function
+
+'-------------------------------------------------------------
+'String配列を昇順ソートして重複行を削除して返す
+' arr : I : 配列
+' Ret : 昇順ソートして重複行を削除した配列
+'-------------------------------------------------------------
+Public Function SortAndDistinctArray(ByRef arr() As String) As String()
+    Dim dict As Object
+    Set dict = CreateObject("Scripting.Dictionary")
+    Dim i As Long
+    For i = LBound(arr) To UBound(arr)
+        If Not dict.Exists(arr(i)) Then
+            dict.Add arr(i), 1
+        End If
+    Next i
+    Dim result() As String
+    ReDim result(0 To dict.count - 1)
+    Dim key As Variant
+    i = 0
+    For Each key In dict.Keys()
+        result(i) = key
+        i = i + 1
+    Next key
+    Set dict = Nothing
+    SortAndDistinctArray = result
+End Function
+
+'-------------------------------------------------------------
+'右のコメントを削除して返す
+' str : I : 文字列
+' ext : I : 拡張子(Ex. "bas", "vb") ※VB系のみサポート
+' Ret : コメントがあれば削除して返す。なければ元の文字列を返す
+' Ex. "abc 'def" → "abc"
+'-------------------------------------------------------------
+Public Function RemoveRightComment(ByVal str As String, ByVal ext As String) As String
+    Dim pos As Long
+    Dim ret As String
+    
+    If ext = "bas" Or _
+       ext = "frm" Or _
+       ext = "cls" Or _
+       ext = "ctl" Or _
+       ext = "vb" Then
+        pos = InStr(str, "'")
+        
+        If pos = 0 Then
+            ret = str
+        Else
+            ret = RTrim(Mid(str, 1, pos - 1))
+        End If
+    Else
+        Err.Raise 53, , "[RemoveRightComment] 指定された拡張子は未サポートです (ext=" & ext & ")"
+    End If
+    
+    RemoveRightComment = RTrim(ret)
+
+End Function
+
+'-------------------------------------------------------------
+'最初に見つかった英字の位置を返す
+' str : I : 文字列
+' Ret : 英字の位置(見つからない場合は0を返す)
+'-------------------------------------------------------------
+Public Function FindFirstCasePosition(ByVal str As String) As Long
+    Dim i As Long
+    Dim char As String
+    
+    For i = 1 To Len(str)
+        char = Mid(str, i, 1)
+        If char Like "[A-Za-z]" Then
+            FindFirstCasePosition = i
+            Exit Function
+        End If
+    Next i
+    
+    FindFirstCasePosition = 0
+End Function
+
+'-------------------------------------------------------------
+'コメント行かを判定する
+' line : I : 行データ
+' ext : I : 拡張子(Ex. "bas", "vb") ※VB系のみサポート
+' Ret : True/False(True=コメント行)
+'-------------------------------------------------------------
+Public Function IsCommentCode(ByVal line As String, ByVal ext As String) As Boolean
+    If line = "" Or ext = "" Then
+        IsCommentCode = False
+        Exit Function
+    End If
+    
+    Dim wk As String
+    wk = Replace(line, vbTab, " ")
+    
+    If ext = "bas" Or _
+       ext = "frm" Or _
+       ext = "cls" Or _
+       ext = "ctl" Or _
+       ext = "vb" Then
+        If Left(LTrim(wk), 1) = "'" Or _
+           Left(LTrim(wk), 4) = "REM " Then
+           IsCommentCode = True
+           Exit Function
+        End If
+    Else
+        Err.Raise 53, , "[IsCommentCode] 指定された拡張子は未サポートです (ext=" & ext & ")"
+    End If
+    
+    IsCommentCode = False
+
+End Function
+
+'-------------------------------------------------------------
+'フォルダパスに指定フォルダ名があるかチェックし、あればそのフォルダまでのパスを返す
+' path : I : フォルダパス(絶対パス)
+' keyword : I : キーワード
+' Ret : キーワードまでのパス(キーワードが見つからない場合は空を返す)
+'-------------------------------------------------------------
+Public Function GetFolderPathByKeyword( _
+    path As String, _
+    keyword As String _
+) As String
+    If path = "" Or keyword = "" Then
+        GetFolderPathByKeyword = ""
+        Exit Function
+    End If
+
+    Dim SEP As String: SEP = Application.PathSeparator
+    Dim path_ary() As String
+    Dim ret_ary() As String
+    Dim i As Integer
+    Dim j As Integer
+    
+    path_ary = Split(path, SEP)
+
+    For i = UBound(path_ary) To 0 Step -1
+        If path_ary(i) = keyword Then
+        
+            ReDim Preserve ret_ary(i)
+            
+            For j = LBound(ret_ary) To UBound(ret_ary)
+                ret_ary(j) = path_ary(j)
+            Next j
+        
+            GetFolderPathByKeyword = Join(ret_ary, SEP)
+            Exit Function
+        End If
+    Next i
+    
+    GetFolderPathByKeyword = ""
+End Function
+
+'-------------------------------------------------------------
+'フォルダパスから最後のフォルダ名を返す
+' path : I : フォルダパス(絶対パス)
+' Ret : 最後のフォルダ名
+'        例: "C:\abc\def\xyz" → "xyz"
+'-------------------------------------------------------------
+Public Function GetLastFolderName(ByVal path As String) As String
+    Dim last As String
+    last = Right(path, Len(path) - InStrRev(path, Application.PathSeparator))
+    GetLastFolderName = last
+End Function
+
+'-------------------------------------------------------------
+'フォルダパスの末尾に現在日時の文字列を付与して返す
+' path : I : フォルダパス(絶対パス)
+' Ret : 末尾に現在日時の文字列を付与したファイルパス
+'-------------------------------------------------------------
+Public Function ChangeUniqueDirPath(ByVal path As String) As String
+    If IsExistsFolder(path) = False Then
+        Err.Raise 53, , "[ChangeUniqueDirPath] 指定されたフォルダが存在しません (path=" & path & ")"
+    End If
+    
+    Dim new_path As String
+    new_path = path & "_" & GetNowTimeString()
+    If IsExistsFolder(new_path) = True Then
+        WaitSec 1
+        new_path = path & "_" & GetNowTimeString()
+    End If
+
+    ChangeUniqueDirPath = new_path
+End Function
+
+'-------------------------------------------------------------
+'正規表現でパターンマッチングした結果を返す
+' test_str : I : 対象文字列
+' ptn : I : 検索パターン
+' is_ignore_case : I : 大文字小文字を区別するか(True=する)
+' Ret : マッチした文字列リスト
+' Note:
+'  - 参照設定に以下を追加する
+'    Microsoft VBScript Regular Expression 5.5
+'-------------------------------------------------------------
+Public Function GetMatchByRegExp( _
+    ByVal test_str As String, _
+    ByVal ptn As String, _
+    ByVal is_ignore_case As Boolean _
+) As String()
+    Dim reg As New VBScript_RegExp_55.RegExp
+    Dim mc As MatchCollection
+    Dim m As Match
+    Dim list() As String
+    ReDim list(0)
+    
+    reg.Global = True
+    reg.ignoreCase = is_ignore_case
+    reg.Pattern = ptn
+    
+    Set mc = reg.Execute(test_str)
+    For Each m In mc
+        Common.AppendArray list, m.value
+    Next
+    
+    GetMatchByRegExp = list
+End Function
+
+'-------------------------------------------------------------
+'正規表現でパターンマッチングを行う
+' test_str : I : 対象文字列
+' ptn : I : 検索パターン
+' is_ignore_case : I : 大文字小文字を区別するか(True=する)
+' Ret : True/False (True=一致)
+' Note:
+'  - 参照設定に以下を追加する
+'    Microsoft VBScript Regular Expression 5.5
+'-------------------------------------------------------------
+Public Function IsMatchByRegExp( _
+    ByVal test_str As String, _
+    ByVal ptn As String, _
+    ByVal is_ignore_case As Boolean _
+) As Boolean
+    Dim reg As New VBScript_RegExp_55.RegExp
+    reg.Global = True
+    reg.ignoreCase = is_ignore_case
+    reg.Pattern = ptn
+    
+    IsMatchByRegExp = reg.Test(test_str)
+End Function
+
+'-------------------------------------------------------------
+'自身のフォルダパスを返す
+' Ret : フォルダパス
+'-------------------------------------------------------------
+Public Function GetMyDir() As String
+    Dim currentProject As Workbook
+    Set currentProject = ThisWorkbook
+    GetMyDir = currentProject.path
+End Function
 
 '-------------------------------------------------------------
 '文字列配列を連結して文字列を返す
@@ -302,10 +588,45 @@ Public Function RenameFolder(ByVal path As String, ByVal rename As String) As St
     Dim folder As Object
     Set folder = fso.GetFolder(path)
     
-    folder.name = rename
-    RenameFolder = folder.path
+    Dim err_msg As String
+    Dim retry As Integer
+    For retry = 0 To 3
+
+On Error Resume Next
+        folder.name = rename
+    
+        err_msg = Err.Description
+        Err.Clear
+On Error GoTo 0
+
+        If err_msg = "" Then
+            Exit For
+        End If
+        
+        WaitSec 1
+
+    Next retry
     
     Set fso = Nothing
+    
+    If err_msg <> "" Then
+        Err.Raise 53, , "[RenameFolder] エラー! (err_msg=" & err_msg & ")"
+    End If
+
+    RenameFolder = folder.path
+
+End Function
+
+'-------------------------------------------------------------
+'ワークシートの指定列のデータ最終行番号を返す
+' ws : I : ワークシート
+' clm : I : 指定列名(Ex."A")
+'-------------------------------------------------------------
+Public Function GetLastRowFromWorksheet( _
+  ByVal ws As Worksheet, _
+  ByVal clm As String _
+) As Long
+    GetLastRowFromWorksheet = ws.Cells(ws.Rows.count, clm).End(xlUp).row
 End Function
 
 '-------------------------------------------------------------
@@ -421,11 +742,11 @@ Public Function GetSheet( _
         '既に開いている
         Set wb = Workbooks(book_path)
     Else
-        Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, READONLY:=is_readonly)
+        Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, ReadOnly:=is_readonly)
     End If
     
     wb.Activate
-    ActiveWindow.VISIBLE = is_visible
+    ActiveWindow.Visible = is_visible
     
     If Common.IsExistSheet(wb, sheet_name) = False Then
         Err.Raise 53, , "[GetSheet] 指定されたシートが存在しません (book_path=" & book_path & ", sheet_name=" & sheet_name & ")"
@@ -971,12 +1292,20 @@ End Function
 ' is_subdir : IN : サブフォルダ含むか (True=含む)
 ' Ret : ファイルリスト(絶対パスのリスト)
 '-------------------------------------------------------------
-Public Function CreateFileList(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean) As String()
+Public Function CreateFileList( _
+    ByVal path As String, _
+    ByVal ext As String, _
+    ByVal is_subdir As Boolean _
+) As String()
     Dim list() As String: list = CreateFileListMain(path, ext, is_subdir)
     CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), ext)
 End Function
 
-Private Function CreateFileListMain(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean) As String()
+Private Function CreateFileListMain( _
+    ByVal path As String, _
+    ByVal ext As String, _
+    ByVal is_subdir As Boolean _
+) As String()
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -1120,9 +1449,14 @@ End Function
 ' value : IN : 追加する文字列
 '-------------------------------------------------------------
 Public Sub AppendArray(ByRef ary() As String, ByVal value As String)
-    Dim cnt As Integer: cnt = UBound(ary) + 1
-    ReDim Preserve ary(cnt)
-    ary(cnt) = value
+    If IsEmptyArray(ary) = True Then
+        ReDim Preserve ary(0)
+        ary(0) = value
+    Else
+        Dim cnt As Integer: cnt = UBound(ary) + 1
+        ReDim Preserve ary(cnt)
+        ary(cnt) = value
+    End If
 End Sub
 
 '-------------------------------------------------------------
@@ -1395,9 +1729,31 @@ Public Sub MoveFolder(ByVal src_path As String, ByVal dst_path As String)
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
 
-    fso.MoveFolder src_path, dst_path
+    Dim err_msg As String
+    Dim retry As Integer
+    For retry = 0 To 3
+
+On Error Resume Next
+        fso.MoveFolder src_path, dst_path
+    
+        err_msg = Err.Description
+        Err.Clear
+On Error GoTo 0
+
+        If err_msg = "" Then
+            Exit For
+        End If
+        
+        WaitSec 1
+
+    Next retry
     
     Set fso = Nothing
+    
+    If err_msg <> "" Then
+        Err.Raise 53, , "[MoveFolder] エラー! (err_msg=" & err_msg & ")"
+    End If
+    
 End Sub
 
 '-------------------------------------------------------------
@@ -1614,7 +1970,7 @@ Public Function ReadTextFileBySJIS(ByVal path As String) As String
     'ワークファイルを削除する
     DeleteFile wk
     
-    ReadTextFileBySJIS = contents
+    ReadTextFileBySJIS = RTrim(contents)
 End Function
 
 '-------------------------------------------------------------
@@ -1665,10 +2021,26 @@ Public Sub WaitSec(ByVal sec As Double)
 End Sub
 
 '-------------------------------------------------------------
-'現在日時を文字列で返す
-' Ret :Ex."20230326123456"
+'現在日時をミリ秒単位の文字列で返す
+' Ret :Ex."20230326123456001"
 '-------------------------------------------------------------
 Public Function GetNowTimeString() As String
+    Dim t As SYSTEMTIME
+
+    Call GetLocalTime(t)
+    
+    Dim yyyy As String: yyyy = Format(t.wYear, "0000")
+    Dim mm As String: mm = Format(t.wMonth, "00")
+    Dim dd As String: dd = Format(t.wDay, "00")
+    Dim hh As String: hh = Format(t.wHour, "00")
+    Dim mn As String: mn = Format(t.wMinute, "00")
+    Dim ss As String: ss = Format(t.wSecond, "00")
+    Dim fff As String: fff = Format(t.wMilliseconds, "000")
+    
+    GetNowTimeString = yyyy & mm & dd & hh & mn & ss & fff
+End Function
+
+Public Function GetNowTimeString_OLD() As String
     Dim str_date As String
     Dim str_time As String
     
@@ -1735,6 +2107,8 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
+
 
 
 

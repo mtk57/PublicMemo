@@ -181,6 +181,8 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
              )
     book_name = Common.GetFileName(sub_param.GetDstFilePath())
     
+    Dim last_row As Long: last_row = Common.GetLastRowFromWorksheet(ws, sub_param.GetDstFindClm())
+    
     'SRC検索列の値が、DST検索列にあるか検索する
     'あれば、SRC転記列の値をDST転記列に入れる
     For row = LBound(copy_datas, 1) To UBound(copy_datas, 1)
@@ -192,26 +194,39 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
             GoTo CONTINUE_ROW
         End If
         
-        '指定列の全行を指定ワードで検索し、ヒットした行番号を取得する
-        found_row = Common.FindRowByKeywordFromWorksheet( _
-                       ws, _
-                       sub_param.GetDstFindClm(), _
-                       1, _
-                       keyword _
-                    )
-    
-        If found_row = 0 Then
-            '見つからない!
-            Common.WriteLog "Search keyword is not found!" & vbCrLf & _
-                            "row=" & row & vbCrLf & _
-                            "keyword=" & keyword
-            'TODO:いったん無視
-            GoTo CONTINUE_ROW
-        End If
+        Dim find_row As Long: find_row = 1
         
-        '転記
-        Set trans_rng = ws.Range(sub_param.GetDstTranClm() & found_row)
-        trans_rng.value = copy_data.GetValue()
+        Do
+            '指定列の全行を指定ワードで検索し、ヒットした行番号を取得する
+            found_row = Common.FindRowByKeywordFromWorksheet( _
+                           ws, _
+                           sub_param.GetDstFindClm(), _
+                           find_row, _
+                           keyword _
+                        )
+        
+            If found_row = 0 Then
+                '見つからない!
+                'Common.WriteLog "Search keyword is not found!" & vbCrLf & _
+                '                "row=" & row & vbCrLf & _
+                '                "keyword=" & keyword
+                '無視
+                Exit Do
+            End If
+            
+            '見つかったので転記
+            Set trans_rng = ws.Range(sub_param.GetDstTranClm() & found_row)
+            trans_rng.value = copy_data.GetValue()
+            
+            If last_row = found_row Then
+                '最終行なのでループを抜ける
+                Exit Do
+            End If
+            
+            '見つかった行の次行を再検索
+            find_row = found_row + 1
+        
+        Loop
         
 CONTINUE_ROW:
         
