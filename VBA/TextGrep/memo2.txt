@@ -1,0 +1,22 @@
+memo			
+			
+	mainparam.tsv フォーマット	UTF-8 (BOMあり)	
+	GrepDirPath	C:\_git\PublicMemo\VBA\TextGrep\testdata	
+	IsDebugLog	0	0=False, 1=True
+	IsSubDir	1	0=False, 1=True
+	TargetFile	*.vb	
+	IsRegEx	1	0=False, 1=True
+	IsIgnoreCase	0	0=False, 1=True
+	Keywords	apple	
+	Keywords	function	
+	・・・	・・・	
+	Keywords	hoge	
+			
+			
+	output.tsv フォーマット	UTF-8 (BOMあり)	
+	#		
+	FilePath		
+	FileName		
+	Extension		
+	Keyword		
+	HitCount		
