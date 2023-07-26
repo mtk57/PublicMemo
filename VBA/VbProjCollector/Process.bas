@@ -423,7 +423,7 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
     Dim base_path As String: base_path = Common.GetCommonString(filelist)
     
     If base_path = "" Then
-        rr.Raise 53, , "[CopyProjectFiles] base_path‚ª‹ó‚Å‚·"
+        Err.Raise 53, , "[CopyProjectFiles] base_path‚ª‹ó‚Å‚·"
     End If
     
     Dim dst_base_path As String: dst_base_path = Replace(base_path, ":", "")
