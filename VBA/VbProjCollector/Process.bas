@@ -374,6 +374,11 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
             Next j
         End If
         
+        If Common.StartsWith(Trim(Replace(Replace(contents(i), "<HintPath>", ""), "</HintPath>", "")), "packages") Then
+            'packages‚Í–³Ž‹‚·‚é
+            GoTo CONTINUE
+        End If
+        
         ReDim Preserve filelist(cnt)
         
         Dim path As String
@@ -416,6 +421,11 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
     
     Dim SEP As String: SEP = Application.PathSeparator
     Dim base_path As String: base_path = Common.GetCommonString(filelist)
+    
+    If base_path = "" Then
+        rr.Raise 53, , "[CopyProjectFiles] base_path‚ª‹ó‚Å‚·"
+    End If
+    
     Dim dst_base_path As String: dst_base_path = Replace(base_path, ":", "")
     Dim dst_file_path() As String
     Dim i As Integer
