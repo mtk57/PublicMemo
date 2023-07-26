@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.1.5"
+Private Const VERSION = "1.1.6"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -44,6 +44,25 @@ Private is_log_opened As Boolean
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
 
 '-------------------------------------------------------------
+'文字列が指定文字列で開始されているかを返す
+' target : I : 文字列
+' search : I : 指定文字列
+' Ret : True/False (True=開始されている, False=開始されていない)
+'-------------------------------------------------------------
+Public Function StartsWith(ByVal target As String, ByVal search As String) As Boolean
+    StartsWith = False
+    
+    If Len(search) > Len(target) Then
+        Exit Function
+    End If
+    
+    If Left(target, Len(search)) = search Then
+        StartsWith = True
+    End If
+    
+End Function
+
+'-------------------------------------------------------------
 'フォルダが空かどうかを返す
 ' path : I : フォルダパス(絶対パス)
 ' Ret : True/False (True=空, False=空では無い)
@@ -59,7 +78,7 @@ Public Function IsEmptyFolder(ByVal path As String) As Boolean
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set folder = fso.GetFolder(path)
     
-    IsEmptyFolder = folder.Files.count = 0 And folder.SubFolders.count = 0
+    IsEmptyFolder = folder.files.count = 0 And folder.SubFolders.count = 0
     
     Set fso = Nothing
     Set folder = Nothing
@@ -857,7 +876,7 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     Set folder = fso.GetFolder(search_path)
     
     Dim file As Object
-    For Each file In folder.Files
+    For Each file In folder.files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like search_name Then
             '発見
             SearchFile = file.path
@@ -1202,7 +1221,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As Stri
         End If
     Next subfolder
     
-    For Each file In folder.Files
+    For Each file In folder.files
         If Right(file.name, Len(ext)) = ext Then
             Set fso = Nothing
             Set folder = Nothing
@@ -1531,7 +1550,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     'コピー元のフォルダ内のファイルをコピーする
     Const OVERWRITE = True
     Dim file As Object
-    For Each file In fso.GetFolder(src_path).Files
+    For Each file In fso.GetFolder(src_path).files
         fso.CopyFile file.path, fso.BuildPath(dest_path, file.name), OVERWRITE
     Next
     
@@ -1897,7 +1916,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Set folder = fso.GetFolder(target_folder)
     
     Dim fileobj As Object
-    For Each fileobj In folder.Files
+    For Each fileobj In folder.files
         If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
             '検索対象のファイルを読み込む
             Dim contents As String: contents = ReadTextFileBySJIS(fileobj.path)
@@ -2107,9 +2126,4 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
-
-
-
-
-
 
