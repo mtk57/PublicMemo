@@ -28,9 +28,6 @@ Public Sub Run()
     
     'grep.exeを実行する
     RunExe
-    
-    '結果ファイルを読み込みシートに出力する
-    OutputSheet
 
     Common.WriteLog "Run E"
 End Sub
@@ -93,22 +90,5 @@ Private Sub RunExe()
     End If
     
     Common.WriteLog "RunExe E"
-End Sub
-
-Private Sub OutputSheet()
-    Common.WriteLog "OutputSheet S"
-    
-    'Common.AddSheet ActiveWorkbook, main_param.GetOutputSheetName()
-    
-    Workbooks.OpenText FILENAME:=main_param.GetOutputFilePath(), _
-        DataType:=xlDelimited, _
-        Tab:=True
-
-    Dim ws As Worksheet
-    Set ws = Workbooks.Item(Workbooks.count).Sheets(1)                  ' 開いた CSV のシート
-    ws.name = main_param.GetOutputSheetName()
-    Call ws.Move(After:=ThisWorkbook.Sheets(ThisWorkbook.Sheets.count)) ' VBA を実行しているワークブックの最後に移動
-    
-    Common.WriteLog "OutputSheet E"
 End Sub
 

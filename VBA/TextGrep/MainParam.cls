@@ -82,8 +82,12 @@ Public Sub Validate()
         Err.Raise 53, , "[MainParam] GREP.exeÇ™éwíËÇ≥ÇÍÇƒÇ¢Ç‹ÇπÇÒ"
     End If
     
-    If Common.IsExistsFile(grep_exe) Then
+    If Common.IsExistsFile(GetGrepExe()) = False Then
         Err.Raise 53, , "[MainParam] GREP.exeÇ™ë∂ç›ÇµÇ‹ÇπÇÒ"
+    End If
+    
+    If output_sheet_name = "" Then
+        output_sheet_name = Common.GetNowTimeString()
     End If
     
     If grep_dir_path = "" Then
@@ -185,11 +189,7 @@ Public Function GetGrepDirPath() As String
 End Function
 
 Public Function GetOutputSheetName() As String
-    If output_sheet_name = "" Then
-        GetOutputSheetName = Common.GetNowTimeString()
-    Else
-        GetOutputSheetName = output_sheet_name
-    End If
+    GetOutputSheetName = output_sheet_name
 End Function
 
 Public Function IsDebugLogInt() As Integer

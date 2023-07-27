@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.1.5"
+Private Const VERSION = "1.1.6"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -42,6 +42,25 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'文字列が指定文字列で開始されているかを返す
+' target : I : 文字列
+' search : I : 指定文字列
+' Ret : True/False (True=開始されている, False=開始されていない)
+'-------------------------------------------------------------
+Public Function StartsWith(ByVal target As String, ByVal search As String) As Boolean
+    StartsWith = False
+    
+    If Len(search) > Len(target) Then
+        Exit Function
+    End If
+    
+    If Left(target, Len(search)) = search Then
+        StartsWith = True
+    End If
+    
+End Function
 
 '-------------------------------------------------------------
 'フォルダが空かどうかを返す
@@ -624,9 +643,9 @@ End Function
 '-------------------------------------------------------------
 Public Function GetLastRowFromWorksheet( _
   ByVal ws As Worksheet, _
-  ByVal CLM As String _
+  ByVal clm As String _
 ) As Long
-    GetLastRowFromWorksheet = ws.Cells(ws.Rows.count, CLM).End(xlUp).row
+    GetLastRowFromWorksheet = ws.Cells(ws.Rows.count, clm).End(xlUp).row
 End Function
 
 '-------------------------------------------------------------
@@ -742,7 +761,7 @@ Public Function GetSheet( _
         '既に開いている
         Set wb = Workbooks(book_path)
     Else
-        Set wb = Workbooks.Open(FILENAME:=book_path, UpdateLinks:=False, ReadOnly:=is_readonly)
+        Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, ReadOnly:=is_readonly)
     End If
     
     wb.Activate
@@ -1868,15 +1887,15 @@ End Function
 '        Ex. "abc.txt"の場合、"txt"が返る
 '            "."が含まれていない場合は""が返る
 '-------------------------------------------------------------
-Public Function GetFileExtension(ByVal FILENAME As String) As String
+Public Function GetFileExtension(ByVal filename As String) As String
     Dim dot_pos As Integer
     
     ' "."の位置を取得
-    dot_pos = InStrRev(FILENAME, ".")
+    dot_pos = InStrRev(filename, ".")
     
     ' 拡張子を取得
     If dot_pos > 0 Then
-        GetFileExtension = LCase(Right(FILENAME, Len(FILENAME) - dot_pos))
+        GetFileExtension = LCase(Right(filename, Len(filename) - dot_pos))
     Else
         GetFileExtension = ""
     End If
@@ -2107,4 +2126,5 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
 

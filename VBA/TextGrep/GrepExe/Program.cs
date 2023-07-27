@@ -32,6 +32,11 @@ using System.Text.RegularExpressions;
  * エンコード:UTF-8 BOMあり
  * ヘッダ:あり(#\tFilePath\tFileName\tExtension\tKeyword\tHitCount)
  * 
+ * 
+ * ■その他
+ * 対象ファイルのエンコードは以下のみとする。
+ * UTF-8, Shift-JIS
+ * 
  */
 
 namespace Grep
@@ -156,8 +161,7 @@ namespace Grep
                     fileList
                         .Select(file =>
                         {
-                            // TODO:エンコード対応(S-JIS or UTF-8)
-                            var contents = File.ReadAllText(file.FullName);
+                            var contents = ReadContents(file.FullName);
 
                             if (!_main_param.IsRegEx)
                             {
@@ -324,6 +328,76 @@ namespace Grep
             }
 
             Logger.Debug("parseMainParam E");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filepath"></param>
+        /// <returns></returns>
+        private static string ReadContents(string filepath)
+        {
+            byte[] bs = File.ReadAllBytes(filepath);
+
+            Encoding enc = DetectEncodingFromBOM(bs);
+
+            if (enc != Encoding.UTF8)
+            {
+                enc = Encoding.GetEncoding(932);
+            }
+
+            return File.ReadAllText(filepath, enc);
+        }
+
+        /// <summary>
+        /// BOMを調べて、文字コードを判別する。
+        /// </summary>
+        /// <param name="bytes">文字コードを調べるデータ。</param>
+        /// <returns>BOMが見つかった時は、対応するEncodingオブジェクト。
+        /// 見つからなかった時は、null。</returns>
+        private static Encoding DetectEncodingFromBOM(byte[] bytes)
+        {
+            if (bytes.Length < 2)
+            {
+                return null;
+            }
+            if ((bytes[0] == 0xfe) && (bytes[1] == 0xff))
+            {
+                //UTF-16 BE
+                return new UnicodeEncoding(true, true);
+            }
+            if ((bytes[0] == 0xff) && (bytes[1] == 0xfe))
+            {
+                if ((4 <= bytes.Length) &&
+                    (bytes[2] == 0x00) && (bytes[3] == 0x00))
+                {
+                    //UTF-32 LE
+                    return new UTF32Encoding(false, true);
+                }
+                //UTF-16 LE
+                return new UnicodeEncoding(false, true);
+            }
+            if (bytes.Length < 3)
+            {
+                return null;
+            }
+            if ((bytes[0] == 0xef) && (bytes[1] == 0xbb) && (bytes[2] == 0xbf))
+            {
+                //UTF-8
+                return new UTF8Encoding(true, true);
+            }
+            if (bytes.Length < 4)
+            {
+                return null;
+            }
+            if ((bytes[0] == 0x00) && (bytes[1] == 0x00) &&
+                (bytes[2] == 0xfe) && (bytes[3] == 0xff))
+            {
+                //UTF-32 BE
+                return new UTF32Encoding(true, true);
+            }
+
+            return null;
         }
     }
 
