@@ -20,9 +20,10 @@ using System.Text.RegularExpressions;
  * TargetFile\t(対象ファイル。ワイルドカード指定可。1種類のみ)
  * IsRegEx\t(0/1=正規表現を使わない/使う)
  * IsIgnoreCase\t(0/1=大文字小文字を区別する/区別しない)
+ * IsOutputZeroCount\t(0/1=0件は出力しない/出力する)
  * Keywords\t(GREPキーワード1。複数個指定可)
  * …
- * Keywords\t(GREPキーワードn。複数個指定可)
+ * Keywords\t(GREPキーワードn)
  * 
  * 
  * ■出力ファイルフォーマット
@@ -122,7 +123,24 @@ namespace Grep
 
             if (args.Length < 1)
             {
-                throw new ArgumentException("コマンドライン引数が少ない");
+                Console.WriteLine(@"Grep.exe Usage");
+                Console.WriteLine(@"Arg1:Full path of 'input.tsv' file.");
+                Console.WriteLine(@"[FILE FORMAT of input.tsv ]");
+                Console.WriteLine(@"* ファイル名:input.tsv");
+                Console.WriteLine(@"* 形式:tsv");
+                Console.WriteLine(@"* エンコード:UTF-8 with BOM");
+                Console.WriteLine(@"* ヘッダ:なし");
+                Console.WriteLine(@"* GrepDirPath\t(GREPフォルダの絶対パス)");
+                Console.WriteLine(@"* IsDebugLog\t(0/1=デバッグログ出力しない/出力する)");
+                Console.WriteLine(@"* IsSubDir\t(0/1=サブフォルダを検索しない/検索する)");
+                Console.WriteLine(@"* TargetFile\t(対象ファイル。ワイルドカード指定可。1種類のみ)");
+                Console.WriteLine(@"* IsRegEx\t(0/1=正規表現を使わない/使う)");
+                Console.WriteLine(@"* IsIgnoreCase\t(0/1=大文字小文字を区別する/区別しない)");
+                Console.WriteLine(@"* IsOutputZeroCount\t(0/1=0件は出力しない/出力する)");
+                Console.WriteLine(@"* Keywords\t(GREPキーワード1。複数個指定可)");
+                Console.WriteLine(@"* …");
+                Console.WriteLine(@"* Keywords\t(GREPキーワードn)");
+                return;
             }
 
             _input_file_path = args[0];
@@ -218,6 +236,9 @@ namespace Grep
                 // Body
                 foreach (var result in _results)
                 {
+                    if (!_main_param.IsOutputZeroCount && result.HitCount == 0)
+                        continue;
+
                     sw.WriteLine($"{num}\t{result.FilePath}\t{result.FileName}\t{result.Extension}\t{result.Keyword}\t{result.HitCount}");
                     num++;
                 }
@@ -251,14 +272,29 @@ namespace Grep
             if (!is_sub_dir)
                 option = SearchOption.TopDirectoryOnly;
 
+            var ext = Path.GetExtension(target_file);
+
             foreach (string name in Directory.GetFiles(search_dir, target_file, option))
             {
-                files.Add(new FileInfo(name));
+                if (endsWith(name, ext))
+                    files.Add(new FileInfo(name));
             }
 
             Logger.Debug("getFiles E");
 
             return files;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="src"></param>
+        /// <param name="end"></param>
+        /// <returns></returns>
+        private static bool endsWith(string src, string end)
+        {
+            int endIndex = src.Length - end.Length;
+            return src.Substring(endIndex) == end;
         }
 
         /// <summary>
@@ -319,6 +355,10 @@ namespace Grep
                     else if (columns[0] == "IsIgnoreCase")
                     {
                         _main_param.IsIgnoreCase = columns[1] == "0" ? false : true;
+                    }
+                    else if (columns[0] == "IsOutputZeroCount")
+                    {
+                        _main_param.IsOutputZeroCount = columns[1] == "0" ? false : true;
                     }
                     else if (columns[0] == "Keywords")
                     {
@@ -481,6 +521,11 @@ namespace Grep
         /// 大文字小文字区別
         /// </summary>
         public bool IsIgnoreCase;
+
+        /// <summary>
+        /// 0件も出力する
+        /// </summary>
+        public bool IsOutputZeroCount;
 
         /// <summary>
         /// GREPキーワード

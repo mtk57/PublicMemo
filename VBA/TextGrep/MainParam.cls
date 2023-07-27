@@ -42,6 +42,10 @@ Private regular_expression_s As String
 Private ignorecase As Boolean
 Private ignorecase_s As String
 
+'0åèÇ‡èoóÕÇ∑ÇÈ
+Private output_zero As Boolean
+Private output_zero_s As String
+
 Private Const CLM_ = "J"
 Private Const ROW_ = 7
 
@@ -59,6 +63,8 @@ Private Sub Class_Initialize()
     regular_expression_s = ""
     ignorecase = False
     ignorecase_s = ""
+    output_zero = False
+    output_zero_s = ""
 End Sub
 
 'èâä˙âª
@@ -74,6 +80,7 @@ Public Sub Init()
     target_file = main_sheet.Range(CLM_ & ROW_ + 5).value
     regular_expression_s = main_sheet.Range(CLM_ & ROW_ + 6).value
     ignorecase_s = main_sheet.Range(CLM_ & ROW_ + 7).value
+    output_zero_s = main_sheet.Range(CLM_ & ROW_ + 8).value
 End Sub
 
 'åüèÿ
@@ -125,6 +132,12 @@ Public Sub Validate()
     Else
         ignorecase = True
     End If
+    
+    If output_zero_s = "NO" Or output_zero_s = "" Then
+        output_zero = False
+    Else
+        output_zero = True
+    End If
 End Sub
 
 Public Sub CreateInputFile(ByRef sub_params() As SubParam)
@@ -151,6 +164,7 @@ Public Sub CreateInputFile(ByRef sub_params() As SubParam)
     ts.Write "TargetFile" & vbTab & GetTargetFile() & vbNewLine
     ts.Write "IsRegEx" & vbTab & IsRegExInt() & vbNewLine
     ts.Write "IsIgnoreCase" & vbTab & IsIgnorecaseInt() & vbNewLine
+    ts.Write "IsOutputZeroCount" & vbTab & IsOutputZeroCountInt() & vbNewLine
     
     Dim i As Long
     For i = 0 To UBound(sub_params)
@@ -240,6 +254,18 @@ Public Function IsIgnorecaseInt() As Integer
     End If
 End Function
 
+Public Function IsOutputZeroCount() As Boolean
+    IsOutputZeroCount = output_zero
+End Function
+
+Public Function IsOutputZeroCountInt() As Integer
+    If output_zero = True Then
+        IsOutputZeroCountInt = 1
+    Else
+        IsOutputZeroCountInt = 0
+    End If
+End Function
+
 Public Function GetAllValue() As String
     Dim ret As String
     
@@ -251,7 +277,8 @@ Public Function GetAllValue() As String
           "contain_subdir=(" & contain_subdir_s & "), " & _
           "target_file=(" & target_file & "), " & _
           "regular_expression=(" & regular_expression_s & "), " & _
-          "ignorecase=(" & ignorecase_s & ")"
+          "ignorecase=(" & ignorecase_s & "), " & _
+          "output_zero=(" & output_zero_s & ")"
 
     GetAllValue = ret
 End Function

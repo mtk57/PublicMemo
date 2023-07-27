@@ -41,9 +41,10 @@ Private Sub CheckAndCollectParam()
     Set main_param = New MainParam
     main_param.Init
     main_param.Validate
+    Common.WriteLog main_param.GetAllValue()
     
     Dim i As Long: i = 0
-    Dim row As Long: row = 18
+    Dim row As Long: row = 19
     Dim cnt As Long: cnt = 0
     
     Do
