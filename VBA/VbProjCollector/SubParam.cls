@@ -13,7 +13,7 @@ Option Explicit
 Private vbprj_file_paths() As String
 
 Private Const CLM_ = "C"
-Private Const START_ROW_ = 21
+Private Const START_ROW_ = 22
 
 'コンストラクタ
 Private Sub Class_Initialize()

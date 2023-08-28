@@ -53,6 +53,7 @@ Public Sub Run()
             dst_path = Common.ChangeUniqueDirPath(dst_path)
         End If
         
+        'コピー
         CopyProjectFiles dst_path, copy_files, vbproj_path
         
         'コピーBATファイルを作成する
@@ -486,23 +487,38 @@ CONTINUE:
     Next i
     
     '移動起点フォルダを移動する
-    MoveBaseFolder in_dest_path, dst_file_path, vbprj_path
+    Dim dst_dir As String: dst_dir = MoveBaseFolder(in_dest_path, dst_file_path, vbprj_path)
+    
+    If main_param.GetMergeDirPath() <> "" Then
+        'マージフォルダが存在しない場合は作成する
+        If Not fso.FolderExists(main_param.GetMergeDirPath) Then
+            Common.CreateFolder (main_param.GetMergeDirPath)
+        End If
+        
+        Common.WriteLog "Merge src=(" & dst_dir & "), dst=(" & main_param.GetMergeDirPath() & ")"
+        
+        'マージフォルダにコピーする
+        Common.CopyFolder dst_dir, main_param.GetMergeDirPath()
+    End If
     
     Set fso = Nothing
     Common.WriteLog "CopyProjectFiles E"
 End Sub
 
 '移動起点フォルダを移動する
-Private Sub MoveBaseFolder( _
+Private Function MoveBaseFolder( _
     ByVal in_dest_path As String, _
     ByRef dst_file_path() As String, _
     ByVal vbprj_path As String _
-)
+) As String
     Common.WriteLog "MoveBaseFolder S"
 
+    Dim dst_dir As String: dst_dir = in_dest_path
+
     If main_param.GetMoveBaseDirName() = "" Then
-        Common.WriteLog "MoveBaseFolder E1"
-        Exit Sub
+        MoveBaseFolder = dst_dir
+        Common.WriteLog "MoveBaseFolder E1(ret=" & dst_dir & ")"
+        Exit Function
     End If
     
     '移動起点フォルダ名が指定されている場合、コピー先フォルダパスに存在するかチェックする
@@ -519,8 +535,9 @@ Private Sub MoveBaseFolder( _
     
     '存在しない場合は何もしない
     If base_dir = "" Then
-        Common.WriteLog "MoveBaseFolder E2"
-        Exit Sub
+        MoveBaseFolder = dst_dir
+        Common.WriteLog "MoveBaseFolder E2(ret=" & dst_dir & ")"
+        Exit Function
     End If
     
     '存在する場合はリネームして移動する
@@ -534,11 +551,13 @@ Private Sub MoveBaseFolder( _
                                 main_param.GetDestDirPath() & SEP & renamed_dir))
     End If
     
-    Common.MoveFolder renamed_path, main_param.GetDestDirPath() & SEP & renamed_dir
+    dst_dir = main_param.GetDestDirPath() & SEP & renamed_dir
+    Common.MoveFolder renamed_path, dst_dir
     Common.DeleteFolder in_dest_path
     
-    Common.WriteLog "MoveBaseFolder E"
-End Sub
+    MoveBaseFolder = dst_dir
+    Common.WriteLog "MoveBaseFolder E(ret=" & dst_dir & ")"
+End Function
 
 'フォルダパスに指定フォルダ名があるかチェックし、あればそのフォルダまでのパスを返す
 Private Function GetFolderPathByKeyword(path As String, keyword As String) As String

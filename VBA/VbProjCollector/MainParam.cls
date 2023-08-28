@@ -26,6 +26,7 @@ Private is_out_sheet_s As String
 Private is_create_copy_bat_s As String
 Private is_create_build_bat_s As String
 Private is_delete_path32_s As String
+Private merge_dir_path As String
 
 Private Const CLM_ = "O"
 Private Const ROW_ = 6
@@ -47,6 +48,8 @@ Private Sub Class_Initialize()
     is_create_copy_bat_s = ""
     is_create_build_bat_s = ""
     is_delete_path32_s = ""
+    
+    merge_dir_path = ""
 End Sub
 
 '初期化
@@ -64,6 +67,7 @@ Public Sub Init()
     is_create_build_bat_s = main_sheet.Range(CLM_ & ROW_ + 9).value
     is_delete_path32_s = main_sheet.Range(CLM_ & ROW_ + 10).value
     ignore_files = main_sheet.Range(CLM_ & ROW_ + 11).value
+    merge_dir_path = main_sheet.Range(CLM_ & ROW_ + 12).value
 End Sub
 
 '初期化(外部実行用)
@@ -99,6 +103,7 @@ Public Sub InitForExternal( _
     is_delete_path32 = True
     
     ignore_files = main_sheet.Range(CLM_ & ROW_ + 11).value
+    merge_dir_path = main_sheet.Range(CLM_ & ROW_ + 12).value
 End Sub
 
 '検証
@@ -210,6 +215,13 @@ Public Function IsDeletePath32() As Boolean
 End Function
 
 '-----------------------------------------
+'マージフォルダパス
+'-----------------------------------------
+Public Function GetMergeDirPath() As String
+    GetMergeDirPath = merge_dir_path
+End Function
+
+'-----------------------------------------
 '収集除外ファイル(vbproj)
 '-----------------------------------------
 Public Function GetIgnoreFiles() As String
@@ -228,7 +240,8 @@ Public Function GetAllValue() As String
           "move_base_dir=(" & move_base_dir & "), " & _
           "is_create_build_bat=(" & is_create_build_bat_s & "), " & _
           "is_delete_path32=(" & is_delete_path32_s & "), " & _
-          "ignore_files=(" & ignore_files & ")"
+          "ignore_files=(" & ignore_files & "), " & _
+          "merge_dir_path=(" & merge_dir_path & ")"
 
     GetAllValue = ret
 End Function
