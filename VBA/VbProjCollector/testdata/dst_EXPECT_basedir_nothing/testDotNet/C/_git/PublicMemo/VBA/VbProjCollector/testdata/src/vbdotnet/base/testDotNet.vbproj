@@ -4,5 +4,8 @@
     <Compile Include="..\cmn\cmn.vb" />
     <Compile Include="base.vb" />
     <Compile Include="sub\sub.vb" />
+    <Reference Include="CommonLib">
+      <HintPath>..\cmn\cmn.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>
