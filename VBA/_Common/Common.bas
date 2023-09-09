@@ -1,7 +1,6 @@
-Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.1.6"
+Private Const VERSION = "1.1.7"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -1544,7 +1543,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     
     'コピー先のフォルダが存在しない場合、作成する
     If Not fso.FolderExists(dest_path) Then
-        fso.CreateFolder dest_path
+        CreateFolder dest_path
     End If
     
     'コピー元のフォルダ内のファイルをコピーする
