@@ -37,15 +37,15 @@ if "%1"=="" (
 )
 if "%2"=="" (
     echo Error Arg2 nothing.
-    exit /b 1
+    exit /b 2
 )
 if "%3"=="" (
     echo Error Arg3 nothing.
-    exit /b 1
+    exit /b 3
 )
 if "%4"=="" (
     echo Error Arg4 nothing.
-    exit /b 1
+    exit /b 4
 )
 
 REM à¯êîÇï\é¶
@@ -77,12 +77,9 @@ set DST=%4
 
 REM ÉÅÉCÉì
 echo %APP% -GREPMODE -GKEY=%SRC% -GREPR=%DST% -GFILE=%EXT% -GFOLDER="%TARGET%" -GCODE=99 -GOPT=SRU
-pause
-%APP% -GREPMODE -GKEY=%SRC% -GREPR=%DST% -GFILE=%EXT% -GFOLDER="%TARGET%" -GCODE=99 -GOPT=S
-RU
+%APP% -GREPMODE -GKEY=%SRC% -GREPR=%DST% -GFILE=%EXT% -GFOLDER="%TARGET%" -GCODE=99 -GOPT=SRU
 
 echo errorlevel=%errorlevel%
-pause
 endlocal
 
 exit /b %errorlevel%
