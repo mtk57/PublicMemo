@@ -39,6 +39,9 @@ Public Sub Run()
             msg = "ブランチが見つかりません。(" & target.GetBranch() & ")"
         ElseIf InStr(target.GetTag(), "STEP1.5") = 0 Then
             msg = "タグにSTEP1.5が指定されていません。 (tag=" & target.GetTag() & ")"
+        ElseIf WorkerCommon.IsExistTag(prms, target.GetTag(), True) = True Or _
+               WorkerCommon.IsExistTag(prms, target.GetTag(), False) = True Then
+            msg = "タグがすでにローカルまたはリモートに存在しています。(tag=" & target.GetTag() & ")"
         End If
 
         If msg <> "" Then

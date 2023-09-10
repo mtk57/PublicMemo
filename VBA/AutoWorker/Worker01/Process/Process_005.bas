@@ -38,6 +38,10 @@ Public Sub Run()
     
         If WorkerCommon.IsExistBranch(prms, target.GetBranch()) = False Then
             msg = "ブランチが見つかりません。(" & target.GetBranch() & ")"
+        
+        ElseIf WorkerCommon.IsExistTag(prms, target.GetTag(), True) = True Or _
+               WorkerCommon.IsExistTag(prms, target.GetTag(), False) = True Then
+            msg = "タグがすでにローカルまたはリモートに存在しています。(tag=" & target.GetTag() & ")"
         End If
 
         If msg <> "" Then
@@ -69,14 +73,18 @@ CONTINUE:
     For i = 0 To UBound(targetlist_exist_only)
     
         Set target = targetlist_exist_only(i)
+        
+        WorkerCommon.SwitchDevelopBranch prms
+        
+        WorkerCommon.DoPull prms
     
         WorkerCommon.SwitchBranch prms, target
+        
+        WorkerCommon.DoPull prms
         
         WorkerCommon.DoMerge prms, prms.GetBaseBranch()
         
         WorkerCommon.RunBat prms.GetBatPath(), CreateBatArgs(prms)
-        
-        WorkerCommon.DoPull prms
         
         DoCommit target
         
@@ -177,7 +185,7 @@ Private Sub DoCommit(ByRef target As ParamTarget)
     Dim git_result() As String
     
     'コミットする
-    cmd = "git commit -m " & DQ & target.GetCommit() & DQ
+    cmd = "git commit -a -m " & DQ & target.GetCommit() & DQ
     git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
     
     Common.WriteLog "DoCommit E"
