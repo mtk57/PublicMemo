@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.1.4"
+Private Const VERSION = "1.2.0"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -42,6 +42,25 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'文字列が指定文字列で開始されているかを返す
+' target : I : 文字列
+' search : I : 指定文字列
+' Ret : True/False (True=開始されている, False=開始されていない)
+'-------------------------------------------------------------
+Public Function StartsWith(ByVal target As String, ByVal search As String) As Boolean
+    StartsWith = False
+    
+    If Len(search) > Len(target) Then
+        Exit Function
+    End If
+    
+    If Left(target, Len(search)) = search Then
+        StartsWith = True
+    End If
+    
+End Function
 
 '-------------------------------------------------------------
 'フォルダが空かどうかを返す
@@ -618,6 +637,18 @@ On Error GoTo 0
 End Function
 
 '-------------------------------------------------------------
+'ワークシートの指定列のデータ最終行番号を返す
+' ws : I : ワークシート
+' clm : I : 指定列名(Ex."A")
+'-------------------------------------------------------------
+Public Function GetLastRowFromWorksheet( _
+  ByVal ws As Worksheet, _
+  ByVal clm As String _
+) As Long
+    GetLastRowFromWorksheet = ws.Cells(ws.Rows.count, clm).End(xlUp).row
+End Function
+
+'-------------------------------------------------------------
 'ワークシートの指定列の全行を指定ワードで検索し、ヒットした行番号を返す
 ' ws : I : ワークシート
 ' find_clm : I : 指定列名(Ex."A")
@@ -730,11 +761,11 @@ Public Function GetSheet( _
         '既に開いている
         Set wb = Workbooks(book_path)
     Else
-        Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, readonly:=is_readonly)
+        Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, ReadOnly:=is_readonly)
     End If
     
     wb.Activate
-    ActiveWindow.visible = is_visible
+    ActiveWindow.Visible = is_visible
     
     If Common.IsExistSheet(wb, sheet_name) = False Then
         Err.Raise 53, , "[GetSheet] 指定されたシートが存在しません (book_path=" & book_path & ", sheet_name=" & sheet_name & ")"
@@ -1513,7 +1544,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     
     'コピー先のフォルダが存在しない場合、作成する
     If Not fso.FolderExists(dest_path) Then
-        fso.CreateFolder dest_path
+        CreateFolder dest_path
     End If
     
     'コピー元のフォルダ内のファイルをコピーする
@@ -1555,27 +1586,66 @@ End Function
 '-------------------------------------------------------------
 Public Function RunProcessWait(ByVal exe_path As String) As Long
 
-  Dim wsh As Object
-  Set wsh = CreateObject("Wscript.Shell")
-  
-  Const NOT_DISP = 0
-  Const DISP = 1
-  Const WAIT = True
-  Const NO_WAIT = False
-  
-  Dim Process As Object
-  Set Process = wsh.Exec(exe_path)
+    Dim wsh As Object
+    Set wsh = CreateObject("Wscript.Shell")
+    
+    Const NOT_DISP = 0
+    Const DISP = 1
+    Const WAIT = True
+    Const NO_WAIT = False
+    
+    Dim Process As Object
+    Set Process = wsh.Exec(exe_path)
+    
+    'プロセス完了時に通知を受け取る
+    Do While Process.Status = 0
+        DoEvents
+    Loop
+    
+    'プロセスの戻り値を取得する
+    RunProcessWait = Process.ExitCode
+    
+    Set Process = Nothing
+    Set wsh = Nothing
+End Function
 
-  'プロセス完了時に通知を受け取る
-  Do While Process.Status = 0
-    DoEvents
-  Loop
+'-------------------------------------------------------------
+' BATファイルを実行する
+' bat_path : IN : BATファイルの絶対パス
+'                 BATに渡すパラメータがある場合も一緒に書くこと
+' Ret : BATの戻り値(exit /b 0の場合0が戻る)
+'-------------------------------------------------------------
+Public Function RunBatFile(ByVal bat_path As String) As Long
+    Dim wsh As Object
+    Set wsh = CreateObject("Wscript.Shell")
+    Dim returnValue As Variant
+    
+    Const NOT_DISP = 0
+    Const DISP = 1
+    Const WAIT = True
+    Const NO_WAIT = False
+    
+    returnValue = wsh.Run(bat_path, NOT_DISP, WAIT)
+    
+    RunBatFile = CLng(returnValue)
+    
+    Set wsh = Nothing
+End Function
 
-  'プロセスの戻り値を取得する
-  RunProcessWait = Process.ExitCode
-
-  Set Process = Nothing
-  Set wsh = Nothing
+'-------------------------------------------------------------
+'前後のダブルクォーテーションを除去して返す
+' 例:"hoge" → hoge
+' target : IN : 対象文字列
+' Ret : 除去後の文字列
+'-------------------------------------------------------------
+Public Function RemoveQuotes(ByVal target As String) As String
+    '""で囲まれているかをチェック
+    If Left(target, 1) = """" And Right(target, 1) = """" Then
+        '""を削除して返す
+        RemoveQuotes = Mid(target, 2, Len(target) - 2)
+    Else
+        RemoveQuotes = target
+    End If
 End Function
 
 '-------------------------------------------------------------
@@ -2095,9 +2165,4 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
-
-
-
-
-
 

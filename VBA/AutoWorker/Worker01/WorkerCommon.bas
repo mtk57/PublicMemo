@@ -456,3 +456,34 @@ Public Sub SwitchBranch(ByRef prms As ParamContainer, ByVal target As ParamTarge
     
     Common.WriteLog "SwitchBranch E"
 End Sub
+
+Public Sub DoMerge(ByRef prms As ParamContainer, ByVal from_branch As String)
+    Common.WriteLog "DoMerge S"
+    
+    Dim cmd As String
+    Dim git_result() As String
+    
+    'マージ
+    cmd = "git merge " & from_branch
+    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+    
+    Common.WriteLog "DoMerge E"
+End Sub
+
+Public Sub RunBat(ByVal bat_path As String, ByVal bat_args As String)
+    Common.WriteLog "RunBat S"
+    
+    Dim ret As Long
+    Dim bat_param As String
+    bat_param = bat_path & " " & bat_args
+
+    Common.WriteLog "bat_param=" & bat_param
+    
+    ret = Common.RunBatFile(bat_param)
+  
+    If ret <> 0 Then
+        Err.Raise 53, , "[RunBat] BATファイルの実行に失敗しました。(bat_param=" & bat_param & ", ret=" & ret & ")"
+    End If
+  
+    Common.WriteLog "RunBat E"
+End Sub

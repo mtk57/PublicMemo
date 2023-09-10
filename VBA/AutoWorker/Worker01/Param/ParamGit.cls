@@ -43,44 +43,74 @@ End Sub
 Public Sub Init()
     Dim sheet As Worksheet
     Set sheet = ThisWorkbook.Sheets("params")
-    Const CLM = Define.GIT_PARAM_CLM
+    Const clm = Define.GIT_PARAM_CLM
     Const i = Define.GIT_PARAM_ROW
     
-    git_url = sheet.Range(CLM & i).value
-    git_path = sheet.Range(CLM & i + 1).value
-    base_folder = sheet.Range(CLM & i + 2).value
-    base_branch = sheet.Range(CLM & i + 3).value
-    is_update_remote_s = sheet.Range(CLM & i + 4).value
-    is_delete_exist_branch_s = sheet.Range(CLM & i + 5).value
-    is_ignore_not_ref_s = sheet.Range(CLM & i + 6).value
+    git_url = sheet.Range(clm & i).value
+    git_path = sheet.Range(clm & i + 1).value
+    base_folder = sheet.Range(clm & i + 2).value
+    base_branch = sheet.Range(clm & i + 3).value
+    is_update_remote_s = sheet.Range(clm & i + 4).value
+    is_delete_exist_branch_s = sheet.Range(clm & i + 5).value
+    is_ignore_not_ref_s = sheet.Range(clm & i + 6).value
 End Sub
 
 '検証
 Public Sub Validate()
-    If git_path = "" Then
-        Err.Raise 53, , HEADER & "Gitフォルダパスが指定されていません"
+
+    If proc_type = PROCESS_TYPE.PROC_002 Or _
+       proc_type = PROCESS_TYPE.PROC_003 Or _
+       proc_type = PROCESS_TYPE.PROC_004 Or _
+       proc_type = PROCESS_TYPE.PROC_005 Or _
+       proc_type = PROCESS_TYPE.DELETE_BRANCH Or _
+       proc_type = PROCESS_TYPE.DELETE_TAG Then
+       
+        '(A)
+        If git_url = "" Then
+            Err.Raise 53, , HEADER & "GitURLパスが指定されていません"
+        End If
+       
+        '(B)
+        If git_path = "" Then
+            Err.Raise 53, , HEADER & "Gitフォルダパスが指定されていません"
+        End If
     End If
     
-    If base_folder = "" Then
-        Err.Raise 53, , HEADER & "起点フォルダ名が指定されていません"
+    If proc_type = PROCESS_TYPE.PROC_002 Then
+        '(C)
+        If base_folder = "" Then
+            Err.Raise 53, , HEADER & "起点フォルダ名が指定されていません"
+        End If
     End If
 
-    If base_branch = "" Then
-        Err.Raise 53, , HEADER & "ベースブランチ名が指定されていません"
+    If proc_type = PROCESS_TYPE.PROC_002 Or _
+       proc_type = PROCESS_TYPE.PROC_003 Or _
+       proc_type = PROCESS_TYPE.PROC_004 Or _
+       proc_type = PROCESS_TYPE.PROC_005 Or _
+       proc_type = PROCESS_TYPE.DELETE_BRANCH Or _
+       proc_type = PROCESS_TYPE.DELETE_TAG Then
+       
+        '(D)
+        If base_branch = "" Then
+            Err.Raise 53, , HEADER & "ベースブランチ名が指定されていません"
+        End If
     End If
     
+    '(E)
     If is_update_remote_s = "NO" Or is_update_remote_s = "" Then
         is_update_remote = False
     Else
         is_update_remote = True
     End If
     
+    '(F)
     If is_delete_exist_branch_s = "NO" Or is_delete_exist_branch_s = "" Then
         is_delete_exist_branch = False
     Else
         is_delete_exist_branch = True
     End If
 
+    '(G)
     If is_ignore_not_ref_s = "NO" Or is_ignore_not_ref_s = "" Then
         is_ignore_not_ref = False
     Else

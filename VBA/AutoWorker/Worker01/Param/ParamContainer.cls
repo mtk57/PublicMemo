@@ -39,14 +39,14 @@ Private Sub CollectTarget()
     Dim params As Worksheet
     Set params = ThisWorkbook.Sheets("params")
 
-    Const CLM = Define.TARGET_PARAM_CLM_0
+    Const clm = Define.TARGET_PARAM_CLM_0
     Const row = Define.TARGET_PARAM_ROW
     Dim i As Long: i = 0
     Dim cnt As Long: cnt = 0
     Dim enable As String
     
     Do
-        enable = params.Range(CLM & row + i).value
+        enable = params.Range(clm & row + i).value
         
         If enable = "" Then
             Exit Do
@@ -106,6 +106,14 @@ End Function
 
 Public Function IsDebugLog() As Boolean
     IsDebugLog = common_param.IsDebugLog()
+End Function
+
+Public Function GetBatPath() As String
+    GetBatPath = common_param.GetBatPath()
+End Function
+
+Public Function GetBatArgs() As String
+    GetBatArgs = common_param.GetBatArgs()
 End Function
 
 Public Function GetGitParam() As ParamGit

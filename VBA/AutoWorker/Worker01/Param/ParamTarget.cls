@@ -73,6 +73,7 @@ End Sub
 
 '検証
 Public Sub Validate(ByVal row As Integer)
+    '(0)
     If is_enable_s = "Enable" Then
         is_enable = True
     Else
@@ -83,11 +84,10 @@ Public Sub Validate(ByVal row As Integer)
         Exit Sub
     End If
 
-    If proc_type <> PROCESS_TYPE.PROC_003 And _
-       proc_type <> PROCESS_TYPE.PROC_004 And _
-       proc_type <> PROCESS_TYPE.DELETE_BRANCH And _
-       proc_type <> PROCESS_TYPE.DELETE_TAG Then
-    
+    '(1)
+    If proc_type = PROCESS_TYPE.PROC_001 Or _
+       proc_type = PROCESS_TYPE.PROC_002 Or _
+       proc_type = PROCESS_TYPE.PROC_003 Then
         If vbprj_file_path = "" Then
             Err.Raise 53, , HEADER & "VBプロジェクトファイルが指定されていません(row=" & row & ")"
         End If
@@ -98,34 +98,58 @@ Public Sub Validate(ByVal row As Integer)
     
     End If
     
-    If lot = "" Then
-        Err.Raise 53, , HEADER & "Lotが指定されていません(row=" & row & ")"
+    If proc_type = PROCESS_TYPE.PROC_002 Or _
+       proc_type = PROCESS_TYPE.PROC_003 Then
+       '(2)
+        If lot = "" Then
+            Err.Raise 53, , HEADER & "Lotが指定されていません(row=" & row & ")"
+        End If
+        
+        '(3)
+        If phase = "" Then
+            Err.Raise 53, , HEADER & "Phaseが指定されていません(row=" & row & ")"
+        End If
     End If
     
-    If phase = "" Then
-        Err.Raise 53, , HEADER & "Phaseが指定されていません(row=" & row & ")"
+    If proc_type = PROCESS_TYPE.PROC_002 Or _
+       proc_type = PROCESS_TYPE.PROC_003 Or _
+       proc_type = PROCESS_TYPE.PROC_004 Or _
+       proc_type = PROCESS_TYPE.PROC_005 Or _
+       proc_type = PROCESS_TYPE.DELETE_BRANCH Or _
+       proc_type = PROCESS_TYPE.DELETE_TAG Then
+        '(4)
+        If pid = "" Then
+            Err.Raise 53, , HEADER & "PIDが指定されていません(row=" & row & ")"
+        End If
+        
+        '(5)
+        If ticket_num = "" Then
+            Err.Raise 53, , HEADER & "ticket_numが指定されていません(row=" & row & ")"
+        End If
     End If
     
-    If pid = "" Then
-        Err.Raise 53, , HEADER & "PIDが指定されていません(row=" & row & ")"
+    If proc_type = PROCESS_TYPE.PROC_002 Or _
+       proc_type = PROCESS_TYPE.PROC_003 Or _
+       proc_type = PROCESS_TYPE.PROC_004 Or _
+       proc_type = PROCESS_TYPE.PROC_005 Or _
+       proc_type = PROCESS_TYPE.DELETE_TAG Then
+        '(6)
+        If step = "" Then
+            Err.Raise 53, , HEADER & "stepが指定されていません(row=" & row & ")"
+        End If
     End If
     
-    If ticket_num = "" Then
-        Err.Raise 53, , HEADER & "ticket_numが指定されていません(row=" & row & ")"
-    End If
-    
-    If step = "" Then
-        Err.Raise 53, , HEADER & "stepが指定されていません(row=" & row & ")"
-    End If
-    
+    '(7)
     If branch = "" Then
         Err.Raise 53, , HEADER & "branchが指定されていません(row=" & row & ")"
     End If
     
+    '(8)
     If commit = "" Then
         Err.Raise 53, , HEADER & "commitが指定されていません(row=" & row & ")"
     End If
 
+    '(9)
     If tag = "" Then
         Err.Raise 53, , HEADER & "tagが指定されていません(row=" & row & ")"
     End If

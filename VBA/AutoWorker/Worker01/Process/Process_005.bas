@@ -1,4 +1,4 @@
-Attribute VB_Name = "Process_004"
+Attribute VB_Name = "Process_005"
 Option Explicit
 
 Private prms As ParamContainer
@@ -7,7 +7,7 @@ Private DQ As String
 
 Public Sub Run()
     Common.WriteLog "Run S"
-    
+      
     SEP = Application.PathSeparator
     DQ = Chr(34)
     
@@ -15,7 +15,7 @@ Public Sub Run()
 
     Set prms = New ParamContainer
     
-    prms.SetProcessType PROCESS_TYPE.PROC_004
+    prms.SetProcessType PROCESS_TYPE.PROC_005
     prms.Init
     prms.Validate
     
@@ -27,18 +27,17 @@ Public Sub Run()
     Dim targetlist() As ParamTarget
     Dim targetlist_exist_only() As ParamTarget
     targetlist = prms.GetTargetList()
-        
+
+    
     WorkerCommon.DoClone prms
     
-    'まずは全てのブランチの存在チェックとタグチェック
+    'まずは全てのブランチの存在チェック
     For i = 0 To UBound(targetlist)
     
         Set target = targetlist(i)
     
         If WorkerCommon.IsExistBranch(prms, target.GetBranch()) = False Then
             msg = "ブランチが見つかりません。(" & target.GetBranch() & ")"
-        ElseIf InStr(target.GetTag(), "STEP1.5") = 0 Then
-            msg = "タグにSTEP1.5が指定されていません。 (tag=" & target.GetTag() & ")"
         End If
 
         If msg <> "" Then
@@ -73,13 +72,25 @@ CONTINUE:
     
         WorkerCommon.SwitchBranch prms, target
         
+        WorkerCommon.DoMerge prms, prms.GetBaseBranch()
+        
+        WorkerCommon.RunBat prms.GetBatPath(), CreateBatArgs(prms)
+        
         WorkerCommon.DoPull prms
+        
+        DoCommit target
         
         DoTag target
         
-        DoPush target
-    
+        DoPush target.GetBranch()
+        
+        WorkerCommon.SwitchDevelopBranch prms
+        
+        WorkerCommon.DoMerge prms, target.GetBranch()
+        
     Next i
+    
+    DoPush prms.GetBaseBranch()
         
 FINISH:
         
@@ -99,7 +110,7 @@ Private Sub DoTag(ByRef target As ParamTarget)
     Common.WriteLog "DoTag E"
 End Sub
 
-Private Sub DoPush(ByRef target As ParamTarget)
+Private Sub DoPush(ByVal branch As String)
     Common.WriteLog "DoPush S"
     
     If prms.IsUpdateRemote() = False Then
@@ -111,7 +122,7 @@ Private Sub DoPush(ByRef target As ParamTarget)
     Dim git_result() As String
     
     'タグを付ける
-    cmd = "git push -f --tags --set-upstream origin " & target.GetBranch()
+    cmd = "git push -f --tags --set-upstream origin " & branch
     
 On Error Resume Next
     git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
@@ -139,7 +150,35 @@ On Error GoTo 0
     Common.WriteLog "DoPush E"
 End Sub
 
+Private Function CreateBatArgs(ByRef prms As ParamContainer) As String
+    Common.WriteLog "CreateBatArgs S"
+    
+    CreateBatArgs = ""
+    
+    If prms.GetBatArgs() = "" Then
+        Common.WriteLog "CreateBatArgs E1"
+        Exit Function
+    End If
+    
+    Dim ret As String: ret = Replace(prms.GetBatArgs(), vbLf, " ")
+    
+    Dim args() As String: args = Split(prms.GetBatArgs(), vbLf)
+    ret = Join(args, " ")
+    
+    CreateBatArgs = ret
+    
+    Common.WriteLog "CreateBatArgs E"
+End Function
 
-
-
-
+Private Sub DoCommit(ByRef target As ParamTarget)
+    Common.WriteLog "DoCommit S"
+    
+    Dim cmd As String
+    Dim git_result() As String
+    
+    'コミットする
+    cmd = "git commit -m " & DQ & target.GetCommit() & DQ
+    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+    
+    Common.WriteLog "DoCommit E"
+End Sub
