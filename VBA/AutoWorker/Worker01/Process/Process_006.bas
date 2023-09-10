@@ -75,7 +75,7 @@ Private Sub OutputTagList(ByRef target As ParamTarget)
     tag_list = GetTargetTagList(target)
     
     If Common.IsEmptyArray(tag_list) = True Then
-        Common.WriteLog "Tag not found."
+        Common.WriteLog "Tag not found.(Branch=" & target.GetBranch() & ", Tag=" & target.GetTag() & ")"
         Common.WriteLog "OutputTagList E1"
         Exit Sub
     End If
@@ -83,7 +83,7 @@ Private Sub OutputTagList(ByRef target As ParamTarget)
     'タグ一覧をtxtで保存する
     Dim i As Long
     For i = LBound(tag_list) To UBound(tag_list)
-        WriteTxt target.GetBranch() & vbTab & target.tag_list(i)
+        WriteTxt target.GetBranch() & vbTab & tag_list(i)
     Next i
         
     Common.WriteLog "OutputTagList E"
@@ -127,7 +127,8 @@ Private Sub WriteTxt(ByVal contents As String)
         'オープンされていないので無視
         Exit Sub
     End If
-    Print txtfile_num, contents
+    Print #txtfile_num, contents
+    'Print #logfile_num, Format(Date, "yyyy/mm/dd") & " " & Format(Now, "hh:mm:ss") & ":" & contents
 End Sub
 
 Private Sub CloseTxt()

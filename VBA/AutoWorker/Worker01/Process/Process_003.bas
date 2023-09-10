@@ -55,7 +55,7 @@ Private Sub CollectTag(ByRef target As ParamTarget)
     tag_list = GetTargetTagList(target)
     
     If Common.IsEmptyArray(tag_list) = True Then
-        Common.WriteLog "Tag not found."
+        Common.WriteLog "Tag not found.(Branch=" & target.GetBranch() & ", Tag=" & target.GetTag() & ")"
         Common.WriteLog "CollectTag E1"
         Exit Sub
     End If
