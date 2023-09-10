@@ -1,0 +1,11 @@
+GrepReplaceTest.bat "C:\_git\PublicMemo\Sakura\grepíuä∑\test\src" "*.vb" "hoge\r\n^|fuga\r\n" ""
+
+echo errorlevel=%errorlevel%
+pause
+
+
+
+"C:\Program Files (x86)\sakura\sakura.exe" -GREPMODE -GKEY="hoge\r\n|fuga\r\n" -GREPR="" -GFILE="*.vb" -GFOLDER=""C:\_git\PublicMemo\Sakura\grepíuä∑\test\src"" -GCODE=99 -GOPT=SLRU
+
+
+

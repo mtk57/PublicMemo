@@ -1,13 +1,8 @@
-set APP="%ProgramFiles(x86)%\sakura\sakura.exe"
-set TARGET="C:\_git\PublicMemo\Sakura\grep置換\test\src"
-set EXT="*.vb"
+@echo off
+setlocal
 
-REM 置換前/置換後
-set SRC="hoge\r\n|fuga\r\n"
-set DST=""
-
+REM ---------------------------------------------------------
 REM https://sakura-editor.github.io/help/HLP000109.html
-
 REM -GREPMODE       Grep実行モードで起動
 REM -GKEY=          Grepの検索文字列
 REM -GREPR=         Grepの置換文字列
@@ -33,6 +28,61 @@ REM C               (置換)クリップボードから貼り付け
 REM O               (置換)バックアップ作成
 REM U               標準出力に出力し、Grep画面にデータを表示しない。コマンドラインからパイプやリダイレクトを指定することで結果を利用できます。
 REM H               ヘッダー・フッターを出力しない
+REM ---------------------------------------------------------
+
+REM 引数チェック
+if "%1"=="" (
+    echo Error Arg1 nothing.
+    exit /b 1
+)
+if "%2"=="" (
+    echo Error Arg2 nothing.
+    exit /b 1
+)
+if "%3"=="" (
+    echo Error Arg3 nothing.
+    exit /b 1
+)
+if "%4"=="" (
+    echo Error Arg4 nothing.
+    exit /b 1
+)
+
+REM 引数を表示
+echo Target Folderpath: %1
+echo Target Extension: %2
+echo Before Keyword: %3
+echo After Keyword: %4
+
+REM エスケープ文字を削除(例:^|→|)
+set BeforeKeyword_OLD=%3
+set BeforeKeyword_NEW=%BeforeKeyword_OLD:^=%
+echo BeforeKeyword_NEW=%BeforeKeyword_NEW%
+
+REM exeパス
+set APP="%ProgramFiles(x86)%\sakura\sakura.exe"
+
+REM Grepの検索対象のフォルダー
+REM 例:"C:\_git\PublicMemo\Sakura\grep置換\test\src"
+set TARGET=%1
+
+REM Grepの検索対象のファイル
+REM 例:"*.vb"
+set EXT=%2
+
+REM 置換前/置換後
+REM 例:"hoge\r\n|fuga\r\n"
+set SRC=%BeforeKeyword_NEW%
+set DST=%4
 
 REM メイン
-%APP% -GREPMODE -GKEY=%SRC% -GREPR=%DST% -GFILE=%EXT% -GFOLDER="%TARGET%" -GCODE=99 -GOPT=SLRU
+echo %APP% -GREPMODE -GKEY=%SRC% -GREPR=%DST% -GFILE=%EXT% -GFOLDER="%TARGET%" -GCODE=99 -GOPT=SRU
+pause
+%APP% -GREPMODE -GKEY=%SRC% -GREPR=%DST% -GFILE=%EXT% -GFOLDER="%TARGET%" -GCODE=99 -GOPT=S
+RU
+
+echo errorlevel=%errorlevel%
+pause
+endlocal
+
+exit /b %errorlevel%
