@@ -62,6 +62,7 @@ Public Sub Validate()
        proc_type = PROCESS_TYPE.PROC_003 Or _
        proc_type = PROCESS_TYPE.PROC_004 Or _
        proc_type = PROCESS_TYPE.PROC_005 Or _
+       proc_type = PROCESS_TYPE.PROC_006 Or _
        proc_type = PROCESS_TYPE.DELETE_BRANCH Or _
        proc_type = PROCESS_TYPE.DELETE_TAG Then
        
@@ -87,6 +88,7 @@ Public Sub Validate()
        proc_type = PROCESS_TYPE.PROC_003 Or _
        proc_type = PROCESS_TYPE.PROC_004 Or _
        proc_type = PROCESS_TYPE.PROC_005 Or _
+       proc_type = PROCESS_TYPE.PROC_006 Or _
        proc_type = PROCESS_TYPE.DELETE_BRANCH Or _
        proc_type = PROCESS_TYPE.DELETE_TAG Then
        

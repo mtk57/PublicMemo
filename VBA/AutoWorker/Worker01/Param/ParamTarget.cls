@@ -99,7 +99,12 @@ Public Sub Validate(ByVal row As Integer)
     End If
     
     If proc_type = PROCESS_TYPE.PROC_002 Or _
-       proc_type = PROCESS_TYPE.PROC_003 Then
+       proc_type = PROCESS_TYPE.PROC_003 Or _
+       proc_type = PROCESS_TYPE.PROC_004 Or _
+       proc_type = PROCESS_TYPE.PROC_005 Or _
+       proc_type = PROCESS_TYPE.PROC_006 Or _
+       proc_type = PROCESS_TYPE.DELETE_BRANCH Or _
+       proc_type = PROCESS_TYPE.DELETE_TAG Then
        '(2)
         If lot = "" Then
             Err.Raise 53, , HEADER & "Lot‚ªŽw’è‚³‚ê‚Ä‚¢‚Ü‚¹‚ñ(row=" & row & ")"
@@ -115,6 +120,7 @@ Public Sub Validate(ByVal row As Integer)
        proc_type = PROCESS_TYPE.PROC_003 Or _
        proc_type = PROCESS_TYPE.PROC_004 Or _
        proc_type = PROCESS_TYPE.PROC_005 Or _
+       proc_type = PROCESS_TYPE.PROC_006 Or _
        proc_type = PROCESS_TYPE.DELETE_BRANCH Or _
        proc_type = PROCESS_TYPE.DELETE_TAG Then
         '(4)
@@ -132,6 +138,7 @@ Public Sub Validate(ByVal row As Integer)
        proc_type = PROCESS_TYPE.PROC_003 Or _
        proc_type = PROCESS_TYPE.PROC_004 Or _
        proc_type = PROCESS_TYPE.PROC_005 Or _
+       proc_type = PROCESS_TYPE.PROC_006 Or _
        proc_type = PROCESS_TYPE.DELETE_TAG Then
         '(6)
         If step = "" Then

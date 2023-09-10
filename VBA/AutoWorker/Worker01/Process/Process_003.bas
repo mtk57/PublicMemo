@@ -61,10 +61,7 @@ Private Sub CollectTag(ByRef target As ParamTarget)
     End If
     
     'ƒ^ƒO‚ðzip‚Å•Û‘¶‚·‚é
-    Dim cmd As String
-    Dim git_result() As String
     Dim i As Long
-
     For i = LBound(tag_list) To UBound(tag_list)
         DoArchive target, tag_list(i)
     Next i

@@ -31,6 +31,7 @@ Public Enum PROCESS_TYPE
     PROC_003
     PROC_004
     PROC_005
+    PROC_006
     DELETE_BRANCH
     DELETE_TAG
 End Enum

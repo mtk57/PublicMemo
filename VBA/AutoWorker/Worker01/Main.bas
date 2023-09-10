@@ -6,6 +6,7 @@ Private Const RUN_002 = "RUN_002"
 Private Const RUN_003 = "RUN_003"
 Private Const RUN_004 = "RUN_004"
 Private Const RUN_005 = "RUN_005"
+Private Const RUN_006 = "RUN_006"
 Private Const DEL_BRANCH = "Delete Branch"
 Private Const DEL_TAG = "Delete Tag"
 
@@ -285,3 +286,38 @@ FINISH:
     MsgBox msg
 End Sub
 
+Public Sub Run006_Click()
+On Error GoTo ErrorHandler
+    If Common.ShowYesNoMessageBox("[" & RUN_006 & "]を実行します") = False Then
+        Exit Sub
+    End If
+
+    VisibleProcessingMessage True
+    Application.DisplayAlerts = False
+    
+    Dim msg As String: msg = "正常に終了しました"
+
+    If IsEnableDebugLog() = True Then
+        Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "AutoRun_" & RUN_006 & ".log"
+    End If
+
+    Common.WriteLog "------------------------------------"
+    Common.WriteLog "★Start"
+
+    Worksheets("params").Activate
+    Process_006.Run
+
+    Common.WriteLog "★End"
+    GoTo FINISH
+
+ErrorHandler:
+    msg = "エラーが発生しました(" & Err.Description & ")"
+
+FINISH:
+    Common.WriteLog msg
+    Common.CloseLog
+    Application.DisplayAlerts = True
+    VisibleProcessingMessage False
+    Worksheets("main").Activate
+    MsgBox msg
+End Sub
