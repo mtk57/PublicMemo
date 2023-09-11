@@ -48,10 +48,10 @@ End Sub
 Private Sub DeleteBranch(ByRef target As ParamTarget)
     Common.WriteLog "DeleteBranch S"
     
-    If FOR_TEST = False Then
-        Common.WriteLog "DeleteBranch E1"
-        Exit Sub
-    End If
+    'If FOR_TEST = False Then
+    '    Common.WriteLog "DeleteBranch E1"
+    '    Exit Sub
+    'End If
     
     'If Common.ShowYesNoMessageBox("[For TEST] ブランチの削除をを実行します。(" & target.GetBranch() & ")") = False Then
     '    Exit Sub
@@ -67,12 +67,15 @@ Private Sub DeleteBranch(ByRef target As ParamTarget)
     If WorkerCommon.IsExistLocalBranch(prms, target.GetBranch()) = True Then
         cmd = "git branch -D " & target.GetBranch()
         git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+        Common.WriteLog "Local branch deleted. (" & target.GetBranch() & ")"
     End If
 
     'リモートブランチを削除する
-    If WorkerCommon.IsExistRemoteBranch(prms, target.GetBranch()) = True Then
+    If WorkerCommon.IsExistRemoteBranch(prms, target.GetBranch()) = True And _
+       prms.IsUpdateRemote() = True Then
         cmd = "git push origin --delete " & target.GetBranch()
         git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+        Common.WriteLog "Remote branch deleted. (" & target.GetBranch() & ")"
     End If
 
     Common.WriteLog "DeleteBranch E"
@@ -81,10 +84,10 @@ End Sub
 Private Sub DeleteTag(ByRef target As ParamTarget)
     Common.WriteLog "DeleteTag S"
     
-    If FOR_TEST = False Then
-        Common.WriteLog "DeleteTag E1"
-        Exit Sub
-    End If
+    'If FOR_TEST = False Then
+    '    Common.WriteLog "DeleteTag E1"
+    '    Exit Sub
+    'End If
     
     'If Common.ShowYesNoMessageBox("[For TEST] タグの削除をを実行します。(" & target.GetTag() & ")") = False Then
     '    Exit Sub
@@ -97,12 +100,15 @@ Private Sub DeleteTag(ByRef target As ParamTarget)
         'ローカルタグを削除する
         cmd = "git tag -d " & target.GetTag()
         git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+        Common.WriteLog "Local tag deleted. (" & target.GetTag() & ")"
     End If
 
-    If WorkerCommon.IsExistTag(prms, target.GetTag(), False) = True Then
+    If WorkerCommon.IsExistTag(prms, target.GetTag(), False) = True And _
+       prms.IsUpdateRemote() = True Then
         'リモートタグを削除する
         cmd = "git push origin :refs/tags/" & target.GetTag()
         git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+        Common.WriteLog "Remote tag deleted. (" & target.GetTag() & ")"
     End If
 
     Common.WriteLog "DeleteTag E"

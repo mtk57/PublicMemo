@@ -470,20 +470,20 @@ Public Sub DoMerge(ByRef prms As ParamContainer, ByVal from_branch As String)
     Common.WriteLog "DoMerge E"
 End Sub
 
-Public Sub RunBat(ByVal bat_path As String, ByVal bat_args As String)
-    Common.WriteLog "RunBat S"
+Public Sub RunSakura(ByVal sakura_path As String, ByVal sakura_args As String)
+    Common.WriteLog "RunSakura S"
     
     Dim ret As Long
-    Dim bat_param As String
-    bat_param = bat_path & " " & bat_args
+    Dim sakura_param As String
+    sakura_param = sakura_path & " " & sakura_args
 
-    Common.WriteLog "bat_param=" & bat_param
+    Common.WriteLog "sakura_param=" & sakura_param
     
-    ret = Common.RunBatFile(bat_param)
+    ret = Common.RunBatFile(sakura_param)
   
     If ret <> 0 Then
-        Err.Raise 53, , "[RunBat] BATファイルの実行に失敗しました。(bat_param=" & bat_param & ", ret=" & ret & ")"
+        Err.Raise 53, , "[RunSakura] sakuraの実行に失敗しました。(sakura_param=" & sakura_param & ", ret=" & ret & ")"
     End If
   
-    Common.WriteLog "RunBat E"
+    Common.WriteLog "RunSakura E"
 End Sub

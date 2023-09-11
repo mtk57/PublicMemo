@@ -19,8 +19,8 @@ Private dst_dir_path As String
 Private ignore_files As String
 Private is_debug_log As Boolean
 Private is_debug_log_s As String
-Private bat_path As String
-Private bat_args As String
+Private sakura_path As String
+Private sakura_args As String
 
 'コンストラクタ
 Private Sub Class_Initialize()
@@ -31,8 +31,8 @@ Private Sub Class_Initialize()
     dst_dir_path = ""
     ignore_files = ""
     is_debug_log = False
-    bat_path = ""
-    bat_args = ""
+    sakura_path = ""
+    sakura_args = ""
 End Sub
 
 '初期化
@@ -46,8 +46,8 @@ Public Sub Init()
     dst_dir_path = sheet.Range(clm & i + 1).value
     ignore_files = sheet.Range(clm & i + 2).value
     is_debug_log_s = sheet.Range(clm & i + 3).value
-    bat_path = sheet.Range(clm & i + 4).value
-    bat_args = sheet.Range(clm & i + 5).value
+    sakura_path = sheet.Range(clm & i + 4).value
+    sakura_args = sheet.Range(clm & i + 5).value
 End Sub
 
 '検証
@@ -80,12 +80,12 @@ Public Sub Validate()
     
     If proc_type = PROCESS_TYPE.PROC_005 Then
         '④
-        If bat_path = "" Then
-            Err.Raise 53, , HEADER & "BATファイルパスが指定されていません"
+        If sakura_path = "" Then
+            Err.Raise 53, , HEADER & "sakuraエディタのパスが指定されていません"
         End If
         
-        If Common.IsExistsFile(Common.RemoveQuotes(bat_path)) = False Then
-            Err.Raise 53, , HEADER & "BATファイルが見つかりません (" & external_path & ")"
+        If Common.IsExistsFile(Common.RemoveQuotes(sakura_path)) = False Then
+            Err.Raise 53, , HEADER & "sakuraエディタが見つかりません (" & external_path & ")"
         End If
     End If
 End Sub
@@ -114,12 +114,12 @@ Public Function IsDebugLog() As Boolean
     IsDebugLog = is_debug_log
 End Function
 
-Public Function GetBatPath() As String
-    GetBatPath = bat_path
+Public Function GetSakuraPath() As String
+    GetSakuraPath = sakura_path
 End Function
 
-Public Function GetBatArgs() As String
-    GetBatArgs = bat_args
+Public Function GetSakuraArgs() As String
+    GetSakuraArgs = sakura_args
 End Function
 
 Public Function GetAllValue() As String
@@ -130,8 +130,8 @@ Public Function GetAllValue() As String
           "dst_dir_path=(" & dst_dir_path & "), " & _
           "ignore_files=(" & ignore_files & "), " & _
           "is_debug_log=(" & is_debug_log_s & "), " & _
-          "bat_path=(" & bat_path & "), " & _
-          "bat_args=(" & bat_args & ")"
+          "sakura_path=(" & sakura_path & "), " & _
+          "sakura_args=(" & sakura_args & ")"
           
     GetAllValue = ret
 End Function

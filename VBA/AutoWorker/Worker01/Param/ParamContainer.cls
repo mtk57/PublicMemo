@@ -108,12 +108,12 @@ Public Function IsDebugLog() As Boolean
     IsDebugLog = common_param.IsDebugLog()
 End Function
 
-Public Function GetBatPath() As String
-    GetBatPath = common_param.GetBatPath()
+Public Function GetSakuraPath() As String
+    GetSakuraPath = common_param.GetSakuraPath()
 End Function
 
-Public Function GetBatArgs() As String
-    GetBatArgs = common_param.GetBatArgs()
+Public Function GetSakuraArgs() As String
+    GetSakuraArgs = common_param.GetSakuraArgs()
 End Function
 
 Public Function GetGitParam() As ParamGit

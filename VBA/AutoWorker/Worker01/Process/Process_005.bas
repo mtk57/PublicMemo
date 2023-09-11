@@ -84,7 +84,7 @@ CONTINUE:
         
         WorkerCommon.DoMerge prms, prms.GetBaseBranch()
         
-        WorkerCommon.RunBat prms.GetBatPath(), CreateBatArgs(prms)
+        WorkerCommon.RunSakura prms.GetSakuraPath(), CreateSakuraArgs(prms)
         
         DoCommit target
         
@@ -158,24 +158,19 @@ On Error GoTo 0
     Common.WriteLog "DoPush E"
 End Sub
 
-Private Function CreateBatArgs(ByRef prms As ParamContainer) As String
-    Common.WriteLog "CreateBatArgs S"
+Private Function CreateSakuraArgs(ByRef prms As ParamContainer) As String
+    Common.WriteLog "CreateSakuraArgs S"
     
-    CreateBatArgs = ""
+    CreateSakuraArgs = ""
     
-    If prms.GetBatArgs() = "" Then
-        Common.WriteLog "CreateBatArgs E1"
+    If prms.GetSakuraArgs() = "" Then
+        Common.WriteLog "CreateSakuraArgs E1"
         Exit Function
     End If
     
-    Dim ret As String: ret = Replace(prms.GetBatArgs(), vbLf, " ")
+    CreateSakuraArgs = Replace(prms.GetSakuraArgs(), vbLf, " ")
     
-    Dim args() As String: args = Split(prms.GetBatArgs(), vbLf)
-    ret = Join(args, " ")
-    
-    CreateBatArgs = ret
-    
-    Common.WriteLog "CreateBatArgs E"
+    Common.WriteLog "CreateSakuraArgs E"
 End Function
 
 Private Sub DoCommit(ByRef target As ParamTarget)
