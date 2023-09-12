@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.1.6"
+Private Const VERSION = "1.2.0"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -1544,7 +1544,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     
     'コピー先のフォルダが存在しない場合、作成する
     If Not fso.FolderExists(dest_path) Then
-        fso.CreateFolder dest_path
+        CreateFolder dest_path
     End If
     
     'コピー元のフォルダ内のファイルをコピーする
@@ -1586,27 +1586,50 @@ End Function
 '-------------------------------------------------------------
 Public Function RunProcessWait(ByVal exe_path As String) As Long
 
-  Dim wsh As Object
-  Set wsh = CreateObject("Wscript.Shell")
-  
-  Const NOT_DISP = 0
-  Const DISP = 1
-  Const WAIT = True
-  Const NO_WAIT = False
-  
-  Dim Process As Object
-  Set Process = wsh.Exec(exe_path)
+    Dim wsh As Object
+    Set wsh = CreateObject("Wscript.Shell")
+    
+    Const NOT_DISP = 0
+    Const DISP = 1
+    Const WAIT = True
+    Const NO_WAIT = False
+    
+    Dim Process As Object
+    Set Process = wsh.Exec(exe_path)
+    
+    'プロセス完了時に通知を受け取る
+    Do While Process.Status = 0
+        DoEvents
+    Loop
+    
+    'プロセスの戻り値を取得する
+    RunProcessWait = Process.ExitCode
+    
+    Set Process = Nothing
+    Set wsh = Nothing
+End Function
 
-  'プロセス完了時に通知を受け取る
-  Do While Process.Status = 0
-    DoEvents
-  Loop
-
-  'プロセスの戻り値を取得する
-  RunProcessWait = Process.ExitCode
-
-  Set Process = Nothing
-  Set wsh = Nothing
+'-------------------------------------------------------------
+' BATファイルを実行する
+' bat_path : IN : BATファイルの絶対パス
+'                 BATに渡すパラメータがある場合も一緒に書くこと
+' Ret : BATの戻り値(exit /b 0の場合0が戻る)
+'-------------------------------------------------------------
+Public Function RunBatFile(ByVal bat_path As String) As Long
+    Dim wsh As Object
+    Set wsh = CreateObject("Wscript.Shell")
+    Dim returnValue As Variant
+    
+    Const NOT_DISP = 0
+    Const DISP = 1
+    Const WAIT = True
+    Const NO_WAIT = False
+    
+    returnValue = wsh.Run(bat_path, NOT_DISP, WAIT)
+    
+    RunBatFile = CLng(returnValue)
+    
+    Set wsh = Nothing
 End Function
 
 '-------------------------------------------------------------
@@ -2126,4 +2149,6 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
+
 

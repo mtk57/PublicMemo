@@ -358,11 +358,15 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
     cnt = 0
 
     For i = LBound(contents) To UBound(contents)
+        'Common.WriteLog "contents(" & i & ")=" & contents(i)
+    
         If InStr(contents(i), "<Compile Include=") = 0 And _
            InStr(contents(i), "<EmbeddedResource Include=") = 0 And _
            InStr(contents(i), "<None Include=") = 0 And _
-           InStr(contents(i), "<HintPath>") = 0 Then
-            'ビルドに必要なファイルを含まないので無視
+           InStr(contents(i), "<HintPath>") = 0 And _
+           InStr(contents(i), "<ApplicationIcon>") = 0 Then
+            'ビルドに必要なファイルを含まないので無視]
+            'Common.WriteLog "Skip contents(" & i & ")=" & contents(i)
             GoTo CONTINUE
         End If
         
@@ -390,8 +394,14 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
             path = Trim(Replace(Replace(contents(i), "<EmbeddedResource Include=""", ""), """ />", ""))
         ElseIf InStr(contents(i), "<None Include=") > 0 Then
             path = Trim(Replace(Replace(contents(i), "<None Include=""", ""), """ />", ""))
-        Else
+        ElseIf InStr(contents(i), "<HintPath>") > 0 Then
             path = Trim(Replace(Replace(contents(i), "<HintPath>", ""), "</HintPath>", ""))
+        ElseIf InStr(contents(i), "<ApplicationIcon>") = 0 Then
+            path = Trim(Replace(Replace(contents(i), "<ApplicationIcon>", ""), "</ApplicationIcon>", ""))
+        End If
+        
+        If path = "" Then
+            GoTo CONTINUE
         End If
         
         path = Replace(path, """>", "")
