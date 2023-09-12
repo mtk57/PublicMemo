@@ -92,8 +92,11 @@ Public Sub Validate(ByVal row As Integer)
             Err.Raise 53, , HEADER & "VBプロジェクトファイルが指定されていません(row=" & row & ")"
         End If
         
-        If Common.IsExistsFile(vbprj_file_path) = False Then
-            Err.Raise 53, , HEADER & "VBプロジェクトファイルが見つかりません(vbprj_file_path=" & vbprj_file_path & ", row=" & row & ")"
+        If proc_type = PROCESS_TYPE.PROC_001 Or _
+           proc_type = PROCESS_TYPE.PROC_002 Then
+            If Common.IsExistsFile(vbprj_file_path) = False Then
+                Err.Raise 53, , HEADER & "VBプロジェクトファイルが見つかりません(vbprj_file_path=" & vbprj_file_path & ", row=" & row & ")"
+            End If
         End If
     
     End If

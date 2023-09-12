@@ -123,6 +123,8 @@ Private Sub DoArchive(ByVal target As ParamTarget, ByVal tag As String)
         
         If filepath = "" Then
             GoTo CONTINUE
+        ElseIf Common.IsExistsFile(prms.GetGitDirPath() & SEP & filepath) = False Then
+            Err.Raise 53, , "[DoArchive] VBプロジェクトファイルが見つかりません(filepath=" & filepath & ", tag=" & tag & ")"
         End If
         
         Dim contents() As String: contents = WorkerCommon.DoShow(prms, tag & ":" & filepath)

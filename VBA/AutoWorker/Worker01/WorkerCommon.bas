@@ -180,7 +180,8 @@ Public Function GetFilepathByTag( _
     Dim cmd As String
     Dim git_result() As String
     
-    cmd = "git ls-tree -r --name-only " & tag & " | findstr " & filename
+    'cmd = "git ls-tree -r --name-only " & tag & " | findstr " & filename  'findstr‚ÍSJIS‚Ì‚Ý‚È‚Ì‚Å•sÌ—p
+    cmd = "git ls-tree -r --name-only " & tag
     
 On Error Resume Next
     git_result = Common.RunGit(repo_path, cmd)
@@ -203,13 +204,22 @@ On Error GoTo 0
     
     git_result = Common.DeleteEmptyArray(git_result)
     
-    If Common.IsEmptyArray(git_result) = True Or _
-       UBound(git_result) > 0 Then
+    If Common.IsEmptyArray(git_result) = True Then
         Common.WriteLog "File not found.(tag=" & tag & ", filename=(" & filename & ")"
         GetFilepathByTag = ""
     Else
-        If Common.GetFileExtension(filename) = Common.GetFileExtension(git_result(0)) Then
-            GetFilepathByTag = git_result(0)
+        '
+        Dim find_row_num  As Long: find_row_num = Common.FindRowByKeywordFromArray(filename, git_result, False)
+        
+        If find_row_num < 0 Then
+            'Œ©‚Â‚©‚ç‚È‚¢
+            Common.WriteLog "File not found.(tag=" & tag & ", filename=(" & filename & ")"
+            GetFilepathByTag = ""
+            Exit Function
+        End If
+    
+        If Common.GetFileExtension(filename) = Common.GetFileExtension(git_result(find_row_num)) Then
+            GetFilepathByTag = git_result(find_row_num)
         Else
             GetFilepathByTag = ""
         End If

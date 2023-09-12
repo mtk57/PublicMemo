@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.2.0"
+Private Const VERSION = "1.2.1"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -646,6 +646,48 @@ Public Function GetLastRowFromWorksheet( _
   ByVal clm As String _
 ) As Long
     GetLastRowFromWorksheet = ws.Cells(ws.Rows.count, clm).End(xlUp).row
+End Function
+
+'-------------------------------------------------------------
+'文字列の配列から指定ワードで検索し、ヒットした行番号を返す
+' keyword : I : 検索ワード
+' input_array : I : 文字列の配列
+' is_use_regexp : I : 正規表現の使用有無
+' Ret : ヒットした行番号
+'-------------------------------------------------------------
+Public Function FindRowByKeywordFromArray(ByVal keyword As String, ByRef input_array() As String, ByVal is_use_regexp As Boolean) As Long
+    If keyword = "" Then
+        FindRowByKeywordFromArray = -1
+        Exit Function
+    End If
+
+    Dim row As Long
+    Dim isMatch As Boolean
+    Dim line As String
+    Dim regex As Object
+    Set regex = Nothing
+    
+    If is_use_regexp = True Then
+        Set regex = CreateObject("VBScript.RegExp")
+        regex.Pattern = keyword
+    End If
+   
+    For row = LBound(input_array) To UBound(input_array)
+        line = input_array(row)
+        
+        If is_use_regexp = True Then
+            isMatch = regex.Test(line)
+        ElseIf InStr(1, line, keyword) > 0 Then
+            isMatch = True
+        End If
+    
+        If isMatch = True Then
+            FindRowByKeywordFromArray = row
+            Exit Function
+        End If
+    Next row
+    
+    FindRowByKeywordFromArray = -1
 End Function
 
 '-------------------------------------------------------------
