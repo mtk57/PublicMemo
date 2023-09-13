@@ -114,13 +114,7 @@ Private Sub DoCopy(ByRef target As ParamTarget)
     '起点フォルダをリネームして、Gitフォルダにコピー
     Dim src_path As String: src_path = prms.GetDestDirPath() & SEP & prms.GetBaseFolder() & "_" & prj_name
     
-    Dim dst_path As String: dst_path = prms.GetGitDirPath() & SEP
-    If ext = "vbp" Then
-        dst_path = dst_path & "SRC_020"
-    Else
-        dst_path = dst_path & "SRC_030"
-    End If
-    dst_path = dst_path & SEP & prms.GetBaseFolder()
+    Dim dst_path As String: dst_path = prms.GetGitDirPath() & SEP & target.GetDestBaseDir() & SEP & prms.GetBaseFolder()
     
     Common.CopyFolder src_path, dst_path
     

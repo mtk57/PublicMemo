@@ -22,6 +22,7 @@ Private phase As String
 Private pid As String
 Private ticket_num As String
 Private step As String
+Private dest_base_dir As String
 Private branch As String
 Private commit As String
 Private tag As String
@@ -38,6 +39,7 @@ Private Sub Class_Initialize()
     pid = ""
     ticket_num = ""
     step = ""
+    dest_base_dir = ""
     branch = ""
     commit = ""
     tag = ""
@@ -55,6 +57,7 @@ Public Sub Init(ByVal row As Integer)
     Dim C4 As String: C4 = Define.TARGET_PARAM_CLM_4
     Dim C5 As String: C5 = Define.TARGET_PARAM_CLM_5
     Dim C6 As String: C6 = Define.TARGET_PARAM_CLM_6
+    Dim C6a As String: C6a = Define.TARGET_PARAM_CLM_6a
     Dim C7 As String: C7 = Define.TARGET_PARAM_CLM_7
     Dim C8 As String: C8 = Define.TARGET_PARAM_CLM_8
     Dim C9 As String: C9 = Define.TARGET_PARAM_CLM_9
@@ -66,6 +69,7 @@ Public Sub Init(ByVal row As Integer)
     pid = sheet.Range(C4 & row).value
     ticket_num = sheet.Range(C5 & row).value
     step = sheet.Range(C6 & row).value
+    dest_base_dir = sheet.Range(C6a & row).value
     branch = sheet.Range(C7 & row).value
     commit = sheet.Range(C8 & row).value
     tag = sheet.Range(C9 & row).value
@@ -130,7 +134,13 @@ Public Sub Validate(ByVal row As Integer)
         If pid = "" Then
             Err.Raise 53, , HEADER & "PIDが指定されていません(row=" & row & ")"
         End If
-        
+    End If
+    
+    If proc_type = PROCESS_TYPE.PROC_002 Or _
+       proc_type = PROCESS_TYPE.PROC_003 Or _
+       proc_type = PROCESS_TYPE.PROC_004 Or _
+       proc_type = PROCESS_TYPE.PROC_005 Or _
+       proc_type = PROCESS_TYPE.DELETE_BRANCH Then
         '(5)
         If ticket_num = "" Then
             Err.Raise 53, , HEADER & "ticket_numが指定されていません(row=" & row & ")"
@@ -146,6 +156,13 @@ Public Sub Validate(ByVal row As Integer)
         '(6)
         If step = "" Then
             Err.Raise 53, , HEADER & "stepが指定されていません(row=" & row & ")"
+        End If
+    End If
+    
+    If proc_type = PROCESS_TYPE.PROC_002 Then
+        '(6a)
+        If dest_base_dir = "" Then
+            Err.Raise 53, , HEADER & "dest_base_dirが指定されていません(row=" & row & ")"
         End If
     End If
     
@@ -201,6 +218,10 @@ Public Function GetStep() As String
     GetStep = step
 End Function
 
+Public Function GetDestBaseDir() As String
+    GetDestBaseDir = dest_base_dir
+End Function
+
 Public Function GetBranch() As String
     GetBranch = branch
 End Function
@@ -224,6 +245,7 @@ Public Function GetAllValue() As String
           "pid=(" & pid & "), " & _
           "ticket_num=(" & ticket_num & "), " & _
           "step=(" & step & "), " & _
+          "dest_base_dir=(" & dest_base_dir & "), " & _
           "branch=(" & branch & "), " & _
           "commit=(" & commit & "), " & _
           "tag=(" & tag & ")"

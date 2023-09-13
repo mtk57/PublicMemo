@@ -1,102 +1,120 @@
-自動化メニュー																					
-ver.	1.4.2																				
-			★必須パラメータ																		
-			①	②	③	④	⑤	(A)	(B)	(C)	(D)	(E)	(F)	(G)	(0)	(1)	(2)	(3)	(4)	(5)	(6)
-ブランチ作成																					
-		1.(1)のVBプロジェクトファイル(C24～Cnn)を②に収集する。	①	②											(0)	(1)					
-																					
+自動化メニュー																						
+ver.	1.7.0																					
+			使用パラメータ																			
+			①	②	③	④	⑤	(A)	(B)	(C)	(D)	(E)	(F)	(G)	(0)	(1)	(2)	(3)	(4)	(5)	(6)	(6a)
+ブランチ作成																						
+		1.(1)のVBプロジェクトファイル(C24～Cnn)を②に収集する。	①	②	③										(0)	(1)						
+																						
 		"1.(B)に(A)をクローンする。
 2.(D)にスイッチする。
 3.(7)ブランチを作成する。
 4.②のフォルダをコピーして(8)コミットする。(コピーは②\(C)配下を(B)\(C)にコピーするので注意)
 5.(9)タグをつけてプッシュする。(STEP1.1以外はNG)
-6.2～5を[Target]の行数分繰り返す。"		②				(A)	(B)	(C)	(D)				(0)	(1)	(2)	(3)	(4)	(5)	(6)
-																					
-タグ収集																					
+6.2～5を[Target]の行数分繰り返す。"		②				(A)	(B)	(C)	(D)	(E)	(F)		(0)	(1)	(2)	(3)	(4)	(5)	(6)	(6a)
+																						
+タグ収集		※(D)にブランチがマージされていること。																				
 		"1.(B)に(A)をクローンする。
 2.(D)にスイッチする。
 3.(9)タグをzipで②に出力する。
     →対象プロジェクトが参照するファイルのみを出力する場合は(G)を参照する。
-4.3を[Target]の行数分繰り返す。"						(A)	(B)		(D)				(0)	(1)	(2)	(3)	(4)	(5)	(6)
-																					
-指定ブランチのHEADにタグ打ち																					
+4.3を[Target]の行数分繰り返す。"		②				(A)	(B)	(C)	(D)			(G)	(0)	(1)	(2)	(3)	(4)	(5)	(6)	
+																						
+指定ブランチのHEADにタグ打ち																						
 		"1.(B)に(A)をクローンする。
 2.(7)にスイッチする。
 3.HEADに(9)タグをつけてプッシュする。(STEP1.5以外はNG)
-4.2～3を[Target]の行数分繰り返す。"						(A)	(B)		(D)				(0)		(2)	(3)	(4)	(5)	(6)
-																					
-指定ブランチに対してBATファイルを実行																					
+4.2～3を[Target]の行数分繰り返す。"						(A)	(B)		(D)	(E)			(0)		(2)	(3)	(4)	(5)	(6)	
+																						
+指定ブランチに対してSakuraを実行																						
 		"1.(B)に(A)をクローンする。
 2.(D)にスイッチしてプルする。
 3.(7)にスイッチしてプルする。
 4.(D)を(7)にマージする。(ファストフォワード)
-5.④のBATを実行する。
+5.④のsakuraを実行する。
 6.(8)コミットする。
 7.(9)タグをつけてプッシュする。
 8.(D)にスイッチする。
 9.(7)を(D)にマージする。(ファストフォワード)
 10.2～9を[Target]の行数分繰り返す。
-11.プッシュする。(D)"				④		(A)	(B)		(D)				(0)		(2)	(3)	(4)	(5)	(6)
-タグ一覧出力																					
+11.プッシュする。(D)"				④	⑤	(A)	(B)		(D)	(E)			(0)		(2)	(3)	(4)	(5)	(6)	
+タグ一覧出力																						
 		"1.(B)に(A)をクローンする。
 2.(9)タグをtxtで②に出力する。
-3.2を[Target]の行数分繰り返す。"						(A)	(B)		(D)				(0)		(2)	(3)	(4)		(6)
+3.2を[Target]の行数分繰り返す。"		②				(A)	(B)		(D)				(0)		(2)	(3)	(4)	(5)	(6)	
 
 
 
 
 
 
-Parameters																							
-																							
-																							
-	[Common]							memo															
-		①外部ツールファイルパス(絶対パス) 	C:\_git\PublicMemo\VBA\VbProjCollector\VBProjCollector.xlsm																				
-		②VBプロジェクトファイルを収集するフォルダパス(絶対パス) 	C:\_tmp\Worker01_wk					末尾に"\"禁止。存在しない場合は作成する。															
-		③収集除外ファイル						複数ある場合は半角カンマで区切る。															
-		デバッグログ出力	NO					未指定はNOとする。															
-		④BATファイルパス(絶対パス) 	"C:\_git\PublicMemo\Sakura\grep置換\GrepReplaceTest.bat"					"本ツールではダブルクォーテーションは付けないので、パスに半角スペースを含む場合は""""で囲むこと。(含まなくても""""で囲んでもよい)
-BATファイルからの戻り値は、正常=0, 正常以外=1以上の整数を返すこと。"															
-		⑤BATファイルに渡す引数	"""C:\_git_wk\GIT_0020\SRC_030""
-""*.vb""
-""hoge\r\n^|fuga\r\n""
-"""""					"引数の仕様について④のBATファイルを参照すること。
+
+
+
+
+
+
+Parameters																								
+																								
+																								
+	[Common]								memo															
+		①外部ツールファイルパス(絶対パス) 	C:\_git\PublicMemo\VBA\VbProjCollector\VBProjCollector.xlsm																					
+		②VBプロジェクトファイルを収集するフォルダパス(絶対パス) 	C:\_tmp\Worker01_wk						末尾に"\"禁止。存在しない場合は作成する。															
+		③収集除外ファイル							複数ある場合は半角カンマで区切る。															
+		デバッグログ出力	NO						未指定はNOとする。															
+		④sakuraエディタのパス(絶対パス) 	"C:\Program Files (x86)\sakura\sakura.exe"						本ツールではダブルクォーテーションは付けないので、パスに半角スペースを含む場合は""で囲むこと。(含まなくても""で囲んでもよい)															
+		⑤sakuraに渡す引数	"-GREPMODE
+-GKEY=""hoge""
+-GREPR=""moge""
+-GFILE=""*.vb""
+-GFOLDER=""C:\_git_wk\GIT_0020\SRC_020""
+-GCODE=99
+-GOPT=SRU"						"引数の仕様についてはsakuraの公式サイトを参照すること。
 複数ある場合は改行する。
-正規表現等の「|」を使用する場合は「^」でエスケープすること。
+実行前に赤字ボールドの内容が正しいことを確認すること。
 本ツールではダブルクォーテーションは付けないので、パス等に半角スペースを含む場合は""""で囲むこと。(含まなくても""""で囲んでもよい)"															
-																							
-	[Git]							memo															
-		(A)GitリポジトリURL	https://github.com/mtk57/GIT_0020					未指定の場合はクローン済とみなす。															
-		(B)Gitフォルダパス(絶対パス) 	C:\_git_wk\GIT_0020					末尾に"\"禁止。存在しない場合は作成する。															
-		(C)起点フォルダ名	Zsrc					②から(C)のフォルダ配下を(B)にコピーする。															
-		(D)ベースブランチ名 	develop1																				
-		(E)リモートブランチを更新する	NO					未指定はNOとする。															
-		(F)(7)が存在した場合は削除する	YES					未指定はNOとする。															
-		(G)VBプロジェクト未参照ファイルを除外	YES					タグ収集時に参照。未指定はNOとする。YESを指定する場合は、(9)に正規表現を使用しないこと。															
-																							
-								memo															
-	[Target]							黄色セルは式が入っているので変更しないこと。(0)が空セルになるまで検索する。(9)は正規表現指定可能。															
-	(0)有効無効	(1)VBプロジェクトファイルの絶対パス	(2)Lot	(3)Phase	(4)PID	(5)Redmine#	(6)STEP	(7)Branch	(8)Commit	(9)Tag													
-1	Enable		1	1	PID_1	00001	1.?	fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.?-PID_1	Run 006のテスト用												
-2								fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
-3								fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
-4								fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
-5								fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
-6								fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
-7								fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
-8								fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
-9								fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
-10								fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
-11								fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
-12								fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
-13								fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
-14								fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
-15	Enable	C:\_git_wk\GIT_0010\SRC_010\Zsrc\DSizing\testA\testA.vbp						fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-	Run 001のテスト用												
-16	Enable	C:\_git_wk\GIT_0010\SRC_010\Zsrc\DSizing\testA\testA.vbp	1	1	PID_1	00001	1.1	fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.1-PID_1	Run 002のテスト用												
-17	Enable	C:\_git_wk\GIT_0010\SRC_010\Zsrc\DSizing\testA\testA.vbp	1	1	PID_1	00001	1.1	fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.1-PID_1	Run 003のテスト用												
-18	Enable		1	1	PID_1	00001	1.5	fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.5-PID_1	Run 004のテスト用												
-19	Enable		1	1	PID_1	00001	1.6	fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.6-PID_1	Run 005のテスト用												
-20	Enable		1	1	PID_1	00001	1.?	fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.?-PID_1	Run 006のテスト用												
+																								
+	[Git]								memo															
+		(A)GitリポジトリURL	https://github.com/mtk57/GIT_0020						未指定の場合はクローン済とみなす。															
+		(B)Gitフォルダパス(絶対パス) 	C:\_git_wk\GIT_0020						末尾に"\"禁止。存在しない場合は作成する。															
+		(C)起点フォルダ名	Zsrc						②から(C)のフォルダ配下を(B)にコピーする。															
+		(D)ベースブランチ名 	develop1																					
+		(E)リモートブランチを更新する	NO						未指定はNOとする。															
+		(F)(7)が存在した場合は削除する	NO						未指定はNOとする。															
+		(G)VBプロジェクト未参照ファイルを除外	YES						タグ収集時に参照。未指定はNOとする。YESを指定する場合は、(9)に正規表現を使用しないこと。															
+																								
+									memo															
+	[Target]								黄色セルは式が入っているので変更しないこと。(0)が空セルになるまで検索する。(9)は正規表現指定可能。															
+	(0)有効無効	(1)VBプロジェクトファイルの絶対パス	(2)Lot	(3)Phase	(4)PID	(5)Redmine#	(6)STEP	(6a)DestBaseDir	(7)Branch	(8)Commit	(9)Tag													
+1									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+2									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+3									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+4									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+5									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+6									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+7									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+8									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+9									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+10									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+11									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+12									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+13									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+14									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+15									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+16									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+17									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+18									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+19									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+20									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+21									fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-													
+
+
+
+
+
+
+
+
+
 
 
 
@@ -104,8 +122,123 @@ BATファイルからの戻り値は、正常=0, 正常以外=1以上の整数�
 
 Danger　zone																							
 			★必須パラメータ																				
-			①	②	③	④	⑤	(A)	(B)	(C)	(D)	(E)	(F)	(G)	(0)	(1)	(2)	(3)	(4)	(5)	(6)		
+			①	②	③	④	⑤	(A)	(B)	(C)	(D)	(E)	(F)	(G)	(0)	(1)	(2)	(3)	(4)	(5)	(6)	(6a)	
 																							
-								(A)	(B)		(D)				(0)		(2)	(3)	(4)	(5)			
+								(A)	(B)		(D)	(E)			(0)		(2)	(3)	(4)	(5)			
 																							
-								(A)	(B)		(D)				(0)		(2)	(3)	(4)		(6)		
+								(A)	(B)		(D)	(E)			(0)		(2)	(3)	(4)		(6)		
+
+
+
+
+
+
+
+
+
+
+
+デグレ確認手順												
+ver.	1.6.0以降											
+												
+	[Common]								途中で変更			
+		①外部ツールファイルパス(絶対パス) 	C:\_git\PublicMemo\VBA\VbProjCollector\VBProjCollector.xlsm						なし			
+		②VBプロジェクトファイルを収集するフォルダパス(絶対パス) 	C:\_tmp\Worker01_wk						なし			
+		③収集除外ファイル							なし			
+		デバッグログ出力	NO						なし			
+		④sakuraエディタのパス(絶対パス) 	"C:\Program Files (x86)\sakura\sakura.exe"						なし			
+		⑤sakuraに渡す引数	"-GREPMODE
+-GKEY=""hoge""
+-GREPR=""moge""
+-GFILE=""*.vb""
+-GFOLDER=""C:\_git_wk\GIT_0020\SRC_020""
+-GCODE=99
+-GOPT=SRU"						なし			
+												
+	[Git]											
+		(A)GitリポジトリURL	https://github.com/mtk57/GIT_0020						なし			
+		(B)Gitフォルダパス(絶対パス) 	C:\_git_wk\GIT_0020						なし			
+		(C)起点フォルダ名	Zsrc						なし			
+		(D)ベースブランチ名 	develop1						なし			
+		(E)リモートブランチを更新する	YES						なし			
+		(F)(7)が存在した場合は削除する	YES						なし			
+		(G)VBプロジェクト未参照ファイルを除外	YES						なし			
+												
+												
+Run001												
+	[Target]											
+	(0)有効無効	(1)VBプロジェクトファイルの絶対パス	(2)Lot	(3)Phase	(4)PID	(5)Redmine#	(6)STEP	(6a)DestBaseDir	(7)Branch	(8)Commit	(9)Tag	
+	Enable	C:\_git_wk\GIT_0010\SRC_010\Zsrc\DSizing\testA\testA.vbp							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-	
+	Enable	C:\_git_wk\GIT_0010\SRC_010\Zsrc\DSizing\testB\testB.vbproj							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-	
+	Enable	C:\_git_wk\GIT_0010\SRC_010\Zsrc\DSizing\testC\全角プロジェクト.vbp							fe_#00000	[COMMIT] 	TAG-LO-PH-STEP-	
+												
+												
+Run002実行前は、GIT_0020には、master, developブランチのみ。タグは1つもないこと。ある場合は以下で消しておく。												
+												
+DeleteBranch												
+DeleteTag												
+	Enable		1	1	PID_1	00001	1.1		fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.1-PID_1	→(6)に正規表現は不可。
+	Enable		1	1	PID_2	00002	1.1		fe_PID_2#00002	[COMMIT] PID_2	TAG-LO1-PH1-STEP1.1-PID_2	→(6)に正規表現は不可。
+	Enable		1	1	PID_3	00003	1.1		fe_PID_3#00003	[COMMIT] PID_3	TAG-LO1-PH1-STEP1.1-PID_3	→(6)に正規表現は不可。
+	Enable		1	1	PID_1	00001	1.5		fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.5-PID_1	→(6)に正規表現は不可。
+	Enable		1	1	PID_2	00002	1.5		fe_PID_2#00002	[COMMIT] PID_2	TAG-LO1-PH1-STEP1.5-PID_2	→(6)に正規表現は不可。
+	Enable		1	1	PID_3	00003	1.5		fe_PID_3#00003	[COMMIT] PID_3	TAG-LO1-PH1-STEP1.5-PID_3	→(6)に正規表現は不可。
+	Enable		1	1	PID_2	00002	1.6		fe_PID_2#00002	[COMMIT] PID_2	TAG-LO1-PH1-STEP1.6-PID_2	→(6)に正規表現は不可。
+												
+												
+Run002												
+	Enable	C:\_git_wk\GIT_0010\SRC_010\Zsrc\DSizing\testA\testA.vbp	1	1	PID_1	00001	1.1	SRC_020	fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.1-PID_1	
+	Enable	C:\_git_wk\GIT_0010\SRC_010\Zsrc\DSizing\testB\testB.vbproj	1	1	PID_2	00002	1.1	SRC_020	fe_PID_2#00002	[COMMIT] PID_2	TAG-LO1-PH1-STEP1.1-PID_2	
+	Enable	C:\_git_wk\GIT_0010\SRC_010\Zsrc\DSizing\testC\全角プロジェクト.vbp	1	1	PID_3	00003	1.1	SRC_020	fe_PID_3#00003	[COMMIT] PID_3	TAG-LO1-PH1-STEP1.1-PID_3	
+												
+												
+Run004												
+	Enable		1	1	PID_1	00001	1.5		fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.5-PID_1	→(6)に正規表現は不可。
+	Enable		1	1	PID_2	00002	1.5		fe_PID_2#00002	[COMMIT] PID_2	TAG-LO1-PH1-STEP1.5-PID_2	→(6)に正規表現は不可。
+	Enable		1	1	PID_3	00003	1.5		fe_PID_3#00003	[COMMIT] PID_3	TAG-LO1-PH1-STEP1.5-PID_3	→(6)に正規表現は不可。
+												
+												
+Run005												
+	Enable	C:\_git_wk\GIT_0020\SRC_020\Zsrc\DSizing\testA\testA.vbp	1	1	PID_1	00001	1.6		fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.6-PID_1	→(6)に正規表現は不可。
+	Enable	C:\_git_wk\GIT_0020\SRC_020\Zsrc\DSizing\testB\testB.vbproj	1	1	PID_2	00002	1.6		fe_PID_2#00002	[COMMIT] PID_2	TAG-LO1-PH1-STEP1.6-PID_2	→(6)に正規表現は不可。
+	Enable	C:\_git_wk\GIT_0020\SRC_020\Zsrc\DSizing\testC\全角プロジェクト.vbp	1	1	PID_3	00003	1.6		fe_PID_3#00003	[COMMIT] PID_3	TAG-LO1-PH1-STEP1.6-PID_3	→(6)に正規表現は不可。
+												
+												
+Run006												
+	Enable		1	1	PID_1	00001	1.?		fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.?-PID_1	→(6)に正規表現は可。
+	Enable		1	1	PID_2	00002	1.?		fe_PID_2#00002	[COMMIT] PID_2	TAG-LO1-PH1-STEP1.?-PID_2	→(6)に正規表現は可。
+	Enable		1	1	PID_3	00003	1.?		fe_PID_3#00003	[COMMIT] PID_3	TAG-LO1-PH1-STEP1.?-PID_3	→(6)に正規表現は可。
+												
+												
+Run003実行前は、GIT_0020のでdevelopにRun002で作成したブランチがすべてマージされていること。												
+												
+Run003												
+	Enable	C:\_git_wk\GIT_0010\SRC_020\Zsrc\DSizing\testA\testA.vbp	1	1	PID_1	00001	1.?		fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.?-PID_1	→(6)に正規表現は可。
+	Enable	C:\_git_wk\GIT_0010\SRC_020\Zsrc\DSizing\testB\testB.vbproj	1	1	PID_2	00002	1.?		fe_PID_2#00002	[COMMIT] PID_2	TAG-LO1-PH1-STEP1.?-PID_2	→(6)に正規表現は可。
+	Enable	C:\_git_wk\GIT_0010\SRC_020\Zsrc\DSizing\testC\全角プロジェクト.vbp	1	1	PID_3	00003	1.?		fe_PID_3#00003	[COMMIT] PID_3	TAG-LO1-PH1-STEP1.?-PID_3	→(6)に正規表現は可。
+												
+												
+デグレ確認はでdevelopのリセットと以下を行う。												
+												
+DeleteBranch												
+DeleteTag												
+	Enable		1	1	PID_1	00001	1.1		fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.1-PID_1	→(6)に正規表現は不可。
+	Enable		1	1	PID_2	00002	1.1		fe_PID_2#00002	[COMMIT] PID_2	TAG-LO1-PH1-STEP1.1-PID_2	→(6)に正規表現は不可。
+	Enable		1	1	PID_3	00003	1.1		fe_PID_3#00003	[COMMIT] PID_3	TAG-LO1-PH1-STEP1.1-PID_3	→(6)に正規表現は不可。
+	Enable		1	1	PID_1	00001	1.5		fe_PID_1#00001	[COMMIT] PID_1	TAG-LO1-PH1-STEP1.5-PID_1	→(6)に正規表現は不可。
+	Enable		1	1	PID_2	00002	1.5		fe_PID_2#00002	[COMMIT] PID_2	TAG-LO1-PH1-STEP1.5-PID_2	→(6)に正規表現は不可。
+	Enable		1	1	PID_3	00003	1.5		fe_PID_3#00003	[COMMIT] PID_3	TAG-LO1-PH1-STEP1.5-PID_3	→(6)に正規表現は不可。
+	Enable		1	1	PID_2	00002	1.6		fe_PID_2#00002	[COMMIT] PID_2	TAG-LO1-PH1-STEP1.6-PID_2	→(6)に正規表現は不可。
+												
+developのリセット												
+	→testA～testCフォルダを削除してコミットでもよい。											
+
+
+
+
+
+
+
+
+
+

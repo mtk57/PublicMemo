@@ -84,17 +84,22 @@ CONTINUE:
         
         WorkerCommon.DoMerge prms, prms.GetBaseBranch()
         
-        WorkerCommon.RunSakura prms.GetSakuraPath(), CreateSakuraArgs(prms)
+        RunSakura prms, target
         
-        DoCommit target
+        If DoCommit(target) = False Then
+            '後続処理をスキップ
+            GoTo CONTINUE2
+        End If
         
         DoTag target
-        
+
         DoPush target.GetBranch()
         
         WorkerCommon.SwitchDevelopBranch prms
-        
+    
         WorkerCommon.DoMerge prms, target.GetBranch()
+        
+CONTINUE2:
         
     Next i
     
@@ -158,7 +163,134 @@ On Error GoTo 0
     Common.WriteLog "DoPush E"
 End Sub
 
-Private Function CreateSakuraArgs(ByRef prms As ParamContainer) As String
+Private Function DoCommit(ByRef target As ParamTarget) As Boolean
+    Common.WriteLog "DoCommit S"
+    
+    Dim cmd As String
+    Dim git_result() As String
+    
+    'コミットする
+    cmd = "git commit -a -m " & DQ & target.GetCommit() & DQ
+    
+On Error Resume Next
+    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+    
+    Dim err_msg As String: err_msg = Err.Description
+    Err.Clear
+On Error GoTo 0
+
+    If err_msg = "" Then
+        '成功。後続処理続行フラグをON
+        DoCommit = True
+    ElseIf InStr(err_msg, "exit code=1") = 0 Then
+        'exit code=1以外は上位に再度エラー通知
+        Err.Raise 53, , "[DoCommit] git commitでエラー (err_msg=" & err_msg & ")"
+    Else
+        'exit code=1でも続行できる可能性があるものは続行する
+        
+        If InStr(err_msg, "working tree clean") = 0 Then
+            '続行できないものとする。上位に再度エラー通知
+            Err.Raise 53, , "[DoCommit] git commitでエラー (err_msg=" & err_msg & ")"
+        End If
+        
+        DoCommit = False  'コミットしたものがないので後続処理続行フラグをOFF
+    End If
+    
+    Common.WriteLog "DoCommit E"
+End Function
+
+Private Sub RunSakura(ByRef prms As ParamContainer, ByVal target As ParamTarget)
+    Common.WriteLog "RunSakura S"
+    
+    Dim ref_file_list() As String
+    
+    '対象VBプロジェクトのファイルのみをsakuraで処理するため、作業用フォルダーにコピー
+    Dim wk_dir As String: wk_dir = CopyVBProjectFilesToWorkDir(target, ref_file_list)
+    
+    Dim ret As Long
+    Dim sakura_param As String
+    sakura_param = prms.GetSakuraPath() & " " & CreateSakuraArgs(prms, wk_dir)
+
+    Common.WriteLog "sakura_param=" & sakura_param
+    
+    ret = Common.RunBatFile(sakura_param)
+  
+    If ret <> 0 Then
+        Common.DeleteFolder wk_dir
+        Err.Raise 53, , "[RunSakura] sakuraの実行に失敗しました。(sakura_param=" & sakura_param & ", ret=" & ret & ")"
+    End If
+    
+    Dim base_dir As String: base_dir = Common.GetCommonString(ref_file_list)
+    
+    CopyVBProjectFilesFromWorkDir wk_dir, base_dir
+    Common.DeleteFolder wk_dir
+  
+    Common.WriteLog "RunSakura E"
+End Sub
+
+Private Function CopyVBProjectFilesToWorkDir(ByVal target As ParamTarget, ByRef ref_file_list() As String) As String
+    Common.WriteLog "CopyVBProjectFilesToWorkDir S"
+    
+    Dim err_msg As String
+    Dim vbproj_path As String: vbproj_path = target.GetVBPrjFilePath()
+    
+    If Common.IsExistsFile(vbproj_path) = False Then
+        err_msg = "[CopyVBProjectFilesToWorkDir] File not found.(" & vbproj_path & ")"
+        If Common.ShowYesNoMessageBox( _
+            "VBプロジェクトファイルが存在しません。処理を続行しますか?" & vbCrLf & _
+            "err_msg=" & err_msg _
+            ) = False Then
+            Err.Raise 53, , "Error! (err_msg=" & err_msg & ")"
+        End If
+    End If
+    
+    'VBプロジェクトファイルの内容を読み込む
+    Dim raw_contents As String: raw_contents = Common.ReadTextFileBySJIS(vbproj_path)
+    
+    'ファイルの内容を配列に格納する
+    Dim contents() As String: contents = Split(raw_contents, vbCrLf)
+    contents = Common.DeleteEmptyArray(contents)
+
+    If Common.IsEmptyArray(contents) = True Then
+        err_msg = "[CopyVBProjectFilesToWorkDir] VB Project file is empty.(" & vbproj_path & ")"
+        If Common.ShowYesNoMessageBox( _
+            "VBプロジェクトファイルが空です。処理を続行しますか?" & vbCrLf & _
+            "err_msg=" & err_msg _
+            ) = False Then
+            Err.Raise 53, , "Error! (err_msg=" & err_msg & ")"
+        End If
+    End If
+    
+    Dim ext As String: ext = Common.GetFileExtension(vbproj_path)
+    
+    'VBプロジェクトファイルを解析して、参照されているファイルの一覧を取得する
+    If ext = "vbp" Then
+        'VB6
+        ref_file_list = WorkerCommon.GetRefFileListForVB6project(prms, vbproj_path, contents)
+    Else
+        'VB.NET
+        ref_file_list = WorkerCommon.GetRefFileListForVBdotNetProject(prms, vbproj_path, contents)
+    End If
+    
+    '作業用フォルダを作成してコピー
+    Dim wk_dir As String: wk_dir = GetTempFolder() & Application.PathSeparator & GetNowTimeString()
+    
+    Dim base_dir As String: base_dir = Common.GetCommonString(ref_file_list)
+    Common.CopyFolder base_dir, wk_dir & Application.PathSeparator & Replace(base_dir, ":", "")
+    
+    CopyVBProjectFilesToWorkDir = wk_dir
+    Common.WriteLog "CopyVBProjectFilesToWorkDir E"
+End Function
+
+Private Sub CopyVBProjectFilesFromWorkDir(ByVal wk_dir As String, ByVal base_dir As String)
+    Common.WriteLog "CopyVBProjectFilesFromWorkDir S"
+    
+    Common.CopyFolder wk_dir & Application.PathSeparator & Replace(base_dir, ":", ""), base_dir
+    
+    Common.WriteLog "CopyVBProjectFilesFromWorkDir E"
+End Sub
+
+Private Function CreateSakuraArgs(ByRef prms As ParamContainer, ByVal wk_dir As String) As String
     Common.WriteLog "CreateSakuraArgs S"
     
     CreateSakuraArgs = ""
@@ -168,20 +300,18 @@ Private Function CreateSakuraArgs(ByRef prms As ParamContainer) As String
         Exit Function
     End If
     
-    CreateSakuraArgs = Replace(prms.GetSakuraArgs(), vbLf, " ")
+    Dim args() As String
+    args = Split(prms.GetSakuraArgs(), vbLf)
+    
+    Dim i As Long
+    For i = 0 To UBound(args)
+        If InStr(args(i), "-GFOLDER=") > 0 Then
+            args(i) = "-GFOLDER=" & DQ & wk_dir & DQ
+            Exit For
+        End If
+    Next i
+    
+    CreateSakuraArgs = Join(args, " ")
     
     Common.WriteLog "CreateSakuraArgs E"
 End Function
-
-Private Sub DoCommit(ByRef target As ParamTarget)
-    Common.WriteLog "DoCommit S"
-    
-    Dim cmd As String
-    Dim git_result() As String
-    
-    'コミットする
-    cmd = "git commit -a -m " & DQ & target.GetCommit() & DQ
-    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
-    
-    Common.WriteLog "DoCommit E"
-End Sub

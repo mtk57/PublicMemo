@@ -124,7 +124,7 @@ Private Sub DoArchive(ByVal target As ParamTarget, ByVal tag As String)
         If filepath = "" Then
             GoTo CONTINUE
         ElseIf Common.IsExistsFile(prms.GetGitDirPath() & SEP & filepath) = False Then
-            Err.Raise 53, , "[DoArchive] VBプロジェクトファイルが見つかりません(filepath=" & filepath & ", tag=" & tag & ")"
+            Err.Raise 53, , "[DoArchive] VBプロジェクトファイルが見つかりません。ベースブランチにマージされていない可能性があります。(filepath=" & filepath & ", tag=" & tag & ")"
         End If
         
         Dim contents() As String: contents = WorkerCommon.DoShow(prms, tag & ":" & filepath)
@@ -132,10 +132,10 @@ Private Sub DoArchive(ByVal target As ParamTarget, ByVal tag As String)
         'VBプロジェクトファイルを解析して、参照されているファイルの一覧を取得する
         If i = 0 Then
             'VB6
-            ref_file_list_vb6 = GetRefFileListForVB6project(filepath, contents)
+            ref_file_list_vb6 = WorkerCommon.GetRefFileListForVB6project(prms, filepath, contents)
         Else
             'VB.NET
-            ref_file_list_vbnet = GetRefFileListForVBdotNetProject(filepath, contents)
+            ref_file_list_vbnet = WorkerCommon.GetRefFileListForVBdotNetProject(prms, filepath, contents)
         End If
     
 CONTINUE:
@@ -185,81 +185,4 @@ On Error GoTo 0
     Common.WriteLog "DoArchive E"
 End Sub
 
-'VBプロジェクトファイルを解析して、参照されているファイルの一覧を取得する
-Private Function GetRefFileListForVB6project( _
-    ByVal vbprj_path As String, _
-    ByRef contents() As String _
-) As String()
-    Common.WriteLog "GetRefFileListForVB6project S"
-    
-    Dim ref_files() As String
-
-    'vbpファイルに記載されているファイルをリストに追加
-    ref_files = WorkerCommon.ParseVB6Project( _
-                    prms, _
-                    prms.GetGitDirPath() & SEP & Replace(vbprj_path, "/", "\"), _
-                    contents _
-                )
-    
-    '相対パスに変更する
-    ref_files = UpdateRefFiles(ref_files)
-
-    'vbpファイルをリストに追加する
-    Dim cnt As Long: cnt = UBound(ref_files)
-    ReDim Preserve ref_files(cnt + 1)
-    ref_files(cnt + 1) = vbprj_path
-
-    GetRefFileListForVB6project = ref_files
-    
-    Common.WriteLog "GetRefFileListForVB6project E"
-End Function
-
-'VB.NETプロジェクトファイルを解析して、参照されているファイルの一覧を取得する
-Private Function GetRefFileListForVBdotNetProject( _
-    ByVal vbprj_path As String, _
-    ByRef contents() As String _
-) As String()
-    Common.WriteLog "GetRefFileListForVBdotNetProject S"
-    
-    Dim ref_files() As String
-
-    'vbprojファイルに記載されているファイルをリストに追加
-    ref_files = WorkerCommon.ParseVBNETProject( _
-                    prms, _
-                    prms.GetGitDirPath() & SEP & Replace(vbprj_path, "/", "\"), _
-                    contents _
-                )
-    
-    '相対パスに変更する
-    ref_files = UpdateRefFiles(ref_files)
-    
-    'vbprojファイルとslnファイルをリストに追加する
-    Dim cnt As Long: cnt = UBound(ref_files)
-    ReDim Preserve ref_files(cnt + 2)
-    ref_files(cnt + 1) = vbprj_path
-    ref_files(cnt + 2) = Replace(vbprj_path, ".vbproj", ".sln")
-        
-    GetRefFileListForVBdotNetProject = ref_files
-    
-    Common.WriteLog "GetRefFileListForVBdotNetProject E"
-End Function
-
-'相対パスに変更する
-Private Function UpdateRefFiles(ByRef ref_files() As String) As String()
-    Common.WriteLog "UpdateRefFiles S"
-    
-    Dim ret_files() As String
-    Dim i As Long
-    Dim cnt As Long: cnt = 0
-    
-    For i = LBound(ref_files) To UBound(ref_files)
-        ReDim Preserve ret_files(cnt)
-        ret_files(cnt) = Replace(Replace(ref_files(i), prms.GetGitDirPath() & SEP, ""), SEP, "/")
-        cnt = cnt + 1
-    Next i
-    
-    UpdateRefFiles = ret_files
-
-    Common.WriteLog "UpdateRefFiles E"
-End Function
 

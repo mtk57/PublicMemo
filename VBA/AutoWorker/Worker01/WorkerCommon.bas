@@ -1,6 +1,104 @@
 Attribute VB_Name = "WorkerCommon"
 Option Explicit
 
+'VBプロジェクトファイルを解析して、参照されているファイルの一覧を取得する
+Public Function GetRefFileListForVB6project( _
+    ByRef prms As ParamContainer, _
+    ByVal vbprj_path As String, _
+    ByRef contents() As String _
+) As String()
+    Common.WriteLog "GetRefFileListForVB6project S"
+    
+    Dim ref_files() As String
+    
+    Dim vbprj_path_new As String
+    If InStr(vbprj_path, "/") = 0 Then
+        vbprj_path_new = vbprj_path
+    Else
+        vbprj_path_new = prms.GetGitDirPath() & Application.PathSeparator & Replace(vbprj_path, "/", "\")
+    End If
+
+    'vbpファイルに記載されているファイルをリストに追加
+    ref_files = ParseVB6Project( _
+                    prms, _
+                    vbprj_path_new, _
+                    contents _
+                )
+    
+    If InStr(vbprj_path, "/") > 0 Then
+        '相対パスに変更する
+        ref_files = UpdateRefFiles(prms, ref_files)
+    End If
+
+    'vbpファイルをリストに追加する
+    Dim cnt As Long: cnt = UBound(ref_files)
+    ReDim Preserve ref_files(cnt + 1)
+    ref_files(cnt + 1) = vbprj_path
+
+    GetRefFileListForVB6project = ref_files
+    
+    Common.WriteLog "GetRefFileListForVB6project E"
+End Function
+
+'VB.NETプロジェクトファイルを解析して、参照されているファイルの一覧を取得する
+Public Function GetRefFileListForVBdotNetProject( _
+    ByRef prms As ParamContainer, _
+    ByVal vbprj_path As String, _
+    ByRef contents() As String _
+) As String()
+    Common.WriteLog "GetRefFileListForVBdotNetProject S"
+    
+    Dim ref_files() As String
+
+    Dim vbprj_path_new As String
+    If InStr(vbprj_path, "/") = 0 Then
+        vbprj_path_new = vbprj_path
+    Else
+        vbprj_path_new = prms.GetGitDirPath() & Application.PathSeparator & Replace(vbprj_path, "/", "\")
+    End If
+
+    'vbprojファイルに記載されているファイルをリストに追加
+    ref_files = ParseVBNETProject( _
+                    prms, _
+                    vbprj_path_new, _
+                    contents _
+                )
+    
+    If InStr(vbprj_path, "/") > 0 Then
+        '相対パスに変更する
+        ref_files = UpdateRefFiles(prms, ref_files)
+    End If
+    
+    'vbprojファイルとslnファイルをリストに追加する
+    Dim cnt As Long: cnt = UBound(ref_files)
+    ReDim Preserve ref_files(cnt + 2)
+    ref_files(cnt + 1) = vbprj_path
+    ref_files(cnt + 2) = Replace(vbprj_path, ".vbproj", ".sln")
+        
+    GetRefFileListForVBdotNetProject = ref_files
+    
+    Common.WriteLog "GetRefFileListForVBdotNetProject E"
+End Function
+
+'相対パスに変更する
+Private Function UpdateRefFiles(ByRef prms As ParamContainer, ByRef ref_files() As String) As String()
+    Common.WriteLog "UpdateRefFiles S"
+    
+    Dim ret_files() As String
+    Dim i As Long
+    Dim cnt As Long: cnt = 0
+    
+    For i = LBound(ref_files) To UBound(ref_files)
+        ReDim Preserve ret_files(cnt)
+        ret_files(cnt) = Replace(Replace(ref_files(i), prms.GetGitDirPath() & Application.PathSeparator, ""), Application.PathSeparator, "/")
+        cnt = cnt + 1
+    Next i
+    
+    UpdateRefFiles = ret_files
+
+    Common.WriteLog "UpdateRefFiles E"
+End Function
+
 'vbpファイルのパースを行う
 ' vbp_path : I : vbpファイルパス(絶対パス)
 ' contents : I : 読み込んだファイルの内容
@@ -53,8 +151,27 @@ Public Function ParseVB6Project( _
         End If
         
         '絶対パスに変換する
-        filelist(cnt) = Common.GetAbsolutePathName(base_path, path)
+        Dim abs_path As String: abs_path = Common.GetAbsolutePathName(base_path, path)
+        filelist(cnt) = abs_path
         cnt = cnt + 1
+        
+        If Common.GetFileExtension(abs_path) = "frm" Then
+            Dim frx_path As String: frx_path = Replace(abs_path, ".frm", ".frx")
+            If Common.IsExistsFile(frx_path) = True Then
+                'frxはvbpに記載されていないのでfrm検知時に存在チェックを行い、存在すればリストに追加する
+                 ReDim Preserve filelist(cnt)
+                 filelist(cnt) = frx_path
+                 cnt = cnt + 1
+            End If
+        ElseIf Common.GetFileExtension(abs_path) = "ctl" Then
+            Dim ctx_path As String: ctx_path = Replace(abs_path, ".ctl", ".ctx")
+            If Common.IsExistsFile(ctx_path) = True Then
+                'ctxはvbpに記載されていないのでctl検知時に存在チェックを行い、存在すればリストに追加する
+                 ReDim Preserve filelist(cnt)
+                 filelist(cnt) = ctx_path
+                 cnt = cnt + 1
+            End If
+        End If
         
 CONTINUE:
     Next i
@@ -88,11 +205,15 @@ Public Function ParseVBNETProject( _
     cnt = 0
 
     For i = LBound(contents) To UBound(contents)
+        'Common.WriteLog "contents(" & i & ")=" & contents(i)
+        
         If InStr(contents(i), "<Compile Include=") = 0 And _
            InStr(contents(i), "<EmbeddedResource Include=") = 0 And _
            InStr(contents(i), "<None Include=") = 0 And _
-           InStr(contents(i), "<HintPath>") = 0 Then
+           InStr(contents(i), "<HintPath>") = 0 And _
+           InStr(contents(i), "<ApplicationIcon>") = 0 Then
             'ビルドに必要なファイルを含まないので無視
+            'Common.WriteLog "Skip contents(" & i & ")=" & contents(i)
             GoTo CONTINUE
         End If
         
@@ -105,6 +226,11 @@ Public Function ParseVBNETProject( _
             Next j
         End If
         
+        If Common.StartsWith(Trim(Replace(Replace(contents(i), "<HintPath>", ""), "</HintPath>", "")), "packages") Then
+            'packagesは無視する
+            GoTo CONTINUE
+        End If
+        
         Dim path As String
         
         If InStr(contents(i), "<Compile Include=") > 0 Then
@@ -113,8 +239,14 @@ Public Function ParseVBNETProject( _
             path = Trim(Replace(Replace(contents(i), "<EmbeddedResource Include=""", ""), """ />", ""))
         ElseIf InStr(contents(i), "<None Include=") > 0 Then
             path = Trim(Replace(Replace(contents(i), "<None Include=""", ""), """ />", ""))
-        Else
+        ElseIf InStr(contents(i), "<HintPath>") > 0 Then
             path = Trim(Replace(Replace(contents(i), "<HintPath>", ""), "</HintPath>", ""))
+        ElseIf InStr(contents(i), "<ApplicationIcon>") = 0 Then
+            path = Trim(Replace(Replace(contents(i), "<ApplicationIcon>", ""), "</ApplicationIcon>", ""))
+        End If
+        
+        If path = "" Then
+            GoTo CONTINUE
         End If
         
         path = Replace(path, """>", "")
@@ -124,7 +256,8 @@ Public Function ParseVBNETProject( _
         'ビルド対象外ファイルは無視する
         If Common.GetFileExtension(abs_path) <> "vb" And _
            Common.GetFileExtension(abs_path) <> "resx" And _
-           Common.GetFileExtension(abs_path) <> "config" Then
+           Common.GetFileExtension(abs_path) <> "config" And _
+           Common.GetFileExtension(abs_path) <> "ico" Then
            
            Common.WriteLog "[ParseVBNETProject] ★★ビルド対象外ファイルが記載されています。確認してください。" & _
                            "【vbproj】=" & vbproj_path & _
@@ -480,20 +613,4 @@ Public Sub DoMerge(ByRef prms As ParamContainer, ByVal from_branch As String)
     Common.WriteLog "DoMerge E"
 End Sub
 
-Public Sub RunSakura(ByVal sakura_path As String, ByVal sakura_args As String)
-    Common.WriteLog "RunSakura S"
-    
-    Dim ret As Long
-    Dim sakura_param As String
-    sakura_param = sakura_path & " " & sakura_args
 
-    Common.WriteLog "sakura_param=" & sakura_param
-    
-    ret = Common.RunBatFile(sakura_param)
-  
-    If ret <> 0 Then
-        Err.Raise 53, , "[RunSakura] sakuraの実行に失敗しました。(sakura_param=" & sakura_param & ", ret=" & ret & ")"
-    End If
-  
-    Common.WriteLog "RunSakura E"
-End Sub
