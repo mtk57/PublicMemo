@@ -275,7 +275,7 @@ Public Function ParseVBNETProject( _
         If InStr(contents(i), "<Compile Include=""reports\") > 0 Then
             'rpxの存在チェックを行い、あれば追加する
             Dim rpx_path As String: rpx_path = Replace(path, ".vb", ".rpx")
-            Dim rpx_find_path As String: rpx_find_path = base_path & SEP & rpx_path
+            Dim rpx_find_path As String: rpx_find_path = base_path & Application.PathSeparator & rpx_path
             If Common.IsExistsFile(rpx_find_path) = True Then
                 Common.WriteLog "rpx found.(" & rpx_find_path & ")"
                 
