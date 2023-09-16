@@ -73,16 +73,30 @@ CONTINUE:
     For i = 0 To UBound(targetlist_exist_only)
     
         Set target = targetlist_exist_only(i)
+        
+        WorkerCommon.SwitchDevelopBranch prms
+        
+        WorkerCommon.DoPull prms
     
         WorkerCommon.SwitchBranch prms, target
         
         WorkerCommon.DoPull prms
         
-        DoTag target
+        WorkerCommon.DoMerge prms, prms.GetBaseBranch()
         
-        DoPush target
+        DoTag target
+
+        DoPush target.GetBranch()
+        
+        WorkerCommon.SwitchDevelopBranch prms
     
+        WorkerCommon.DoMerge prms, target.GetBranch()
+        
+CONTINUE2:
+        
     Next i
+    
+    DoPush prms.GetBaseBranch()
         
 FINISH:
         
