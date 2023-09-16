@@ -61,9 +61,7 @@ On Error GoTo ErrorHandler
 ErrorHandler:
     Dim err_msg As String: err_msg = Err.Description
     CloseTxt
-    Resume Next
     Common.WriteLog "Run E(Error)=" & err_msg
-    
     Err.Raise 53, , "[Run] ÉGÉâÅ[! (err_msg=" & err_msg & ")"
 End Sub
 

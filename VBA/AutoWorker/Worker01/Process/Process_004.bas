@@ -26,6 +26,8 @@ Public Sub Run()
     Dim target As ParamTarget
     Dim targetlist() As ParamTarget
     Dim targetlist_exist_only() As ParamTarget
+    Dim CHECK_STEP As String: CHECK_STEP = "STEP1.5"
+    
     targetlist = prms.GetTargetList()
         
     WorkerCommon.DoClone prms
@@ -37,8 +39,8 @@ Public Sub Run()
     
         If WorkerCommon.IsExistBranch(prms, target.GetBranch()) = False Then
             msg = "ブランチが見つかりません。(" & target.GetBranch() & ")"
-        ElseIf InStr(target.GetTag(), "STEP1.5") = 0 Then
-            msg = "タグにSTEP1.5が指定されていません。 (tag=" & target.GetTag() & ")"
+        ElseIf InStr(target.GetTag(), CHECK_STEP) = 0 Then
+            msg = "タグに" & CHECK_STEP & "が指定されていません。 (tag=" & target.GetTag() & ")"
         ElseIf WorkerCommon.IsExistTag(prms, target.GetTag(), True) = True Or _
                WorkerCommon.IsExistTag(prms, target.GetTag(), False) = True Then
             msg = "タグがすでにローカルまたはリモートに存在しています。(tag=" & target.GetTag() & ")"
@@ -116,7 +118,7 @@ Private Sub DoTag(ByRef target As ParamTarget)
     Common.WriteLog "DoTag E"
 End Sub
 
-Private Sub DoPush(ByRef target As ParamTarget)
+Private Sub DoPush(ByVal branch As String)
     Common.WriteLog "DoPush S"
     
     If prms.IsUpdateRemote() = False Then
@@ -128,7 +130,7 @@ Private Sub DoPush(ByRef target As ParamTarget)
     Dim git_result() As String
     
     'タグを付ける
-    cmd = "git push -f --tags --set-upstream origin " & target.GetBranch()
+    cmd = "git push -f --tags --set-upstream origin " & branch
     
 On Error Resume Next
     git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
