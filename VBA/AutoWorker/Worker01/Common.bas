@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.3.1"
+Private Const VERSION = "1.3.2"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -262,9 +262,8 @@ Public Function GetLastFolderName(ByVal path As String) As String
         Err.Raise 53, , "[GetLastFolderName] パスが長すぎます (path=" & path & ")"
     End If
 
-    Dim last As String
-    last = Right(path, Len(path) - InStrRev(path, Application.PathSeparator))
-    GetLastFolderName = last
+    Dim new_path As String: new_path = Common.RemoveTrailingBackslash(path)
+    GetLastFolderName = Right(new_path, Len(new_path) - InStrRev(new_path, Application.PathSeparator))
 End Function
 
 '-------------------------------------------------------------
@@ -1787,10 +1786,6 @@ End Function
 ' Ret : BATの戻り値(exit /b 0の場合0が戻る)
 '-------------------------------------------------------------
 Public Function RunBatFile(ByVal bat_path As String) As Long
-    If IsMaxOverPath(bat_path) = True Then
-        Err.Raise 53, , "[RunBatFile] パスが長すぎます (bat_path=" & bat_path & ")"
-    End If
-
     Dim wsh As Object
     Set wsh = CreateObject("Wscript.Shell")
     Dim returnValue As Variant

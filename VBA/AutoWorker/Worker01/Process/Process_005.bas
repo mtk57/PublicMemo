@@ -231,6 +231,7 @@ End Sub
 Private Function CopyVBProjectFilesToWorkDir(ByVal target As ParamTarget, ByRef ref_file_list() As String) As String
     Common.WriteLog "CopyVBProjectFilesToWorkDir S"
     
+    Dim SEP As String: SEP = Application.PathSeparator
     Dim err_msg As String
     Dim vbproj_path As String: vbproj_path = target.GetVBPrjFilePath()
     
@@ -273,10 +274,16 @@ Private Function CopyVBProjectFilesToWorkDir(ByVal target As ParamTarget, ByRef 
     End If
     
     '作業用フォルダを作成してコピー
-    Dim wk_dir As String: wk_dir = GetTempFolder() & Application.PathSeparator & GetNowTimeString()
+    Dim wk_dir As String: wk_dir = GetTempFolder() & SEP & GetNowTimeString()
     
     Dim base_dir As String: base_dir = Common.GetCommonString(ref_file_list)
-    Common.CopyFolder base_dir, wk_dir & Application.PathSeparator & Replace(base_dir, ":", "")
+    Dim base_parent As String: base_parent = Common.GetLastFolderName(base_dir)
+    Dim i As Long
+    For i = 0 To UBound(ref_file_list)
+        Dim dst_dir As String: dst_dir = Common.GetFolderNameFromPath(wk_dir & SEP & base_parent & SEP & Replace(ref_file_list(i), base_dir, ""))
+        Common.CreateFolder dst_dir
+        Common.CopyFile ref_file_list(), dst_dir & SEP & Common.GetFileName(ref_file_list(i))
+    Next i
     
     CopyVBProjectFilesToWorkDir = wk_dir
     Common.WriteLog "CopyVBProjectFilesToWorkDir E"
@@ -285,7 +292,7 @@ End Function
 Private Sub CopyVBProjectFilesFromWorkDir(ByVal wk_dir As String, ByVal base_dir As String)
     Common.WriteLog "CopyVBProjectFilesFromWorkDir S"
     
-    Common.CopyFolder wk_dir & Application.PathSeparator & Replace(base_dir, ":", ""), base_dir
+    Common.CopyFolder wk_dir & Application.PathSeparator & Common.GetLastFolderName(base_dir), base_dir
     
     Common.WriteLog "CopyVBProjectFilesFromWorkDir E"
 End Sub
