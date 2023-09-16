@@ -282,7 +282,7 @@ Private Function CopyVBProjectFilesToWorkDir(ByVal target As ParamTarget, ByRef 
     For i = 0 To UBound(ref_file_list)
         Dim dst_dir As String: dst_dir = Common.GetFolderNameFromPath(wk_dir & SEP & base_parent & SEP & Replace(ref_file_list(i), base_dir, ""))
         Common.CreateFolder dst_dir
-        Common.CopyFile ref_file_list(), dst_dir & SEP & Common.GetFileName(ref_file_list(i))
+        Common.CopyFile ref_file_list(i), dst_dir & SEP & Common.GetFileName(ref_file_list(i))
     Next i
     
     CopyVBProjectFilesToWorkDir = wk_dir
