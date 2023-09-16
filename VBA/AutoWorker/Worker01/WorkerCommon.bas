@@ -241,7 +241,7 @@ Public Function ParseVBNETProject( _
             path = Trim(Replace(Replace(contents(i), "<None Include=""", ""), """ />", ""))
         ElseIf InStr(contents(i), "<HintPath>") > 0 Then
             path = Trim(Replace(Replace(contents(i), "<HintPath>", ""), "</HintPath>", ""))
-        ElseIf InStr(contents(i), "<ApplicationIcon>") = 0 Then
+        ElseIf InStr(contents(i), "<ApplicationIcon>") > 0 Then
             path = Trim(Replace(Replace(contents(i), "<ApplicationIcon>", ""), "</ApplicationIcon>", ""))
         End If
         
@@ -270,6 +270,22 @@ Public Function ParseVBNETProject( _
         ReDim Preserve filelist(cnt)
         filelist(cnt) = abs_path
         cnt = cnt + 1
+        
+        'ActiveReport 特殊処理
+        If InStr(contents(i), "<Compile Include=""reports\") > 0 Then
+            'rpxの存在チェックを行い、あれば追加する
+            Dim rpx_path As String: rpx_path = Replace(path, ".vb", ".rpx")
+            Dim rpx_find_path As String: rpx_find_path = base_path & SEP & rpx_path
+            If Common.IsExistsFile(rpx_find_path) = True Then
+                Common.WriteLog "rpx found.(" & rpx_find_path & ")"
+                
+                ReDim Preserve filelist(cnt)
+                filelist(cnt) = Common.GetAbsolutePathName(base_path, rpx_path)
+                cnt = cnt + 1
+            Else
+                Common.WriteLog "rpx not found.(" & rpx_find_path & ")"
+            End If
+        End If
         
 CONTINUE:
     Next i
