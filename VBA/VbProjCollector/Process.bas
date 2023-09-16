@@ -410,6 +410,22 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
         filelist(cnt) = Common.GetAbsolutePathName(base_path, path)
         cnt = cnt + 1
         
+        'ActiveReport 特殊処理
+        If InStr(contents(i), "<Compile Include=""reports\") > 0 Then
+            'rpxの存在チェックを行い、あれば追加する
+            Dim rpx_path As String: rpx_path = Replace(path, ".vb", ".rpx")
+            Dim rpx_find_path As String: rpx_find_path = base_path & SEP & rpx_path
+            If Common.IsExistsFile(rpx_find_path) = True Then
+                Common.WriteLog "rpx found.(" & rpx_find_path & ")"
+                
+                ReDim Preserve filelist(cnt)
+                filelist(cnt) = Common.GetAbsolutePathName(base_path, rpx_path)
+                cnt = cnt + 1
+            Else
+                Common.WriteLog "rpx not found.(" & rpx_find_path & ")"
+            End If
+        End If
+        
 CONTINUE:
     Next i
     
@@ -426,9 +442,6 @@ End Function
 'VBプロジェクトファイルが参照しているファイルを同じフォルダ構成のままコピーする
 Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As String, ByVal vbprj_path As String)
     Common.WriteLog "CopyProjectFiles S"
-    
-    Dim fso As Object
-    Set fso = CreateObject("Scripting.FileSystemObject")
     
     Dim SEP As String: SEP = Application.PathSeparator
     Dim base_path As String: base_path = Common.GetCommonString(filelist)
@@ -475,12 +488,12 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
         Dim path As String: path = Common.GetFolderNameFromPath(dst)
         
         'フォルダが存在しない場合は作成する
-        If Not fso.FolderExists(path) Then
+        If Common.IsExistsFolder(path) = False Then
             Common.CreateFolder (path)
         End If
         
         'ファイルをコピーする
-        fso.CopyFile src, dst
+        Common.CopyFile src, dst
         
         If Common.GetFileExtension(dst) = "vbp" Then
             'VBPファイルのPath32はコンパイル時には不要なので削除しておく
@@ -501,7 +514,7 @@ CONTINUE:
     
     If main_param.GetMergeDirPath() <> "" Then
         'マージフォルダが存在しない場合は作成する
-        If Not fso.FolderExists(main_param.GetMergeDirPath) Then
+        If Common.IsExistsFolder(main_param.GetMergeDirPath) = False Then
             Common.CreateFolder (main_param.GetMergeDirPath)
         End If
         
@@ -511,7 +524,6 @@ CONTINUE:
         Common.CopyFolder dst_dir, main_param.GetMergeDirPath()
     End If
     
-    Set fso = Nothing
     Common.WriteLog "CopyProjectFiles E"
 End Sub
 
