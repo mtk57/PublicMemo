@@ -70,19 +70,17 @@ CONTINUE:
         GoTo FINISH
     End If
     
+    WorkerCommon.SwitchDevelopBranch prms
+    
+    WorkerCommon.DoPull prms
+    
     For i = 0 To UBound(targetlist_exist_only)
     
         Set target = targetlist_exist_only(i)
         
-        WorkerCommon.SwitchDevelopBranch prms
-        
-        WorkerCommon.DoPull prms
-    
         WorkerCommon.SwitchBranch prms, target
         
         WorkerCommon.DoPull prms
-        
-        WorkerCommon.DoMerge prms, prms.GetBaseBranch()
         
         RunSakura prms, target
         
@@ -117,7 +115,7 @@ Private Sub DoTag(ByRef target As ParamTarget)
     Dim git_result() As String
     
     'ƒ^ƒO‚ð•t‚¯‚é
-    cmd = "git tag -f " & target.GetTag() & " HEAD"
+    cmd = "git tag -f " & target.GetTag()
     git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
     
     Common.WriteLog "DoTag E"
@@ -138,7 +136,7 @@ Private Sub DoPush(ByVal branch As String)
     cmd = "git push -f --tags --set-upstream origin " & branch
     
 On Error Resume Next
-    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+    git_result = WorkerCommon.DoPush(prms, cmd)
     
     Dim err_msg As String: err_msg = Err.Description
     Err.Clear

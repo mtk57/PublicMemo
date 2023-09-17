@@ -74,7 +74,7 @@ Private Sub DeleteBranch(ByRef target As ParamTarget)
     If WorkerCommon.IsExistRemoteBranch(prms, target.GetBranch()) = True And _
        prms.IsUpdateRemote() = True Then
         cmd = "git push origin --delete " & target.GetBranch()
-        git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+        git_result = WorkerCommon.DoPush(prms, cmd)
         Common.WriteLog "Remote branch deleted. (" & target.GetBranch() & ")"
     End If
 
@@ -107,7 +107,7 @@ Private Sub DeleteTag(ByRef target As ParamTarget)
        prms.IsUpdateRemote() = True Then
         'リモートタグを削除する
         cmd = "git push origin :refs/tags/" & target.GetTag()
-        git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+        git_result = WorkerCommon.DoPush(prms, cmd)
         Common.WriteLog "Remote tag deleted. (" & target.GetTag() & ")"
     End If
 

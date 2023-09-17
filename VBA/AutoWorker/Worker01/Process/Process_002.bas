@@ -159,7 +159,7 @@ Private Sub DoTag(ByRef target As ParamTarget)
     End If
     
     'ƒ^ƒO‚ð•t‚¯‚é
-    cmd = "git tag " & target.GetTag() & " HEAD"
+    cmd = "git tag " & target.GetTag()
     git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
     
     Common.WriteLog "DoTag E"
@@ -180,7 +180,7 @@ Private Sub DoPush(ByRef target As ParamTarget)
     cmd = "git push --tags --set-upstream origin " & target.GetBranch()
     
 On Error Resume Next
-    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+    git_result = WorkerCommon.DoPush(prms, cmd)
     
     Dim err_msg As String: err_msg = Err.Description
     Err.Clear

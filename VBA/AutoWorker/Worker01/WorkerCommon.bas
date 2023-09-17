@@ -552,8 +552,8 @@ Public Sub SwitchDevelopBranch(ByRef prms As ParamContainer)
         cmd = "git switch " & prms.GetBaseBranch()
         git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
     Else
-        'ローカルブランチがないので作成して切り替え
-        cmd = "git checkout -b " & prms.GetBaseBranch()
+        'ローカルブランチがないのでリモートから作成して切り替え
+        cmd = "git checkout -b " & prms.GetBaseBranch() & " origin/" & prms.GetBaseBranch()
         git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
     End If
     
@@ -562,6 +562,11 @@ End Sub
 
 Public Sub DoPull(ByRef prms As ParamContainer)
     Common.WriteLog "DoPull S"
+    
+    If prms.IsUpdateRemote() = False Then
+        Common.WriteLog "DoPull E1"
+        Exit Sub
+    End If
     
     Dim cmd As String
     Dim git_result() As String
@@ -572,6 +577,23 @@ Public Sub DoPull(ByRef prms As ParamContainer)
     
     Common.WriteLog "DoPull E"
 End Sub
+
+Public Function DoPush(ByRef prms As ParamContainer, ByVal cmd As String) As String()
+    Common.WriteLog "DoPush S"
+    
+    Dim git_result() As String
+    
+    If prms.IsUpdateRemote() = False Then
+        DoPush = git_result
+        Common.WriteLog "DoPush E1"
+        Exit Function
+    End If
+    
+    git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+    DoPush = git_result
+    
+    Common.WriteLog "DoPush E"
+End Function
 
 Public Sub SwitchBranch(ByRef prms As ParamContainer, ByVal target As ParamTarget)
     Common.WriteLog "SwitchBranch S"
@@ -608,8 +630,8 @@ Public Sub SwitchBranch(ByRef prms As ParamContainer, ByVal target As ParamTarge
         cmd = "git switch " & target.GetBranch()
         git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
     Else
-        'ローカルブランチがないので作成して切り替え
-        cmd = "git checkout -b " & target.GetBranch()
+        'ローカルブランチがないのでリモートから作成して切り替え
+        cmd = "git checkout -b " & target.GetBranch() & " origin/" & target.GetBranch()
         git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
     End If
     
