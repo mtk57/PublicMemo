@@ -638,14 +638,17 @@ Public Sub SwitchBranch(ByRef prms As ParamContainer, ByVal target As ParamTarge
     Common.WriteLog "SwitchBranch E"
 End Sub
 
-Public Sub DoMerge(ByRef prms As ParamContainer, ByVal from_branch As String)
+'targetに以下のいずれかを指定する
+'1.マージ元のブランチ名
+'2.マージ元のタグ名
+Public Sub DoMerge(ByRef prms As ParamContainer, ByVal target As String)
     Common.WriteLog "DoMerge S"
     
     Dim cmd As String
     Dim git_result() As String
     
     'マージ
-    cmd = "git merge " & from_branch
+    cmd = "git merge " & target
     git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
     
     Common.WriteLog "DoMerge E"

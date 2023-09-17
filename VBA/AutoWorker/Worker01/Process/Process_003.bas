@@ -36,7 +36,7 @@ Public Sub Run()
     
         Set target = targetlist(i)
     
-        WorkerCommon.SwitchDevelopBranch prms
+        WorkerCommon.SwitchBranch prms, target
         
         WorkerCommon.DoPull prms
         

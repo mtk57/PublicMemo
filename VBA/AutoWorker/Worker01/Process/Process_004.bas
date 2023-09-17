@@ -71,10 +71,6 @@ CONTINUE:
         Common.WriteLog "targetlist_exist_only is empty."
         GoTo FINISH
     End If
-     
-    WorkerCommon.SwitchDevelopBranch prms
-    
-    WorkerCommon.DoPull prms
     
     For i = 0 To UBound(targetlist_exist_only)
     
@@ -87,10 +83,6 @@ CONTINUE:
         DoTag target
 
         DoPush target.GetBranch()
-        
-        WorkerCommon.SwitchDevelopBranch prms
-    
-        WorkerCommon.DoMerge prms, target.GetBranch()
         
 CONTINUE2:
         

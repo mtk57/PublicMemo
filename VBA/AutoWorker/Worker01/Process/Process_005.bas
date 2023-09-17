@@ -95,7 +95,7 @@ CONTINUE:
         
         WorkerCommon.SwitchDevelopBranch prms
     
-        WorkerCommon.DoMerge prms, target.GetBranch()
+        WorkerCommon.DoMerge prms, target.GetTag()
         
 CONTINUE2:
         
