@@ -27,11 +27,12 @@ Partial Class Form1
         Me.checkBox1 = New System.Windows.Forms.CheckBox()
         Me.button2 = New System.Windows.Forms.Button()
         Me.ToolTip1 = New System.Windows.Forms.ToolTip(Me.components)
+        Me.GroupBox1 = New System.Windows.Forms.GroupBox()
         Me.SuspendLayout()
         '
         'button1
         '
-        Me.button1.Location = New System.Drawing.Point(80, 64)
+        Me.button1.Location = New System.Drawing.Point(193, 173)
         Me.button1.Name = "button1"
         Me.button1.Size = New System.Drawing.Size(270, 91)
         Me.button1.TabIndex = 1
@@ -42,7 +43,7 @@ Partial Class Form1
         'checkBox1
         '
         Me.checkBox1.AutoSize = True
-        Me.checkBox1.Location = New System.Drawing.Point(395, 96)
+        Me.checkBox1.Location = New System.Drawing.Point(203, 26)
         Me.checkBox1.Name = "checkBox1"
         Me.checkBox1.Size = New System.Drawing.Size(201, 28)
         Me.checkBox1.TabIndex = 2
@@ -52,13 +53,22 @@ Partial Class Form1
         'button2
         '
         Me.button2.Enabled = False
-        Me.button2.Location = New System.Drawing.Point(90, 225)
+        Me.button2.Location = New System.Drawing.Point(203, 334)
         Me.button2.Name = "button2"
         Me.button2.Size = New System.Drawing.Size(260, 92)
         Me.button2.TabIndex = 15
         Me.button2.Text = "button2"
         Me.ToolTip1.SetToolTip(Me.button2, "Hello button2")
         Me.button2.UseVisualStyleBackColor = True
+        '
+        'GroupBox1
+        '
+        Me.GroupBox1.Location = New System.Drawing.Point(121, 100)
+        Me.GroupBox1.Name = "GroupBox1"
+        Me.GroupBox1.Size = New System.Drawing.Size(457, 440)
+        Me.GroupBox1.TabIndex = 16
+        Me.GroupBox1.TabStop = False
+        Me.GroupBox1.Text = "GroupBox1"
         '
         'Form1
         '
@@ -68,6 +78,7 @@ Partial Class Form1
         Me.Controls.Add(Me.button2)
         Me.Controls.Add(Me.checkBox1)
         Me.Controls.Add(Me.button1)
+        Me.Controls.Add(Me.GroupBox1)
         Me.Name = "Form1"
         Me.Text = "Form1"
         Me.ResumeLayout(False)
@@ -79,4 +90,5 @@ Partial Class Form1
     Friend WithEvents checkBox1 As CheckBox
     Private WithEvents button2 As Button
     Friend WithEvents ToolTip1 As ToolTip
+    Friend WithEvents GroupBox1 As GroupBox
 End Class

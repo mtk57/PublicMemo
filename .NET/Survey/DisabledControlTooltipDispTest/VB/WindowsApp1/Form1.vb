@@ -1,8 +1,11 @@
 ﻿Public Class Form1
-    Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
-        Dim td As New ToolTipOnDisabledControl()
-        td.SetToolTip(Me.button2, Me.toolTip1, "2")
-    End Sub
+	Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
+		Dim td As New ToolTipOnDisabledControl()
+		td.SetToolTip(Me.button2, Me.ToolTip1, "This tooltip is Disabled for Button2")
+
+	End Sub
+
+
 
 	Private Sub checkBox1_CheckedChanged(sender As Object, e As EventArgs) Handles checkBox1.CheckedChanged
 		button1.Enabled = Not button1.Enabled
@@ -11,10 +14,10 @@
 			Dim td As New ToolTipOnDisabledControl()
 			'td.SetToolTip(this.button1, "1");
 			'test
-			td.SetToolTip(Me.button1, Me.ToolTip1, "1")
+			td.SetToolTip(Me.button1, Me.ToolTip1, "This tooltip is Disabled for Button1")
 		Else
 			'test
-			Me.ToolTip1.SetToolTip(Me.button1, "Hello button1")
+			Me.ToolTip1.SetToolTip(Me.button1, "This tooltip is Enabled for Button1")
 		End If
 	End Sub
 
@@ -40,6 +43,41 @@
 #Region "Public Methods"
 		Public Sub New()
 			Me.ToolTip = New ToolTip()
+
+			Dim timer As New Timer()
+			timer.Interval = 100 ' 100ミリ秒ごとに更新
+			AddHandler timer.Tick, AddressOf Timer_Tick
+			timer.Start()
+		End Sub
+
+		Private Sub Timer_Tick(ByVal sender As Object, ByVal e As EventArgs)
+			' マウスカーソルの座標を取得して表示する
+			'Dim cursorPosition As Point = Cursor.Position
+			'Me.Label1.Text = $"X: {cursorPosition.X}, Y: {cursorPosition.Y}"
+
+			' マウスカーソルのスクリーン座標を取得
+			Dim screenPoint As Point = Cursor.Position
+
+			' コントロールに対して座標変換を行う
+			Dim clientPoint As Point = Me.enabledParentControl.PointToClient(screenPoint)
+
+			If clientPoint.X >= Me.TargetControl.Left AndAlso
+			   clientPoint.X <= Me.TargetControl.Right AndAlso
+			   clientPoint.Y >= Me.TargetControl.Top AndAlso
+			   clientPoint.Y <= Me.TargetControl.Bottom Then
+				If Not Me.isShown Then
+					Me.ToolTip.Show(
+						Me.TooltipText,
+						Me.TargetControl,
+						Me.TargetControl.Width / 2, Me.TargetControl.Height / 2,
+						Me.ToolTip.AutoPopDelay)
+					Me.isShown = True
+				End If
+			Else
+				'else if(this.isShown)
+				Me.ToolTip.Hide(Me.TargetControl)
+				Me.isShown = False
+			End If
 		End Sub
 
 		'public void SetToolTip(Control targetControl, string tooltipText = null)
@@ -93,16 +131,23 @@
 
 #Region "Private Methods"
 		Private Sub EnabledParentControl_MouseMove(sender As Object, e As MouseEventArgs)
-			If e.Location.X >= Me.TargetControl.Left AndAlso e.Location.X <= Me.TargetControl.Right AndAlso e.Location.Y >= Me.TargetControl.Top AndAlso e.Location.Y <= Me.TargetControl.Bottom Then
-				If Not Me.isShown Then
-					Me.ToolTip.Show(Me.TooltipText, Me.TargetControl, Me.TargetControl.Width / 2, Me.TargetControl.Height / 2, Me.ToolTip.AutoPopDelay)
-					Me.isShown = True
-				End If
-			Else
-				'else if(this.isShown)
-				Me.ToolTip.Hide(Me.TargetControl)
-				Me.isShown = False
-			End If
+			'If e.Location.X >= Me.TargetControl.Left AndAlso
+			'   e.Location.X <= Me.TargetControl.Right AndAlso
+			'   e.Location.Y >= Me.TargetControl.Top AndAlso
+			'   e.Location.Y <= Me.TargetControl.Bottom Then
+			'	If Not Me.isShown Then
+			'		Me.ToolTip.Show(
+			'			Me.TooltipText,
+			'			Me.TargetControl,
+			'			Me.TargetControl.Width / 2, Me.TargetControl.Height / 2,
+			'			Me.ToolTip.AutoPopDelay)
+			'		Me.isShown = True
+			'	End If
+			'Else
+			'	'else if(this.isShown)
+			'	Me.ToolTip.Hide(Me.TargetControl)
+			'	Me.isShown = False
+			'End If
 		End Sub
 
 		Private Sub TargetControl_EnabledChanged(sender As Object, e As EventArgs)
