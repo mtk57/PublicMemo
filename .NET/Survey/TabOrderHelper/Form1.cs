@@ -1,18 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace TabOrderHelper
 {
     public partial class Form1 : Form
     {
-        private TabOrderHelper _tabHelper = null;
+        private TabOrderHelper _helper = null;
 
         public Form1()
         {
@@ -21,9 +14,39 @@ namespace TabOrderHelper
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            _tabHelper = new TabOrderHelper(this);
+            _helper = new TabOrderHelper(this);
         }
 
+        //protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        //{
+        //    var activeControl = this.ActiveControl;
 
+        //    Console.WriteLine($"activeControl={activeControl.Name}");
+
+        //    if (keyData == Keys.Tab)
+        //    {
+        //        // TABキーが押されたときの処理
+        //        //Console.WriteLine("TAB key pressed");
+
+        //        var nextControl = _helper.GetNextControl(activeControl);
+
+        //        nextControl.Focus();
+
+        //        return true; // イベントを処理済みとしてマークする
+        //    }
+        //    else if (keyData == (Keys.Shift | Keys.Tab))
+        //    {
+        //        // SHIFT+TABキーが押されたときの処理
+        //        //Console.WriteLine("SHIFT+TAB key pressed");
+
+        //        var prevControl = _helper.GetNextControl(activeControl, false);
+
+        //        prevControl.Focus();
+
+        //        return true; // イベントを処理済みとしてマークする
+        //    }
+
+        //    return base.ProcessCmdKey(ref msg, keyData);
+        //}
     }
 }

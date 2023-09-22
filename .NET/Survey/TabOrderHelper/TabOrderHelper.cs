@@ -2,6 +2,7 @@
 // デザイナーの「表示/タブオーダー」のように、階層化されたタブインデックスをリストで管理する
 //
 // 参考:https://zecl.hatenablog.com/entry/20090226/p1
+//      https://atmarkit.itmedia.co.jp/fdotnet/dotnettips/243winkeyproc/winkeyproc.html
 //
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,8 @@ namespace TabOrderHelper
 {
     public sealed class TabOrderHelper
     {
+        private const char SEP = ',';
+
         private System.Collections.Generic.List<ControlModel> _controlModels;
 
         public TabOrderHelper(System.Windows.Forms.Control rootControl)
@@ -38,6 +41,8 @@ namespace TabOrderHelper
             }
 
             HasDuplicateLastIndex();
+
+            SetGroupRepresentation();
 
             return;
         }
@@ -71,8 +76,8 @@ namespace TabOrderHelper
         {
             var sb = new System.Text.StringBuilder();
             foreach (var item in GetHierarchicalTabindices(control))
-                sb.AppendFormat("{0},", item.ToString());
-            return System.Text.RegularExpressions.Regex.Replace(sb.ToString(), ",$", "");
+                sb.AppendFormat("{0}" + SEP, item.ToString());
+            return System.Text.RegularExpressions.Regex.Replace(sb.ToString(), SEP + "$", "");
         }
 
         private bool IsParent(System.Windows.Forms.Control target)
@@ -115,6 +120,11 @@ namespace TabOrderHelper
             return false;
         }
 
+        private void SetGroupRepresentation()
+        {
+            // TODO:ラジオボタンの場合のみグループの代表フラグを設定する
+        }
+
         private ControlModel FindControl(System.Windows.Forms.Control control)
         {
             foreach (var m in _controlModels)
@@ -136,7 +146,8 @@ namespace TabOrderHelper
 
         private int FindNextGreaterNumber(int lastIndex)
         {
-            var model = _controlModels.FirstOrDefault(x => x.LastIndex > lastIndex);
+            // TODO:FirstOrDefaultの判定を修正する
+            var model = _controlModels.OrderBy(x => x.LastIndex).FirstOrDefault(x => x.LastIndex > lastIndex);
             if (model == null)
             {
                 model = _controlModels.OrderBy(x => x.LastIndex).FirstOrDefault();
@@ -146,7 +157,8 @@ namespace TabOrderHelper
 
         private int FindNextLessNumber(int lastIndex)
         {
-            var model = _controlModels.FirstOrDefault(x => x.LastIndex < lastIndex);
+            // TODO:FirstOrDefaultの判定を修正する
+            var model = _controlModels.OrderByDescending(x => x.LastIndex).FirstOrDefault(x => x.LastIndex < lastIndex);
             if (model == null)
             {
                 model = _controlModels.OrderByDescending(x => x.LastIndex).FirstOrDefault();
@@ -163,9 +175,11 @@ namespace TabOrderHelper
         {
             private System.Windows.Forms.Control _control;
             private string _indexString;
+            private int _parentLastIndex;
             private int _lastIndex;
             private bool _isContainer;
             private bool _isRadioButton;
+            private bool _isGroupRepresentation;
 
             private ControlModel()
             {
@@ -176,25 +190,41 @@ namespace TabOrderHelper
             {
                 _control = control;
                 _indexString = indexString;
+                _parentLastIndex = GetPreviousNumber(_indexString);
                 _lastIndex = GetLastNumber(_indexString);
                 _isContainer = isContainer;
                 _isRadioButton = isRadioButton;
+                _isGroupRepresentation = false;
             }
 
             public System.Windows.Forms.Control Control { get { return _control; } }
             public string IndexString { get { return _indexString; } }
+            public int ParentLastIndex { get { return _parentLastIndex; } }
             public int LastIndex { get { return _lastIndex; } }
             public bool IsContainer { get { return _isContainer; } }
             public bool IsRadioButton { get { return _isRadioButton; } }
+            public bool IsGroupRepresentation { get { return _isGroupRepresentation; } set { _isGroupRepresentation = value; } }
 
             public override string ToString()
             {
-                return $"Name={_control.Name}, TabIndex={_control.TabIndex}, IndexString={_indexString}, LastIndex={_lastIndex}, IsContainer={_isContainer}, IsRadioButton={_isRadioButton}";
+                return $"Name={_control.Name}, TabIndex={_control.TabIndex}, IndexString={_indexString}, ParentLastIndex={_parentLastIndex}, LastIndex={_lastIndex}, IsContainer={_isContainer}, IsRadioButton={_isRadioButton}, IsGroupRepresentation={_isGroupRepresentation}";
+            }
+
+            private int GetPreviousNumber(string indexString)
+            {
+                var numbers = indexString.Split(SEP);
+                var length = numbers.Length;
+                var secondLastNumber = -1;
+                if (length > 1)
+                {
+                    int.TryParse(numbers[length - 2], out secondLastNumber);
+                }
+                return secondLastNumber;
             }
 
             private int GetLastNumber(string indexString)
             {
-                var parts = indexString.Split(',');
+                var parts = indexString.Split(SEP);
                 var lastPart = parts[parts.Length - 1];
                 return int.Parse(lastPart);
             }
