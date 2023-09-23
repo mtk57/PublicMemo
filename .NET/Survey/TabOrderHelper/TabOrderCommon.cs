@@ -5,6 +5,34 @@
         public const char SEP = ':';
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    internal interface IHasHierarchicalTabIndices :
+        System.Windows.Forms.IWin32Window,
+        System.Collections.Generic.IEnumerable<int>,
+        System.IComparable,
+        System.IComparable<IHasHierarchicalTabIndices>
+    {
+        System.Collections.Generic.IEnumerable<int> HierarchicalTabIndices { get; }
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    internal class ControlNotFoundException : System.Exception
+    {
+        private ControlNotFoundException()
+        {
+            // do nothing
+        }
+
+        public ControlNotFoundException(string message) : base(message)
+        {
+            // do nothing
+        }
+    }
+
     internal static class PlatformInvoker
     {
         /// <summary>
@@ -34,10 +62,19 @@
     /// <summary>
     /// SortHelperOfHierarchicalTabIndices
     /// </summary>
-    internal class SortHelperOfHierarchicalTabIndices : System.Collections.Generic.IComparer<IHasHierarchicalTabIndices>
+    internal class SortHelperOfHierarchicalTabIndices :
+        System.Collections.Generic.IComparer<IHasHierarchicalTabIndices>
     {
-        private int togleNum = 1;
-        public SortHelperOfHierarchicalTabIndices() { }
+        private int _togleNum = 1;
+        
+        private SortHelperOfHierarchicalTabIndices()
+        {
+        }
+
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="sort"></param>
         public SortHelperOfHierarchicalTabIndices(Sort sort)
         {
             switch (sort)
@@ -45,30 +82,12 @@
                 case Sort.Asc:
                     break;
                 case Sort.Desc:
-                    togleNum = -1;
+                    _togleNum = -1;
                     break;
                 default:
-                    togleNum = 1;
+                    _togleNum = 1;
                     break;
             }
-        }
-
-        private int Compare(System.IntPtr hwdx, System.IntPtr hwdy)
-        {
-            var h = PlatformInvoker.GetWindow(hwdx, (uint)PlatformInvoker.GetWindowCmd.GW_HWNDNEXT);
-            while (h != default(System.IntPtr))
-            {
-                if (h == hwdy) return -1 * togleNum;
-                h = PlatformInvoker.GetWindow(h, (uint)PlatformInvoker.GetWindowCmd.GW_HWNDNEXT);
-            }
-
-            h = PlatformInvoker.GetWindow(hwdx, (uint)PlatformInvoker.GetWindowCmd.GW_HWNDPREV);
-            while (h != default(System.IntPtr))
-            {
-                if (h == hwdy) return 1 * togleNum;
-                h = PlatformInvoker.GetWindow(h, (uint)PlatformInvoker.GetWindowCmd.GW_HWNDPREV);
-            }
-            return 0;
         }
 
         public int Compare(IHasHierarchicalTabIndices x, IHasHierarchicalTabIndices y)
@@ -81,15 +100,41 @@
 
                 while (e1 && e2)
                 {
-                    int compare = enumerator1.Current.CompareTo(enumerator2.Current) * togleNum;
-                    if (compare != 0) return compare;
+                    int compare = enumerator1.Current.CompareTo(enumerator2.Current) * _togleNum;
+                    if (compare != 0)
+                        return compare;
 
                     e1 = enumerator1.MoveNext();
                     e2 = enumerator2.MoveNext();
                 }
-                if (!e1 && !e2) return Compare(x.Handle, y.Handle);
-                if (!e1) return -1 * togleNum;
-                if (!e2) return 1 * togleNum;
+                if (!e1 && !e2)
+                    return CompareZOrder(x.Handle, y.Handle);
+                if (!e1)
+                    return -1 * _togleNum;
+                if (!e2)
+                    return 1 * _togleNum;
+            }
+            return 0;
+        }
+
+        private int CompareZOrder(System.IntPtr hwdx, System.IntPtr hwdy)
+        {
+            var h = PlatformInvoker.GetWindow(hwdx, (uint)PlatformInvoker.GetWindowCmd.GW_HWNDNEXT);
+            while (h != default(System.IntPtr))
+            {
+                if (h == hwdy)
+                    return -1 * _togleNum;
+
+                h = PlatformInvoker.GetWindow(h, (uint)PlatformInvoker.GetWindowCmd.GW_HWNDNEXT);
+            }
+
+            h = PlatformInvoker.GetWindow(hwdx, (uint)PlatformInvoker.GetWindowCmd.GW_HWNDPREV);
+            while (h != default(System.IntPtr))
+            {
+                if (h == hwdy)
+                    return 1 * _togleNum;
+
+                h = PlatformInvoker.GetWindow(h, (uint)PlatformInvoker.GetWindowCmd.GW_HWNDPREV);
             }
             return 0;
         }

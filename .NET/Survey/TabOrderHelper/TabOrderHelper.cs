@@ -4,12 +4,7 @@
 // 参考:https://zecl.hatenablog.com/entry/20090226/p1
 //      https://atmarkit.itmedia.co.jp/fdotnet/dotnettips/243winkeyproc/winkeyproc.html
 //
-using System.Collections.Generic;
-using System;
 using System.Linq;
-using System.Windows.Forms;
-using System.Runtime.InteropServices;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.Button;
 
 namespace TabOrderHelper
 {
@@ -27,9 +22,6 @@ namespace TabOrderHelper
         private System.Collections.Generic.List<TabOrderModel> _modelList;
         private System.Collections.Generic.Dictionary<int, TabOrderModel> _modelDict;
 
-        /// <summary>
-        /// コンストラクタ
-        /// </summary>
         private TabOrderHelper()
         {
             // do nothing
@@ -96,88 +88,33 @@ namespace TabOrderHelper
             return false;
         }
 
-        private bool IsRadioButton(System.Windows.Forms.Control target)
-        {
-            if (target is System.Windows.Forms.RadioButton)
-                return true;
-            return false;
-        }
-
-        //private bool HasDuplicateLastIndex()
-        //{
-        //    System.Collections.Generic.HashSet<int> uniqueNumbers = new System.Collections.Generic.HashSet<int>();
-
-        //    foreach (var m in _controlList)
-        //    {
-        //        var number = m.LastIndex;
-
-        //        if (uniqueNumbers.Contains(number))
-        //        {
-        //            throw new DuplicateTabIndexException($"Duplicate tab index values. Info=[{m.ToString()}]");
-        //        }
-        //        uniqueNumbers.Add(number);
-        //    }
-        //    return false;
-        //}
-
         /// <summary>
-        /// タブが止まるコントロールを設定する
+        /// 内部的にナンバリングした重複無しのタブインデックス値を設定する
         /// </summary>
         private void UpdateTabIndex()
         {
             _modelList.Sort(new SortHelperOfHierarchicalTabIndices(Sort.Asc));
 
-            // まずはラジオボタンのインデックスの子と親の辞書を作成する
-            // Key=コントロール名
-            // Value=Keyの親のタブインデックス
-            //       (つまりラジオボタンを内包するコンテナコントロールのタブインデックス。
-            //        コンテナに内包されていない場合は-1となる)
-            // 例:
-            //    Key   Value
-            //    ---------
-            //    rd1   10
-            //    rd2   10
-            //    btn1  -1
-            //    grp1  -1
-            //    txt1   5
-            var grpIndex = _modelList.Where(x => !x.IsTabStop && 
-                                                     !x.IsContainer && 
-                                                     x.IsRadioButton)
-                                        .ToDictionary(x => x.IndexString, x => x.ParentLastIndex);
+            var index = 0;
+            int? groupIndex = null;
 
-            // 辞書をKeyで昇順ソートする
-            // 例:
-            //    Key Value
-            //    ---------
-            //    0   -1
-            //    1   -1
-            //    2    5
-            //    3   10
-            //    4   10
-            var grpIndexSortedKey = grpIndex.OrderBy(x => x.Key)
-                                            .ToDictionary(x => x.Key, x => x.Value);
+            for (var i=0; i< _modelList.Count; i++)
+            {
+                var model = _modelList[i];
 
-            // Valueの重複を削除する
-            // 例:
-            //    Key Value
-            //    ---------
-            //    0   -1
-            //    2    5
-            //    3   10
-            var grpIndexDeletedValue = grpIndexSortedKey.GroupBy(x => x.Value)
-                                                        .Select(x => x.First())
-                                                        .ToDictionary(x => x.Key, x => x.Value);
+                if (!model.IsRadioButton)
+                {
+                    model.UniqueTabIndex = index++;
+                    continue;
+                }
 
-            // タブストップを設定する
-            //_controlList.Where(x => grpIndexDeletedValue.Any(
-            //                                   kvp => kvp.Key == x.LastIndex && 
-            //                                   kvp.Value == x.ParentLastIndex))
-            //              .ToList()
-            //              .ForEach(x => x.IsTabStop = true);
-
-            _modelList.Where(m => !m.IsContainer && !m.IsRadioButton)
-                          .ToList()
-                          .ForEach(m => m.IsTabStop = true);
+                // ラジオボタンの場合は同グループの最初のコントロールをタブオーダーの対象とする
+                if (groupIndex == null || groupIndex != model.ParentLastIndex)
+                {
+                    model.UniqueTabIndex = index++;
+                    groupIndex = model.ParentLastIndex;
+                }
+            }
         }
 
         private void SetPrevNextControl()

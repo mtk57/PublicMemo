@@ -46,8 +46,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TabOrderInterfaces.cs" />
-    <Compile Include="TabOrderExceptions.cs" />
     <Compile Include="TabOrderCommon.cs" />
     <Compile Include="TabOrderModels.cs" />
     <Compile Include="Form1.cs">

@@ -4,18 +4,22 @@
     {
         private System.Collections.Generic.IEnumerable<int> _hierarchicalTabIndices;
 
-        private System.Windows.Forms.Control _prevControl;
-        private System.Windows.Forms.Control _control;
-        private System.Windows.Forms.Control _nextControl;
+        public System.Windows.Forms.Control PrevControl { get; set; }
+        public System.Windows.Forms.Control Control { get; }
+        public System.Windows.Forms.Control NextControl { get; set; }
+        public string IndexString { get; }
+        public int ParentLastIndex { get; }
+        public int LastIndex { get; }
 
-        private string _indexString;
-        private int _parentLastIndex;
-        private int _lastIndex;
-        private int _tabIndex;  // これが内部的にナンバリングした重複無しのタブインデックス値
+        /// <summary>
+        /// 内部的にナンバリングした重複無しのタブインデックス値
+        /// </summary>
+        public int UniqueTabIndex { get; set; }
 
-        private bool _isContainer;
-        private bool _isRadioButton;
-        private bool _isTabStop;
+        public bool IsContainer { get; }
+        public bool IsRadioButton { get; }
+        public bool IsTabStop { get; set; }
+        public System.IntPtr Handle { get; }
 
         private TabOrderModel()
         {
@@ -26,55 +30,43 @@
         {
             _hierarchicalTabIndices = GetHierarchicalTabindices(control);
 
-            _prevControl = null;
-            _control = control;
-            _nextControl = null;
-            _indexString = GetHierarchicalTabIndicesString(_control);
-            _parentLastIndex = GetPreviousNumber(_indexString);
-            _lastIndex = GetLastNumber(_indexString);
-            _tabIndex = -1;
-            _isRadioButton = _control is System.Windows.Forms.RadioButton;
-            _isTabStop = false;
+            PrevControl = null;
+            Control = control;
+            NextControl = null;
+            IndexString = GetHierarchicalTabIndicesString(control);
+            ParentLastIndex = GetPreviousNumber(IndexString);
+            LastIndex = GetLastNumber(IndexString);
+            UniqueTabIndex = -1;
+            IsRadioButton = control is System.Windows.Forms.RadioButton;
+            IsTabStop = false;
         }
-
-        public System.Windows.Forms.Control PrevControl { get { return _prevControl; } set { _prevControl = value; } }
-        public System.Windows.Forms.Control Control { get { return _control; } }
-        public System.Windows.Forms.Control NextControl { get { return _nextControl; } set { _nextControl = value; } }
-        public string IndexString { get { return _indexString; } }
-        public int ParentLastIndex { get { return _parentLastIndex; } }
-        public int LastIndex { get { return _lastIndex; } }
-        public int TabIndex { get { return _lastIndex; } set { _tabIndex = value; } }
-        public bool IsContainer { get { return _isContainer; } }
-        public bool IsRadioButton { get { return _isRadioButton; } }
-        public bool IsTabStop { get { return _isTabStop; } set { _isTabStop = value; } }
-        public System.IntPtr Handle { get { return _control.Handle; } }
 
         public override string ToString()
         {
-            if (_prevControl == null)
+            if (PrevControl == null)
             {
-                return $"Name={_control.Name}\t" +
-                       $"TabIndex={_control.TabIndex}\t" +
-                       $"IndexString={_indexString}\t" +
-                       $"ParentLastIndex={_parentLastIndex}\t" +
-                       $"LastIndex={_lastIndex}\t" +
-                       $"TabIndex={_tabIndex}\t" +
-                       $"IsContainer={_isContainer}\t" +
-                       $"IsRadioButton={_isRadioButton}\t" +
-                       $"IsTabStop={_isTabStop}";
+                return $"Name={Control.Name}\t" +
+                       $"TabIndex={Control.TabIndex}\t" +
+                       $"IndexString={IndexString}\t" +
+                       $"ParentLastIndex={ParentLastIndex}\t" +
+                       $"LastIndex={LastIndex}\t" +
+                       $"UniqueTabIndex={UniqueTabIndex}\t" +
+                       $"IsContainer={IsContainer}\t" +
+                       $"IsRadioButton={IsRadioButton}\t" +
+                       $"IsTabStop={IsTabStop}";
             }
 
-            return $"Name={_control.Name}\t" +
-                   $"PrevTabIndex={_prevControl.TabIndex}\t" +
-                   $"TabIndex={_control.TabIndex}\t" +
-                   $"NextTabIndex={_nextControl.TabIndex}\t" +
-                   $"IndexString={_indexString}\t" +
-                   $"ParentLastIndex={_parentLastIndex}\t" +
-                   $"LastIndex={_lastIndex}\t" +
-                   $"TabIndex={_tabIndex}\t" +
-                   $"IsContainer={_isContainer}\t" +
-                   $"IsRadioButton={_isRadioButton}\t" +
-                   $"IsTabStop={_isTabStop}";
+            return $"Name={Control.Name}\t" +
+                   $"PrevTabIndex={PrevControl.TabIndex}\t" +
+                   $"TabIndex={Control.TabIndex}\t" +
+                   $"NextTabIndex={NextControl.TabIndex}\t" +
+                   $"IndexString={IndexString}\t" +
+                   $"ParentLastIndex={ParentLastIndex}\t" +
+                   $"LastIndex={LastIndex}\t" +
+                   $"UniqueTabIndex={UniqueTabIndex}\t" +
+                   $"IsContainer={IsContainer}\t" +
+                   $"IsRadioButton={IsRadioButton}\t" +
+                   $"IsTabStop={IsTabStop}";
         }
 
         public System.Collections.Generic.IEnumerable<int> HierarchicalTabIndices
