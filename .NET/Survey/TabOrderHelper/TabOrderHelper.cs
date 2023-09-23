@@ -4,39 +4,60 @@
 // 参考:https://zecl.hatenablog.com/entry/20090226/p1
 //      https://atmarkit.itmedia.co.jp/fdotnet/dotnettips/243winkeyproc/winkeyproc.html
 //
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Windows.Forms;
 
 namespace TabOrderHelper
 {
+    /// <summary>
+    /// タブオーダーヘルパークラス
+    /// 
+    /// [本クラスを使用する場合の注意点]
+    /// 1.コンテナ系コントロールは以下のみ対応する。
+    ///   Panel
+    ///   GroupBox
+    ///   TabControl
+    /// 2.タブインデックスは重複していないこと。
+    ///
+    /// </summary>
     public sealed class TabOrderHelper
     {
         private const char SEP = ':';
+        private System.Collections.Generic.List<ControlModel> _controlList;
+        private System.Collections.Generic.Dictionary<int, ControlModel> _controlDict;
 
-        private System.Collections.Generic.List<ControlModel> _controlModels;
-
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
         private TabOrderHelper()
         {
             // do nothing
         }
 
-        public TabOrderHelper(System.Windows.Forms.Control rootControl)
+        /// <summary>
+        /// コンストラクタ
+        /// </summary>
+        /// <param name="form">フォーム</param>
+        public TabOrderHelper(System.Windows.Forms.Control form)
         {
-            _controlModels = new System.Collections.Generic.List<ControlModel>();
-            CreateControlModels(rootControl);
+            _controlList = new System.Collections.Generic.List<ControlModel>();
+            _controlDict = new System.Collections.Generic.Dictionary<int, ControlModel>();
+
+            CreateControlList(form);
         }
 
+        /// <summary>
+        /// カレントコントロールの次(もしくは前)のコントロールを返す
+        /// </summary>
+        /// <param name="control">カレントコントロール</param>
+        /// <param name="forward">True:次のコントロール、False:前のコントロール</param>
+        /// <returns>コントロール</returns>
         public System.Windows.Forms.Control GetNextControl(System.Windows.Forms.Control control, bool forward = true)
         {
-            // TODO:タブオーダーは基本的に静的な情報なので、辞書で持っておくとよいかも。
-
-            return GetNextControl(FindControl(control), forward);
+            var tabIndex = control.TabIndex;
+            return forward ? _controlDict[tabIndex].NextControl : _controlDict[tabIndex].PrevControl;
         }
 
-        private void CreateControlModels(System.Windows.Forms.Control rootControl)
+        private void CreateControlList(System.Windows.Forms.Control rootControl)
         {
             foreach (var c in GetAllControls(rootControl))
             {
@@ -45,19 +66,21 @@ namespace TabOrderHelper
                 var isRadioButton = IsRadioButton(c);
 
                 var model = new ControlModel(c, indexString, isContainer, isRadioButton);
-                _controlModels.Add(model);
+                _controlList.Add(model);
             }
 
             HasDuplicateLastIndex();
 
             SetTabStop();
 
-            foreach (var c in _controlModels)
+            SetPrevNextControl();
+
+            CreateDict();
+
+#if DEBUG
+            foreach (var c in _controlList)
                 System.Diagnostics.Debug.WriteLine(c.ToString());
-
-            // TODO:タブオーダーは基本的に静的な情報なので、辞書で持っておくとよいかも。
-
-            return;
+#endif
         }
 
         private System.Collections.Generic.IEnumerable<System.Windows.Forms.Control> GetAllControls(System.Windows.Forms.Control rootControl)
@@ -120,7 +143,7 @@ namespace TabOrderHelper
         {
             System.Collections.Generic.HashSet<int> uniqueNumbers = new System.Collections.Generic.HashSet<int>();
 
-            foreach (var m in _controlModels)
+            foreach (var m in _controlList)
             {
                 var number = m.LastIndex;
 
@@ -151,7 +174,7 @@ namespace TabOrderHelper
             //    0   -1
             //    1   -1
             //    2    5
-            var grpIndex = _controlModels.Where(x => !x.IsTabStop && 
+            var grpIndex = _controlList.Where(x => !x.IsTabStop && 
                                                      !x.IsContainer && 
                                                      x.IsRadioButton)
                                         .ToDictionary(x => x.LastIndex, x => x.ParentLastIndex);
@@ -180,74 +203,75 @@ namespace TabOrderHelper
                                                         .ToDictionary(x => x.Key, x => x.Value);
 
             // タブストップを設定する
-            _controlModels.Where(x => grpIndexDeletedValue.Any(
+            _controlList.Where(x => grpIndexDeletedValue.Any(
                                                kvp => kvp.Key == x.LastIndex && 
                                                kvp.Value == x.ParentLastIndex))
                           .ToList()
                           .ForEach(x => x.IsTabStop = true);
 
-            _controlModels.Where(m => !m.IsContainer && !m.IsRadioButton)
+            _controlList.Where(m => !m.IsContainer && !m.IsRadioButton)
                           .ToList()
                           .ForEach(m => m.IsTabStop = true);
         }
 
-        private ControlModel FindControl(System.Windows.Forms.Control control)
+        private void SetPrevNextControl()
         {
-            foreach (var m in _controlModels)
+            foreach (var x in _controlList)
             {
-                if (m.Control.Name == control.Name) return m;
+                x.NextControl = GetNextControl(x, true);
+                x.PrevControl = GetNextControl(x, false);
             }
-
-            throw new ControlNotFoundException($"The specified control name cannot be found. Name=[{control.Name}]");
         }
 
         private System.Windows.Forms.Control GetNextControl(ControlModel model, bool forward = true)
         {
             var lastIndex = model.LastIndex;
 
-            var nextLastIndex = forward ? FindNextGreaterNumber(lastIndex) : FindNextLessNumber(lastIndex);
-
-            return FindControlByLastIndex(nextLastIndex).Control;
+            return forward ? GetNextGreaterTabIndexControl(lastIndex) : GetPrevLessTabIndexControl(lastIndex);
         }
 
-        private int FindNextGreaterNumber(int lastIndex)
+        private System.Windows.Forms.Control GetNextGreaterTabIndexControl(int lastIndex)
         {
-            var model = _controlModels.OrderBy(x => x.LastIndex)
-                                      .FirstOrDefault(x =>  x.LastIndex > lastIndex &&
-                                                           !x.IsContainer &&
-                                                            x.IsTabStop);
+            var model = _controlList.OrderBy(x => x.LastIndex)
+                                      .FirstOrDefault(x => x.LastIndex > lastIndex &&
+                                                          !x.IsContainer &&
+                                                           x.IsTabStop);
             if (model == null)
             {
-                model = _controlModels.OrderBy(x => x.LastIndex)
-                                      .FirstOrDefault(x => !x.IsContainer && 
-                                                            x.IsTabStop);
-            }
-            return model.LastIndex;
-        }
-
-        private int FindNextLessNumber(int lastIndex)
-        {
-            var model = _controlModels.OrderByDescending(x => x.LastIndex)
-                                      .FirstOrDefault(x =>  x.LastIndex < lastIndex &&
-                                                           !x.IsContainer &&
-                                                            x.IsTabStop);
-            if (model == null)
-            {
-                model = _controlModels.OrderByDescending(x => x.LastIndex)
+                model = _controlList.OrderBy(x => x.LastIndex)
                                       .FirstOrDefault(x => !x.IsContainer &&
                                                             x.IsTabStop);
             }
-            return model.LastIndex;
+            return model.Control;
         }
 
-        private ControlModel FindControlByLastIndex(int lastIndex)
+        private System.Windows.Forms.Control GetPrevLessTabIndexControl(int lastIndex)
         {
-            return _controlModels.First(m => m.LastIndex == lastIndex);
+            var model = _controlList.OrderByDescending(x => x.LastIndex)
+                                      .FirstOrDefault(x => x.LastIndex < lastIndex &&
+                                                          !x.IsContainer &&
+                                                           x.IsTabStop);
+            if (model == null)
+            {
+                model = _controlList.OrderByDescending(x => x.LastIndex)
+                                      .FirstOrDefault(x => !x.IsContainer &&
+                                                            x.IsTabStop);
+            }
+            return model.Control;
         }
+
+        private void CreateDict()
+        {
+            _controlDict = _controlList.OrderBy(x => x.LastIndex)
+                                       .ToDictionary(x => x.LastIndex, x => x);
+        }
+
 
         private sealed class ControlModel
         {
+            private System.Windows.Forms.Control _prevControl;
             private System.Windows.Forms.Control _control;
+            private System.Windows.Forms.Control _nextControl;
             private string _indexString;
             private int _parentLastIndex;
             private int _lastIndex;
@@ -271,7 +295,9 @@ namespace TabOrderHelper
                 _isTabStop = false;
             }
 
+            public System.Windows.Forms.Control PrevControl { get { return _prevControl; } set { _prevControl = value; } }
             public System.Windows.Forms.Control Control { get { return _control; } }
+            public System.Windows.Forms.Control NextControl { get { return _nextControl; } set { _nextControl = value; } }
             public string IndexString { get { return _indexString; } }
             public int ParentLastIndex { get { return _parentLastIndex; } }
             public int LastIndex { get { return _lastIndex; } }
@@ -282,7 +308,9 @@ namespace TabOrderHelper
             public override string ToString()
             {
                 return $"Name={_control.Name}\t" +
+                       $"PrevTabIndex={_prevControl.TabIndex}\t" +
                        $"TabIndex={_control.TabIndex}\t" +
+                       $"NextTabIndex={_nextControl.TabIndex}\t" +
                        $"IndexString={_indexString}\t" +
                        $"ParentLastIndex={_parentLastIndex}\t" +
                        $"LastIndex={_lastIndex}\t" +
