@@ -14,9 +14,14 @@ namespace TabOrderHelper
 {
     public sealed class TabOrderHelper
     {
-        private const char SEP = ',';
+        private const char SEP = ':';
 
         private System.Collections.Generic.List<ControlModel> _controlModels;
+
+        private TabOrderHelper()
+        {
+            // do nothing
+        }
 
         public TabOrderHelper(System.Windows.Forms.Control rootControl)
         {
@@ -45,7 +50,7 @@ namespace TabOrderHelper
 
             HasDuplicateLastIndex();
 
-            SetGroupRepresentation();
+            SetTabStop();
 
             foreach (var c in _controlModels)
                 System.Diagnostics.Debug.WriteLine(c.ToString());
@@ -129,15 +134,15 @@ namespace TabOrderHelper
         }
 
         /// <summary>
-        /// ラジオボタンのグループ代表を設定する
+        /// タブが止まるコントロールを設定する
         /// </summary>
-        private void SetGroupRepresentation()
+        private void SetTabStop()
         {
             // まずはラジオボタンのインデックスの子と親の辞書を作成する
             // Key=タブインデックス
             // Value=Keyの親のタブインデックス
             //       (つまりラジオボタンを内包するコンテナコントロールのタブインデックス。
-            //        コンテナに内包されていない場合は-1)
+            //        コンテナに内包されていない場合は-1となる)
             // 例:
             //    Key Value
             //    ---------
@@ -146,7 +151,7 @@ namespace TabOrderHelper
             //    0   -1
             //    1   -1
             //    2    5
-            var grpIndex = _controlModels.Where(x => !x.IsGroupRepresentation && 
+            var grpIndex = _controlModels.Where(x => !x.IsTabStop && 
                                                      !x.IsContainer && 
                                                      x.IsRadioButton)
                                         .ToDictionary(x => x.LastIndex, x => x.ParentLastIndex);
@@ -174,17 +179,16 @@ namespace TabOrderHelper
                                                         .Select(x => x.First())
                                                         .ToDictionary(x => x.Key, x => x.Value);
 
-            // ラジオボタンのグループ代表を設定する
+            // タブストップを設定する
             _controlModels.Where(x => grpIndexDeletedValue.Any(
                                                kvp => kvp.Key == x.LastIndex && 
                                                kvp.Value == x.ParentLastIndex))
                           .ToList()
-                          .ForEach(x => x.IsGroupRepresentation = true);
+                          .ForEach(x => x.IsTabStop = true);
 
-            // コンテナとラジオボタン以外をグループ代表に設定する
             _controlModels.Where(m => !m.IsContainer && !m.IsRadioButton)
                           .ToList()
-                          .ForEach(m => m.IsGroupRepresentation = true);
+                          .ForEach(m => m.IsTabStop = true);
         }
 
         private ControlModel FindControl(System.Windows.Forms.Control control)
@@ -211,12 +215,12 @@ namespace TabOrderHelper
             var model = _controlModels.OrderBy(x => x.LastIndex)
                                       .FirstOrDefault(x =>  x.LastIndex > lastIndex &&
                                                            !x.IsContainer &&
-                                                            x.IsGroupRepresentation);
+                                                            x.IsTabStop);
             if (model == null)
             {
                 model = _controlModels.OrderBy(x => x.LastIndex)
                                       .FirstOrDefault(x => !x.IsContainer && 
-                                                            x.IsGroupRepresentation);
+                                                            x.IsTabStop);
             }
             return model.LastIndex;
         }
@@ -226,12 +230,12 @@ namespace TabOrderHelper
             var model = _controlModels.OrderByDescending(x => x.LastIndex)
                                       .FirstOrDefault(x =>  x.LastIndex < lastIndex &&
                                                            !x.IsContainer &&
-                                                            x.IsGroupRepresentation);
+                                                            x.IsTabStop);
             if (model == null)
             {
                 model = _controlModels.OrderByDescending(x => x.LastIndex)
                                       .FirstOrDefault(x => !x.IsContainer &&
-                                                            x.IsGroupRepresentation);
+                                                            x.IsTabStop);
             }
             return model.LastIndex;
         }
@@ -241,7 +245,7 @@ namespace TabOrderHelper
             return _controlModels.First(m => m.LastIndex == lastIndex);
         }
 
-        private class ControlModel
+        private sealed class ControlModel
         {
             private System.Windows.Forms.Control _control;
             private string _indexString;
@@ -249,7 +253,7 @@ namespace TabOrderHelper
             private int _lastIndex;
             private bool _isContainer;
             private bool _isRadioButton;
-            private bool _isGroupRepresentation;
+            private bool _isTabStop;
 
             private ControlModel()
             {
@@ -264,7 +268,7 @@ namespace TabOrderHelper
                 _lastIndex = GetLastNumber(_indexString);
                 _isContainer = isContainer;
                 _isRadioButton = isRadioButton;
-                _isGroupRepresentation = false;
+                _isTabStop = false;
             }
 
             public System.Windows.Forms.Control Control { get { return _control; } }
@@ -273,18 +277,25 @@ namespace TabOrderHelper
             public int LastIndex { get { return _lastIndex; } }
             public bool IsContainer { get { return _isContainer; } }
             public bool IsRadioButton { get { return _isRadioButton; } }
-            public bool IsGroupRepresentation { get { return _isGroupRepresentation; } set { _isGroupRepresentation = value; } }
+            public bool IsTabStop { get { return _isTabStop; } set { _isTabStop = value; } }
 
             public override string ToString()
             {
-                return $"Name={_control.Name}, TabIndex={_control.TabIndex}, IndexString={_indexString}, ParentLastIndex={_parentLastIndex}, LastIndex={_lastIndex}, IsContainer={_isContainer}, IsRadioButton={_isRadioButton}, IsGroupRepresentation={_isGroupRepresentation}";
+                return $"Name={_control.Name}\t" +
+                       $"TabIndex={_control.TabIndex}\t" +
+                       $"IndexString={_indexString}\t" +
+                       $"ParentLastIndex={_parentLastIndex}\t" +
+                       $"LastIndex={_lastIndex}\t" +
+                       $"IsContainer={_isContainer}\t" +
+                       $"IsRadioButton={_isRadioButton}\t" +
+                       $"IsTabStop={_isTabStop}";
             }
 
             private int GetPreviousNumber(string indexString)
             {
                 var numbers = indexString.Split(SEP);
                 var length = numbers.Length;
-                var secondLastNumber = -1;
+                var secondLastNumber = -1;  //コンテナに内包されていない場合
                 if (length > 1)
                 {
                     int.TryParse(numbers[length - 2], out secondLastNumber);
@@ -309,6 +320,7 @@ namespace TabOrderHelper
 
             public DuplicateTabIndexException(string message) : base(message)
             {
+                // do nothing
             }
         }
 
@@ -321,6 +333,7 @@ namespace TabOrderHelper
 
             public ControlNotFoundException(string message) : base(message)
             {
+                // do nothing
             }
         }
     }

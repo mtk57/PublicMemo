@@ -17,36 +17,36 @@ namespace TabOrderHelper
             _helper = new TabOrderHelper(this);
         }
 
-        //protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-        //{
-        //    var activeControl = this.ActiveControl;
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            var activeControl = this.ActiveControl;
 
-        //    Console.WriteLine($"activeControl={activeControl.Name}");
+            System.Diagnostics.Debug.WriteLine($"activeControl={activeControl.Name}, TabIndex={activeControl.TabIndex}");
 
-        //    if (keyData == Keys.Tab)
-        //    {
-        //        // TABキーが押されたときの処理
-        //        //System.Diagnostics.Debug.WriteLine("TAB key pressed");
+            if (keyData == Keys.Tab)
+            {
+                // TABキーが押されたときの処理
+                //System.Diagnostics.Debug.WriteLine("TAB key pressed");
 
-        //        var nextControl = _helper.GetNextControl(activeControl);
+                var nextControl = _helper.GetNextControl(activeControl);
 
-        //        nextControl.Focus();
+                nextControl.Focus();
 
-        //        return true; // イベントを処理済みとしてマークする
-        //    }
-        //    else if (keyData == (Keys.Shift | Keys.Tab))
-        //    {
-        //        // SHIFT+TABキーが押されたときの処理
-        //        //System.Diagnostics.Debug.WriteLine("SHIFT+TAB key pressed");
+                return true; // イベントを処理済みとしてマークする
+            }
+            else if (keyData == (Keys.Shift | Keys.Tab))
+            {
+                // SHIFT+TABキーが押されたときの処理
+                //System.Diagnostics.Debug.WriteLine("SHIFT+TAB key pressed");
 
-        //        var prevControl = _helper.GetNextControl(activeControl, false);
+                var prevControl = _helper.GetNextControl(activeControl, false);
 
-        //        prevControl.Focus();
+                prevControl.Focus();
 
-        //        return true; // イベントを処理済みとしてマークする
-        //    }
+                return true; // イベントを処理済みとしてマークする
+            }
 
-        //    return base.ProcessCmdKey(ref msg, keyData);
-        //}
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
     }
 }
