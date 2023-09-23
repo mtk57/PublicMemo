@@ -4,8 +4,11 @@
 // 参考:https://zecl.hatenablog.com/entry/20090226/p1
 //      https://atmarkit.itmedia.co.jp/fdotnet/dotnettips/243winkeyproc/winkeyproc.html
 //
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Windows.Forms;
 
 namespace TabOrderHelper
 {
@@ -23,6 +26,8 @@ namespace TabOrderHelper
 
         public System.Windows.Forms.Control GetNextControl(System.Windows.Forms.Control control, bool forward = true)
         {
+            // TODO:タブオーダーは基本的に静的な情報なので、辞書で持っておくとよいかも。
+
             return GetNextControl(FindControl(control), forward);
         }
 
@@ -36,13 +41,16 @@ namespace TabOrderHelper
 
                 var model = new ControlModel(c, indexString, isContainer, isRadioButton);
                 _controlModels.Add(model);
-
-                System.Diagnostics.Debug.WriteLine(model.ToString());
             }
 
             HasDuplicateLastIndex();
 
             SetGroupRepresentation();
+
+            foreach (var c in _controlModels)
+                System.Diagnostics.Debug.WriteLine(c.ToString());
+
+            // TODO:タブオーダーは基本的に静的な情報なので、辞書で持っておくとよいかも。
 
             return;
         }
@@ -120,9 +128,63 @@ namespace TabOrderHelper
             return false;
         }
 
+        /// <summary>
+        /// ラジオボタンのグループ代表を設定する
+        /// </summary>
         private void SetGroupRepresentation()
         {
-            // TODO:ラジオボタンの場合のみグループの代表フラグを設定する
+            // まずはラジオボタンのインデックスの子と親の辞書を作成する
+            // Key=タブインデックス
+            // Value=Keyの親のタブインデックス
+            //       (つまりラジオボタンを内包するコンテナコントロールのタブインデックス。
+            //        コンテナに内包されていない場合は-1)
+            // 例:
+            //    Key Value
+            //    ---------
+            //    4   10
+            //    3   10
+            //    0   -1
+            //    1   -1
+            //    2    5
+            var grpIndex = _controlModels.Where(x => !x.IsGroupRepresentation && 
+                                                     !x.IsContainer && 
+                                                     x.IsRadioButton)
+                                        .ToDictionary(x => x.LastIndex, x => x.ParentLastIndex);
+
+            // 辞書をKeyで昇順ソートする
+            // 例:
+            //    Key Value
+            //    ---------
+            //    0   -1
+            //    1   -1
+            //    2    5
+            //    3   10
+            //    4   10
+            var grpIndexSortedKey = grpIndex.OrderBy(x => x.Key)
+                                            .ToDictionary(x => x.Key, x => x.Value);
+
+            // Valueの重複を削除する
+            // 例:
+            //    Key Value
+            //    ---------
+            //    0   -1
+            //    2    5
+            //    3   10
+            var grpIndexDeletedValue = grpIndexSortedKey.GroupBy(x => x.Value)
+                                                        .Select(x => x.First())
+                                                        .ToDictionary(x => x.Key, x => x.Value);
+
+            // ラジオボタンのグループ代表を設定する
+            _controlModels.Where(x => grpIndexDeletedValue.Any(
+                                               kvp => kvp.Key == x.LastIndex && 
+                                               kvp.Value == x.ParentLastIndex))
+                          .ToList()
+                          .ForEach(x => x.IsGroupRepresentation = true);
+
+            // コンテナとラジオボタン以外をグループ代表に設定する
+            _controlModels.Where(m => !m.IsContainer && !m.IsRadioButton)
+                          .ToList()
+                          .ForEach(m => m.IsGroupRepresentation = true);
         }
 
         private ControlModel FindControl(System.Windows.Forms.Control control)
@@ -146,22 +208,30 @@ namespace TabOrderHelper
 
         private int FindNextGreaterNumber(int lastIndex)
         {
-            // TODO:FirstOrDefaultの判定を修正する
-            var model = _controlModels.OrderBy(x => x.LastIndex).FirstOrDefault(x => x.LastIndex > lastIndex);
+            var model = _controlModels.OrderBy(x => x.LastIndex)
+                                      .FirstOrDefault(x =>  x.LastIndex > lastIndex &&
+                                                           !x.IsContainer &&
+                                                            x.IsGroupRepresentation);
             if (model == null)
             {
-                model = _controlModels.OrderBy(x => x.LastIndex).FirstOrDefault();
+                model = _controlModels.OrderBy(x => x.LastIndex)
+                                      .FirstOrDefault(x => !x.IsContainer && 
+                                                            x.IsGroupRepresentation);
             }
             return model.LastIndex;
         }
 
         private int FindNextLessNumber(int lastIndex)
         {
-            // TODO:FirstOrDefaultの判定を修正する
-            var model = _controlModels.OrderByDescending(x => x.LastIndex).FirstOrDefault(x => x.LastIndex < lastIndex);
+            var model = _controlModels.OrderByDescending(x => x.LastIndex)
+                                      .FirstOrDefault(x =>  x.LastIndex < lastIndex &&
+                                                           !x.IsContainer &&
+                                                            x.IsGroupRepresentation);
             if (model == null)
             {
-                model = _controlModels.OrderByDescending(x => x.LastIndex).FirstOrDefault();
+                model = _controlModels.OrderByDescending(x => x.LastIndex)
+                                      .FirstOrDefault(x => !x.IsContainer &&
+                                                            x.IsGroupRepresentation);
             }
             return model.LastIndex;
         }

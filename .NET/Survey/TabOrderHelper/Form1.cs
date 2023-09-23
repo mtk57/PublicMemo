@@ -26,7 +26,7 @@ namespace TabOrderHelper
         //    if (keyData == Keys.Tab)
         //    {
         //        // TABキーが押されたときの処理
-        //        //Console.WriteLine("TAB key pressed");
+        //        //System.Diagnostics.Debug.WriteLine("TAB key pressed");
 
         //        var nextControl = _helper.GetNextControl(activeControl);
 
@@ -37,7 +37,7 @@ namespace TabOrderHelper
         //    else if (keyData == (Keys.Shift | Keys.Tab))
         //    {
         //        // SHIFT+TABキーが押されたときの処理
-        //        //Console.WriteLine("SHIFT+TAB key pressed");
+        //        //System.Diagnostics.Debug.WriteLine("SHIFT+TAB key pressed");
 
         //        var prevControl = _helper.GetNextControl(activeControl, false);
 
