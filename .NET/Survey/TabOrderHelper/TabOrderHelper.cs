@@ -153,34 +153,36 @@ namespace TabOrderHelper
 
         private TabOrderModel GetControlByUniqueTabIndex(int? uniqueTabIndex, bool forward)
         {
+            TabOrderModel ret = null;
             var findIndex = forward ? uniqueTabIndex + 1 : uniqueTabIndex - 1;
 
-            _modelList.Sort();
-            foreach (var model in _modelList)
+            var foundModel = _modelList.FirstOrDefault(model => model.UniqueTabIndex == findIndex);
+            if (foundModel != null)
             {
-                if (model.UniqueTabIndex == findIndex)
-                {
-                    return new TabOrderModel(model.Control);
-                }
+                ret = new TabOrderModel(foundModel.Control);
+                ret.UniqueTabIndex = foundModel.UniqueTabIndex;
+                return ret;
             }
 
-            // 見つからない場合は先頭(or最後)から探す
-            if (!forward)
-                _modelList.Reverse();
-
-            for (var i = 0; i < _modelList.Count; i++)
+            if (forward)
             {
-                var model = _modelList[i];
-                if (model.UniqueTabIndex >= 0)
-                {
-                    if (!forward)
-                        _modelList.Sort();
-                    return new TabOrderModel(model.Control);
-                }
+                foundModel = _modelList.FirstOrDefault(model => model.UniqueTabIndex >= 0);
+            }
+            else
+            {
+                foundModel = _modelList.OrderByDescending(x => x.UniqueTabIndex)
+                                       .FirstOrDefault(model => model.UniqueTabIndex >= 0);
+            }
+            if (foundModel != null)
+            {
+                ret = new TabOrderModel(foundModel.Control);
+                ret.UniqueTabIndex = foundModel.UniqueTabIndex;
+                return ret;
             }
 
             throw new ControlNotFoundException($"Next or Preview Control not found. Info=[uniqueTabIndex={uniqueTabIndex}], forward={forward}");
         }
+
 
         private void CreateModelDict()
         {
