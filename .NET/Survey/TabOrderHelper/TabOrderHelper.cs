@@ -122,8 +122,8 @@ namespace TabOrderHelper
 
         private void UpdatePrevNextControl()
         {
-            foreach (var c in _modelList)
-                System.Diagnostics.Debug.WriteLine("BEFORE\t" + c.ToString());
+            //foreach (var c in _modelList)
+            //    System.Diagnostics.Debug.WriteLine("BEFORE\t" + c.ToString());
 
             foreach (var model in _modelList)
             {
@@ -143,8 +143,8 @@ namespace TabOrderHelper
                 }
             }
 
-            foreach (var c in _modelList)
-                System.Diagnostics.Debug.WriteLine("AFTER\t" + c.ToString());
+            //foreach (var c in _modelList)
+            //    System.Diagnostics.Debug.WriteLine("AFTER\t" + c.ToString());
 
         }
 
@@ -190,10 +190,14 @@ namespace TabOrderHelper
 
         private void UpdatePrevNextControlByModelForRadioButton(TabOrderModel model)
         {
-            var parentIndex = model.ParentLastIndex;
+            var enableRadioButton = _modelList.FirstOrDefault(x => x.UniqueTabIndex >= 0 &&
+                                                                   x.ParentLastIndex == model.ParentLastIndex && 
+                                                                   x.IsRadioButton);
+            if (enableRadioButton == null)
+                throw new ControlNotFoundException($"Next or Preview Control not found. Info=[{model}]");
 
-
-
+            model.NextControl = enableRadioButton.NextControl;
+            model.PrevControl = enableRadioButton.PrevControl;
         }
 
         private void CreateModelDict()
