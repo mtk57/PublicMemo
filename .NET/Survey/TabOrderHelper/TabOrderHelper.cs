@@ -127,22 +127,19 @@ namespace TabOrderHelper
 
             foreach (var model in _modelList)
             {
-                if (!model.IsRadioButton)
+                if (model.UniqueTabIndex >= 0)
                 {
-                    // ラジオボタン以外の場合はシンプルに次(or前)のユニークタブインデックスのコントロールを設定する
-                    //model.PrevControl = (model.UniqueTabIndex != 0) ?
-                    //                    _modelList.First(x => x.UniqueTabIndex == model.UniqueTabIndex - 1).Control :
-                    //                    _modelList.Last().Control;
-                    //model.NextControl = (model.UniqueTabIndex != _modelList.Count - 1) ?
-                    //                    _modelList.First(x => x.UniqueTabIndex == model.UniqueTabIndex + 1).Control :
-                    //                    _modelList.First().Control;
-
-                    model.PrevControl = GetControlByUniqueTabIndex(model.UniqueTabIndex, false);
-                    model.NextControl = GetControlByUniqueTabIndex(model.UniqueTabIndex, true);
+                    // ユニークタブインデックスが設定済の場合は、シンプルに次(or前)のユニークタブインデックスのコントロールを設定する
+                    UpdatePrevNextControlByModel(model);
                 }
-                else
-                {
+            }
 
+            foreach (var model in _modelList)
+            {
+                if (model.UniqueTabIndex == null && model.IsRadioButton)
+                {
+                    // ユニークタブインデックスが未設定のラジオボタンの場合は、同じユニークタブインデックスのコントロールを設定する
+                    UpdatePrevNextControlByModelForRadioButton(model);
                 }
             }
 
@@ -151,38 +148,53 @@ namespace TabOrderHelper
 
         }
 
-        private TabOrderModel GetControlByUniqueTabIndex(int? uniqueTabIndex, bool forward)
+        private void UpdatePrevNextControlByModel(TabOrderModel model)
         {
-            TabOrderModel ret = null;
-            var findIndex = forward ? uniqueTabIndex + 1 : uniqueTabIndex - 1;
+            for (var i=0; i<2; i++) // 2はforward=True/Falseを表す
+            {
+                var forward = (i == 0) ? true : false;
+                var targetIndex = forward ? model.UniqueTabIndex + 1 : model.UniqueTabIndex - 1;
 
-            var foundModel = _modelList.FirstOrDefault(model => model.UniqueTabIndex == findIndex);
-            if (foundModel != null)
-            {
-                ret = new TabOrderModel(foundModel.Control);
-                ret.UniqueTabIndex = foundModel.UniqueTabIndex;
-                return ret;
-            }
+                TabOrderModel updateModel = null;
+                TabOrderModel foundModel = null;
 
-            if (forward)
-            {
-                foundModel = _modelList.FirstOrDefault(model => model.UniqueTabIndex >= 0);
-            }
-            else
-            {
-                foundModel = _modelList.OrderByDescending(x => x.UniqueTabIndex)
-                                       .FirstOrDefault(model => model.UniqueTabIndex >= 0);
-            }
-            if (foundModel != null)
-            {
-                ret = new TabOrderModel(foundModel.Control);
-                ret.UniqueTabIndex = foundModel.UniqueTabIndex;
-                return ret;
-            }
+                foundModel = _modelList.FirstOrDefault(x => x.UniqueTabIndex == targetIndex);
 
-            throw new ControlNotFoundException($"Next or Preview Control not found. Info=[uniqueTabIndex={uniqueTabIndex}], forward={forward}");
+                if (foundModel == null)
+                {
+                    // ターゲットが見つからないのでリストの先頭or末尾から有効な値を取得する
+
+                    if (forward)
+                        // Nextの場合は昇順ソートして先頭から検索
+                        foundModel = _modelList.OrderBy(x => x.UniqueTabIndex)
+                                               .FirstOrDefault(x => x.UniqueTabIndex >= 0);
+                    else
+                        // Prevの場合は降順ソートして先頭から検索
+                        foundModel = _modelList.OrderByDescending(x => x.UniqueTabIndex)
+                                               .FirstOrDefault(x => x.UniqueTabIndex >= 0);
+   
+                    if (foundModel == null)
+                        // 有効な値が見つからない
+                        throw new ControlNotFoundException($"Next or Preview Control not found. Info=[{model}]");
+                }
+
+                updateModel = new TabOrderModel(foundModel.Control);
+                updateModel.UniqueTabIndex = foundModel.UniqueTabIndex;
+
+                if (forward)
+                    model.NextControl = updateModel;
+                else
+                    model.PrevControl = updateModel;
+            }
         }
 
+        private void UpdatePrevNextControlByModelForRadioButton(TabOrderModel model)
+        {
+            var parentIndex = model.ParentLastIndex;
+
+
+
+        }
 
         private void CreateModelDict()
         {

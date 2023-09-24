@@ -46,7 +46,9 @@
             if (PrevControl == null)
             {
                 return $"Name={Control.Name}\t" +
+                       $"PrevUniqueTabIndex=\t" +
                        $"TabIndex={Control.TabIndex}\t" +
+                       $"NextUniqueTabIndex=\t" +
                        $"IndexString={IndexString}\t" +
                        $"ParentLastIndex={ParentLastIndex}\t" +
                        $"LastIndex={LastIndex}\t" +
