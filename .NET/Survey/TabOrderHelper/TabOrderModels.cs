@@ -4,9 +4,9 @@
     {
         private System.Collections.Generic.IEnumerable<int> _hierarchicalTabIndices;
 
-        public System.Windows.Forms.Control PrevControl { get; set; }
+        public TabOrderModel PrevControl { get; set; }
         public System.Windows.Forms.Control Control { get; }
-        public System.Windows.Forms.Control NextControl { get; set; }
+        public TabOrderModel NextControl { get; set; }
         public string IndexString { get; }
         public int ParentLastIndex { get; }
         public int LastIndex { get; }
@@ -14,7 +14,7 @@
         /// <summary>
         /// 内部的にナンバリングした重複無しのタブインデックス値
         /// </summary>
-        public int UniqueTabIndex { get; set; }
+        public int? UniqueTabIndex { get; set; }
 
         public bool IsContainer { get; }
         public bool IsRadioButton { get; }
@@ -36,7 +36,7 @@
             IndexString = GetHierarchicalTabIndicesString(control);
             ParentLastIndex = GetPreviousNumber(IndexString);
             LastIndex = GetLastNumber(IndexString);
-            UniqueTabIndex = -1;
+            UniqueTabIndex = null;
             IsRadioButton = control is System.Windows.Forms.RadioButton;
             IsTabStop = false;
         }
@@ -57,9 +57,9 @@
             }
 
             return $"Name={Control.Name}\t" +
-                   $"PrevTabIndex={PrevControl.TabIndex}\t" +
+                   $"PrevUniqueTabIndex={PrevControl.UniqueTabIndex}\t" +
                    $"TabIndex={Control.TabIndex}\t" +
-                   $"NextTabIndex={NextControl.TabIndex}\t" +
+                   $"NextUniqueTabIndex={NextControl.UniqueTabIndex}\t" +
                    $"IndexString={IndexString}\t" +
                    $"ParentLastIndex={ParentLastIndex}\t" +
                    $"LastIndex={LastIndex}\t" +

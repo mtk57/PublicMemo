@@ -5,6 +5,7 @@
 //      https://atmarkit.itmedia.co.jp/fdotnet/dotnettips/243winkeyproc/winkeyproc.html
 //
 using System.Linq;
+using System.Reflection;
 
 namespace TabOrderHelper
 {
@@ -20,7 +21,7 @@ namespace TabOrderHelper
     public sealed class TabOrderHelper
     {
         private System.Collections.Generic.List<TabOrderModel> _modelList;
-        private System.Collections.Generic.Dictionary<int, TabOrderModel> _modelDict;
+        private System.Collections.Generic.Dictionary<string, TabOrderModel> _modelDict;
 
         private TabOrderHelper()
         {
@@ -34,7 +35,7 @@ namespace TabOrderHelper
         public TabOrderHelper(System.Windows.Forms.Control form)
         {
             _modelList = new System.Collections.Generic.List<TabOrderModel>();
-            _modelDict = new System.Collections.Generic.Dictionary<int, TabOrderModel>();
+            _modelDict = new System.Collections.Generic.Dictionary<string, TabOrderModel>();
 
             CreateModelList(form);
             CreateModelDict();
@@ -53,8 +54,8 @@ namespace TabOrderHelper
         /// <returns>コントロール</returns>
         public System.Windows.Forms.Control GetNextControl(System.Windows.Forms.Control control, bool forward = true)
         {
-            var tabIndex = control.TabIndex;
-            return forward ? _modelDict[tabIndex].NextControl : _modelDict[tabIndex].PrevControl;
+            var name = control.Name;
+            return forward ? _modelDict[name].NextControl.Control : _modelDict[name].PrevControl.Control;
         }
 
         private void CreateModelList(System.Windows.Forms.Control rootControl)
@@ -68,6 +69,8 @@ namespace TabOrderHelper
             }
 
             UpdateTabIndex();
+
+            UpdatePrevNextControl();
         }
 
         private System.Collections.Generic.IEnumerable<System.Windows.Forms.Control> GetAllControls(System.Windows.Forms.Control rootControl)
@@ -117,13 +120,73 @@ namespace TabOrderHelper
             }
         }
 
-        private void SetPrevNextControl()
+        private void UpdatePrevNextControl()
         {
-            foreach (var x in _modelList)
+            foreach (var c in _modelList)
+                System.Diagnostics.Debug.WriteLine("BEFORE\t" + c.ToString());
+
+            foreach (var model in _modelList)
             {
-                x.NextControl = GetNextControl(x, true);
-                x.PrevControl = GetNextControl(x, false);
+                if (!model.IsRadioButton)
+                {
+                    // ラジオボタン以外の場合はシンプルに次(or前)のユニークタブインデックスのコントロールを設定する
+                    //model.PrevControl = (model.UniqueTabIndex != 0) ?
+                    //                    _modelList.First(x => x.UniqueTabIndex == model.UniqueTabIndex - 1).Control :
+                    //                    _modelList.Last().Control;
+                    //model.NextControl = (model.UniqueTabIndex != _modelList.Count - 1) ?
+                    //                    _modelList.First(x => x.UniqueTabIndex == model.UniqueTabIndex + 1).Control :
+                    //                    _modelList.First().Control;
+
+                    model.PrevControl = GetControlByUniqueTabIndex(model.UniqueTabIndex, false);
+                    model.NextControl = GetControlByUniqueTabIndex(model.UniqueTabIndex, true);
+                }
+                else
+                {
+
+                }
             }
+
+            foreach (var c in _modelList)
+                System.Diagnostics.Debug.WriteLine("AFTER\t" + c.ToString());
+
+        }
+
+        private TabOrderModel GetControlByUniqueTabIndex(int? uniqueTabIndex, bool forward)
+        {
+            var findIndex = forward ? uniqueTabIndex + 1 : uniqueTabIndex - 1;
+
+            _modelList.Sort();
+            foreach (var model in _modelList)
+            {
+                if (model.UniqueTabIndex == findIndex)
+                {
+                    return new TabOrderModel(model.Control);
+                }
+            }
+
+            // 見つからない場合は先頭(or最後)から探す
+            if (!forward)
+                _modelList.Reverse();
+
+            for (var i = 0; i < _modelList.Count; i++)
+            {
+                var model = _modelList[i];
+                if (model.UniqueTabIndex >= 0)
+                {
+                    if (!forward)
+                        _modelList.Sort();
+                    return new TabOrderModel(model.Control);
+                }
+            }
+
+            throw new ControlNotFoundException($"Next or Preview Control not found. Info=[uniqueTabIndex={uniqueTabIndex}], forward={forward}");
+        }
+
+        private void CreateModelDict()
+        {
+            _modelDict = _modelList.Where(x => x.UniqueTabIndex != -1)
+                                   .OrderBy(x => x.UniqueTabIndex)
+                                   .ToDictionary(x => x.Control.Name, x => x);
         }
 
         private System.Windows.Forms.Control GetNextControl(TabOrderModel model, bool forward = true)
@@ -161,12 +224,6 @@ namespace TabOrderHelper
                                                             x.IsTabStop);
             }
             return model.Control;
-        }
-
-        private void CreateModelDict()
-        {
-            _modelDict = _modelList.OrderBy(x => x.LastIndex)
-                                       .ToDictionary(x => x.LastIndex, x => x);
         }
     }
 }

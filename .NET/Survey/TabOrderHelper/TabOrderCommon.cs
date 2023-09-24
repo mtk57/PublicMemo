@@ -66,9 +66,10 @@
         System.Collections.Generic.IComparer<IHasHierarchicalTabIndices>
     {
         private int _togleNum = 1;
-        
-        private SortHelperOfHierarchicalTabIndices()
+
+        public SortHelperOfHierarchicalTabIndices()
         {
+            // do nothing
         }
 
         /// <summary>
