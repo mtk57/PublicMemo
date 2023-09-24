@@ -21,7 +21,7 @@ namespace TabOrderHelper
         {
             var activeControl = this.ActiveControl;
 
-            System.Diagnostics.Debug.WriteLine($"activeControl={activeControl.Name}, TabIndex={activeControl.TabIndex}");
+            //System.Diagnostics.Debug.WriteLine($"activeControl={activeControl.Name}, TabIndex={activeControl.TabIndex}");
 
             if (keyData == Keys.Tab)
             {
