@@ -5,7 +5,6 @@
 //      https://atmarkit.itmedia.co.jp/fdotnet/dotnettips/243winkeyproc/winkeyproc.html
 //
 using System.Linq;
-using System.Reflection;
 
 namespace TabOrderHelper
 {
@@ -34,16 +33,7 @@ namespace TabOrderHelper
         /// <param name="form">フォーム</param>
         public TabOrderHelper(System.Windows.Forms.Control form)
         {
-            _modelList = new System.Collections.Generic.List<TabOrderModel>();
-            _modelDict = new System.Collections.Generic.Dictionary<string, TabOrderModel>();
-
-            CreateModelList(form);
-            CreateModelDict();
-
-#if DEBUG
-            foreach (var c in _modelList)
-                System.Diagnostics.Debug.WriteLine(c.ToString());
-#endif
+            Update(form);
         }
 
         /// <summary>
@@ -83,6 +73,20 @@ namespace TabOrderHelper
 
             // 全て非表示なのでアクティブコントロールを返す
             return control;
+        }
+
+        public void Update(System.Windows.Forms.Control form)
+        {
+            _modelList = new System.Collections.Generic.List<TabOrderModel>();
+            _modelDict = new System.Collections.Generic.Dictionary<string, TabOrderModel>();
+
+            CreateModelList(form);
+            CreateModelDict();
+
+#if DEBUG
+            foreach (var c in _modelList)
+                System.Diagnostics.Debug.WriteLine(c.ToString());
+#endif
         }
 
         private void CreateModelList(System.Windows.Forms.Control rootControl)
@@ -230,43 +234,6 @@ namespace TabOrderHelper
         private void CreateModelDict()
         {
             _modelDict = _modelList.ToDictionary(x => x.Control.Name, x => x);
-        }
-
-        private System.Windows.Forms.Control GetNextControl(TabOrderModel model, bool forward = true)
-        {
-            var lastIndex = model.LastIndex;
-
-            return forward ? GetNextGreaterTabIndexControl(lastIndex) : GetPrevLessTabIndexControl(lastIndex);
-        }
-
-        private System.Windows.Forms.Control GetNextGreaterTabIndexControl(int lastIndex)
-        {
-            var model = _modelList.OrderBy(x => x.LastIndex)
-                                      .FirstOrDefault(x => x.LastIndex > lastIndex &&
-                                                          !x.IsContainer &&
-                                                           x.IsTabStop);
-            if (model == null)
-            {
-                model = _modelList.OrderBy(x => x.LastIndex)
-                                      .FirstOrDefault(x => !x.IsContainer &&
-                                                            x.IsTabStop);
-            }
-            return model.Control;
-        }
-
-        private System.Windows.Forms.Control GetPrevLessTabIndexControl(int lastIndex)
-        {
-            var model = _modelList.OrderByDescending(x => x.LastIndex)
-                                      .FirstOrDefault(x => x.LastIndex < lastIndex &&
-                                                          !x.IsContainer &&
-                                                           x.IsTabStop);
-            if (model == null)
-            {
-                model = _modelList.OrderByDescending(x => x.LastIndex)
-                                      .FirstOrDefault(x => !x.IsContainer &&
-                                                            x.IsTabStop);
-            }
-            return model.Control;
         }
     }
 }
