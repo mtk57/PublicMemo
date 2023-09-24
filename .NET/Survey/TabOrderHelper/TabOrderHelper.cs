@@ -202,9 +202,7 @@ namespace TabOrderHelper
 
         private void CreateModelDict()
         {
-            _modelDict = _modelList.Where(x => x.UniqueTabIndex != -1)
-                                   .OrderBy(x => x.UniqueTabIndex)
-                                   .ToDictionary(x => x.Control.Name, x => x);
+            _modelDict = _modelList.ToDictionary(x => x.Control.Name, x => x);
         }
 
         private System.Windows.Forms.Control GetNextControl(TabOrderModel model, bool forward = true)
