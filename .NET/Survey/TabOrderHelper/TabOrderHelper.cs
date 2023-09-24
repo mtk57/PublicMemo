@@ -55,7 +55,34 @@ namespace TabOrderHelper
         public System.Windows.Forms.Control GetNextControl(System.Windows.Forms.Control control, bool forward = true)
         {
             var name = control.Name;
-            return forward ? _modelDict[name].NextControl.Control : _modelDict[name].PrevControl.Control;
+            var nextControl = forward ? _modelDict[name].NextControl.Control : _modelDict[name].PrevControl.Control;
+
+            if (nextControl.Visible)
+            {
+                return nextControl;
+            }
+
+            // 非表示の場合フォーカスしないので表示されているコントロールを探す
+            var nextName = nextControl.Name;
+
+            foreach (var c in _modelList)
+            {
+                if (forward)
+                {
+                    if (_modelDict[nextName].NextControl.Control.Visible)
+                        return _modelDict[nextName].NextControl.Control;
+                    nextName = _modelDict[nextName].NextControl.Control.Name;
+                }
+                else
+                {
+                    if (_modelDict[nextName].PrevControl.Control.Visible)
+                        return _modelDict[nextName].PrevControl.Control;
+                    nextName = _modelDict[nextName].PrevControl.Control.Name;
+                }
+            }
+
+            // 全て非表示なのでアクティブコントロールを返す
+            return control;
         }
 
         private void CreateModelList(System.Windows.Forms.Control rootControl)
