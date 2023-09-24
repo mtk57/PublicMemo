@@ -4,6 +4,7 @@
 	''' </summary>
 	Friend NotInheritable Class TabOrderModel
 		Implements IHasHierarchicalTabIndices
+
 		Private _hierarchicalTabIndices As System.Collections.Generic.IEnumerable(Of Integer)
 
 		''' <summary>
@@ -64,8 +65,8 @@
 			End Get
 		End Property
 
-		' do nothing
 		Private Sub New()
+			' do nothing
 		End Sub
 
 		''' <summary>
@@ -88,10 +89,28 @@
 
 		Public Overrides Function ToString() As String
 			If PrevControl Is Nothing Then
-				Return "Name={Control.Name}" & vbTab + "PrevUniqueTabIndex=" & vbTab + "TabIndex={Control.TabIndex}" & vbTab + "NextUniqueTabIndex=" & vbTab + "IndexString={IndexString}" & vbTab + "ParentLastIndex={ParentLastIndex}" & vbTab + "LastIndex={LastIndex}" & vbTab + "UniqueTabIndex={UniqueTabIndex}" & vbTab + "IsContainer={IsContainer}" & vbTab + "IsRadioButton={IsRadioButton}"
+				Return "Name={Control.Name}" & vbTab +
+					   "PrevUniqueTabIndex=" & vbTab +
+					   "TabIndex={Control.TabIndex}" & vbTab +
+					   "NextUniqueTabIndex=" & vbTab +
+					   "IndexString={IndexString}" & vbTab +
+					   "ParentLastIndex={ParentLastIndex}" & vbTab +
+					   "LastIndex={LastIndex}" & vbTab +
+					   "UniqueTabIndex={UniqueTabIndex}" & vbTab +
+					   "IsContainer={IsContainer}" & vbTab +
+					   "IsRadioButton={IsRadioButton}"
 			End If
 
-			Return "Name={Control.Name}" & vbTab + "PrevUniqueTabIndex={PrevControl.UniqueTabIndex}" & vbTab + "TabIndex={Control.TabIndex}" & vbTab + "NextUniqueTabIndex={NextControl.UniqueTabIndex}" & vbTab + "IndexString={IndexString}" & vbTab + "ParentLastIndex={ParentLastIndex}" & vbTab + "LastIndex={LastIndex}" & vbTab + "UniqueTabIndex={UniqueTabIndex}" & vbTab + "IsContainer={IsContainer}" & vbTab + "IsRadioButton={IsRadioButton}"
+			Return "Name={Control.Name}" & vbTab +
+				   "PrevUniqueTabIndex={PrevControl.UniqueTabIndex}" & vbTab +
+				   "TabIndex={Control.TabIndex}" & vbTab +
+				   "NextUniqueTabIndex={NextControl.UniqueTabIndex}" & vbTab +
+				   "IndexString={IndexString}" & vbTab +
+				   "ParentLastIndex={ParentLastIndex}" & vbTab +
+				   "LastIndex={LastIndex}" & vbTab +
+				   "UniqueTabIndex={UniqueTabIndex}" & vbTab +
+				   "IsContainer={IsContainer}" & vbTab +
+				   "IsRadioButton={IsRadioButton}"
 		End Function
 
 		Public ReadOnly Property HierarchicalTabIndices() As System.Collections.Generic.IEnumerable(Of Integer) Implements IHasHierarchicalTabIndices.HierarchicalTabIndices

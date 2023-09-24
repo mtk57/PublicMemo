@@ -16,42 +16,44 @@ Namespace TabOrderHelper
 	'''   GroupBox
 	'''
 	''' [使用例]
-	''' public partial class Form1 : Form
-	''' {
-	'''     private TabOrderHelper _helper = null;
+	''' Public Class Form1
+	'''     Private _helper As TabOrderHelper.TabOrderHelper = Nothing
 	'''
-	'''     private void Form1_Load(object sender, EventArgs e)
-	'''     {
-	'''         _helper = new TabOrderHelper(this);
-	'''     }
+	'''     Private Sub Form1_Load(sender As Object, e As EventArgs)
+	''' 	    _helper = New TabOrderHelper.TabOrderHelper(Me)
+	''' 	End Sub
+	''' 
+	'''     Protected Overrides Function ProcessCmdKey(ByRef msg As Message, ByVal keyData As Keys) As Boolean
+	'''         Dim control = Me.ActiveControl
+	''' 
+	'''         If keyData = Keys.Tab Then
+	''' 	        ' TABキーが押されたときの処理
+	''' 
+	''' 	        Dim nextControl = _helper.GetNextControl(control)
+	'''			    nextControl.Focus()
+	'''			    Return True ' イベントを処理済みとしてマークする
 	'''
-	'''     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-	'''     {
-	'''         var activeControl = this.ActiveControl;
+	'''		    ElseIf keyData = (Keys.Shift Or Keys.Tab) Then
+	'''			    ' SHIFT+TABキーが押されたときの処理
 	'''
-	'''         if (keyData == Keys.Tab)
-	'''         {
-	'''             var nextControl = _helper.GetNextControl(activeControl, true);
-	'''             nextControl.Focus();
-	'''             return true;
-	'''         }
-	'''         else if (keyData == (Keys.Shift | Keys.Tab))
-	'''         {
-	'''             var prevControl = _helper.GetNextControl(activeControl, false);
-	'''             prevControl.Focus();
-	'''             return true;
-	'''         }
-	'''         return base.ProcessCmdKey(ref msg, keyData);
-	'''     }
-	''' }
+	'''			    Dim prevControl = _helper.GetNextControl(control, False)
+	'''			    prevControl.Focus()
+	'''			    Return True ' イベントを処理済みとしてマークする
+	'''
+	'''		    End If
+	'''
+	'''		    Return MyBase.ProcessCmdKey(msg, keyData)
+	'''	    End Function
+	'''
+	''' End Class
 	''' 
 	''' </summary>
 	Public NotInheritable Class TabOrderHelper
 		Private _modelList As System.Collections.Generic.List(Of TabOrderModel)
 		Private _modelDict As System.Collections.Generic.Dictionary(Of String, TabOrderModel)
 
-		' do nothing
 		Private Sub New()
+			' do nothing
 		End Sub
 
 		''' <summary>
@@ -77,9 +79,9 @@ Namespace TabOrderHelper
 			End If
 
 			' 非表示の場合フォーカスしないので表示されているコントロールを探す
-			Dim nextName As Object = nextControl.Name
+			Dim nextName As String = nextControl.Name
 
-			For Each c As Object In _modelList
+			For Each c As TabOrderModel In _modelList
 				If forward Then
 					If _modelDict(nextName).NextControl.Control.Visible Then
 						Return _modelDict(nextName).NextControl.Control
@@ -109,7 +111,7 @@ Namespace TabOrderHelper
 			CreateModelDict()
 
 #If DEBUG Then
-			For Each c As Object In _modelList
+			For Each c As TabOrderModel In _modelList
 				System.Diagnostics.Debug.WriteLine(c.ToString())
 			Next
 #End If
@@ -121,7 +123,7 @@ Namespace TabOrderHelper
 		''' <param name="rootControl">ルートコントロール</param>
 		Private Sub CreateModelList(rootControl As System.Windows.Forms.Control)
 			' ルートコントロール配下の全コントロールを調べる
-			For Each item As Object In GetAllControls(rootControl)
+			For Each item As System.Windows.Forms.Control In GetAllControls(rootControl)
 				' コンテナ系はフォーカスが当たらないので無視
 				If IsContainer(item) Then
 					Continue For
@@ -158,7 +160,8 @@ Namespace TabOrderHelper
 		''' <param name="target">対象コントロール</param>
 		''' <returns>True:コンテナ系, False:コンテナ系以外</returns>
 		Private Function IsContainer(target As System.Windows.Forms.Control) As Boolean
-			If TypeOf target Is System.Windows.Forms.Panel OrElse TypeOf target Is System.Windows.Forms.GroupBox Then
+			If TypeOf target Is System.Windows.Forms.Panel OrElse
+			   TypeOf target Is System.Windows.Forms.GroupBox Then
 				Return True
 			End If
 			Return False
@@ -197,14 +200,14 @@ Namespace TabOrderHelper
 		''' 前後のコントロールを設定する
 		''' </summary>
 		Private Sub UpdatePrevNextControl()
-			For Each model As Object In _modelList
+			For Each model As TabOrderModel In _modelList
 				If model.UniqueTabIndex >= 0 Then
 					' ユニークタブインデックスが設定済の場合は、シンプルに次(or前)のユニークタブインデックスのコントロールを設定する
 					UpdatePrevNextControlByModel(model)
 				End If
 			Next
 
-			For Each model As Object In _modelList
+			For Each model As TabOrderModel In _modelList
 				If model.UniqueTabIndex Is Nothing AndAlso model.IsRadioButton Then
 					' ユニークタブインデックスが未設定のラジオボタンの場合は、同じユニークタブインデックスのコントロールを設定する
 					UpdatePrevNextControlByModelForRadioButton(model)
@@ -218,11 +221,9 @@ Namespace TabOrderHelper
 		''' <param name="model">モデル</param>
 		''' <exception cref="ControlNotFoundException"></exception>
 		Private Sub UpdatePrevNextControlByModel(model As TabOrderModel)
-			Dim i As Object = 0
-			While i < 2
-				' 2はforward=True/Falseを表す
-				Dim forward As Object = If((i = 0), True, False)
-				Dim targetIndex As Object = If(forward, model.UniqueTabIndex + 1, model.UniqueTabIndex - 1)
+			For i As Integer = 0 To 2 - 1 ' 2はforward=True/Falseを表す
+				Dim forward As Boolean = If((i = 0), True, False)
+				Dim targetIndex As Integer? = If(forward, model.UniqueTabIndex + 1, model.UniqueTabIndex - 1)
 
 				Dim updateModel As TabOrderModel = Nothing
 				Dim foundModel As TabOrderModel = Nothing
@@ -235,10 +236,12 @@ Namespace TabOrderHelper
 
 					If forward Then
 						' Nextの場合は昇順ソートして先頭から検索
-						foundModel = _modelList.OrderBy(Function(x) x.UniqueTabIndex).FirstOrDefault(Function(x) x.UniqueTabIndex >= 0)
+						foundModel = _modelList.OrderBy(Function(x) x.UniqueTabIndex) _
+											   .FirstOrDefault(Function(x) x.UniqueTabIndex >= 0)
 					Else
 						' Prevの場合は降順ソートして先頭から検索
-						foundModel = _modelList.OrderByDescending(Function(x) x.UniqueTabIndex).FirstOrDefault(Function(x) x.UniqueTabIndex >= 0)
+						foundModel = _modelList.OrderByDescending(Function(x) x.UniqueTabIndex) _
+											   .FirstOrDefault(Function(x) x.UniqueTabIndex >= 0)
 					End If
 
 					If foundModel Is Nothing Then
@@ -255,8 +258,8 @@ Namespace TabOrderHelper
 				Else
 					model.PrevControl = updateModel
 				End If
-				i += 1
-			End While
+
+			Next i
 		End Sub
 
 		''' <summary>
@@ -266,7 +269,9 @@ Namespace TabOrderHelper
 		''' <exception cref="ControlNotFoundException"></exception>
 		Private Sub UpdatePrevNextControlByModelForRadioButton(model As TabOrderModel)
 			' モデルリストから条件に合致するモデルを探す
-			Dim enableRadioButton As Object = _modelList.FirstOrDefault(Function(x) x.UniqueTabIndex >= 0 AndAlso x.ParentLastIndex = model.ParentLastIndex AndAlso x.IsRadioButton)
+			Dim enableRadioButton As TabOrderModel = _modelList.FirstOrDefault(Function(x) x.UniqueTabIndex >= 0 AndAlso
+																						   x.ParentLastIndex = model.ParentLastIndex AndAlso
+																						   x.IsRadioButton)
 			If enableRadioButton Is Nothing Then
 				Throw New ControlNotFoundException("Next or Preview Control not found. Info=[{model}]")
 			End If

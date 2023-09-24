@@ -28,8 +28,9 @@
 	''' </summary>
 	Friend Class ControlNotFoundException
 		Inherits System.Exception
-		' do nothing
+
 		Private Sub New()
+			' do nothing
 		End Sub
 
 		''' <summary>
@@ -37,7 +38,6 @@
 		''' </summary>
 		''' <param name="message">メッセージ</param>
 		Public Sub New(message As String)
-			' do nothing
 			MyBase.New(message)
 		End Sub
 	End Class
@@ -81,14 +81,21 @@
 
 		Private _toggle As Integer = 1
 
+		''' <summary>
+		''' デフォルトコンストラクタ
+		''' </summary>
 		Public Sub New()
 			' do nothing
 		End Sub
 
+		''' <summary>
+		''' コンストラクタ
+		''' </summary>
+		''' <param name="sort">ソート順</param>
 		Public Sub New(sort As Sort)
 			Select Case sort
 				Case Sort.Asc
-			' do nothing
+
 				Case Sort.Desc
 					_toggle = -1
 				Case Else
@@ -96,6 +103,13 @@
 			End Select
 		End Sub
 
+		''' <summary>
+		''' コンペア
+		''' List.Sort()から呼び出される
+		''' </summary>
+		''' <param name="x">比較元のタブインデックス</param>
+		''' <param name="y">比較先のタブインデックス</param>
+		''' <returns>コンペア結果(0:xとyは等しい, 1:xはyより大きい, -1:xはy未満</returns>
 		Public Function Compare(ByVal x As IHasHierarchicalTabIndices, ByVal y As IHasHierarchicalTabIndices) As Integer Implements IComparer(Of IHasHierarchicalTabIndices).Compare
 			Using enumerator1 = x.GetEnumerator()
 				Using enumerator2 = y.GetEnumerator()
@@ -131,7 +145,12 @@
 			Return 0
 		End Function
 
-
+		''' <summary>
+		''' Zオーダーのコンペア
+		''' </summary>
+		''' <param name="hwdx">比較元のウィンドウハンドル</param>
+		''' <param name="hwdy">比較先のウィンドウハンドル</param>
+		''' <returns>コンペア結果(0:xとyは等しい, 1:xはyより大きい, -1:xはy未満</returns>
 		Private Function CompareZOrder(ByVal hwdx As System.IntPtr, ByVal hwdy As System.IntPtr) As Integer
 			Dim h = PlatformInvoker.GetWindow(hwdx, CUInt(PlatformInvoker.GetWindowCmd.GW_HWNDNEXT))
 			While h <> System.IntPtr.Zero
