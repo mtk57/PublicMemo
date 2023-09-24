@@ -16,6 +16,36 @@ namespace TabOrderHelper
     ///   Panel
     ///   GroupBox
     ///
+    /// [使用例]
+    /// public partial class Form1 : Form
+    /// {
+    ///     private TabOrderHelper _helper = null;
+    ///
+    ///     private void Form1_Load(object sender, EventArgs e)
+    ///     {
+    ///         _helper = new TabOrderHelper(this);
+    ///     }
+    ///
+    ///     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+    ///     {
+    ///         var activeControl = this.ActiveControl;
+    ///
+    ///         if (keyData == Keys.Tab)
+    ///         {
+    ///             var nextControl = _helper.GetNextControl(activeControl, true);
+    ///             nextControl.Focus();
+    ///             return true;
+    ///         }
+    ///         else if (keyData == (Keys.Shift | Keys.Tab))
+    ///         {
+    ///             var prevControl = _helper.GetNextControl(activeControl, false);
+    ///             prevControl.Focus();
+    ///             return true;
+    ///         }
+    ///         return base.ProcessCmdKey(ref msg, keyData);
+    ///     }
+    /// }
+    /// 
     /// </summary>
     public sealed class TabOrderHelper
     {
@@ -75,6 +105,10 @@ namespace TabOrderHelper
             return control;
         }
 
+        /// <summary>
+        /// 内部情報を更新する
+        /// </summary>
+        /// <param name="form">フォーム</param>
         public void Update(System.Windows.Forms.Control form)
         {
             _modelList = new System.Collections.Generic.List<TabOrderModel>();
@@ -89,21 +123,35 @@ namespace TabOrderHelper
 #endif
         }
 
+        /// <summary>
+        /// モデルリストを作成する
+        /// </summary>
+        /// <param name="rootControl">ルートコントロール</param>
         private void CreateModelList(System.Windows.Forms.Control rootControl)
         {
+            // ルートコントロール配下の全コントロールを調べる
             foreach (var item in GetAllControls(rootControl))
             {
-                if (IsContainer(item)) continue;
+                // コンテナ系はフォーカスが当たらないので無視
+                if (IsContainer(item))
+                    continue;
 
                 var model = new TabOrderModel(item);
                 _modelList.Add(model);
             }
 
-            UpdateTabIndex();
+            // 内部的にナンバリングした重複無しのタブインデックス値を設定する
+            UpdateUniqueTabIndex();
 
+            // 前後のコントロールを設定する
             UpdatePrevNextControl();
         }
 
+        /// <summary>
+        /// ルートコントロール配下の全コントロールの一覧を返す
+        /// </summary>
+        /// <param name="rootControl">ルートコントロール</param>
+        /// <returns>全コントロールの一覧</returns>
         private System.Collections.Generic.IEnumerable<System.Windows.Forms.Control> GetAllControls(System.Windows.Forms.Control rootControl)
         {
             foreach (System.Windows.Forms.Control c in rootControl.Controls)
@@ -114,6 +162,11 @@ namespace TabOrderHelper
             }
         }
 
+        /// <summary>
+        /// 対象コントロールがコンテナ系かどうかを返す
+        /// </summary>
+        /// <param name="target">対象コントロール</param>
+        /// <returns>True:コンテナ系, False:コンテナ系以外</returns>
         private bool IsContainer(System.Windows.Forms.Control target)
         {
             if (target is System.Windows.Forms.Panel ||
@@ -125,7 +178,7 @@ namespace TabOrderHelper
         /// <summary>
         /// 内部的にナンバリングした重複無しのタブインデックス値を設定する
         /// </summary>
-        private void UpdateTabIndex()
+        private void UpdateUniqueTabIndex()
         {
             _modelList.Sort(new SortHelperOfHierarchicalTabIndices(Sort.Asc));
 
@@ -138,6 +191,7 @@ namespace TabOrderHelper
 
                 if (!model.IsRadioButton)
                 {
+                    // ラジオボタン以外は無条件に設定
                     model.UniqueTabIndex = index++;
                     continue;
                 }
@@ -151,11 +205,11 @@ namespace TabOrderHelper
             }
         }
 
+        /// <summary>
+        /// 前後のコントロールを設定する
+        /// </summary>
         private void UpdatePrevNextControl()
         {
-            //foreach (var c in _modelList)
-            //    System.Diagnostics.Debug.WriteLine("BEFORE\t" + c.ToString());
-
             foreach (var model in _modelList)
             {
                 if (model.UniqueTabIndex >= 0)
@@ -173,12 +227,13 @@ namespace TabOrderHelper
                     UpdatePrevNextControlByModelForRadioButton(model);
                 }
             }
-
-            //foreach (var c in _modelList)
-            //    System.Diagnostics.Debug.WriteLine("AFTER\t" + c.ToString());
-
         }
 
+        /// <summary>
+        /// 次(or前)のユニークタブインデックスのコントロールを設定する
+        /// </summary>
+        /// <param name="model">モデル</param>
+        /// <exception cref="ControlNotFoundException"></exception>
         private void UpdatePrevNextControlByModel(TabOrderModel model)
         {
             for (var i=0; i<2; i++) // 2はforward=True/Falseを表す
@@ -189,11 +244,12 @@ namespace TabOrderHelper
                 TabOrderModel updateModel = null;
                 TabOrderModel foundModel = null;
 
+                // モデルリストからターゲットと一致するインデックスを探す
                 foundModel = _modelList.FirstOrDefault(x => x.UniqueTabIndex == targetIndex);
 
                 if (foundModel == null)
                 {
-                    // ターゲットが見つからないのでリストの先頭or末尾から有効な値を取得する
+                    // ターゲットが見つからないのでリストの先頭or末尾からインデックスを取得する
 
                     if (forward)
                         // Nextの場合は昇順ソートして先頭から検索
@@ -219,8 +275,14 @@ namespace TabOrderHelper
             }
         }
 
+        /// <summary>
+        /// ラジオボタンの場合は、同じユニークタブインデックスのコントロールを設定する
+        /// </summary>
+        /// <param name="model">モデル</param>
+        /// <exception cref="ControlNotFoundException"></exception>
         private void UpdatePrevNextControlByModelForRadioButton(TabOrderModel model)
         {
+            // モデルリストから条件に合致するモデルを探す
             var enableRadioButton = _modelList.FirstOrDefault(x => x.UniqueTabIndex >= 0 &&
                                                                    x.ParentLastIndex == model.ParentLastIndex && 
                                                                    x.IsRadioButton);
@@ -231,6 +293,9 @@ namespace TabOrderHelper
             model.PrevControl = enableRadioButton.PrevControl;
         }
 
+        /// <summary>
+        /// モデル辞書を作成する
+        /// </summary>
         private void CreateModelDict()
         {
             _modelDict = _modelList.ToDictionary(x => x.Control.Name, x => x);
