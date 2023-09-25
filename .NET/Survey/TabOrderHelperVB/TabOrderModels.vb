@@ -72,45 +72,45 @@
 		''' <summary>
 		''' コンストラクタ
 		''' </summary>
-		''' <param name="control">コントロール</param>
-		Public Sub New(control As System.Windows.Forms.Control)
+		''' <param name="c">コントロール</param>
+		Public Sub New(c As System.Windows.Forms.Control)
 			' 階層タブインデックスを取得する
-			_hierarchicalTabIndices = GetHierarchicalTabindices(control)
+			_hierarchicalTabIndices = GetHierarchicalTabindices(Control)
 
 			PrevControl = Nothing
-			control = control
+			Control = c
 			NextControl = Nothing
-			IndexString = GetHierarchicalTabIndicesString(control)
+			IndexString = GetHierarchicalTabIndicesString(Control)
 			ParentLastIndex = GetPreviousNumber(IndexString)
 			LastIndex = GetLastNumber(IndexString)
 			UniqueTabIndex = Nothing
-			IsRadioButton = TypeOf control Is System.Windows.Forms.RadioButton
+			IsRadioButton = TypeOf Control Is System.Windows.Forms.RadioButton
 		End Sub
 
 		Public Overrides Function ToString() As String
 			If PrevControl Is Nothing Then
-				Return "Name={Control.Name}" & vbTab +
-					   "PrevUniqueTabIndex=" & vbTab +
-					   "TabIndex={Control.TabIndex}" & vbTab +
-					   "NextUniqueTabIndex=" & vbTab +
-					   "IndexString={IndexString}" & vbTab +
-					   "ParentLastIndex={ParentLastIndex}" & vbTab +
-					   "LastIndex={LastIndex}" & vbTab +
-					   "UniqueTabIndex={UniqueTabIndex}" & vbTab +
-					   "IsContainer={IsContainer}" & vbTab +
-					   "IsRadioButton={IsRadioButton}"
+				Return $"Name={Control.Name}" & vbTab &
+					   $"PrevUniqueTabIndex=" & vbTab &
+					   $"TabIndex={Control.TabIndex}" & vbTab &
+					   $"NextUniqueTabIndex=" & vbTab &
+					   $"IndexString={IndexString}" & vbTab &
+					   $"ParentLastIndex={ParentLastIndex}" & vbTab &
+					   $"LastIndex={LastIndex}" & vbTab &
+					   $"UniqueTabIndex={UniqueTabIndex}" & vbTab &
+					   $"IsContainer={IsContainer}" & vbTab &
+					   $"IsRadioButton={IsRadioButton}"
 			End If
 
-			Return "Name={Control.Name}" & vbTab +
-				   "PrevUniqueTabIndex={PrevControl.UniqueTabIndex}" & vbTab +
-				   "TabIndex={Control.TabIndex}" & vbTab +
-				   "NextUniqueTabIndex={NextControl.UniqueTabIndex}" & vbTab +
-				   "IndexString={IndexString}" & vbTab +
-				   "ParentLastIndex={ParentLastIndex}" & vbTab +
-				   "LastIndex={LastIndex}" & vbTab +
-				   "UniqueTabIndex={UniqueTabIndex}" & vbTab +
-				   "IsContainer={IsContainer}" & vbTab +
-				   "IsRadioButton={IsRadioButton}"
+			Return $"Name={Control.Name}" & vbTab &
+				   $"PrevUniqueTabIndex={PrevControl.UniqueTabIndex}" & vbTab &
+				   $"TabIndex={Control.TabIndex}" & vbTab &
+				   $"NextUniqueTabIndex={NextControl.UniqueTabIndex}" & vbTab &
+				   $"IndexString={IndexString}" & vbTab &
+				   $"ParentLastIndex={ParentLastIndex}" & vbTab &
+				   $"LastIndex={LastIndex}" & vbTab &
+				   $"UniqueTabIndex={UniqueTabIndex}" & vbTab &
+				   $"IsContainer={IsContainer}" & vbTab &
+				   $"IsRadioButton={IsRadioButton}"
 		End Function
 
 		Public ReadOnly Property HierarchicalTabIndices() As System.Collections.Generic.IEnumerable(Of Integer) Implements IHasHierarchicalTabIndices.HierarchicalTabIndices
@@ -172,10 +172,10 @@
 		''' <returns>タブインデックス</returns>
 		Private Function GetHierarchicalTabIndicesString(control As System.Windows.Forms.Control) As String
 			Dim sb As New System.Text.StringBuilder()
-			For Each item As Object In GetHierarchicalTabindices(control)
-				sb.AppendFormat("{0}" + Common.SEP, item.ToString())
+			For Each item As Integer In GetHierarchicalTabindices(control)
+				sb.AppendFormat("{0}" & Common.SEP, item.ToString())
 			Next
-			Return System.Text.RegularExpressions.Regex.Replace(sb.ToString(), Common.SEP + "$", "")
+			Return System.Text.RegularExpressions.Regex.Replace(sb.ToString(), Common.SEP & "$", "")
 		End Function
 
 		''' <summary>
@@ -201,9 +201,9 @@
 		''' <param name="indexString">タブインデックス文字列</param>
 		''' <returns>最後の階層の1つ上の値</returns>
 		Private Function GetPreviousNumber(indexString As String) As Integer
-			Dim numbers As Object = indexString.Split(Common.SEP)
-			Dim length As Object = numbers.Length
-			Dim secondLastNumber As Object = -1
+			Dim numbers() As String = indexString.Split(Common.SEP)
+			Dim length As Integer = numbers.Length
+			Dim secondLastNumber As Integer = -1
 			'コンテナに内包されていない場合
 			If length > 1 Then
 				Integer.TryParse(numbers(length - 2), secondLastNumber)
@@ -218,8 +218,8 @@
 		''' <param name="indexString">タブインデックス文字列</param>
 		''' <returns>最後の階層の値</returns>
 		Private Function GetLastNumber(indexString As String) As Integer
-			Dim parts As Object = indexString.Split(Common.SEP)
-			Dim lastPart As Object = parts(parts.Length - 1)
+			Dim parts() As String = indexString.Split(Common.SEP)
+			Dim lastPart As String = parts(parts.Length - 1)
 			Return Integer.Parse(lastPart)
 		End Function
 	End Class

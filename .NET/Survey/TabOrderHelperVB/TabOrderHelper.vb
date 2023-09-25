@@ -229,7 +229,7 @@ Namespace TabOrderHelper
 				Dim foundModel As TabOrderModel = Nothing
 
 				' モデルリストからターゲットと一致するインデックスを探す
-				foundModel = _modelList.FirstOrDefault(Function(x) x.UniqueTabIndex = targetIndex)
+				foundModel = _modelList.FirstOrDefault(Function(x) If(x.UniqueTabIndex Is Nothing, False, x.UniqueTabIndex = targetIndex))
 
 				If foundModel Is Nothing Then
 					' ターゲットが見つからないのでリストの先頭or末尾からインデックスを取得する
@@ -237,11 +237,11 @@ Namespace TabOrderHelper
 					If forward Then
 						' Nextの場合は昇順ソートして先頭から検索
 						foundModel = _modelList.OrderBy(Function(x) x.UniqueTabIndex) _
-											   .FirstOrDefault(Function(x) x.UniqueTabIndex >= 0)
+											   .FirstOrDefault(Function(x) If(x.UniqueTabIndex Is Nothing, False, x.UniqueTabIndex >= 0))
 					Else
 						' Prevの場合は降順ソートして先頭から検索
 						foundModel = _modelList.OrderByDescending(Function(x) x.UniqueTabIndex) _
-											   .FirstOrDefault(Function(x) x.UniqueTabIndex >= 0)
+											   .FirstOrDefault(Function(x) If(x.UniqueTabIndex Is Nothing, False, x.UniqueTabIndex >= 0))
 					End If
 
 					If foundModel Is Nothing Then
