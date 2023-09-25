@@ -84,7 +84,7 @@
 		''' <param name="c">コントロール</param>
 		Public Sub New(c As System.Windows.Forms.Control)
 			' 階層タブインデックスを取得する
-			_hierarchicalTabIndices = GetHierarchicalTabindices(Control)
+			_hierarchicalTabIndices = GetHierarchicalTabindices(c)
 
 			PrevControl = Nothing
 			Control = c

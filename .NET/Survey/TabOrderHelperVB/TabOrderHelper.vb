@@ -288,7 +288,7 @@ Namespace TabOrderHelper
 		''' モデル辞書を作成する
 		''' </summary>
 		Private Sub CreateModelDict()
-			_modelDict = _modelList.Where(Function(x) x.UniqueTabIndex >= 0) _
+			_modelDict = _modelList.Where(Function(x) If(x.UniqueTabIndex Is Nothing, False, x.UniqueTabIndex >= 0)) _
 								   .ToDictionary(Function(x) x.Control.Name, Function(x) x)
 		End Sub
 	End Class
