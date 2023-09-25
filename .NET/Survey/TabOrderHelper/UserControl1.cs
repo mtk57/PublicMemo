@@ -1,6 +1,6 @@
 ﻿using System.Windows.Forms;
 
-namespace TabOrderHelper
+namespace MyControl
 {
     public partial class UserControl1 : UserControl
     {

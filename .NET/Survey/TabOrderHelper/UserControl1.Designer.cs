@@ -1,4 +1,4 @@
-﻿namespace TabOrderHelper
+﻿namespace MyControl
 {
     partial class UserControl1
     {

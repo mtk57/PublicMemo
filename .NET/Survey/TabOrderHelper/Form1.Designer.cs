@@ -28,11 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.userControl11 = new UserControl1();
-            this.userControl12 = new UserControl1();
-            this.userControl13 = new UserControl1();
+            this.userControl11 = new MyControl.UserControl1();
+            this.userControl12 = new MyControl.UserControl1();
+            this.userControl13 = new MyControl.UserControl1();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.userControl14 = new UserControl1();
+            this.userControl14 = new MyControl.UserControl1();
             this.radioButton1 = new System.Windows.Forms.RadioButton();
             this.radioButton2 = new System.Windows.Forms.RadioButton();
             this.groupBox1.SuspendLayout();
@@ -120,13 +120,13 @@
         }
 
         #endregion
-        private UserControl1 userControl11;
-        private UserControl1 userControl12;
-        private UserControl1 userControl13;
+        private MyControl.UserControl1 userControl11;
+        private MyControl.UserControl1 userControl12;
+        private MyControl.UserControl1 userControl13;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.RadioButton radioButton2;
         private System.Windows.Forms.RadioButton radioButton1;
-        private UserControl1 userControl14;
+        private MyControl.UserControl1 userControl14;
     }
 }
 
