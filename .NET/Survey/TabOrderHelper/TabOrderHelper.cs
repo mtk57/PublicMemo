@@ -77,31 +77,33 @@ namespace TabOrderHelper
             var name = control.Name;
             var nextControl = forward ? _modelDict[name].NextControl.Control : _modelDict[name].PrevControl.Control;
 
-            if (nextControl.Visible)
+            if (nextControl.Visible && nextControl.Enabled)
             {
                 return nextControl;
             }
 
-            // 非表示の場合フォーカスしないので表示されているコントロールを探す
+            // 非表示 or 非活性の場合フォーカスしないのでフォーカスできるコントロールを探す
             var nextName = nextControl.Name;
 
             foreach (var c in _modelList)
             {
                 if (forward)
                 {
-                    if (_modelDict[nextName].NextControl.Control.Visible)
+                    if (_modelDict[nextName].NextControl.Control.Visible ||
+                        _modelDict[nextName].NextControl.Control.Enabled)
                         return _modelDict[nextName].NextControl.Control;
                     nextName = _modelDict[nextName].NextControl.Control.Name;
                 }
                 else
                 {
-                    if (_modelDict[nextName].PrevControl.Control.Visible)
+                    if (_modelDict[nextName].PrevControl.Control.Visible ||
+                        _modelDict[nextName].PrevControl.Control.Enabled)
                         return _modelDict[nextName].PrevControl.Control;
                     nextName = _modelDict[nextName].PrevControl.Control.Name;
                 }
             }
 
-            // 全て非表示なのでアクティブコントロールを返す
+            // 全て非表示・非活性なのでアクティブコントロールを返す
             return control;
         }
 
@@ -189,15 +191,15 @@ namespace TabOrderHelper
             {
                 var model = _modelList[i];
 
-                if (!model.IsRadioButton)
+                if (!model.IsRadioButton && !model.IsUserControlChild)
                 {
-                    // ラジオボタン以外は無条件に設定
+                    // ラジオボタン以外かつユーザーコントロールの子供以外は無条件に設定
                     model.UniqueTabIndex = index++;
                     continue;
                 }
 
                 // ラジオボタンの場合は同グループの最初のコントロールをタブオーダーの対象とする
-                if (groupIndex == null || groupIndex != model.ParentLastIndex)
+                if (model.IsRadioButton && (groupIndex == null || groupIndex != model.ParentLastIndex))
                 {
                     model.UniqueTabIndex = index++;
                     groupIndex = model.ParentLastIndex;
@@ -298,7 +300,8 @@ namespace TabOrderHelper
         /// </summary>
         private void CreateModelDict()
         {
-            _modelDict = _modelList.ToDictionary(x => x.Control.Name, x => x);
+            _modelDict = _modelList.Where(x => x.UniqueTabIndex >= 0)
+                                   .ToDictionary(x => x.Control.Name, x => x);
         }
     }
 }

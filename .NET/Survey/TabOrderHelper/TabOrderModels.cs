@@ -56,6 +56,17 @@
         public bool IsRadioButton { get; }
 
         /// <summary>
+        /// ユーザーコントロールの子供か否か
+        /// </summary>
+        public bool IsUserControlChild
+        {
+            get
+            {
+                return Control.Parent is System.Windows.Forms.UserControl; 
+            }
+        }
+
+        /// <summary>
         /// コントロールのウィンドウハンドル
         /// Zオーダー判定時に必要
         /// </summary>
@@ -98,7 +109,8 @@
                        $"LastIndex={LastIndex}\t" +
                        $"UniqueTabIndex={UniqueTabIndex}\t" +
                        $"IsContainer={IsContainer}\t" +
-                       $"IsRadioButton={IsRadioButton}";
+                       $"IsRadioButton={IsRadioButton}\t" +
+                       $"IsUserControlChild={IsUserControlChild}";
             }
 
             return $"Name={Control.Name}\t" +
@@ -110,7 +122,8 @@
                    $"LastIndex={LastIndex}\t" +
                    $"UniqueTabIndex={UniqueTabIndex}\t" +
                    $"IsContainer={IsContainer}\t" +
-                   $"IsRadioButton={IsRadioButton}";
+                   $"IsRadioButton={IsRadioButton}\t" +
+                   $"IsUserControlChild={IsUserControlChild}";
         }
 
         public System.Collections.Generic.IEnumerable<int> HierarchicalTabIndices
