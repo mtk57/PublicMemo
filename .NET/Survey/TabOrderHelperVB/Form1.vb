@@ -1,7 +1,7 @@
 ﻿Public Class Form1
     Private _helper As TabOrderHelper.TabOrderHelper = Nothing
 
-    Private Sub Form1_Load(sender As Object, e As EventArgs)
+    Private Sub Form1_Load_1(sender As Object, e As EventArgs) Handles MyBase.Load
         _helper = New TabOrderHelper.TabOrderHelper(Me)
     End Sub
 

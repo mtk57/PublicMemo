@@ -56,6 +56,15 @@
 		Public ReadOnly Property IsRadioButton() As Boolean
 
 		''' <summary>
+		''' ユーザーコントロールの子供か否か
+		''' </summary>
+		Public ReadOnly Property IsUserControlChild() As Boolean
+			Get
+				Return TypeOf Control.Parent Is System.Windows.Forms.UserControl
+			End Get
+		End Property
+
+		''' <summary>
 		''' コントロールのウィンドウハンドル
 		''' Zオーダー判定時に必要
 		''' </summary>
@@ -98,7 +107,8 @@
 					   $"LastIndex={LastIndex}" & vbTab &
 					   $"UniqueTabIndex={UniqueTabIndex}" & vbTab &
 					   $"IsContainer={IsContainer}" & vbTab &
-					   $"IsRadioButton={IsRadioButton}"
+					   $"IsRadioButton={IsRadioButton}" & vbTab &
+					   $"IsUserControlChild={IsUserControlChild}"
 			End If
 
 			Return $"Name={Control.Name}" & vbTab &
@@ -110,7 +120,8 @@
 				   $"LastIndex={LastIndex}" & vbTab &
 				   $"UniqueTabIndex={UniqueTabIndex}" & vbTab &
 				   $"IsContainer={IsContainer}" & vbTab &
-				   $"IsRadioButton={IsRadioButton}"
+				   $"IsRadioButton={IsRadioButton}" & vbTab &
+				   $"IsUserControlChild={IsUserControlChild}"
 		End Function
 
 		Public ReadOnly Property HierarchicalTabIndices() As System.Collections.Generic.IEnumerable(Of Integer) Implements IHasHierarchicalTabIndices.HierarchicalTabIndices

@@ -71,31 +71,33 @@ Namespace TabOrderHelper
 		''' <param name="forward">True:次のコントロール、False:前のコントロール</param>
 		''' <returns>コントロール</returns>
 		Public Function GetNextControl(control As System.Windows.Forms.Control, Optional forward As Boolean = True) As System.Windows.Forms.Control
-			Dim name As Object = control.Name
-			Dim nextControl As Object = If(forward, _modelDict(name).NextControl.Control, _modelDict(name).PrevControl.Control)
+			Dim name As String = control.Name
+			Dim nextControl As System.Windows.Forms.Control = If(forward, _modelDict(name).NextControl.Control, _modelDict(name).PrevControl.Control)
 
-			If nextControl.Visible Then
+			If nextControl.Visible AndAlso nextControl.Enabled Then
 				Return nextControl
 			End If
 
-			' 非表示の場合フォーカスしないので表示されているコントロールを探す
+			' 非表示 or 非活性の場合フォーカスしないのでフォーカスできるコントロールを探す
 			Dim nextName As String = nextControl.Name
 
 			For Each c As TabOrderModel In _modelList
 				If forward Then
-					If _modelDict(nextName).NextControl.Control.Visible Then
+					If _modelDict(nextName).NextControl.Control.Visible OrElse
+					   _modelDict(nextName).NextControl.Control.Enabled Then
 						Return _modelDict(nextName).NextControl.Control
 					End If
 					nextName = _modelDict(nextName).NextControl.Control.Name
 				Else
-					If _modelDict(nextName).PrevControl.Control.Visible Then
+					If _modelDict(nextName).PrevControl.Control.Visible OrElse
+					   _modelDict(nextName).PrevControl.Control.Enabled Then
 						Return _modelDict(nextName).PrevControl.Control
 					End If
 					nextName = _modelDict(nextName).PrevControl.Control.Name
 				End If
 			Next
 
-			' 全て非表示なのでアクティブコントロールを返す
+			' 全て非表示・非活性なのでアクティブコントロールを返す
 			Return control
 		End Function
 
@@ -179,15 +181,17 @@ Namespace TabOrderHelper
 			For i As Integer = 0 To _modelList.Count - 1
 				Dim model = _modelList(i)
 
-				If Not model.IsRadioButton Then
-					' ラジオボタン以外は無条件に設定
+				If Not model.IsRadioButton AndAlso
+				   Not model.IsUserControlChild Then
+					' ラジオボタン以外かつユーザーコントロールの子供以外は無条件に設定
 					model.UniqueTabIndex = index
 					index += 1
 					Continue For
 				End If
 
 				' ラジオボタンの場合は同グループの最初のコントロールをタブオーダーの対象とする
-				If groupIndex Is Nothing OrElse groupIndex <> model.ParentLastIndex Then
+				If model.IsRadioButton AndAlso
+				   (groupIndex Is Nothing OrElse groupIndex <> model.ParentLastIndex) Then
 					model.UniqueTabIndex = index
 					index += 1
 					groupIndex = model.ParentLastIndex
@@ -284,7 +288,8 @@ Namespace TabOrderHelper
 		''' モデル辞書を作成する
 		''' </summary>
 		Private Sub CreateModelDict()
-			_modelDict = _modelList.ToDictionary(Function(x) x.Control.Name, Function(x) x)
+			_modelDict = _modelList.Where(Function(x) x.UniqueTabIndex >= 0) _
+								   .ToDictionary(Function(x) x.Control.Name, Function(x) x)
 		End Sub
 	End Class
 End Namespace
