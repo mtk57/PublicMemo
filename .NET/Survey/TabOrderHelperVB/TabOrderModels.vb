@@ -43,12 +43,8 @@
 		''' <summary>
 		''' 内部的にナンバリングした重複無しのタブインデックス
 		''' </summary>
-		Public Property UniqueTabIndex() As Integer?
+		Public Property UniqueTabIndex() As Integer
 
-		''' <summary>
-		''' コンテナ系コントロールか否か
-		''' </summary>
-		Public ReadOnly Property IsContainer() As Boolean
 
 		''' <summary>
 		''' ラジオボタンコントロールか否か
@@ -92,7 +88,7 @@
 			IndexString = GetHierarchicalTabIndicesString(Control)
 			ParentLastIndex = GetPreviousNumber(IndexString)
 			LastIndex = GetLastNumber(IndexString)
-			UniqueTabIndex = Nothing
+			UniqueTabIndex = -1
 			IsRadioButton = TypeOf Control Is System.Windows.Forms.RadioButton
 		End Sub
 
@@ -106,7 +102,6 @@
 					   $"ParentLastIndex={ParentLastIndex}" & vbTab &
 					   $"LastIndex={LastIndex}" & vbTab &
 					   $"UniqueTabIndex={UniqueTabIndex}" & vbTab &
-					   $"IsContainer={IsContainer}" & vbTab &
 					   $"IsRadioButton={IsRadioButton}" & vbTab &
 					   $"IsUserControlChild={IsUserControlChild}"
 			End If
@@ -119,7 +114,6 @@
 				   $"ParentLastIndex={ParentLastIndex}" & vbTab &
 				   $"LastIndex={LastIndex}" & vbTab &
 				   $"UniqueTabIndex={UniqueTabIndex}" & vbTab &
-				   $"IsContainer={IsContainer}" & vbTab &
 				   $"IsRadioButton={IsRadioButton}" & vbTab &
 				   $"IsUserControlChild={IsUserControlChild}"
 		End Function
@@ -214,8 +208,8 @@
 		Private Function GetPreviousNumber(indexString As String) As Integer
 			Dim numbers() As String = indexString.Split(Common.SEP)
 			Dim length As Integer = numbers.Length
-			Dim secondLastNumber As Integer = -1
-			'コンテナに内包されていない場合
+			Dim secondLastNumber As Integer = -1    'コンテナに内包されていない場合
+
 			If length > 1 Then
 				Integer.TryParse(numbers(length - 2), secondLastNumber)
 			End If
