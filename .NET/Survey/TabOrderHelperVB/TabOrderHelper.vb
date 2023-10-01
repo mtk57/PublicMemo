@@ -100,7 +100,7 @@ Namespace TabOrderHelper
 
 				' 全て非表示・非活性なのでアクティブコントロールを返す
 				Return control
-			Catch ex As Exception
+			Catch ex As System.Exception
 				' For Fail-Safe
 				System.Diagnostics.Debug.WriteLine(ex.ToString())
 				Return Nothing
@@ -119,9 +119,10 @@ Namespace TabOrderHelper
 
 			Try
 				CreateModelList(form)
-			Catch ex As Exception
+			Catch ex As System.Exception
 				' For Fail-Safe
 				System.Diagnostics.Debug.WriteLine(ex.ToString())
+				_modelList = Nothing
 				Return
 			End Try
 
@@ -188,9 +189,9 @@ Namespace TabOrderHelper
 			If target.TabStop = False OrElse
 			   TypeOf target Is System.Windows.Forms.Panel OrElse
 			   TypeOf target Is System.Windows.Forms.GroupBox Then
-				Return True
+				Return False
 			End If
-			Return False
+			Return True
 
 		End Function
 
@@ -212,8 +213,8 @@ Namespace TabOrderHelper
 
 				If Not model.IsUserControlChild Then
 					' ユーザーコントロールの子供以外は無条件に設定
-					model.UniqueTabIndex = Index
-					Index += 1
+					model.UniqueTabIndex = index
+					index += 1
 					Continue For
 				End If
 			Next i
@@ -229,6 +230,7 @@ Namespace TabOrderHelper
 
 				' シンプルに次(or前)のユニークタブインデックスのコントロールを設定する
 				For i As Integer = 0 To 2 - 1 ' 2はforward=True/Falseを表す
+
 					Dim forward As Boolean = If((i = 0), True, False)
 					Dim targetIndex As Integer = If(forward, model.UniqueTabIndex + 1, model.UniqueTabIndex - 1)
 
