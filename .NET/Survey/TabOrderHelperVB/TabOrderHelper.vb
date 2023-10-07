@@ -71,16 +71,18 @@ Namespace TabOrderHelper
 		''' </summary>
 		''' <param name="control">カレントコントロール</param>
 		''' <param name="forward">検索方向  True:次のコントロール、False:前のコントロール</param>
+		''' <param name="isCursor">カーソルキーによるフォーカス移動か否か</param>
 		''' <returns>コントロール</returns>
 		Public Function GetNextControl(
 			ByRef control As System.Windows.Forms.Control,
-			Optional ByVal forward As Boolean = True) _
+			Optional ByVal forward As Boolean = True,
+			Optional ByVal isCursor As Boolean = False) _
 			As System.Windows.Forms.Control
 
 			Try
 				Dim name As String = control.Name
 				Dim nextControl As System.Windows.Forms.Control =
-					GetNextControl(name, forward).Control
+					GetNextControl(name, forward, isCursor).Control
 
 				If nextControl.Visible AndAlso nextControl.Enabled Then
 					Return nextControl
@@ -90,7 +92,7 @@ Namespace TabOrderHelper
 				Dim nextName As String = nextControl.Name
 
 				For Each c As TabOrderModel In _modelList
-					nextControl = GetNextControl(nextName, forward).Control
+					nextControl = GetNextControl(nextName, forward, isCursor).Control
 					If nextControl.Visible AndAlso
 					   nextControl.Enabled Then
 						Return nextControl
@@ -278,10 +280,12 @@ Namespace TabOrderHelper
 		''' </summary>
 		''' <param name="name">検索対象のコントロール名</param>
 		''' <param name="forward">検索方向</param>
+		''' <param name="isCursor">カーソルキーによるフォーカス移動か否か</param>
 		''' <returns>次or前のコントロール</returns>
 		Private Function GetNextControl(
 			ByVal name As String,
-			ByVal forward As Boolean) _
+			ByVal forward As Boolean,
+			ByVal isCursor As Boolean) _
 			As TabOrderModel
 
 			Dim target As TabOrderModel =
@@ -294,38 +298,66 @@ Namespace TabOrderHelper
 
 			Dim ret As TabOrderModel = If(forward, target.NextControl, target.PrevControl)
 
-			If Not ret.IsRadioButton Then
-				' 次or前のコントロールがラジオボタン以外であればそのまま返す
-				Return ret
-			Else
-				' 次or前のコントロールがラジオボタンの場合
+			If Not isCursor Then
+				' TABキーによるフォーカス移動
 
-				' 同じグループのラジオボタンが全て未チェックか調べて真であればチェックをつけて返す
-				If ret.Control.Visible AndAlso ret.Control.Enabled AndAlso
-				   IsAllUncheckedByRadioButton(ret) Then
-					Dim rb As System.Windows.Forms.RadioButton =
-					   DirectCast(ret.Control, System.Windows.Forms.RadioButton)
-					rb.Checked = True
+				If Not ret.IsRadioButton Then
+					' 次or前のコントロールがラジオボタン以外であればそのまま返す
 					Return ret
-				End If
+				Else
+					' 次or前のコントロールがラジオボタンの場合
 
-				Dim nextControl As TabOrderModel = ret
-
-				' 同じグループのラジオボタンのいずれかにチェックがついている場合
-				For Each c As TabOrderModel In _modelList
-
-					' ラジオボタン以外 or チェック済の場合はそのまま返す
-					If Not nextControl.IsRadioButton OrElse
-					   IsCheckedByRadioButton(nextControl) Then
-						Return nextControl
+					' 同じグループのラジオボタンが全て未チェックか調べて真であればチェックをつけて返す
+					If ret.Control.Visible AndAlso ret.Control.Enabled AndAlso
+					   IsAllUncheckedByRadioButton(ret) Then
+						Dim rb As System.Windows.Forms.RadioButton =
+						   DirectCast(ret.Control, System.Windows.Forms.RadioButton)
+						rb.Checked = True
+						Return ret
 					End If
 
-					' 未チェックのラジオボタンの場合、次or前のコントロールを取得する
-					nextControl = GetNextControl(nextControl, forward)
-				Next
+					Dim nextControl As TabOrderModel = ret
 
-				Return nextControl
+					' 同じグループのラジオボタンのいずれかにチェックがついている場合
+					For Each c As TabOrderModel In _modelList
 
+						' ラジオボタン以外 or チェック済の場合はそのまま返す
+						If Not nextControl.IsRadioButton OrElse
+						   IsCheckedByRadioButton(nextControl) Then
+							Return nextControl
+						End If
+
+						' 未チェックのラジオボタンの場合、次or前のコントロールを取得する
+						nextControl = GetNextControl(nextControl, forward)
+					Next
+
+					Return nextControl
+
+				End If
+
+			Else
+				' カーソルキーによるフォーカス移動(同階層のみに制限する)
+
+				If target.ParentLastIndex = ret.ParentLastIndex Then
+					' 次or前のコントロールが同階層であればそのまま返す
+					Return ret
+				Else
+					' 次or前のコントロールが同階層でない場合は同階層のコントロールを探して返す
+
+					Dim nextControl As TabOrderModel = ret
+
+					For Each c As TabOrderModel In _modelList
+
+						If target.ParentLastIndex = nextControl.ParentLastIndex Then
+							Return nextControl
+						End If
+
+						nextControl = GetNextControlBySameLevel(target, forward)
+					Next
+
+					Return nextControl
+
+				End If
 			End If
 
 		End Function
@@ -391,6 +423,41 @@ Namespace TabOrderHelper
 				If ret Is Nothing Then
 					ret = _modelList.Last()
 				End If
+			End If
+
+			Return ret
+
+		End Function
+
+		''' <summary>
+		''' 対象コントロールと同階層の次or前のコントロールを取得する
+		''' </summary>
+		''' <param name="target">対象コントロール</param>
+		''' <param name="forward">検索方向</param>
+		''' <returns>同階層の次or前のコントロール</returns>
+		Private Function GetNextControlBySameLevel(
+			target As TabOrderModel,
+			ByVal forward As Boolean) _
+			As TabOrderModel
+
+			Dim ret As TabOrderModel
+
+			If forward Then
+				ret = _modelList.FirstOrDefault(Function(x) x.UniqueTabIndex > target.UniqueTabIndex AndAlso
+															x.ParentLastIndex = target.ParentLastIndex)
+				If ret Is Nothing Then
+					ret = _modelList.FirstOrDefault(Function(x) x.ParentLastIndex = target.ParentLastIndex)
+				End If
+			Else
+				ret = _modelList.LastOrDefault(Function(x) x.UniqueTabIndex < target.UniqueTabIndex AndAlso
+														   x.ParentLastIndex = target.ParentLastIndex)
+				If ret Is Nothing Then
+					ret = _modelList.LastOrDefault(Function(x) x.ParentLastIndex = target.ParentLastIndex)
+				End If
+			End If
+
+			If ret Is Nothing Then
+				ret = target
 			End If
 
 			Return ret
