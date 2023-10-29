@@ -42,18 +42,18 @@ End Sub
 Public Function Init() As String
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
-    Const CLM = "D"
+    Const clm = "D"
     Const i = 6
     
     'MUST
-    src_dir_path = main_sheet.Range(CLM & i).value
+    src_dir_path = main_sheet.Range(clm & i).value
     
     'WANT
-    conv_type = main_sheet.Range(CLM & i + 1).value
-    is_contain_subdir_s = main_sheet.Range(CLM & i + 2).value
-    extension = main_sheet.Range(CLM & i + 3).value
-    dst_dir_path = main_sheet.Range(CLM & i + 7).value
-    is_backup_s = main_sheet.Range(CLM & i + 8).value
+    conv_type = main_sheet.Range(clm & i + 1).value
+    is_contain_subdir_s = main_sheet.Range(clm & i + 2).value
+    extension = main_sheet.Range(clm & i + 3).value
+    dst_dir_path = main_sheet.Range(clm & i + 7).value
+    is_backup_s = main_sheet.Range(clm & i + 8).value
     
     Init = Validate()
 End Function

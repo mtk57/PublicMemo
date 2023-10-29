@@ -4,9 +4,9 @@ Option Explicit
 Private Function IsEnableDebugLog() As Boolean
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
-    Const CELL = "D10"
+    Const cell = "D10"
     
-    Dim is_debug_log_s As String: is_debug_log_s = main_sheet.Range(CELL).value
+    Dim is_debug_log_s As String: is_debug_log_s = main_sheet.Range(cell).value
     
     If is_debug_log_s = "" Or _
        is_debug_log_s = "NO" Then
