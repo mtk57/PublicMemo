@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.3.3"
+Private Const VERSION = "1.3.4"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -91,7 +91,7 @@ Public Function IsEmptyFolder(ByVal path As String) As Boolean
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set folder = fso.GetFolder(path)
     
-    IsEmptyFolder = folder.files.count = 0 And folder.SubFolders.count = 0
+    IsEmptyFolder = folder.Files.count = 0 And folder.SubFolders.count = 0
     
     Set fso = Nothing
     Set folder = Nothing
@@ -986,7 +986,7 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     Set folder = fso.GetFolder(search_path)
     
     Dim file As Object
-    For Each file In folder.files
+    For Each file In folder.Files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like search_name Then
             '発見
             SearchFile = file.path
@@ -1367,7 +1367,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As Stri
         End If
     Next subfolder
     
-    For Each file In folder.files
+    For Each file In folder.Files
         If Right(file.name, Len(ext)) = ext Then
             Set fso = Nothing
             Set folder = Nothing
@@ -1538,6 +1538,11 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     Dim j As Long: j = 0
     Dim filtered_list() As String
     Dim ext As String: ext = Replace(in_ext, "*", "")
+    
+    If in_ext = "*.*" Then
+        FilterFileListByExtension = path_list
+        Exit Function
+    End If
     
     If IsEmptyArray(path_list) = True Then
         FilterFileListByExtension = path_list
@@ -1728,7 +1733,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     'コピー元のフォルダ内のファイルをコピーする
     Const OVERWRITE = True
     Dim file As Object
-    For Each file In fso.GetFolder(src_path).files
+    For Each file In fso.GetFolder(src_path).Files
         fso.CopyFile file.path, fso.BuildPath(dest_path, file.name), OVERWRITE
     Next
     
@@ -2180,7 +2185,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Set folder = fso.GetFolder(target_folder)
     
     Dim fileobj As Object
-    For Each fileobj In folder.files
+    For Each fileobj In folder.Files
         If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
             '検索対象のファイルを読み込む
             Dim contents As String: contents = ReadTextFileBySJIS(fileobj.path)
@@ -2409,6 +2414,8 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
+
 
 
 
