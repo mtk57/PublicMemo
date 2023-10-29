@@ -1,6 +1,7 @@
+Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.3.2"
+Private Const VERSION = "1.3.3"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -1636,6 +1637,17 @@ Public Sub AppendArray(ByRef ary() As String, ByVal value As String)
     End If
 End Sub
 
+Public Sub AppendArrayLong(ByRef ary() As String, ByVal value As String)
+    If IsEmptyArrayLong(ary) = True Then
+        ReDim Preserve ary(0)
+        ary(0) = value
+    Else
+        Dim cnt As Long: cnt = UBound(ary) + 1
+        ReDim Preserve ary(cnt)
+        ary(cnt) = value
+    End If
+End Sub
+
 '-------------------------------------------------------------
 'フォルダパスを列挙する。（サブフォルダ含む）
 ' 注意：pathは戻り値には含まない
@@ -2289,6 +2301,19 @@ Public Function IsEmptyArray(arr As Variant) As Boolean
     On Error GoTo 0
 End Function
 
+Public Function IsEmptyArrayLong(arr As Variant) As Boolean
+    On Error Resume Next
+    Dim i As Long
+    i = UBound(arr)
+    If i >= 0 And Err.Number = 0 Then
+        IsEmptyArrayLong = False
+    Else
+        IsEmptyArrayLong = True
+        Err.Clear
+    End If
+    On Error GoTo 0
+End Function
+
 '-------------------------------------------------------------
 'n秒待つ
 ' sec : I : 待つ時間(秒) ※小数も可
@@ -2384,6 +2409,8 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
+
 
 
 
