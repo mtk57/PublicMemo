@@ -312,7 +312,7 @@ Private Sub InsertCode(ByVal target_path As String)
     
     Dim contents() As String: contents = GetTargetContents(target_path)
     
-    If Common.IsEmptyArray(contents) = True Then
+    If Common.IsEmptyArrayLong(contents) = True Then
         Common.WriteLog "InsertCode E1"
         Exit Sub
     End If
@@ -324,6 +324,8 @@ Private Sub InsertCode(ByVal target_path As String)
  
     For i = LBound(contents) To UBound(contents)
         Dim line As String: line = contents(i)
+        
+        Common.WriteLog "InsertCode i=" & i & ":" & line
         
         If Common.IsCommentCode(line, Common.GetFileExtension(target_path)) = True Then
             'コメント行なので次の行へ
@@ -350,7 +352,7 @@ Private Sub InsertCode(ByVal target_path As String)
             
 NOT_METHOD:
         '関数定義以外の行
-        Common.AppendArray new_contents, line
+        Common.AppendArrayLong new_contents, line
         
 CONTINUE:
     
@@ -385,7 +387,7 @@ Private Function InsertCodeForMethod( _
     Dim seq As Long: seq = 1    '関数途中終了時を区別するための連番
     Dim ext As String: ext = Common.GetFileExtension(target_path)
 
-    Common.AppendArray new_contents, line
+    Common.AppendArrayLong new_contents, line
     cnt = cnt + 1
     
     '関数開始定義の終了行を取得する
@@ -393,11 +395,11 @@ Private Function InsertCodeForMethod( _
     
     If offset > 0 Then
         For i = 0 To offset - 1
-            Common.AppendArray new_contents, contents(start + i + 1)
+            Common.AppendArrayLong new_contents, contents(start + i + 1)
         Next i
         cnt = cnt + 1 + offset - 1
     End If
-    Common.AppendArray new_contents, GetMethodStartLine(method_name)
+    Common.AppendArrayLong new_contents, GetMethodStartLine(method_name)
     
     For i = start + offset + 1 To UBound(contents)
         line = contents(i)
@@ -414,8 +416,8 @@ Private Function InsertCodeForMethod( _
            Common.IsMatchByRegExp(del_comment_line, METHOD_EXIT, True) = True Then
             '関数の途中終了行を発見
             
-            Common.AppendArray new_contents, GetMethodExitLine(method_name, seq)
-            Common.AppendArray new_contents, line
+            Common.AppendArrayLong new_contents, GetMethodExitLine(method_name, seq)
+            Common.AppendArrayLong new_contents, line
             cnt = cnt + 1
             
             seq = seq + 1
@@ -426,8 +428,8 @@ Private Function InsertCodeForMethod( _
         If Common.IsMatchByRegExp(del_comment_line, METHOD_END, True) = True Then
             '関数定義の終了行を発見
             
-            Common.AppendArray new_contents, GetMethodEndLine(method_name)
-            Common.AppendArray new_contents, line
+            Common.AppendArrayLong new_contents, GetMethodEndLine(method_name)
+            Common.AppendArrayLong new_contents, line
             cnt = cnt + 1
             
             GoTo FINISH
@@ -435,7 +437,7 @@ Private Function InsertCodeForMethod( _
 
 METHOD_BODY:
         '関数定義の本体
-        Common.AppendArray new_contents, line
+        Common.AppendArrayLong new_contents, line
         cnt = cnt + 1
         
 CONTINUE:

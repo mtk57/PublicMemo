@@ -42,9 +42,9 @@ End Sub
 Private Function IsEnableDebugLog() As Boolean
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
-    Const CLM = "L7"
+    Const clm = "L7"
     
-    Dim is_debug_log_s As String: is_debug_log_s = main_sheet.Range(CLM).value
+    Dim is_debug_log_s As String: is_debug_log_s = main_sheet.Range(clm).value
     
     If is_debug_log_s = "" Or _
        is_debug_log_s = "NO" Then

@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.1.4"
+Private Const VERSION = "1.3.3"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -44,6 +44,34 @@ Private is_log_opened As Boolean
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
 
 '-------------------------------------------------------------
+'パスが255byte以上かを返す
+' path : I : パス (絶対・相対はチェックしない)
+' Ret : True/False (True=255byte以上, False=255byte未満)
+'-------------------------------------------------------------
+Public Function IsMaxOverPath(ByVal path As String) As Boolean
+    IsMaxOverPath = LenB(StrConv(path, vbFromUnicode)) >= 255
+End Function
+
+'-------------------------------------------------------------
+'文字列が指定文字列で開始されているかを返す
+' target : I : 文字列
+' search : I : 指定文字列
+' Ret : True/False (True=開始されている, False=開始されていない)
+'-------------------------------------------------------------
+Public Function StartsWith(ByVal target As String, ByVal search As String) As Boolean
+    StartsWith = False
+    
+    If Len(search) > Len(target) Then
+        Exit Function
+    End If
+    
+    If Left(target, Len(search)) = search Then
+        StartsWith = True
+    End If
+    
+End Function
+
+'-------------------------------------------------------------
 'フォルダが空かどうかを返す
 ' path : I : フォルダパス(絶対パス)
 ' Ret : True/False (True=空, False=空では無い)
@@ -52,7 +80,11 @@ Public Function IsEmptyFolder(ByVal path As String) As Boolean
     If IsExistsFolder(path) = False Then
         Err.Raise 53, , "[IsEmptyFolder] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
-    
+
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[IsEmptyFolder] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim fso As Object
     Dim folder As Object
     
@@ -190,6 +222,10 @@ Public Function GetFolderPathByKeyword( _
         Exit Function
     End If
 
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[GetFolderPathByKeyword] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim SEP As String: SEP = Application.PathSeparator
     Dim path_ary() As String
     Dim ret_ary() As String
@@ -222,9 +258,12 @@ End Function
 '        例: "C:\abc\def\xyz" → "xyz"
 '-------------------------------------------------------------
 Public Function GetLastFolderName(ByVal path As String) As String
-    Dim last As String
-    last = Right(path, Len(path) - InStrRev(path, Application.PathSeparator))
-    GetLastFolderName = last
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[GetLastFolderName] パスが長すぎます (path=" & path & ")"
+    End If
+
+    Dim new_path As String: new_path = Common.RemoveTrailingBackslash(path)
+    GetLastFolderName = Right(new_path, Len(new_path) - InStrRev(new_path, Application.PathSeparator))
 End Function
 
 '-------------------------------------------------------------
@@ -236,7 +275,11 @@ Public Function ChangeUniqueDirPath(ByVal path As String) As String
     If IsExistsFolder(path) = False Then
         Err.Raise 53, , "[ChangeUniqueDirPath] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
-    
+
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[ChangeUniqueDirPath] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim new_path As String
     new_path = path & "_" & GetNowTimeString()
     If IsExistsFolder(new_path) = True Then
@@ -376,7 +419,11 @@ Public Function IsEmptyFile(ByVal path As String) As Boolean
     If IsExistsFile(path) = False Then
         Err.Raise 53, , "[IsEmptyFile] 指定されたファイルが存在しません (path=" & path & ")"
     End If
-    
+
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[IsEmptyFile] パスが長すぎます (path=" & path & ")"
+    End If
+
     IsEmptyFile = (FileLen(path) = 0)
 End Function
 
@@ -407,7 +454,11 @@ Public Sub RemoveLinesWithKeyword(ByVal path As String, ByVal keyword As String)
     If IsExistsFile(path) = False Then
         Err.Raise 53, , "[RemoveLinesWithKeyword] 指定されたファイルが存在しません (path=" & path & ")"
     End If
-    
+
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[RemoveLinesWithKeyword] パスが長すぎます (path=" & path & ")"
+    End If
+
     If keyword = "" Then
         Exit Sub
     End If
@@ -471,7 +522,11 @@ End Function
 Public Function RunGit(ByVal repo_path As String, ByVal command As String) As String()
     Dim err_msg As String: err_msg = ""
     Dim std_out() As String
-    
+
+    If IsMaxOverPath(repo_path) = True Then
+        Err.Raise 53, , "[RunGit] パスが長すぎます (repo_path=" & repo_path & ")"
+    End If
+
     If IsExistsFile(GIT_BASH) = False Then
         err_msg = "[RunGit] gitが見つかりません (" & GIT_BASH & ")"
         GoTo FINISH_3
@@ -562,7 +617,11 @@ Public Sub CopyFile(ByVal src_path As String, ByVal dst_path As String)
     If IsExistsFile(src_path) = False Then
         Err.Raise 53, , "[CopyFile] 指定されたファイルが存在しません (src_path=" & src_path & ")"
     End If
-    
+
+    If IsMaxOverPath(src_path) = True Or IsMaxOverPath(dst_path) = True Then
+        Err.Raise 53, , "[CopyFile] パスが長すぎます (src_path=" & src_path & ", dst_path=" & dst_path & ")"
+    End If
+
     If dst_path = "" Or src_path = dst_path Or IsExistsFile(dst_path) = True Then
         Exit Sub
     End If
@@ -580,6 +639,10 @@ End Sub
 Public Function RenameFolder(ByVal path As String, ByVal rename As String) As String
     If IsExistsFolder(path) = False Then
         Err.Raise 53, , "[RenameFolder] 指定されたフォルダが存在しません (path=" & path & ")"
+    End If
+
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[RenameFolder] パスが長すぎます (path=" & path & ")"
     End If
 
     Dim fso As Object
@@ -615,6 +678,60 @@ On Error GoTo 0
 
     RenameFolder = folder.path
 
+End Function
+
+'-------------------------------------------------------------
+'ワークシートの指定列のデータ最終行番号を返す
+' ws : I : ワークシート
+' clm : I : 指定列名(Ex."A")
+'-------------------------------------------------------------
+Public Function GetLastRowFromWorksheet( _
+  ByVal ws As Worksheet, _
+  ByVal clm As String _
+) As Long
+    GetLastRowFromWorksheet = ws.Cells(ws.Rows.count, clm).End(xlUp).row
+End Function
+
+'-------------------------------------------------------------
+'文字列の配列から指定ワードで検索し、ヒットした行番号を返す
+' keyword : I : 検索ワード
+' input_array : I : 文字列の配列
+' is_use_regexp : I : 正規表現の使用有無
+' Ret : ヒットした行番号
+'-------------------------------------------------------------
+Public Function FindRowByKeywordFromArray(ByVal keyword As String, ByRef input_array() As String, ByVal is_use_regexp As Boolean) As Long
+    If keyword = "" Then
+        FindRowByKeywordFromArray = -1
+        Exit Function
+    End If
+
+    Dim row As Long
+    Dim isMatch As Boolean
+    Dim line As String
+    Dim regex As Object
+    Set regex = Nothing
+    
+    If is_use_regexp = True Then
+        Set regex = CreateObject("VBScript.RegExp")
+        regex.Pattern = keyword
+    End If
+   
+    For row = LBound(input_array) To UBound(input_array)
+        line = input_array(row)
+        
+        If is_use_regexp = True Then
+            isMatch = regex.Test(line)
+        ElseIf InStr(1, line, keyword) > 0 Then
+            isMatch = True
+        End If
+    
+        If isMatch = True Then
+            FindRowByKeywordFromArray = row
+            Exit Function
+        End If
+    Next row
+    
+    FindRowByKeywordFromArray = -1
 End Function
 
 '-------------------------------------------------------------
@@ -687,7 +804,11 @@ Public Function ChangeFileExt(ByVal path As String, ByVal ext As String) As Stri
         ChangeFileExt = path
         Exit Function
     End If
-    
+
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[ChangeFileExt] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim SEP As String: SEP = Application.PathSeparator
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
@@ -721,7 +842,11 @@ Public Function GetSheet( _
     ByVal is_readonly As Boolean, _
     ByVal is_visible As Boolean _
 ) As Worksheet
-    
+
+    If IsMaxOverPath(book_path) = True Then
+        Err.Raise 53, , "[GetSheet] パスが長すぎます (book_path=" & book_path & ")"
+    End If
+
     Dim wb As Workbook
     Dim ws As Worksheet
     Application.ScreenUpdating = False
@@ -730,11 +855,11 @@ Public Function GetSheet( _
         '既に開いている
         Set wb = Workbooks(book_path)
     Else
-        Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, readonly:=is_readonly)
+        Set wb = Workbooks.Open(filename:=book_path, UpdateLinks:=False, ReadOnly:=is_readonly)
     End If
     
     wb.Activate
-    ActiveWindow.visible = is_visible
+    ActiveWindow.Visible = is_visible
     
     If Common.IsExistSheet(wb, sheet_name) = False Then
         Err.Raise 53, , "[GetSheet] 指定されたシートが存在しません (book_path=" & book_path & ", sheet_name=" & sheet_name & ")"
@@ -779,7 +904,11 @@ Public Sub DeleteFile(ByVal path As String)
     If IsExistsFile(path) = False Then
         Exit Sub
     End If
-    
+
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[DeleteFile] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -802,7 +931,11 @@ Public Function CopyUniqueFile(ByVal src_file_path As String, ByVal dst_dir_path
         CopyUniqueFile = ""
         Exit Function
     End If
-    
+
+    If IsMaxOverPath(src_file_path) = True Or IsMaxOverPath(dst_dir_path) = True Then
+        Err.Raise 53, , "[CopyUniqueFile] パスが長すぎます (src_file_path=" & src_file_path & ", dst_dir_path=" & dst_dir_path & ")"
+    End If
+
     Dim SEP As String: SEP = Application.PathSeparator
     Dim dst_file_path As String
     
@@ -825,6 +958,10 @@ End Function
 ' Ret : ファイル名
 '-------------------------------------------------------------
 Public Function GetFileName(ByVal path As String) As String
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[GetFileName] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     GetFileName = fso.GetFileName(path)
@@ -838,6 +975,10 @@ End Function
 ' Ret : ファイルパス
 '-------------------------------------------------------------
 Public Function SearchFile(ByVal search_path As String, ByVal search_name As String) As String
+    If IsMaxOverPath(search_path) = True Then
+        Err.Raise 53, , "[SearchFile] パスが長すぎます (search_path=" & search_path & ")"
+    End If
+
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -888,6 +1029,10 @@ Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal i
         Err.Raise 53, , "[UTF8toSJIS_AllFile] 拡張子が指定されていません"
     End If
 
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[UTF8toSJIS_AllFile] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim i As Long
     Dim src_file_list() As String: src_file_list = CreateFileList(path, ext, is_subdir)
 
@@ -912,6 +1057,10 @@ Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal i
         Err.Raise 53, , "[SJIStoUTF8_AllFile] 拡張子が指定されていません"
     End If
 
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[SJIStoUTF8_AllFile] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim i As Long
     Dim src_file_list() As String: src_file_list = CreateFileList(path, ext, is_subdir)
 
@@ -927,6 +1076,10 @@ End Sub
 '                  →末尾に".bak_現在日時"を付与
 '-------------------------------------------------------------
 Public Sub SJIStoUTF8(ByVal path As String, ByVal is_backup As Boolean)
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[SJIStoUTF8] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim in_str As String
     Dim buf As String
     Dim i As Long
@@ -971,6 +1124,10 @@ End Sub
 '                  →末尾に".bak_現在日時"を付与
 '-------------------------------------------------------------
 Public Sub UTF8toSJIS(ByVal path As String, ByVal is_backup As Boolean)
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[UTF8toSJIS] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim in_str As String
     Dim out_str() As String
     Dim i As Long
@@ -1021,7 +1178,11 @@ Public Function IsSJIS(ByVal path As String) As Boolean
     If IsExistsFile(path) = False Then
         Err.Raise 53, , "[IsSJIS] 指定されたファイルが存在しません (path=" & path & ")"
     End If
-    
+
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[IsSJIS] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim Ado As Object
     Const TYPE_BINARY = 1
     Set Ado = CreateObject("ADODB.Stream")
@@ -1084,7 +1245,11 @@ Public Function IsUTF8(ByVal path As String) As Boolean
     If IsExistsFile(path) = False Then
         Err.Raise 53, , "[IsUTF8] 指定されたファイルが存在しません (path=" & path & ")"
     End If
-    
+
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[IsUTF8] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim in_str As String
     Dim out_str() As String
     Dim i As Long
@@ -1121,6 +1286,10 @@ Public Function IsUTF8_WithBom(ByVal path As String) As Boolean
         Err.Raise 53, , "[IsUTF8_WithBom] 指定されたファイルが存在しません (path" & path & ")"
     End If
 
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[IsUTF8_WithBom] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim bytedata() As Byte: bytedata = ReadBinary(path, 3)
     Dim length As Integer: length = UBound(bytedata) + 1
     
@@ -1144,6 +1313,10 @@ End Function
 ' Ret : 読み込んだバイナリ配列
 '-------------------------------------------------------------
 Public Function ReadBinary(ByVal path As String, ByVal readsize As Integer) As Byte()
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[ReadBinary] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim readdata() As Byte
     
     If readsize <= 0 Then
@@ -1171,6 +1344,10 @@ End Function
 ' Ret : True/False (True=存在する, False=存在しない)
 '-------------------------------------------------------------
 Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As String) As Boolean
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[IsExistsExtensionFile] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim fso As Object
     Dim folder As Object
     Dim subfolder As Object
@@ -1215,6 +1392,11 @@ Public Sub OpenLog(ByVal logfile_path As String)
         'すでにオープンしているので無視
         Exit Sub
     End If
+
+    If IsMaxOverPath(logfile_path) = True Then
+        Err.Raise 53, , "[OpenLog] パスが長すぎます (logfile_path=" & logfile_path & ")"
+    End If
+
     logfile_num = FreeFile()
     Open logfile_path For Append As logfile_num
     is_log_opened = True
@@ -1285,6 +1467,10 @@ Public Function CreateFileList( _
     ByVal ext As String, _
     ByVal is_subdir As Boolean _
 ) As String()
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[CreateFileList] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim list() As String: list = CreateFileListMain(path, ext, is_subdir)
     CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), ext)
 End Function
@@ -1388,6 +1574,10 @@ End Function
 ' Ret : 比較結果 : True/False (True=一致)
 '-------------------------------------------------------------
 Public Function IsMatchTextFiles(ByVal file1 As String, ByVal file2 As String) As Boolean
+    If IsMaxOverPath(file1) = True Or IsMaxOverPath(file2) = True Then
+        Err.Raise 53, , "[IsMatchTextFiles] パスが長すぎます (file1=" & file1 & ", file2=" & file2 & ")"
+    End If
+
     Dim filesize1 As Long: filesize1 = FileLen(file1)
     Dim filesize2 As Long: filesize2 = FileLen(file2)
     
@@ -1447,6 +1637,17 @@ Public Sub AppendArray(ByRef ary() As String, ByVal value As String)
     End If
 End Sub
 
+Public Sub AppendArrayLong(ByRef ary() As String, ByVal value As String)
+    If IsEmptyArrayLong(ary) = True Then
+        ReDim Preserve ary(0)
+        ary(0) = value
+    Else
+        Dim cnt As Long: cnt = UBound(ary) + 1
+        ReDim Preserve ary(cnt)
+        ary(cnt) = value
+    End If
+End Sub
+
 '-------------------------------------------------------------
 'フォルダパスを列挙する。（サブフォルダ含む）
 ' 注意：pathは戻り値には含まない
@@ -1454,6 +1655,10 @@ End Sub
 ' Ret : フォルダパスリスト
 '-------------------------------------------------------------
 Public Function GetFolderPathList(ByVal path As String) As String()
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[GetFolderPathList] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim fso As Object
     Dim top_dir As Object
     Dim sub_dir As Object
@@ -1503,6 +1708,10 @@ End Function
 ' dst_path : IN : コピー先フォルダパス(絶対パス)
 '-------------------------------------------------------------
 Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
+    If IsMaxOverPath(src_path) = True Or IsMaxOverPath(dest_path) = True Then
+        Err.Raise 53, , "[CopyFolder] パスが長すぎます (src_path=" & src_path & ", dest_path=" & dest_path & ")"
+    End If
+
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -1513,7 +1722,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     
     'コピー先のフォルダが存在しない場合、作成する
     If Not fso.FolderExists(dest_path) Then
-        fso.CreateFolder dest_path
+        CreateFolder dest_path
     End If
     
     'コピー元のフォルダ内のファイルをコピーする
@@ -1554,28 +1763,70 @@ End Function
 ' Ret : プロセスの戻り値
 '-------------------------------------------------------------
 Public Function RunProcessWait(ByVal exe_path As String) As Long
+    If IsMaxOverPath(exe_path) = True Then
+        Err.Raise 53, , "[RunProcessWait] パスが長すぎます (exe_path=" & exe_path & ")"
+    End If
 
-  Dim wsh As Object
-  Set wsh = CreateObject("Wscript.Shell")
-  
-  Const NOT_DISP = 0
-  Const DISP = 1
-  Const WAIT = True
-  Const NO_WAIT = False
-  
-  Dim Process As Object
-  Set Process = wsh.Exec(exe_path)
+    Dim wsh As Object
+    Set wsh = CreateObject("Wscript.Shell")
+    
+    Const NOT_DISP = 0
+    Const DISP = 1
+    Const WAIT = True
+    Const NO_WAIT = False
+    
+    Dim Process As Object
+    Set Process = wsh.Exec(exe_path)
+    
+    'プロセス完了時に通知を受け取る
+    Do While Process.Status = 0
+        DoEvents
+    Loop
+    
+    'プロセスの戻り値を取得する
+    RunProcessWait = Process.ExitCode
+    
+    Set Process = Nothing
+    Set wsh = Nothing
+End Function
 
-  'プロセス完了時に通知を受け取る
-  Do While Process.Status = 0
-    DoEvents
-  Loop
+'-------------------------------------------------------------
+' BATファイルを実行する
+' bat_path : IN : BATファイルの絶対パス
+'                 BATに渡すパラメータがある場合も一緒に書くこと
+' Ret : BATの戻り値(exit /b 0の場合0が戻る)
+'-------------------------------------------------------------
+Public Function RunBatFile(ByVal bat_path As String) As Long
+    Dim wsh As Object
+    Set wsh = CreateObject("Wscript.Shell")
+    Dim returnValue As Variant
+    
+    Const NOT_DISP = 0
+    Const DISP = 1
+    Const WAIT = True
+    Const NO_WAIT = False
+    
+    returnValue = wsh.Run(bat_path, NOT_DISP, WAIT)
+    
+    RunBatFile = CLng(returnValue)
+    
+    Set wsh = Nothing
+End Function
 
-  'プロセスの戻り値を取得する
-  RunProcessWait = Process.ExitCode
-
-  Set Process = Nothing
-  Set wsh = Nothing
+'-------------------------------------------------------------
+'前後のダブルクォーテーションを除去して返す
+' 例:"hoge" → hoge
+' target : IN : 対象文字列
+' Ret : 除去後の文字列
+'-------------------------------------------------------------
+Public Function RemoveQuotes(ByVal target As String) As String
+    '""で囲まれているかをチェック
+    If Left(target, 1) = """" And Right(target, 1) = """" Then
+        '""を削除して返す
+        RemoveQuotes = Mid(target, 2, Len(target) - 2)
+    Else
+        RemoveQuotes = target
+    End If
 End Function
 
 '-------------------------------------------------------------
@@ -1584,6 +1835,10 @@ End Function
 ' Ret : パス文字列
 '-------------------------------------------------------------
 Public Function RemoveTrailingBackslash(ByVal path As String) As String
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[RemoveTrailingBackslash] パスが長すぎます (path=" & path & ")"
+    End If
+
     If Right(path, 1) = "\" Then
         path = Left(path, Len(path) - 1)
     End If
@@ -1598,6 +1853,10 @@ End Function
 Public Sub OutputTextFileToSheet(ByVal file_path As String, ByVal sheet_name As String)
     If IsExistsFile(file_path) = False Or sheet_name = "" Then
         Err.Raise 53, , "[OutputTextFileToSheet] 指定されたファイルが存在しません (file_path=" & file_path & ")"
+    End If
+
+    If IsMaxOverPath(file_path) = True Then
+        Err.Raise 53, , "[OutputTextFileToSheet] パスが長すぎます (file_path=" & file_path & ")"
     End If
 
     'ワーク用にコピーする
@@ -1642,6 +1901,10 @@ End Sub
 ' path : IN : ファイルパス (絶対パス)
 '-------------------------------------------------------------
 Public Sub CreateSJISTextFile(ByRef contents() As String, ByVal path As String)
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[CreateSJISTextFile] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -1667,6 +1930,10 @@ End Sub
 ' path : IN : フォルダパス (絶対パス)
 '-------------------------------------------------------------
 Public Sub CreateFolder(ByVal path As String)
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[CreateFolder] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -1695,6 +1962,10 @@ Public Sub DeleteFolder(ByVal path As String)
         Exit Sub
     End If
 
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[DeleteFolder] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
 
@@ -1712,6 +1983,10 @@ Public Sub MoveFolder(ByVal src_path As String, ByVal dst_path As String)
     If IsExistsFolder(src_path) = False Then
         Err.Raise 53, , "[MoveFolder] 移動元フォルダが存在しません (src_path=" & src_path & ")"
         Exit Sub
+    End If
+
+    If IsMaxOverPath(src_path) = True Or IsMaxOverPath(dst_path) = True Then
+        Err.Raise 53, , "[MoveFolder] パスが長すぎます (src_path=" & src_path & ", dst_path=" & dst_path & ")"
     End If
 
     Dim fso As Object
@@ -1784,6 +2059,10 @@ End Function
 '           Ret = "C:\tmp"
 '-------------------------------------------------------------
 Public Function GetFolderNameFromPath(ByVal path As String) As String
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[GetFolderNameFromPath] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim last_separator As Long
     
     last_separator = InStrRev(path, Application.PathSeparator)
@@ -1805,6 +2084,10 @@ End Function
 '           Ret = "C:\tmp\cdf\xyz.txt"
 '-------------------------------------------------------------
 Public Function GetAbsolutePathName(ByVal base_path As String, ByVal ref_path As String) As String
+    If IsMaxOverPath(base_path) = True Or IsMaxOverPath(ref_path) = True Then
+        Err.Raise 53, , "[GetAbsolutePathName] パスが長すぎます (base_path=" & base_path & ", ref_path=" & ref_path & ")"
+    End If
+
      Dim fso As Object
      Set fso = CreateObject("Scripting.FileSystemObject")
      
@@ -1819,6 +2102,10 @@ End Function
 ' Ret : True/False (True=存在する)
 '-------------------------------------------------------------
 Public Function IsExistsFile(ByVal path As String) As Boolean
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[IsExistsFile] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -1837,6 +2124,10 @@ End Function
 ' Ret : True/False (True=存在する)
 '-------------------------------------------------------------
 Public Function IsExistsFolder(ByVal path As String) As Boolean
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[IsExistsFolder] パスが長すぎます (path=" & path & ")"
+    End If
+
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -1878,6 +2169,10 @@ End Function
 '       配列の末尾には検索ファイルの絶対パスを格納する
 '-------------------------------------------------------------
 Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_file As String) As String()
+    If IsMaxOverPath(target_folder) = True Then
+        Err.Raise 53, , "[SearchAndReadFiles] パスが長すぎます (target_folder=" & target_folder & ")"
+    End If
+
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     
@@ -1933,7 +2228,11 @@ Public Function ReadTextFileBySJIS(ByVal path As String) As String
     If IsExistsFile(path) = False Then
         Err.Raise 53, , "[ReadTextFileBySJIS] 指定されたファイルが存在しません (path=" & path & ")"
     End If
-    
+
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[ReadTextFileBySJIS] パスが長すぎます (path=" & path & ")"
+    End If
+
     'ワーク用にコピーする
     Dim wk As String: wk = CopyUniqueFile(path, "")
     
@@ -1967,7 +2266,9 @@ End Function
 ' Ret : 読み込んだ内容
 '-------------------------------------------------------------
 Public Function ReadTextFileByUTF8(ByVal file_path) As String
-    'TODO:引数チェック
+    If IsMaxOverPath(file_path) = True Then
+        Err.Raise 53, , "[ReadTextFileByUTF8] パスが長すぎます (file_path=" & file_path & ")"
+    End If
     
     Dim contents As String
     
@@ -1995,6 +2296,19 @@ Public Function IsEmptyArray(arr As Variant) As Boolean
         IsEmptyArray = False
     Else
         IsEmptyArray = True
+        Err.Clear
+    End If
+    On Error GoTo 0
+End Function
+
+Public Function IsEmptyArrayLong(arr As Variant) As Boolean
+    On Error Resume Next
+    Dim i As Long
+    i = UBound(arr)
+    If i >= 0 And Err.Number = 0 Then
+        IsEmptyArrayLong = False
+    Else
+        IsEmptyArrayLong = True
         Err.Clear
     End If
     On Error GoTo 0
@@ -2095,6 +2409,7 @@ Public Sub ActiveBook(ByVal book_name As String)
     Set wb = Workbooks(book_name)
     wb.Activate
 End Sub
+
 
 
 
