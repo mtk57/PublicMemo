@@ -378,7 +378,7 @@ Private Function InsertCodeForMethod( _
     Const METHOD_END = "End\s(Function|Sub)$"
     Const METHOD_EXIT = "Exit\s(Function|Sub)$"
     Const METHOD_APP_END = "^(\t|\s)*\bEnd$"
-    Const METHOD_RET = "^[ \t]*(Return|Throw)$"
+    Const METHOD_RET = "^[ \t]*(Return|Throw) *"
     
     Dim i As Long
     Dim line As String: line = contents(start)  '解析中の行データ

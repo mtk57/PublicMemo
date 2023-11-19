@@ -14,7 +14,7 @@ WriteLogSimple "Form1_Load START"  'for DEBUG
 
 		If a Then
 WriteLogSimple "Form1_Load END 1"  'for DEBUG
-			Return
+			Return 123
 		End If
 
 		Try
