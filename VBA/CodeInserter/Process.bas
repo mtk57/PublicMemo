@@ -378,6 +378,7 @@ Private Function InsertCodeForMethod( _
     Const METHOD_END = "End\s(Function|Sub)$"
     Const METHOD_EXIT = "Exit\s(Function|Sub)$"
     Const METHOD_APP_END = "^(\t|\s)*\bEnd$"
+    Const METHOD_RET = "^[ \t]*(Return|Throw)$"
     
     Dim i As Long
     Dim line As String: line = contents(start)  '解析中の行データ
@@ -413,7 +414,8 @@ Private Function InsertCodeForMethod( _
         Dim del_comment_line As String: del_comment_line = Common.RemoveRightComment(line, ext)
         
         If Common.IsMatchByRegExp(del_comment_line, METHOD_APP_END, True) = True Or _
-           Common.IsMatchByRegExp(del_comment_line, METHOD_EXIT, True) = True Then
+           Common.IsMatchByRegExp(del_comment_line, METHOD_EXIT, True) = True Or _
+           (IsVBNETExt(ext) = True And Common.IsMatchByRegExp(del_comment_line, METHOD_RET, True) = True) Then
             '関数の途中終了行を発見
             
             Common.AppendArrayLong new_contents, GetMethodExitLine(method_name, seq)
@@ -675,4 +677,24 @@ Private Function GetTargetContents(ByVal path As String) As String()
     Common.WriteLog "GetTargetContents E"
 End Function
 
+Private Function IsVB6Ext(ByVal ext As String) As Boolean
+    IsVB6Ext = False
+
+    If ext = "bas" Or _
+       ext = "frm" Or _
+       ext = "cls" Or _
+       ext = "ctl" Then
+       IsVB6Ext = True
+       Exit Function
+    End If
+End Function
+
+Private Function IsVBNETExt(ByVal ext As String) As Boolean
+    IsVBNETExt = False
+
+    If ext = "vb" Then
+       IsVBNETExt = True
+       Exit Function
+    End If
+End Function
 
