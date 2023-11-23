@@ -6,6 +6,8 @@ Private SEP As String
 Private DQ As String
 Private Const VB6_EXT = "bas,frm,cls,ctl"
 Private Const VBNET_EXT = "vb"
+Private Const REPLACE_METHOD = "＠"
+Private Const REPLACE_FILENAME = "＊"
 
 'パラメータ
 Private main_param As MainParam
@@ -387,6 +389,7 @@ Private Function InsertCodeForMethod( _
     Dim offset As Long  '関数開始位置のオフセット行数(関数の引数が複数行の場合は2行以上になる)
     Dim seq As Long: seq = 1    '関数途中終了時を区別するための連番
     Dim ext As String: ext = Common.GetFileExtension(target_path)
+    Dim filename As String: filename = Common.GetFileName(target_path)
 
     Common.AppendArrayLong new_contents, line
     cnt = cnt + 1
@@ -400,7 +403,7 @@ Private Function InsertCodeForMethod( _
         Next i
         cnt = cnt + 1 + offset - 1
     End If
-    Common.AppendArrayLong new_contents, GetMethodStartLine(method_name)
+    Common.AppendArrayLong new_contents, GetMethodStartLine(method_name, filename)
     
     For i = start + offset + 1 To UBound(contents)
         line = contents(i)
@@ -418,7 +421,7 @@ Private Function InsertCodeForMethod( _
            (IsVBNETExt(ext) = True And Common.IsMatchByRegExp(del_comment_line, METHOD_RET, True) = True) Then
             '関数の途中終了行を発見
             
-            Common.AppendArrayLong new_contents, GetMethodExitLine(method_name, seq)
+            Common.AppendArrayLong new_contents, GetMethodExitLine(method_name, filename, seq)
             Common.AppendArrayLong new_contents, line
             cnt = cnt + 1
             
@@ -430,7 +433,7 @@ Private Function InsertCodeForMethod( _
         If Common.IsMatchByRegExp(del_comment_line, METHOD_END, True) = True Then
             '関数定義の終了行を発見
             
-            Common.AppendArrayLong new_contents, GetMethodEndLine(method_name)
+            Common.AppendArrayLong new_contents, GetMethodEndLine(method_name, filename)
             Common.AppendArrayLong new_contents, line
             cnt = cnt + 1
             
@@ -554,25 +557,48 @@ Private Function GetMethodType(ByVal line As String) As String
 End Function
 
 '関数開始直後に挿入するコードを作成する
-Private Function GetMethodStartLine(ByVal method_name As String) As String
+Private Function GetMethodStartLine(ByVal method_name As String, ByVal file_name As String) As String
     Common.WriteLog "GetMethodStartLine S"
-    GetMethodStartLine = Replace(main_param.GetInsertWord(), "＠", method_name & " START")
+    Dim ret As String
+    ret = ReplaceMethodLine(method_name, file_name, " START")
+    GetMethodStartLine = ret
     Common.WriteLog "GetMethodStartLine E"
 End Function
 
 '関数終了直前に挿入するコードを作成する
-Private Function GetMethodEndLine(ByVal method_name As String) As String
+Private Function GetMethodEndLine(ByVal method_name As String, ByVal file_name As String) As String
     Common.WriteLog "GetMethodEndLine S"
-    GetMethodEndLine = Replace(main_param.GetInsertWord(), "＠", method_name & " END")
+    Dim ret As String
+    ret = ReplaceMethodLine(method_name, file_name, " END")
+    GetMethodEndLine = ret
     Common.WriteLog "GetMethodEndLine E"
 End Function
 
 '関数途中直前に挿入するコードを作成する
-Private Function GetMethodExitLine(ByVal method_name As String, ByVal seq As Long) As String
+Private Function GetMethodExitLine(ByVal method_name As String, ByVal file_name As String, ByVal seq As Long) As String
     Common.WriteLog "GetMethodExitLine S"
     Common.WriteLog "seq=" & seq
-    GetMethodExitLine = Replace(main_param.GetInsertWord(), "＠", method_name & " END " & seq)
+    Dim ret As String
+    ret = ReplaceMethodLine(method_name, file_name, " END " & seq)
+    GetMethodExitLine = ret
     Common.WriteLog "GetMethodExitLine E"
+End Function
+
+Private Function ReplaceMethodLine(ByVal method_name As String, ByVal file_name As String, ByVal suffix As String) As String
+    Common.WriteLog "ReplaceMethodLine S"
+    Dim ret As String
+    ret = main_param.GetInsertWord()
+    
+    If InStr(ret, REPLACE_FILENAME) > 0 Then
+        ret = Replace(ret, REPLACE_FILENAME, file_name)
+    End If
+    
+    If InStr(ret, REPLACE_METHOD) > 0 Then
+        ret = Replace(ret, REPLACE_METHOD, method_name & suffix)
+    End If
+    
+    ReplaceMethodLine = ret
+    Common.WriteLog "ReplaceMethodLine E"
 End Function
 
 '関数名を返す
