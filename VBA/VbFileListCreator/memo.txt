@@ -1,0 +1,8 @@
+VB File List Creator																																												
+ver.	1.0.0																																											
+									★=MUST																																			
+																																												
+	Main Param																															memo												
+		①検索するフォルダパス(絶対パス)											★	C:\_git\PublicMemo\VBA\VbFileListCreator\testdata\src																		末尾に"\"禁止											Ex.	C:\_git\PublicMemo\VBA\VbFileListCreator\testdata\src
+		②デバッグログ出力												NO																		未指定の場合は出力しない。												
+																																												
