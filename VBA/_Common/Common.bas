@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.3.4"
+Private Const VERSION = "1.3.5"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -91,7 +91,7 @@ Public Function IsEmptyFolder(ByVal path As String) As Boolean
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set folder = fso.GetFolder(path)
     
-    IsEmptyFolder = folder.Files.count = 0 And folder.SubFolders.count = 0
+    IsEmptyFolder = folder.files.count = 0 And folder.SubFolders.count = 0
     
     Set fso = Nothing
     Set folder = Nothing
@@ -986,7 +986,7 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     Set folder = fso.GetFolder(search_path)
     
     Dim file As Object
-    For Each file In folder.Files
+    For Each file In folder.files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like search_name Then
             '発見
             SearchFile = file.path
@@ -1367,7 +1367,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As Stri
         End If
     Next subfolder
     
-    For Each file In folder.Files
+    For Each file In folder.files
         If Right(file.name, Len(ext)) = ext Then
             Set fso = Nothing
             Set folder = Nothing
@@ -1733,7 +1733,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     'コピー元のフォルダ内のファイルをコピーする
     Const OVERWRITE = True
     Dim file As Object
-    For Each file In fso.GetFolder(src_path).Files
+    For Each file In fso.GetFolder(src_path).files
         fso.CopyFile file.path, fso.BuildPath(dest_path, file.name), OVERWRITE
     Next
     
@@ -2185,7 +2185,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Set folder = fso.GetFolder(target_folder)
     
     Dim fileobj As Object
-    For Each fileobj In folder.Files
+    For Each fileobj In folder.files
         If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
             '検索対象のファイルを読み込む
             Dim contents As String: contents = ReadTextFileBySJIS(fileobj.path)
@@ -2354,7 +2354,7 @@ Public Function GetNowTimeString_OLD() As String
     str_date = Format(Date, "yyyymmdd")
     str_time = Format(Time, "hhmmss")
     
-    GetNowTimeString = str_date & str_time
+    GetNowTimeString_OLD = str_date & str_time
 End Function
 
 '-------------------------------------------------------------
@@ -2415,9 +2415,30 @@ Public Sub ActiveBook(ByVal book_name As String)
     wb.Activate
 End Sub
 
-
-
-
-
-
-
+'-------------------------------------------------------------
+'指定されたシートの指定セルに値を出力する
+' book_name : IN : ワークブック
+' sheet_name : IN : シート名
+' cell_row : 行
+' cell_clm : 列
+' contents : IN : 出力する内容
+'-------------------------------------------------------------
+Public Sub UpdateSheet( _
+    ByRef book_name As Workbook, _
+    ByVal sheet_name As String, _
+    ByVal cell_row As Long, ByVal cell_clm As Long, _
+    ByVal contents As String)
+    
+    If IsExistSheet(book_name, sheet_name) = False Then
+        Err.Raise 53, , "[UpdateSheet] シートが見つかりません (book_name=" & book_name & "), sheet_name=" & sheet_name & ")"
+    End If
+    
+    If cell_row < 0 Or cell_clm < 0 Then
+        Err.Raise 53, , "[UpdateSheet] セル位置が不正です (cell_row=" & cell_row & "), cell_clm=" & cell_clm & ")"
+    End If
+    
+    Dim ws As Worksheet
+    Set ws = book_name.Sheets(sheet_name)
+    
+    ws.Cells(cell_row, cell_clm).value = contents
+End Sub
