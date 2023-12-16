@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.3.5"
+Private Const VERSION = "1.3.6"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -42,6 +42,42 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+'文字列を末尾から先頭に向かって見ていき、指定された文字を見つけたらそこまでの文字列を返す
+' 例:str="ABC:DEF", last_char=":"の場合、"DEF"が返る
+' str : I : 文字列
+' last_char : I : 指定された文字(1文字)
+' Ret : 指定された文字を見つけたらそこまでの文字列。見つからない場合は""
+'-------------------------------------------------------------
+Public Function GetStringLastChar(ByVal str As String, ByVal last_char As String) As String
+    '文字列の長さを取得
+    Dim length As Integer
+    Dim i As Integer
+    Dim ch As String
+    
+    length = Len(str)
+    
+    If length = 0 Then
+        GetStringLastChar = ""
+        Exit Function
+    End If
+    
+    '文字列の末尾から先頭に向かってループ
+    For i = length To 1 Step -1
+        'i番目の文字を取得
+        ch = Mid(str, i, 1)
+        
+        '見つかった
+        If ch = last_char Then
+            GetStringLastChar = Right(str, length - i)
+            Exit Function
+        End If
+    Next i
+    
+    '見つからなかった
+    GetStringLastChar = ""
+End Function
 
 '-------------------------------------------------------------
 'パスが255byte以上かを返す
@@ -2442,3 +2478,5 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = contents
 End Sub
+
+
