@@ -96,14 +96,13 @@ Private Function Parse(ByVal src_path As String) As String()
         GoTo CONTINUE_ROW
         
 FOUND_TABLE_NAME:
-        ' ƒJƒ‰ƒ€–¼“™‚ðŽæ“¾‚·‚é
-        clm_name = GetColumnName(line)
-        
-        If clm_name = "" Then
+        If Common.IsMatchByRegExp(line, "^\t", False) = False Then
             table_name = ""
             GoTo CONTINUE_ROW
         End If
-        
+
+        ' ƒJƒ‰ƒ€–¼“™‚ðŽæ“¾‚·‚é
+        clm_name = GetColumnName(line)
         clm_type = GetColumnType(line)
         clm_info = GetColumnInfo(line)
         clm_constraint = GetColumnConstraint(line)
@@ -126,7 +125,7 @@ Private Function GetTableName(ByVal line As String) As String
     Common.WriteLog "GetTableName S"
     
     Dim ret() As String
-    ret = Common.GetMatchByRegExp(line, "\[.*\]", False)
+    ret = Common.GetMatchByRegExp(line, "\[(.*?)\]", False)
     
     ret = Common.DeleteEmptyArray(ret)
     
@@ -136,7 +135,7 @@ Private Function GetTableName(ByVal line As String) As String
         Exit Function
     End If
     
-    GetTableName = Replace(Replace(ret(0), "[", ""), "]", "")
+    GetTableName = Replace(Replace(ret(1), "[", ""), "]", "")
     
     Common.WriteLog "GetTableName E"
 End Function
