@@ -1,7 +1,6 @@
-Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.3.6"
+Private Const VERSION = "1.3.7"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -42,6 +41,49 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+' ファイルに文字列リストをUTF-8で書き込む
+' path : I : 指定ファイルパス(絶対パス)
+' str_ary : I : 文字列リスト
+'-------------------------------------------------------------
+Public Sub SaveToFileFromStringArray(ByVal path As String, ByRef str_ary() As String)
+    If path = "" Or IsExistsFile(path) = False Then
+        Err.Raise 53, , "[SaveToFileFromStringArray] 指定されたパスが不正です (path=" & path & ")"
+    End If
+
+    Dim stream As Object
+    Set stream = CreateObject("ADODB.Stream")
+    
+On Error GoTo Error
+    '文字コードをUTF-8に設定する
+    stream.Charset = "UTF-8"
+    
+    'テキストモードで開く
+    stream.Open
+    
+    Dim row As Long
+    Dim line As String
+    
+    For row = 0 To UBound(str_ary)
+        line = str_ary(row)
+        stream.WriteText line
+        stream.WriteText vbCrLf
+    Next row
+    
+    Const OVER_WRITE = 2
+    stream.SaveToFile path, OVER_WRITE
+
+    stream.Close
+    Set stream = Nothing
+    
+    Exit Sub
+Error:
+    stream.Close
+    Set stream = Nothing
+    
+    Err.Raise 53, , "[SaveToFileFromStringArray] エラー! (path=" & path & "), Desc=" & Err.Description
+End Sub
 
 '-------------------------------------------------------------
 '文字列を末尾から先頭に向かって見ていき、指定された文字を見つけたらそこまでの文字列を返す
@@ -725,7 +767,7 @@ Public Function GetLastRowFromWorksheet( _
   ByVal ws As Worksheet, _
   ByVal clm As String _
 ) As Long
-    GetLastRowFromWorksheet = ws.Cells(ws.Rows.count, clm).End(xlUp).row
+    GetLastRowFromWorksheet = ws.Cells(ws.rows.count, clm).End(xlUp).row
 End Function
 
 '-------------------------------------------------------------
@@ -788,7 +830,7 @@ Public Function FindRowByKeywordFromWorksheet( _
     Dim cell As Range
     Dim found_row As Long
     
-    Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
+    Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.rows.count, find_clm).End(xlUp).row)
     
     found_row = 0
     For Each cell In rng
@@ -814,7 +856,7 @@ Public Function GetSheetContentsByStringArray(ByVal sheet_name As String) As Str
     
     Set ws = ActiveWorkbook.Worksheets(sheet_name)
 
-    row_cnt = ws.Cells(ws.Rows.count, 1).End(xlUp).row
+    row_cnt = ws.Cells(ws.rows.count, 1).End(xlUp).row
     clm_cnt = ws.Cells(1, ws.Columns.count).End(xlToLeft).Column
 
     ReDim arr(1 To row_cnt, 1 To clm_cnt)
