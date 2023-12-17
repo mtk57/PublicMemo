@@ -1,0 +1,8 @@
+Schema Parser																																																	
+ver.	1.0.0																																																
+																																																	
+																																																	
+Main Param																																memo																	
+	①デバッグログ出力										NO																					未指定の場合は"NO"とする。																	
+	②スクリプトファイルのパス										C:\_git\PublicMemo\VBA\SchemaParser\testdata\src\schema_sample.sql																					絶対パス																	
+	③解析結果ファイルのパス										C:\_git\PublicMemo\VBA\SchemaParser\testdata\dst\schema_sample.tsv																					絶対パス																	
