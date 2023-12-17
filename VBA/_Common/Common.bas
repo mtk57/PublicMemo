@@ -1,6 +1,7 @@
+Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.3.7"
+Private Const VERSION = "1.3.8"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -1039,11 +1040,36 @@ Public Function GetFileName(ByVal path As String) As String
     If IsMaxOverPath(path) = True Then
         Err.Raise 53, , "[GetFileName] パスが長すぎます (path=" & path & ")"
     End If
+    
+    If path = "" Then
+        Err.Raise 53, , "[GetFileName] パスが空です (path=" & path & ")"
+    End If
 
     Dim fso As Object
     Set fso = CreateObject("Scripting.FileSystemObject")
     GetFileName = fso.GetFileName(path)
     Set fso = Nothing
+End Function
+
+'-------------------------------------------------------------
+'ファイルパスからフォルダパスを返す
+' path : IN : ファイルパス(絶対パス)
+' Ret : フォルダパス(絶対パス)
+'-------------------------------------------------------------
+Public Function GetFolderPath(ByVal file_path As String) As String
+    If IsMaxOverPath(file_path) = True Then
+        Err.Raise 53, , "[GetFolderPath] パスが長すぎます (file_path=" & file_path & ")"
+    End If
+    
+    If file_path = "" Then
+        Err.Raise 53, , "[GetFolderPath] パスが空です (file_path=" & file_path & ")"
+    End If
+    
+    Dim pos As Integer
+    pos = InStrRev(file_path, "\")
+    
+    '\より左側の文字列をフォルダパスとして返す
+    GetFolderPath = Left(file_path, pos - 1)
 End Function
 
 '-------------------------------------------------------------
@@ -2007,6 +2033,37 @@ Public Sub CreateSJISTextFile(ByRef contents() As String, ByVal path As String)
     Set fso = Nothing
 End Sub
 
+'-------------------------------------------------------------
+'ファイルを作成する
+' path : IN : ファイルパス (絶対パス)
+'-------------------------------------------------------------
+Public Sub CreateFile(ByVal path As String)
+    If IsMaxOverPath(path) = True Then
+        Err.Raise 53, , "[CreateFile] パスが長すぎます (path=" & path & ")"
+    End If
+    
+    If path = "" Then
+        Err.Raise 53, , "[CreateFile] パスが指定されていません (path=" & path & ")"
+    End If
+    
+    If IsExistsFile(path) = True Then
+        Exit Sub
+    End If
+    
+    Dim dir_path As String
+    dir_path = Common.GetFolderPath(path)
+    
+    If Common.IsExistsFolder(dir_path) = False Then
+        CreateFolder dir_path
+    End If
+    
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    fso.CreateTextFile path
+    
+    Set fso = Nothing
+End Sub
 
 '-------------------------------------------------------------
 'サブフォルダをまとめて作成する
