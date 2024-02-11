@@ -13,7 +13,7 @@ Option Explicit
 Private vbprj_file_paths() As String
 
 Private Const CLM_ = "C"
-Private Const START_ROW_ = 22
+Private Const START_ROW_ = 23
 
 'コンストラクタ
 Private Sub Class_Initialize()
@@ -54,28 +54,7 @@ End Sub
 
 '検証
 Public Sub Validate()
-    Dim i As Integer
-    Dim path As String
-    Dim ext As String
-    
-    If GetVBProjFilePathListCount() <= 0 Then
-        Exit Sub
-    End If
-    
-    For i = LBound(vbprj_file_paths) To UBound(vbprj_file_paths)
-        path = vbprj_file_paths(i)
-        If Common.IsExistsFile(path) = False Then
-            Err.Raise 53, , "[SubParam] VBプロジェクトファイルが見つかりません。" & vbCrLf & _
-                            "path=" & path
-        End If
-        
-        ext = Common.GetFileExtension(path)
-        If ext <> "vbp" And ext <> "vbproj" Then
-            Err.Raise 53, , "[SubParam] VBプロジェクトファイル名が未対応の拡張子です。" & vbCrLf & _
-                            "path=" & path
-        End If
-    Next i
-
+    'Do nothing
 End Sub
 
 '=========================================

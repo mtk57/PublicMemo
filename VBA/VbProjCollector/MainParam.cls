@@ -28,6 +28,9 @@ Private is_create_build_bat_s As String
 Private is_delete_path32_s As String
 Private merge_dir_path As String
 
+Private is_continue_s As String
+Private is_continue As Boolean
+
 Private Const CLM_ = "O"
 Private Const ROW_ = 6
 
@@ -50,6 +53,8 @@ Private Sub Class_Initialize()
     is_delete_path32_s = ""
     
     merge_dir_path = ""
+    
+    is_continue = True
 End Sub
 
 '初期化
@@ -68,6 +73,7 @@ Public Sub Init()
     is_delete_path32_s = main_sheet.Range(CLM_ & ROW_ + 10).value
     ignore_files = main_sheet.Range(CLM_ & ROW_ + 11).value
     merge_dir_path = main_sheet.Range(CLM_ & ROW_ + 12).value
+    is_continue_s = main_sheet.Range(CLM_ & ROW_ + 13).value
 End Sub
 
 '初期化(外部実行用)
@@ -104,6 +110,9 @@ Public Sub InitForExternal( _
     
     ignore_files = main_sheet.Range(CLM_ & ROW_ + 11).value
     merge_dir_path = main_sheet.Range(CLM_ & ROW_ + 12).value
+    
+    is_continue_s = "YES"
+    is_continue = True
 End Sub
 
 '検証
@@ -152,6 +161,11 @@ Public Sub Validate()
         is_delete_path32 = True
     End If
 
+    If is_continue_s = "" Or is_continue_s = "YES" Then
+        is_continue = True
+    Else
+        is_continue = False
+    End If
 End Sub
 
 '=========================================
@@ -222,6 +236,13 @@ Public Function GetMergeDirPath() As String
 End Function
 
 '-----------------------------------------
+'コピー元が存在しない場合は無視して続行する
+'-----------------------------------------
+Public Function IsContinue() As Boolean
+    IsContinue = is_continue
+End Function
+
+'-----------------------------------------
 '収集除外ファイル(vbproj)
 '-----------------------------------------
 Public Function GetIgnoreFiles() As String
@@ -241,7 +262,8 @@ Public Function GetAllValue() As String
           "is_create_build_bat=(" & is_create_build_bat_s & "), " & _
           "is_delete_path32=(" & is_delete_path32_s & "), " & _
           "ignore_files=(" & ignore_files & "), " & _
-          "merge_dir_path=(" & merge_dir_path & ")"
+          "merge_dir_path=(" & merge_dir_path & "), " & _
+          "is_continue=(" & is_continue_s & ")"
 
     GetAllValue = ret
 End Function

@@ -20,6 +20,8 @@ Private vbprj_files() As String
 Public Sub Run()
     Common.WriteLog "Run S"
     
+    Dim err_msg As String
+    
     SEP = Application.PathSeparator
     DQ = Chr(34)
     
@@ -40,6 +42,20 @@ Public Sub Run()
     'メインループ
     For i = LBound(vbprj_files) To UBound(vbprj_files)
         Dim vbproj_path As String: vbproj_path = vbprj_files(i)
+        
+        If Common.IsExistsFile(vbproj_path) = False Then
+            'VBプロジェクトファイルが見つからない
+            err_msg = "VBプロジェクトファイルが見つかりません。(" & vbproj_path & ")"
+            Common.WriteLog "[Run] ★Error!! (" & err_msg & ")"
+            
+            If main_param.IsContinue() = True Then
+                'エラーを無視する場合
+                GoTo CONTINUE_I
+            Else
+                Err.Raise 53, , err_msg
+            End If
+        End If
+    
         Common.WriteLog "i=" & i & ":[" & vbproj_path & "]"
     
         'VBプロジェクトファイルのパースを行い、コピーするファイルリストを作成する
@@ -61,6 +77,9 @@ Public Sub Run()
     
         'VBプロジェクトファイルをシート出力する
         OutputSheet vbproj_path
+        
+CONTINUE_I:
+        
     Next i
     
     'ビルドBATファイルを作成する
@@ -94,7 +113,7 @@ Private Sub CheckAndCollectParam()
     If main_param.GetVBPrjFileName() = "" And _
        sub_param.GetVBProjFilePathListCount() <= 0 Then
         err_msg = "VBプロジェクトファイルが指定されていません。"
-        Common.WriteLog "CheckAndCollectParam E3 (" & err_msg & ")"
+        Common.WriteLog "[CheckAndCollectParam] ★Error!! (" & err_msg & ")"
         Err.Raise 53, , err_msg
     End If
 
@@ -124,8 +143,8 @@ Private Sub SearchVBProjFile()
     vbprj_files = Common.DeleteEmptyArray(vbprj_files)
     
     If Common.IsEmptyArray(vbprj_files) = True Then
-        err_msg = "VBプロジェクトファイルが見つかりませんでした"
-        Common.WriteLog "SearchVBProjFile E1 (" & err_msg & ")"
+        err_msg = "VBプロジェクトファイルが1つも見つかりませんでした"
+        Common.WriteLog "[SearchVBProjFile] ★Error!! (" & err_msg & ")"
         Err.Raise 53, , err_msg
     End If
     
@@ -145,7 +164,7 @@ Private Sub DeleteDestFolder()
                 "処理を続けますか？" & vbCrLf & _
                 "（続けるとフォルダは削除されます!）" _
             ) = False Then
-                Err.Raise 53, , "コピー先フォルダが空では無いので処理をキャンセルしました。(" & dst_path & ")"
+                Err.Raise 53, , "[DeleteDestFolder] ★Error!! (コピー先フォルダが空では無いので処理をキャンセルしました。[" & dst_path & "])"
             End If
         End If
     End If
@@ -447,7 +466,7 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
     Dim base_path As String: base_path = Common.GetCommonString(filelist)
     
     If base_path = "" Then
-        Err.Raise 53, , "[CopyProjectFiles] base_pathが空です"
+        Err.Raise 53, , "[CopyProjectFiles] ★Error! (base_pathが空です)"
     End If
     
     Dim dst_base_path As String: dst_base_path = Replace(base_path, ":", "")
@@ -472,15 +491,12 @@ Private Sub CopyProjectFiles(ByVal in_dest_path As String, ByRef filelist() As S
             err_msg = "VBプロジェクトに記載されたファイルが存在しません" & vbCrLf & _
                       "VB Project path=" & vbprj_path & vbCrLf & _
                       "Not found=" & src
-            Common.WriteLog "[CopyProjectFiles] ★★エラー! err_msg=" & err_msg
+            Common.WriteLog "[CopyProjectFiles] ★Error!! (" & err_msg & ")"
             
-            If Common.ShowYesNoMessageBox( _
-                "[CopyProjectFiles]でエラーが発生しました。処理を続行しますか?" & vbCrLf & _
-                "err_msg=" & err_msg _
-                ) = False Then
-                Err.Raise 53, , "[CopyProjectFiles] エラー! (err_msg=" & err_msg & ")"
+            If main_param.IsContinue() = False Then
+                Err.Raise 53, , "[CopyProjectFiles] ★Error!! (" & err_msg & ")"
             End If
-            
+
             GoTo CONTINUE
         End If
         
