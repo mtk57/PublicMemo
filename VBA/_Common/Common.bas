@@ -1,7 +1,6 @@
-Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.3.8"
+Private Const VERSION = "1.3.9"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -691,8 +690,9 @@ End Function
 'ファイルをコピーする
 ' src_path : I : コピー元ファイルパス(絶対パス)
 ' dst_path : I : コピー先ファイルパス(絶対パス)
+' is_create_dir : I : コピー先にフォルダを作成してコピーする(デフォルト=false)
 '-------------------------------------------------------------
-Public Sub CopyFile(ByVal src_path As String, ByVal dst_path As String)
+Public Sub CopyFile(ByVal src_path As String, ByVal dst_path As String, Optional ByVal is_create_dir As Boolean = False)
     If IsExistsFile(src_path) = False Then
         Err.Raise 53, , "[CopyFile] 指定されたファイルが存在しません (src_path=" & src_path & ")"
     End If
@@ -704,6 +704,22 @@ Public Sub CopyFile(ByVal src_path As String, ByVal dst_path As String)
     If dst_path = "" Or src_path = dst_path Or IsExistsFile(dst_path) = True Then
         Exit Sub
     End If
+    
+    If is_create_dir = False Then
+        FileCopy src_path, dst_path
+        Exit Sub
+    End If
+    
+    Dim dst_dir_path As String
+    dst_dir_path = Common.GetFolderPath(dst_path)
+    
+    If Common.IsExistsFolder(dst_dir_path) = True Then
+        FileCopy src_path, dst_path
+        Exit Sub
+    End If
+    
+    'コピー先フォルダパスが存在しないので作成する
+    Common.CreateFolder (dst_dir_path)
     
     FileCopy src_path, dst_path
 End Sub
@@ -768,7 +784,7 @@ Public Function GetLastRowFromWorksheet( _
   ByVal ws As Worksheet, _
   ByVal clm As String _
 ) As Long
-    GetLastRowFromWorksheet = ws.Cells(ws.rows.count, clm).End(xlUp).row
+    GetLastRowFromWorksheet = ws.Cells(ws.Rows.count, clm).End(xlUp).row
 End Function
 
 '-------------------------------------------------------------
@@ -831,7 +847,7 @@ Public Function FindRowByKeywordFromWorksheet( _
     Dim cell As Range
     Dim found_row As Long
     
-    Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.rows.count, find_clm).End(xlUp).row)
+    Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
     
     found_row = 0
     For Each cell In rng
@@ -857,7 +873,7 @@ Public Function GetSheetContentsByStringArray(ByVal sheet_name As String) As Str
     
     Set ws = ActiveWorkbook.Worksheets(sheet_name)
 
-    row_cnt = ws.Cells(ws.rows.count, 1).End(xlUp).row
+    row_cnt = ws.Cells(ws.Rows.count, 1).End(xlUp).row
     clm_cnt = ws.Cells(1, ws.Columns.count).End(xlToLeft).Column
 
     ReDim arr(1 To row_cnt, 1 To clm_cnt)
@@ -2020,10 +2036,10 @@ Public Sub CreateSJISTextFile(ByRef contents() As String, ByVal path As String)
     Dim txt As Object
     Dim i As Long
     
-    Dim IS_OVERWRITE As Boolean: IS_OVERWRITE = True
+    Dim is_overwrite As Boolean: is_overwrite = True
     Dim IS_UNICODE As Boolean: IS_UNICODE = False
     
-    Set txt = fso.CreateTextFile(path, IS_OVERWRITE, IS_UNICODE)
+    Set txt = fso.CreateTextFile(path, is_overwrite, IS_UNICODE)
     
     For i = LBound(contents) To UBound(contents)
         txt.WriteLine contents(i)
@@ -2577,5 +2593,4 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = contents
 End Sub
-
 
