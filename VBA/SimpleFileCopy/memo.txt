@@ -1,0 +1,13 @@
+Simple File Copy																																
+ver.	1.0.0																															
+																																
+Main Param																																
+		①デバッグログを出力する												NO																		デフォルト=NO
+		②コピー先フォルダパス(絶対パス)												C:\_git\PublicMemo\VBA\SimpleFileCopy\testdata\dst																		末尾に"\"禁止。存在しない場合は作成する。
+		③フォルダもコピーする												YES																		デフォルト=YES
+		④コピー元が存在しない場合は無視して続行する												YES																		デフォルト=YES
+		⑤コピー先に同名ファイルがある場合は上書きする												YES																		デフォルト=YES
+Copy Success Count:12/12																																
+																																
+Sub Param						※空行が見つかるまで探索。																										
+12		コピー元ファイルパス(絶対パス)																														
