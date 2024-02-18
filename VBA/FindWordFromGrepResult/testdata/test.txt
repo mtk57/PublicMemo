@@ -1,0 +1,9 @@
+hoge fuga
+
+apple.Type = "hoge"
+apple.Color = "Red"
+
+banana.TypeMode = "fuga"
+banana.Color = "Yellow"
+
+xyz
