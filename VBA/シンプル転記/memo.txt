@@ -1,25 +1,27 @@
-シンプル転記				ver.0.4.2																																																	
+シンプル転記				ver.1.2.0																																																	
 													パスは全て絶対パスで指定すること																																								
 													関連するフォルダ・ファイルは他アプリで開いている場合は実行前に閉じておくこと。																																								
 													Sub paramはいくらでも追加してよい。																																								
 	Main Param					★=MUST							memo																																								
 			(1)デバッグログ出力			NO							(1)			※未指定の場合は「NO」とする。「YES」の場合は本ファイルと同じフォルダに出力する。																																					
-			(2)DST検索列が見つからない場合			無視							(2)			※未指定の場合は「中断」とする。																																					
-			(3)書式もコピーするか?			YES							(3)			※未指定の場合は「NO」とする。xls, xlsx, xlsm指定時のみ。																																					
-			(4)バックアップ作成			YES							(4)			※未指定の場合は「NO」とする。「YES」の場合はDSTファイルと同じフォルダに作成する。																																					
+			(2)DST検索列が見つからない場合			無視		※まだ未サポート					(2)			※未指定の場合は「中断」とする。																																					
+			(3)書式もコピーするか?			YES		※まだ未サポート					(3)			※未指定の場合は「NO」とする。xls, xlsx, xlsm指定時のみ。																																					
+			(4)バックアップ作成			YES		※まだ未サポート					(4)			※未指定の場合は「NO」とする。「YES」の場合はDSTファイルと同じフォルダに作成する。																																					
+			(5)転記後にファイルを閉じない			YES							(5)			※未指定の場合は「NO」とする。																																					
+			(6)転記元が空の場合は無視する			YES							(6)			※未指定の場合は「NO」とする。																																					
 																																																					
 	Sub Params																																																				
 																																																					
-			有効無効	転記元★				転記先					有効無効			※未指定の場合は「STOPPER」とする。																																					
+			有効無効	転記元★				転記先					有効無効  ※未指定の場合は「STOPPER」とする。																																								
 				①ファイルパス	②シート名	"③検索列
-※対象は黄色セルのみ"	④転記列	(a)ファイルパス★	(b)シート名	(c)検索列	(d)転記列		①(a)			※xls, xlsx, xlsm, csv, tsvのみ対応。										(b)	※未指定の場合は②と同じとする。								(c)	※未指定の場合は③と同じとする。								(d)	※未指定の場合は④と同じとする。								
-		1	ENABLE	C:\_git\PublicMemo\VBA\シンプル転記\testdata\src\src.xlsx	src	C	A	C:\_git\PublicMemo\VBA\シンプル転記\testdata\dst\dst.xlsx	dst	A	B																																										
-		2																																																			
-																																																					
-																																																					
-																																																					
-																																																					
-																																																					
-																																																					
-																																																					
+※対象は黄色セルのみ"	④転記列	(a)ファイルパス★	(b)シート名	(c)検索列	(d)転記列		①/(a) xls, xlsx, xlsmのみ対応。ファイル名のみの場合は開いているファイルを参照する。													(b) 未指定の場合は②と同じとする。									(c) 未指定の場合は③と同じとする。									(d) 未指定の場合は④と同じとする。									
+		1	DISABLE	C:\_git\PublicMemo\VBA\シンプル転記\testdata\src\src.xlsx	src	C	A	C:\_git\PublicMemo\VBA\シンプル転記\testdata\dst\dst.xlsx	dst	A	B																																										
+		2	DISABLE	src.xlsx	src	C	A	dst.xlsx	dst	A	B																																										
+		3	DISABLE	dst.xlsx	src2	B	D	dst.xlsx	dst2	A	C																																										
+		4	DISABLE	src.xlsx	src	C	A	src.xlsx	dst	A	B																																										
+		5	DISABLE	src.xlsx	src	E	F	src.xlsx	dst	D	E																																										
+		6	DISABLE	src.xlsx	src	E	G	src.xlsx	dst	D	F																																										
+		7	DISABLE	src.xlsx	src	E	H	src.xlsx	dst	D	G																																										
+		8																																																			
+		9																																																			
 																																																					

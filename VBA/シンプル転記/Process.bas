@@ -41,7 +41,7 @@ Private Sub CheckAndCollectParam()
     Common.WriteLog main_param.GetAllValue()
 
     'Sub Params
-    Const START_ROW = 16
+    Const START_ROW = 17
     Dim row As Long: row = START_ROW
     Dim cnt As Long: cnt = 0
     
@@ -194,6 +194,14 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
             GoTo CONTINUE_ROW
         End If
         
+        If main_param.IsSkipBlank() = True And copy_data.GetValue() = "" Then
+            '転記元が空の場合はスキップするフラグが真 かつ 転記元が空なので転記しない
+            'Common.WriteLog "Copy Value is empty!" & vbCrLf & _
+            '                "row=" & row & vbCrLf & _
+            '                "keyword=" & keyword
+            GoTo CONTINUE_ROW
+        End If
+        
         Dim find_row As Long: find_row = 1
         
         Do
@@ -216,7 +224,9 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
             
             '見つかったので転記
             Set trans_rng = ws.Range(sub_param.GetDstTranClm() & found_row)
-            trans_rng.value = copy_data.GetValue()
+            
+            Dim src_val As String: src_val = copy_data.GetValue()
+            trans_rng.value = src_val
             
             If last_row = found_row Then
                 '最終行なのでループを抜ける
@@ -225,7 +235,7 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
             
             '見つかった行の次行を再検索
             find_row = found_row + 1
-        
+                  
         Loop
         
 CONTINUE_ROW:

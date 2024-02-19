@@ -18,6 +18,8 @@ Private is_backup As Boolean
 Private is_backup_s As String
 Private is_not_close As Boolean
 Private is_not_close_s As String
+Private is_skip_blank As Boolean
+Private is_skip_blank_s As String
 
 'コンストラクタ
 Private Sub Class_Initialize()
@@ -25,6 +27,7 @@ Private Sub Class_Initialize()
     is_copy_format = False
     is_backup = False
     is_not_close = False
+    is_skip_blank = False
 End Sub
 
 '初期化
@@ -38,6 +41,7 @@ Public Sub Init()
     is_copy_format_s = main_sheet.Range(clm & i + 1).value
     is_backup_s = main_sheet.Range(clm & i + 2).value
     is_not_close_s = main_sheet.Range(clm & i + 3).value
+    is_skip_blank_s = main_sheet.Range(clm & i + 4).value
 End Sub
 
 '検証
@@ -68,6 +72,13 @@ Public Sub Validate()
        is_not_close = False
     Else
         is_not_close = True
+    End If
+
+    If is_skip_blank_s = "" Or _
+       is_skip_blank_s = "NO" Then
+       is_skip_blank = False
+    Else
+        is_skip_blank = True
     End If
 
 End Sub
@@ -104,6 +115,13 @@ Public Function IsNotClose() As Boolean
     IsNotClose = is_not_close
 End Function
 
+'-----------------------------------------
+'転記元が空の場合は無視する
+'-----------------------------------------
+Public Function IsSkipBlank() As Boolean
+    IsSkipBlank = is_skip_blank
+End Function
+
 
 Public Function GetAllValue() As String
     Dim ret As String
@@ -112,7 +130,8 @@ Public Function GetAllValue() As String
           "dst_not_found_action=(" & dst_not_found_action & "), " & _
           "is_copy_format=(" & is_copy_format_s & "), " & _
           "is_backup=(" & is_backup_s & "), " & _
-          "is_not_close=(" & is_not_close_s & ")"
+          "is_not_close=(" & is_not_close_s & "), " & _
+          "is_skip_blank=(" & is_skip_blank_s & ")"
 
     GetAllValue = ret
 End Function
