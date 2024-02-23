@@ -303,6 +303,13 @@ Write
 Xor											
 
 ---------------------------------------
+■DefObj A-Z
+データ型を指定しない変数では、デフォルトのデータ型を（Variant ではなく）Object に設定します。
+A-Z は、その範囲の文字で始まる名前の変数に適用されることを意味します。
+（この場合はすべての文字なので、すべての変数に適用されます）。
+
+
+---------------------------------------
 ■各言語の比較
 https://learn.microsoft.com/ja-jp/previous-versions/visualstudio/visual-studio-2012/zwkz3536(v=vs.110)?redirectedfrom=MSDN
 
