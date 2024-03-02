@@ -23,6 +23,7 @@ Public Const TARGET_PARAM_CLM_6a = "I"
 Public Const TARGET_PARAM_CLM_7 = "J"
 Public Const TARGET_PARAM_CLM_8 = "K"
 Public Const TARGET_PARAM_CLM_9 = "L"
+Public Const TARGET_PARAM_CLM_10 = "M"
 Public Const TARGET_PARAM_ROW = 24
 
 Public Enum PROCESS_TYPE
@@ -35,5 +36,6 @@ Public Enum PROCESS_TYPE
     PROC_006
     DELETE_BRANCH
     DELETE_TAG
+    RENAME_TAG
 End Enum
 

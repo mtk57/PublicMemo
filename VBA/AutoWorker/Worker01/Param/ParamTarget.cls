@@ -26,6 +26,8 @@ Private dest_base_dir As String
 Private branch As String
 Private commit As String
 Private tag As String
+Private any1 As String
+
 
 'コンストラクタ
 Private Sub Class_Initialize()
@@ -43,6 +45,7 @@ Private Sub Class_Initialize()
     branch = ""
     commit = ""
     tag = ""
+    any1 = ""
 End Sub
 
 '初期化
@@ -61,6 +64,7 @@ Public Sub Init(ByVal row As Integer)
     Dim C7 As String: C7 = Define.TARGET_PARAM_CLM_7
     Dim C8 As String: C8 = Define.TARGET_PARAM_CLM_8
     Dim C9 As String: C9 = Define.TARGET_PARAM_CLM_9
+    Dim C10 As String: C10 = Define.TARGET_PARAM_CLM_10
     
     is_enable_s = sheet.Range(C0 & row).value
     vbprj_file_path = sheet.Range(C1 & row).value
@@ -73,6 +77,7 @@ Public Sub Init(ByVal row As Integer)
     branch = sheet.Range(C7 & row).value
     commit = sheet.Range(C8 & row).value
     tag = sheet.Range(C9 & row).value
+    any1 = sheet.Range(C10 & row).value
 End Sub
 
 '検証
@@ -180,6 +185,13 @@ Public Sub Validate(ByVal row As Integer)
     If tag = "" Then
         Err.Raise 53, , HEADER & "tagが指定されていません(row=" & row & ")"
     End If
+    
+    If proc_type = PROCESS_TYPE.RENAME_TAG Then
+        '(10)
+        If any1 = "" Then
+            Err.Raise 53, , HEADER & "Any1が指定されていません(row=" & row & ")"
+        End If
+    End If
 End Sub
 
 '=========================================
@@ -234,6 +246,10 @@ Public Function GetTag() As String
     GetTag = tag
 End Function
 
+Public Function GetAny1() As String
+    GetAny1 = any1
+End Function
+
 Public Function GetAllValue() As String
     Dim ret As String
     
@@ -248,7 +264,8 @@ Public Function GetAllValue() As String
           "dest_base_dir=(" & dest_base_dir & "), " & _
           "branch=(" & branch & "), " & _
           "commit=(" & commit & "), " & _
-          "tag=(" & tag & ")"
+          "tag=(" & tag & "), " & _
+          "any1=(" & any1 & ")"
 
     GetAllValue = ret
 End Function

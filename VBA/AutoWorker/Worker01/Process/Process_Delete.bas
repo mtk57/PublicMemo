@@ -38,6 +38,8 @@ Public Sub Run(ByVal type_ As PROCESS_TYPE)
             DeleteBranch target
         ElseIf type_ = DELETE_TAG Then
             DeleteTag target
+        ElseIf type_ = RENAME_TAG Then
+            RenameTag target
         End If
         
     Next i
@@ -112,5 +114,40 @@ Private Sub DeleteTag(ByRef target As ParamTarget)
     End If
 
     Common.WriteLog "DeleteTag E"
+End Sub
+
+Private Sub RenameTag(ByRef target As ParamTarget)
+    Common.WriteLog "RenameTag S"
+    
+    Dim cmd As String
+    Dim git_result() As String
+    
+    If WorkerCommon.IsExistTag(prms, target.GetTag(), True) = True Then
+        'ローカルタグと同じコミットに別名のタグを設定する
+        cmd = "git tag -f " & target.GetAny1() & " " & target.GetTag()
+        git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+        Common.WriteLog "Local tag addded. (" & target.GetAny1() & ")"
+        
+        'ローカルタグを削除する
+        cmd = "git tag -d " & target.GetTag()
+        git_result = Common.RunGit(prms.GetGitDirPath(), cmd)
+        Common.WriteLog "Local tag deleted. (" & target.GetTag() & ")"
+    End If
+
+    If WorkerCommon.IsExistTag(prms, target.GetTag(), False) = True And _
+       prms.IsUpdateRemote() = True Then
+        'リモートタグを追加する
+        '      git push --tags "origin" refs/tags/TESTTAG1_OLD
+        cmd = "git push --tags origin refs/tags/" & target.GetAny1()
+        git_result = WorkerCommon.DoPush(prms, cmd)
+        Common.WriteLog "Remote tag addded. (" & target.GetAny1() & ")"
+        
+        'リモートタグを削除する
+        cmd = "git push origin :refs/tags/" & target.GetTag()
+        git_result = WorkerCommon.DoPush(prms, cmd)
+        Common.WriteLog "Remote tag deleted. (" & target.GetTag() & ")"
+    End If
+
+    Common.WriteLog "RenameTag E"
 End Sub
 

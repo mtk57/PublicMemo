@@ -9,6 +9,7 @@ Private Const RUN_005 = "RUN_005"
 Private Const RUN_006 = "RUN_006"
 Private Const DEL_BRANCH = "Delete Branch"
 Private Const DEL_TAG = "Delete Tag"
+Private Const RENAME_TAG = "Rename Tag"
 
 Public Sub Run001_Click()
 On Error GoTo ErrorHandler
@@ -138,6 +139,42 @@ On Error GoTo ErrorHandler
 
     Worksheets("params").Activate
     Process_Delete.Run PROCESS_TYPE.DELETE_TAG
+
+    Common.WriteLog "★End"
+    GoTo FINISH
+
+ErrorHandler:
+    msg = "エラーが発生しました(" & Err.Description & ")"
+
+FINISH:
+    Common.WriteLog msg
+    Common.CloseLog
+    Application.DisplayAlerts = True
+    VisibleProcessingMessage False
+    Worksheets("danger_zone").Activate
+    MsgBox msg
+End Sub
+
+Public Sub RenameTag_Click()
+On Error GoTo ErrorHandler
+    If Common.ShowYesNoMessageBox("[" & RENAME_TAG & "]を実行します") = False Then
+        Exit Sub
+    End If
+
+    VisibleProcessingMessage True
+    Application.DisplayAlerts = False
+    
+    Dim msg As String: msg = "正常に終了しました"
+
+    If IsEnableDebugLog() = True Then
+        Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "AutoRun_" & RENAME_TAG & ".log"
+    End If
+
+    Common.WriteLog "------------------------------------"
+    Common.WriteLog "★Start"
+
+    Worksheets("params").Activate
+    Process_Delete.Run PROCESS_TYPE.RENAME_TAG
 
     Common.WriteLog "★End"
     GoTo FINISH
