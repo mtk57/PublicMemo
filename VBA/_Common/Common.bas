@@ -1,6 +1,6 @@
 Option Explicit
 
-Private Const VERSION = "1.4.0"
+Private Const VERSION = "1.4.1"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -2399,11 +2399,12 @@ End Function
 '-------------------------------------------------------------
 'ファイル名から拡張子を返す
 ' filename : IN : ファイル名
+' isRaw    : IN : True=取得した拡張子をそのまま返す、False=小文字に変換して返す(デフォルト)
 ' Ret : ファイル名の拡張子
 '        Ex. "abc.txt"の場合、"txt"が返る
 '            "."が含まれていない場合は""が返る
 '-------------------------------------------------------------
-Public Function GetFileExtension(ByVal filename As String) As String
+Public Function GetFileExtension(ByVal filename As String, Optional ByVal isRaw As Boolean = False) As String
     Dim dot_pos As Integer
     
     ' "."の位置を取得
@@ -2411,7 +2412,11 @@ Public Function GetFileExtension(ByVal filename As String) As String
     
     ' 拡張子を取得
     If dot_pos > 0 Then
-        GetFileExtension = LCase(Right(filename, Len(filename) - dot_pos))
+        If isRaw = False Then
+            GetFileExtension = LCase(Right(filename, Len(filename) - dot_pos))
+        Else
+            GetFileExtension = Right(filename, Len(filename) - dot_pos)
+        End If
     Else
         GetFileExtension = ""
     End If
@@ -2693,6 +2698,8 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = contents
 End Sub
+
+
 
 
 
