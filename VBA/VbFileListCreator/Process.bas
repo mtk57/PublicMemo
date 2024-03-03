@@ -6,6 +6,7 @@ Private SEP As String
 Private DQ As String
 
 Const EXT_VBP = "*.vbp"
+Const EXT_VBPROJ = "*.vbproj"
 
 'パラメータ
 Public main_param As MainParam
@@ -85,10 +86,13 @@ Private Sub SearchVBProjFile()
     Dim path As String
     Dim i As Integer: i = 0
     
+    Dim target_ext As String
+    target_ext = "*." & main_param.GetTargetType()
+    
     'VBプロジェクトファイルを検索する
     vbprj_files = Common.CreateFileList( _
         main_param.GetSrcDirPath(), _
-        EXT_VBP, _
+        target_ext, _
         True)
 
     vbprj_files = Common.DeleteEmptyArray(vbprj_files)
@@ -125,7 +129,11 @@ Private Function ParseContents(ByVal vbproj_path As String) As RefFiles
     ReDim Preserve contents(cnt + 1)
     contents(cnt + 1) = vbproj_path
     
-    Set ParseContents = ParseVB6Project(contents)
+    If Common.GetFileExtension(vbproj_path) = "vbp" Then
+        Set ParseContents = ParseVB6Project(contents)
+    Else
+        Set ParseContents = ParseVBNETProject(contents)
+    End If
 
     Common.WriteLog "ParseContents E"
 End Function
@@ -241,6 +249,131 @@ CONTINUE:
     
     Set ParseVB6Project = ref_files
     Common.WriteLog "ParseVB6Project E"
+End Function
+
+'vbprojファイルのパースを行う
+'
+'vbprojファイルのパース対象と内容の例は以下の通り。
+'-----------------------------------------
+'<?xml version="1.0" encoding="utf-8"?>
+'<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+'  <ItemGroup>
+'    <Compile Include="..\cmn\cmn.vb" />
+'    <Compile Include="base.vb" />
+'    <Compile Include="sub\sub.vb" />
+'  </ItemGroup>
+'</Project>
+'-----------------------------------------
+'上記例の場合、以下の配列が返る (base_pathがC:\tmp\baseの場合)
+'[0] : "C:\tmp\base\base.vb"
+'[1] : "C:\tmp\cmn\cmn.vb"
+'[2] : "C:\tmp\base\sub\sub.vb"
+'[3] : "C:\tmp\base\test.vbproj"
+Private Function ParseVBNETProject(ByRef contents() As String) As RefFiles
+    Common.WriteLog "ParseVBNETProject S"
+
+    Dim ref_files As RefFiles
+    Set ref_files = New RefFiles
+
+    Dim i As Long
+    Dim j As Long
+    Dim cnt As Long
+    Dim filelist() As String
+    
+    Dim vbproj_path As String: vbproj_path = contents(UBound(contents))
+    Dim base_path As String: base_path = Common.GetFolderNameFromPath(vbproj_path)
+    
+    '除外ファイルリストを作成
+    Dim ignore_files() As String
+    ignore_files = Split(main_param.GetIgnoreFiles(), ",")
+
+    cnt = 0
+
+    For i = LBound(contents) To UBound(contents)
+        'Common.WriteLog "contents(" & i & ")=" & contents(i)
+    
+        If InStr(contents(i), "<Compile Include=") = 0 And _
+           InStr(contents(i), "<EmbeddedResource Include=") = 0 And _
+           InStr(contents(i), "<None Include=") = 0 And _
+           InStr(contents(i), "<HintPath>") = 0 And _
+           InStr(contents(i), "<ApplicationIcon>") = 0 Then
+            'ビルドに必要なファイルを含まないので無視
+            'Common.WriteLog "Skip contents(" & i & ")=" & contents(i)
+            GoTo CONTINUE
+        End If
+        
+        If Common.IsEmptyArray(ignore_files) = False Then
+            For j = LBound(ignore_files) To UBound(ignore_files)
+                If InStr(contents(i), ignore_files(j)) > 0 Then
+                    '除外ファイルを含むので無視
+                    GoTo CONTINUE
+                End If
+            Next j
+        End If
+        
+        If Common.StartsWith(Trim(Replace(Replace(contents(i), "<HintPath>", ""), "</HintPath>", "")), "packages") Then
+            'packagesは無視する
+            GoTo CONTINUE
+        End If
+        
+        ReDim Preserve filelist(cnt)
+        
+        Dim path As String
+        
+        If InStr(contents(i), "<Compile Include=") > 0 Then
+            path = Trim(Replace(Replace(contents(i), "<Compile Include=""", ""), """ />", ""))
+        ElseIf InStr(contents(i), "<EmbeddedResource Include=") > 0 Then
+            path = Trim(Replace(Replace(contents(i), "<EmbeddedResource Include=""", ""), """ />", ""))
+        ElseIf InStr(contents(i), "<None Include=") > 0 Then
+            path = Trim(Replace(Replace(contents(i), "<None Include=""", ""), """ />", ""))
+        ElseIf InStr(contents(i), "<HintPath>") > 0 Then
+            path = Trim(Replace(Replace(contents(i), "<HintPath>", ""), "</HintPath>", ""))
+        ElseIf InStr(contents(i), "<ApplicationIcon>") > 0 Then
+            path = Trim(Replace(Replace(contents(i), "<ApplicationIcon>", ""), "</ApplicationIcon>", ""))
+        End If
+        
+        If path = "" Then
+            GoTo CONTINUE
+        End If
+        
+        path = Replace(path, """>", "")
+        
+        '絶対パスに変換する
+        filelist(cnt) = Common.GetAbsolutePathName(base_path, path)
+        ref_files.AppendRefFilePath (filelist(cnt))
+        cnt = cnt + 1
+        
+        'ActiveReport 特殊処理
+        If InStr(contents(i), "<Compile Include=""reports\") > 0 Then
+            'rpxの存在チェックを行い、あれば追加する
+            Dim rpx_path As String: rpx_path = Replace(path, ".vb", ".rpx")
+            Dim rpx_find_path As String: rpx_find_path = base_path & SEP & rpx_path
+            If Common.IsExistsFile(rpx_find_path) = True Then
+                Common.WriteLog "rpx found.(" & rpx_find_path & ")"
+                
+                ReDim Preserve filelist(cnt)
+                filelist(cnt) = Common.GetAbsolutePathName(base_path, rpx_path)
+                cnt = cnt + 1
+            Else
+                Common.WriteLog "rpx not found.(" & rpx_find_path & ")"
+            End If
+        End If
+        
+CONTINUE:
+    Next i
+    
+    '最後にvbproj, slnファイルも追加する
+    Dim filelist_cnt As Integer: filelist_cnt = UBound(filelist)
+    ReDim Preserve filelist(filelist_cnt + 2)
+    filelist(filelist_cnt + 1) = vbproj_path
+    filelist(filelist_cnt + 2) = Replace(vbproj_path, ".vbproj", ".sln")
+    
+    ref_files.SetSrcDirPath (vbproj_path)
+    
+    'ParseVBNETProject = filelist
+    Set ParseVBNETProject = ref_files
+    
+    Common.WriteLog "ParseVBNETProject E"
 End Function
 
 Private Sub CreateSheet()
