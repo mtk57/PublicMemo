@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.3.9"
+Private Const VERSION = "1.4.1"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -42,6 +42,73 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+' A1形式の文字列から列番号を返す
+'  Ex. "A1" -> 1
+'      "ZZ12" -> 27
+' a1：A1形式の文字列
+' return：列番号
+'-------------------------------------------------------------
+Public Function GetColNumFromA1(ByVal a1 As String) As Long
+    Dim clm As String
+    Dim row As Long
+    Call SplitCellAddress(a1, clm, row)
+    
+    Dim substr As String
+    substr = clm
+    
+    Dim i As Integer
+    
+    For i = 1 To Len(clm)
+        If (i = 1) Then
+            GetColNumFromA1 = GetColNumFromA1 + A_to_ColNum(Right(substr, 1))
+        Else
+            GetColNumFromA1 = GetColNumFromA1 + (A_to_ColNum(Right(substr, 1)) * (i - 1) * 26)
+        End If
+        substr = Left(substr, Len(substr) - 1)
+    Next i
+End Function
+
+'-------------------------------------------------------------
+' A～Zを1～26に変換する
+' idx：I : A～Z
+' Ret：1～26
+'-------------------------------------------------------------
+Public Function A_to_ColNum(ByVal az As String) As Integer
+    A_to_ColNum = Asc(az) - 65 + 1
+End Function
+
+'-------------------------------------------------------------
+' A1形式のセルアドレスを列名と行番号に分離して返す
+' cell_adr : I : A1形式のセルアドレス
+' clm_name : O : 列名
+' row_num : O : 行番号
+' Ret : True=Success, False=Failed
+'-------------------------------------------------------------
+Public Function SplitCellAddress(ByVal cell_adr As String, ByRef clm_name As String, ByRef row_num As Long) As Boolean
+    Dim matches() As String
+    
+    matches = GetMatchByRegExp(cell_adr, "[A-Z]+", True)
+    
+    If Common.IsEmptyArray(matches) = True Then
+         SplitCellAddress = False
+         Exit Function
+    End If
+    
+    clm_name = matches(0)
+    
+    matches = GetMatchByRegExp(cell_adr, "[0-9]+", False)
+    
+    If Common.IsEmptyArray(matches) = True Then
+         SplitCellAddress = False
+         Exit Function
+    End If
+    
+    row_num = CLng(matches(0))
+    
+    SplitCellAddress = True
+End Function
 
 '-------------------------------------------------------------
 ' ファイルに文字列リストをUTF-8で書き込む
@@ -370,6 +437,37 @@ Public Function ChangeUniqueDirPath(ByVal path As String) As String
 End Function
 
 '-------------------------------------------------------------
+'正規表現でパターンマッチングした文字列を置換する
+' test_str : I : 対象文字列
+' ptn : I : 検索パターン
+' replace_str : I : 置換後文字列
+' is_ignore_case : I : 大文字小文字を区別するか(True=する)
+' Ret : 置換後の対象文字列
+' Note:
+'  - 参照設定に以下を追加する
+'    Microsoft VBScript Regular Expression 5.5
+'-------------------------------------------------------------
+Public Function ReplaceByRegExp( _
+    ByVal test_str As String, _
+    ByVal ptn As String, _
+    ByVal replace_str As String, _
+    ByVal is_ignore_case As Boolean _
+) As String
+    Dim reg As New VBScript_RegExp_55.RegExp
+    Dim mc As MatchCollection
+    Dim m As Match
+    Dim list() As String
+    ReDim list(0)
+    
+    reg.Global = True
+    reg.ignoreCase = is_ignore_case
+    reg.Pattern = ptn
+    
+    ReplaceByRegExp = reg.Replace(test_str, replace_str)
+
+End Function
+
+'-------------------------------------------------------------
 '正規表現でパターンマッチングした結果を返す
 ' test_str : I : 対象文字列
 ' ptn : I : 検索パターン
@@ -398,6 +496,8 @@ Public Function GetMatchByRegExp( _
     For Each m In mc
         Common.AppendArray list, m.value
     Next
+    
+    list = Common.DeleteEmptyArray(list)
     
     GetMatchByRegExp = list
 End Function
@@ -2300,11 +2400,12 @@ End Function
 '-------------------------------------------------------------
 'ファイル名から拡張子を返す
 ' filename : IN : ファイル名
+' isRaw    : IN : True=取得した拡張子をそのまま返す、False=小文字に変換して返す(デフォルト)
 ' Ret : ファイル名の拡張子
 '        Ex. "abc.txt"の場合、"txt"が返る
 '            "."が含まれていない場合は""が返る
 '-------------------------------------------------------------
-Public Function GetFileExtension(ByVal filename As String) As String
+Public Function GetFileExtension(ByVal filename As String, Optional ByVal isRaw As Boolean = False) As String
     Dim dot_pos As Integer
     
     ' "."の位置を取得
@@ -2312,7 +2413,11 @@ Public Function GetFileExtension(ByVal filename As String) As String
     
     ' 拡張子を取得
     If dot_pos > 0 Then
-        GetFileExtension = LCase(Right(filename, Len(filename) - dot_pos))
+        If isRaw = False Then
+            GetFileExtension = LCase(Right(filename, Len(filename) - dot_pos))
+        Else
+            GetFileExtension = Right(filename, Len(filename) - dot_pos)
+        End If
     Else
         GetFileExtension = ""
     End If
@@ -2594,6 +2699,8 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = contents
 End Sub
+
+
 
 
 

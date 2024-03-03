@@ -312,7 +312,7 @@ Private Function ParseVB6Project(ByRef contents() As String) As String()
         cnt = cnt + 1
         
         If Common.GetFileExtension(abs_path) = "frm" Then
-            Dim frx_path As String: frx_path = Replace(abs_path, ".frm", ".frx")
+            Dim frx_path As String: frx_path = Replace(abs_path, "." & Common.GetFileExtension(abs_path, True), ".frx")
             If Common.IsExistsFile(frx_path) = True Then
                 'frxはvbpに記載されていないのでfrm検知時に存在チェックを行い、存在すればリストに追加する
                  ReDim Preserve filelist(cnt)
@@ -320,7 +320,7 @@ Private Function ParseVB6Project(ByRef contents() As String) As String()
                  cnt = cnt + 1
             End If
         ElseIf Common.GetFileExtension(abs_path) = "ctl" Then
-            Dim ctx_path As String: ctx_path = Replace(abs_path, ".ctl", ".ctx")
+            Dim ctx_path As String: ctx_path = Replace(abs_path, "." & Common.GetFileExtension(abs_path, True), ".ctx")
             If Common.IsExistsFile(ctx_path) = True Then
                 'ctxはvbpに記載されていないのでctl検知時に存在チェックを行い、存在すればリストに追加する
                  ReDim Preserve filelist(cnt)
