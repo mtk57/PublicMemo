@@ -15,6 +15,9 @@
 ●VBのFunction/Subの定義(ただし引数は含まない)
 ^(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+.*\(
 
+-----------------------------------------
+●Grep結果に含まれる行桁を検索
+\(\d+,\d+\)
 
 =============================
 基本
