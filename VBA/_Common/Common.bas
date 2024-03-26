@@ -1,6 +1,7 @@
+Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.0"
+Private Const VERSION = "1.5.1"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -486,7 +487,7 @@ Public Function GetMethodInfoForVB( _
         End If
         
         'Functionの場合は戻り値までマージされているか確認する
-        If IsMatchByRegExp(merge_lines, "Function\s+[A-Za-z_][A-Za-z0-9_]*\(.*\)\s+As\s+[A-Za-z_][A-Za-z0-9_]*\(*\)*$", True) = True Then
+        If IsMatchByRegExp(merge_lines, "Function\s+[A-Za-z_][A-Za-z0-9_]*\(.*\)(\s+As\s+[A-Za-z_][A-Za-z0-9_]*\(*\)*)*$", True) = True Then
             Exit For
         End If
         
@@ -508,7 +509,13 @@ CONTINUE:
     '戻り値
     If methodType = "Function" Then
         wk = Mid(merge_lines, end_clm)
-        Ret.Ret = Replace(wk, ") As ", "")
+        
+        If wk = ")" Then
+            '戻り値がないFunction
+            Ret.Ret = ""
+        Else
+            Ret.Ret = Replace(wk, ") As ", "")
+        End If
     Else
         Ret.Ret = ""
     End If
