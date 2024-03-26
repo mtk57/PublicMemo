@@ -86,13 +86,8 @@ End Sub
 'シートに結果を出力する
 Private Sub OutputSheet()
     Common.WriteLog "OutputSheet S"
-    
-    'If Common.IsEmptyArray(results) = True Then
-    '    Common.WriteLog "OutputSheet E1"
-    '    Exit Sub
-    'End If
-    
-        'シートを追加
+        
+    'シートを追加
     Dim sheet_name As String: sheet_name = Common.GetNowTimeString()
     Common.AddSheet ActiveWorkbook, sheet_name
     
@@ -152,6 +147,8 @@ Private Sub OutputSheet()
     
     '結果オブジェクトリストでループ
     For i = 0 To UBound(results)
+        Common.WriteLog "i=" & i
+    
         result = results(i)
         
         ws.Cells(row + i, 1).value = result.ResultRaw
@@ -166,9 +163,17 @@ Private Sub OutputSheet()
         '引数リスト
         params = result.MethodInfo.params
         
+        If Common.IsEmptyArray(params) Then
+            Common.WriteLog "params is empty."
+            GoTo CONTINUE_I
+        End If
+        
         For j = 0 To UBound(params)
+            Common.WriteLog "j=" & j
             ws.Cells(row + i, 9 + j).value = params(j)
         Next j
+        
+CONTINUE_I:
         
     Next i
     

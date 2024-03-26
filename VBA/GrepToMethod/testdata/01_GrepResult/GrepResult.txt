@@ -1,19 +1,31 @@
 
-□検索条件  "CreateObject("ADODB.Stream")"
+□検索条件  "●"
 検索対象       *.bas
 フォルダー       C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc
 除外ファイル   
 除外フォルダー   
     (サブフォルダーも検索)
-    (英大文字小文字を区別しない)
+    (英大文字小文字を区別する)
+    (正規表現:bregonig.dll Ver.4.20 with Onigmo 6.2.0)
     (文字コードセットの自動判別)
     (一致した行を出力)
 
 
-C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(123,18)  [SJIS]:     Set stream = CreateObject("ADODB.Stream")
-C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(1330,10)  [SJIS]:     With CreateObject("ADODB.Stream")
-C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(1356,10)  [SJIS]:     With CreateObject("ADODB.Stream")
-C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(1408,15)  [SJIS]:     Set Ado = CreateObject("ADODB.Stream")
-C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(1478,10)  [SJIS]:     With CreateObject("ADODB.Stream")
-C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(2536,10)  [SJIS]:     With CreateObject("ADODB.Stream")
-6 個が検索されました。
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(3,1)  [SJIS]: ●関数定義より上
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(7,1)  [SJIS]: ●Function1 引数あり・戻り値あり
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(13,1)  [SJIS]: ●Function2 引数あり・戻り値なし
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(19,1)  [SJIS]: ●Function3 引数なし・戻り値なし
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(25,1)  [SJIS]: ●Function4 引数なし・戻り値あり
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(31,1)  [SJIS]: ●Function5 引数あり(複数・改行なし)・戻り値なし
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(38,1)  [SJIS]: ●Function6 引数あり(複数・改行あり)・戻り値なし
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(45,1)  [SJIS]: ●Function7 引数あり(複数・改行あり)・戻り値あり
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(53,1)  [SJIS]: ●Function8 引数あり(複数・改行あり)・戻り値あり2
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(61,1)  [SJIS]: ●Function9 引数あり(複数・改行あり)・戻り値あり3
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(69,1)  [SJIS]: ●Function10 引数あり(複数・改行あり)・戻り値あり10
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(75,1)  [SJIS]: ●Sub1 引数あり
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(81,1)  [SJIS]: ●Sub2 引数なし
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(87,1)  [SJIS]: ●Sub3 引数あり(複数・改行なし)
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(94,1)  [SJIS]: ●Sub4 引数あり(複数・改行あり)
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(101,1)  [SJIS]: ●Sub5 引数あり(複数・改行あり)2
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(105,1)  [SJIS]: ●関数定義より下
+17 個が検索されました。
