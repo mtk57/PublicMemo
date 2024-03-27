@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.2"
+Private Const VERSION = "1.5.3"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -1295,7 +1295,8 @@ FINISH:
     If IsUTF8(temp) = False Then
         std_out = Split(ReadTextFileBySJIS(temp), vbCrLf)
     Else
-        std_out = Split(ReadTextFileByUTF8(temp), vbLf)
+        'std_out = Split(ReadTextFileByUTF8(temp), vbLf)
+        std_out = Split(Replace(ReadTextFileByUTF8(temp), vbCrLf, vbLf), vbLf)
     End If
 
 FINISH_2:
