@@ -306,7 +306,8 @@ Private Function CreateSakuraArgs(ByRef prms As ParamContainer, ByVal wk_dir As 
     End If
     
     Dim args() As String
-    args = Split(prms.GetSakuraArgs(), vbLf)
+    'args = Split(prms.GetSakuraArgs(), vbLf)
+    args = Split(Replace(prms.GetSakuraArgs(), vbCrLf, ""), vbLf)
     
     Dim i As Long
     For i = 0 To UBound(args)
