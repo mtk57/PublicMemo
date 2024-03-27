@@ -1,0 +1,15 @@
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\module1.bas
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\cmn\module2.bas
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\sub\module3.bas
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\form1.frm
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\cmn\form2.frm
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\sub\form3.frm
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\class1.cls
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\cmn\class2.cls
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\sub\class3.cls
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\resfile321.RES
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\cmn\resfile322.RES
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\sub\resfile323.RES
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\usercontrol1.ctl
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\cmn\usercontrol2.ctl
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\testVB6.vbp	C:\_git\PublicMemo\VBA\GrepToMethod\testdata2_for_CallStack\00_GrepTarget\base\sub\usercontrol3.ctl

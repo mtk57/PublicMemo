@@ -13,7 +13,7 @@ Option Explicit
 Private grep_results() As String
 
 Private Const CLM_ = "B"
-Private Const START_ROW_ = 13
+Private Const START_ROW_ = 17
 
 'コンストラクタ
 Private Sub Class_Initialize()

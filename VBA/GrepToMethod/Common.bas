@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.1"
+Private Const VERSION = "1.5.2"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -228,7 +228,7 @@ Public Function GetContents(ByVal path As String) As String()
     If IsUTF8(path) = False Then
         GetContents = Split(ReadTextFileBySJIS(path), vbCrLf)
     Else
-        GetContents = Split(ReadTextFileByUTF8(path), vbLf)
+        GetContents = Split(Replace(ReadTextFileByUTF8(path), vbCrLf, vbLf), vbLf)
     End If
 
 End Function
