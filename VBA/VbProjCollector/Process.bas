@@ -39,6 +39,10 @@ Public Sub Run()
     Dim i As Integer
     Dim copy_files() As String
     
+    Dim success_cnt As Integer
+    Dim fail_cnt As Integer
+    Dim total_cnt As Integer: total_cnt = UBound(vbprj_files) + 1
+    
     'メインループ
     For i = LBound(vbprj_files) To UBound(vbprj_files)
         Dim vbproj_path As String: vbproj_path = vbprj_files(i)
@@ -50,6 +54,9 @@ Public Sub Run()
             
             If main_param.IsContinue() = True Then
                 'エラーを無視する場合
+                
+                fail_cnt = fail_cnt + 1
+                
                 GoTo CONTINUE_I
             Else
                 Err.Raise 53, , err_msg
@@ -78,12 +85,19 @@ Public Sub Run()
         'VBプロジェクトファイルをシート出力する
         OutputSheet vbproj_path
         
+        success_cnt = success_cnt + 1
+        
 CONTINUE_I:
         
     Next i
     
     'ビルドBATファイルを作成する
     CreateBuildBatFile vbprj_files
+
+    '結果を取得する
+    Dim main_sheet As Worksheet
+    Set main_sheet = ThisWorkbook.Sheets("main")
+    main_sheet.Range("J3").value = "成功=" & success_cnt & ",  失敗=" & fail_cnt & ",  総数=" & total_cnt
 
     Common.WriteLog "Run E"
 End Sub
@@ -193,17 +207,17 @@ Private Function ParseContents(ByVal vbproj_path As String) As String()
     Common.WriteLog "ParseContents S"
     
     'VBプロジェクトファイルの内容を読み込む
-    Dim contents() As String: contents = GetVBPrjContents(vbproj_path)
+    Dim Contents() As String: Contents = GetVBPrjContents(vbproj_path)
     
     '末尾にファイルパスを追加する
-    Dim cnt As Integer: cnt = UBound(contents)
-    ReDim Preserve contents(cnt + 1)
-    contents(cnt + 1) = vbproj_path
+    Dim cnt As Integer: cnt = UBound(Contents)
+    ReDim Preserve Contents(cnt + 1)
+    Contents(cnt + 1) = vbproj_path
     
     If Common.GetFileExtension(vbproj_path) = "vbp" Then
-        ParseContents = ParseVB6Project(contents)
+        ParseContents = ParseVB6Project(Contents)
     Else
-        ParseContents = ParseVBNETProject(contents)
+        ParseContents = ParseVBNETProject(Contents)
     End If
 
     Common.WriteLog "ParseContents E"
@@ -217,9 +231,9 @@ Private Function GetVBPrjContents(ByVal vbproj_path As String) As String()
     Dim raw_contents As String: raw_contents = Common.ReadTextFileBySJIS(vbproj_path)
     
     'ファイルの内容を配列に格納する
-    Dim contents() As String: contents = Split(raw_contents, vbCrLf)
+    Dim Contents() As String: Contents = Split(raw_contents, vbCrLf)
     
-    GetVBPrjContents = Common.DeleteEmptyArray(contents)
+    GetVBPrjContents = Common.DeleteEmptyArray(Contents)
     
     Common.WriteLog "GetVBPrjContents E"
 End Function
@@ -262,7 +276,7 @@ End Function
 '[13] :"C:\tmp\cmn\usercontrol2.ctl
 '[14] :"C:\tmp\base\sub\usercontrol3.ctl
 '[15] :"C:\tmp\base\test.vbp"
-Private Function ParseVB6Project(ByRef contents() As String) As String()
+Private Function ParseVB6Project(ByRef Contents() As String) As String()
     Common.WriteLog "ParseVB6Project S"
 
     Dim i, cnt As Integer
@@ -271,19 +285,19 @@ Private Function ParseVB6Project(ByRef contents() As String) As String()
     Dim key As String
     Dim value As String
     
-    Dim vbp_path As String: vbp_path = contents(UBound(contents))
+    Dim vbp_path As String: vbp_path = Contents(UBound(Contents))
     Dim base_path As String: base_path = Common.GetFolderNameFromPath(vbp_path)
 
     cnt = 0
 
-    For i = LBound(contents) To UBound(contents)
-        If InStr(contents(i), "=") = 0 Then
+    For i = LBound(Contents) To UBound(Contents)
+        If InStr(Contents(i), "=") = 0 Then
             '"="を含まないので無視
             GoTo CONTINUE
         End If
         
         'Key/Valueに分ける
-        datas = Split(contents(i), "=")
+        datas = Split(Contents(i), "=")
         
         'キーを取得
         key = datas(0)
@@ -359,7 +373,7 @@ End Function
 '[1] : "C:\tmp\cmn\cmn.vb"
 '[2] : "C:\tmp\base\sub\sub.vb"
 '[3] : "C:\tmp\base\test.vbproj"
-Private Function ParseVBNETProject(ByRef contents() As String) As String()
+Private Function ParseVBNETProject(ByRef Contents() As String) As String()
     Common.WriteLog "ParseVBNETProject S"
 
     Dim i As Long
@@ -367,7 +381,7 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
     Dim cnt As Long
     Dim filelist() As String
     
-    Dim vbproj_path As String: vbproj_path = contents(UBound(contents))
+    Dim vbproj_path As String: vbproj_path = Contents(UBound(Contents))
     Dim base_path As String: base_path = Common.GetFolderNameFromPath(vbproj_path)
     
     '除外ファイルリストを作成
@@ -376,14 +390,14 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
 
     cnt = 0
 
-    For i = LBound(contents) To UBound(contents)
+    For i = LBound(Contents) To UBound(Contents)
         'Common.WriteLog "contents(" & i & ")=" & contents(i)
     
-        If InStr(contents(i), "<Compile Include=") = 0 And _
-           InStr(contents(i), "<EmbeddedResource Include=") = 0 And _
-           InStr(contents(i), "<None Include=") = 0 And _
-           InStr(contents(i), "<HintPath>") = 0 And _
-           InStr(contents(i), "<ApplicationIcon>") = 0 Then
+        If InStr(Contents(i), "<Compile Include=") = 0 And _
+           InStr(Contents(i), "<EmbeddedResource Include=") = 0 And _
+           InStr(Contents(i), "<None Include=") = 0 And _
+           InStr(Contents(i), "<HintPath>") = 0 And _
+           InStr(Contents(i), "<ApplicationIcon>") = 0 Then
             'ビルドに必要なファイルを含まないので無視
             'Common.WriteLog "Skip contents(" & i & ")=" & contents(i)
             GoTo CONTINUE
@@ -391,14 +405,14 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
         
         If Common.IsEmptyArray(ignore_files) = False Then
             For j = LBound(ignore_files) To UBound(ignore_files)
-                If InStr(contents(i), ignore_files(j)) > 0 Then
+                If InStr(Contents(i), ignore_files(j)) > 0 Then
                     '除外ファイルを含むので無視
                     GoTo CONTINUE
                 End If
             Next j
         End If
         
-        If Common.StartsWith(Trim(Replace(Replace(contents(i), "<HintPath>", ""), "</HintPath>", "")), "packages") Then
+        If Common.StartsWith(Trim(Replace(Replace(Contents(i), "<HintPath>", ""), "</HintPath>", "")), "packages") Then
             'packagesは無視する
             GoTo CONTINUE
         End If
@@ -407,16 +421,16 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
         
         Dim path As String
         
-        If InStr(contents(i), "<Compile Include=") > 0 Then
-            path = Trim(Replace(Replace(contents(i), "<Compile Include=""", ""), """ />", ""))
-        ElseIf InStr(contents(i), "<EmbeddedResource Include=") > 0 Then
-            path = Trim(Replace(Replace(contents(i), "<EmbeddedResource Include=""", ""), """ />", ""))
-        ElseIf InStr(contents(i), "<None Include=") > 0 Then
-            path = Trim(Replace(Replace(contents(i), "<None Include=""", ""), """ />", ""))
-        ElseIf InStr(contents(i), "<HintPath>") > 0 Then
-            path = Trim(Replace(Replace(contents(i), "<HintPath>", ""), "</HintPath>", ""))
-        ElseIf InStr(contents(i), "<ApplicationIcon>") > 0 Then
-            path = Trim(Replace(Replace(contents(i), "<ApplicationIcon>", ""), "</ApplicationIcon>", ""))
+        If InStr(Contents(i), "<Compile Include=") > 0 Then
+            path = Trim(Replace(Replace(Contents(i), "<Compile Include=""", ""), """ />", ""))
+        ElseIf InStr(Contents(i), "<EmbeddedResource Include=") > 0 Then
+            path = Trim(Replace(Replace(Contents(i), "<EmbeddedResource Include=""", ""), """ />", ""))
+        ElseIf InStr(Contents(i), "<None Include=") > 0 Then
+            path = Trim(Replace(Replace(Contents(i), "<None Include=""", ""), """ />", ""))
+        ElseIf InStr(Contents(i), "<HintPath>") > 0 Then
+            path = Trim(Replace(Replace(Contents(i), "<HintPath>", ""), "</HintPath>", ""))
+        ElseIf InStr(Contents(i), "<ApplicationIcon>") > 0 Then
+            path = Trim(Replace(Replace(Contents(i), "<ApplicationIcon>", ""), "</ApplicationIcon>", ""))
         End If
         
         If path = "" Then
@@ -430,7 +444,7 @@ Private Function ParseVBNETProject(ByRef contents() As String) As String()
         cnt = cnt + 1
         
         'ActiveReport 特殊処理
-        If InStr(contents(i), "<Compile Include=""reports\") > 0 Then
+        If InStr(Contents(i), "<Compile Include=""reports\") > 0 Then
             'rpxの存在チェックを行い、あれば追加する
             Dim rpx_path As String: rpx_path = Replace(path, ".vb", ".rpx")
             Dim rpx_find_path As String: rpx_find_path = base_path & SEP & rpx_path
@@ -631,8 +645,8 @@ End Function
 Private Function GetProjectName(ByVal vbprj_file_path As String) As String
     Common.WriteLog "GetProjectName S"
     Dim vbprj_file_name As String: vbprj_file_name = Common.GetFileName(vbprj_file_path)
-    Dim ext As String: ext = Common.GetFileExtension(vbprj_file_name)
-    GetProjectName = Replace(vbprj_file_name, "." & ext, "")
+    Dim Ext As String: Ext = Common.GetFileExtension(vbprj_file_name)
+    GetProjectName = Replace(vbprj_file_name, "." & Ext, "")
     Common.WriteLog "GetProjectName E"
 End Function
 
@@ -711,7 +725,7 @@ Private Sub CreateCopyBatFile( _
     End If
     
     Dim i As Long
-    Dim contents() As String
+    Dim Contents() As String
     Dim contents_cnt As Long
     Dim base_path As String: base_path = Common.GetCommonString(copy_files)
     Dim dst_base_path As String: dst_base_path = Replace(base_path, ":", "")
@@ -721,23 +735,23 @@ Private Sub CreateCopyBatFile( _
     Const row_cnt = 3
     Const SECOND_ROW_CNT = 2
     
-    ReDim Preserve contents(FIRST_ROW_CNT)
+    ReDim Preserve Contents(FIRST_ROW_CNT)
     
     'コマンド作成開始
-    contents(0) = "@echo off"
-    contents(1) = "set SRC_DIR=" & Common.RemoveTrailingBackslash(base_path)
-    contents(2) = "set DST_DIR=" & dst_path
-    contents(3) = ""
-    contents(4) = "echo SRC_DIR=%SRC_DIR%"
-    contents(5) = "echo DST_DIR=%DST_DIR%"
-    contents(6) = ""
-    contents(7) = "REM 各ファイルをコピー"
+    Contents(0) = "@echo off"
+    Contents(1) = "set SRC_DIR=" & Common.RemoveTrailingBackslash(base_path)
+    Contents(2) = "set DST_DIR=" & dst_path
+    Contents(3) = ""
+    Contents(4) = "echo SRC_DIR=%SRC_DIR%"
+    Contents(5) = "echo DST_DIR=%DST_DIR%"
+    Contents(6) = ""
+    Contents(7) = "REM 各ファイルをコピー"
     
-    Dim OFFSET As Long: OFFSET = UBound(contents) + 1
+    Dim OFFSET As Long: OFFSET = UBound(Contents) + 1
 
     For i = LBound(copy_files) To UBound(copy_files)
-        contents_cnt = UBound(contents)
-        ReDim Preserve contents(contents_cnt + row_cnt)
+        contents_cnt = UBound(Contents)
+        ReDim Preserve Contents(contents_cnt + row_cnt)
     
         Dim file As String: file = copy_files(i)
         
@@ -745,18 +759,18 @@ Private Sub CreateCopyBatFile( _
         Dim dst_tmp As String: dst_tmp = "%DST_DIR%" & SEP & dst_base_path & Replace(file, base_path, "")
         Dim dst As String: dst = Common.GetFolderNameFromPath(dst_tmp)
         
-        contents(i * row_cnt + OFFSET) = "md " & DQ & dst & DQ
-        contents(i * row_cnt + OFFSET + 1) = "xcopy /Y /F " & DQ & src & DQ & " " & DQ & dst & DQ
-        contents(i * row_cnt + OFFSET + 2) = ""
+        Contents(i * row_cnt + OFFSET) = "md " & DQ & dst & DQ
+        Contents(i * row_cnt + OFFSET + 1) = "xcopy /Y /F " & DQ & src & DQ & " " & DQ & dst & DQ
+        Contents(i * row_cnt + OFFSET + 2) = ""
     Next i
     
-    contents_cnt = UBound(contents)
-    ReDim Preserve contents(contents_cnt + SECOND_ROW_CNT)
-    contents(contents_cnt + SECOND_ROW_CNT - 1) = ""
-    contents(contents_cnt + SECOND_ROW_CNT) = "pause"
+    contents_cnt = UBound(Contents)
+    ReDim Preserve Contents(contents_cnt + SECOND_ROW_CNT)
+    Contents(contents_cnt + SECOND_ROW_CNT - 1) = ""
+    Contents(contents_cnt + SECOND_ROW_CNT) = "pause"
     
     'ファイルに出力する
-    Common.CreateSJISTextFile contents, dst_path & SEP & bat_name
+    Common.CreateSJISTextFile Contents, dst_path & SEP & bat_name
     
     Common.WriteLog "CreateCopyBatFile E"
 End Sub
@@ -777,30 +791,30 @@ Private Sub CreateBuildBatFile(ByRef vbprj_files() As String)
     Const BUILDLOG = "build.log"
     
     Dim i As Long
-    Dim contents() As String
+    Dim Contents() As String
     Dim contents_cnt As Long
        
     Const FIRST_ROW_CNT = 11
     Const row_cnt = 5
     Const SECOND_ROW_CNT = 2
     
-    ReDim Preserve contents(FIRST_ROW_CNT)
+    ReDim Preserve Contents(FIRST_ROW_CNT)
     
     'コマンド作成開始
-    contents(0) = "@echo off"
-    contents(1) = "set VB6EXE=" & VB6EXE
-    contents(2) = "set MSBLDEXE=" & MSBLDEXE
-    contents(3) = "set BUILDLOG=" & BUILDLOG
-    contents(4) = ""
-    contents(5) = "echo VB6EXE=%VB6EXE%"
-    contents(6) = "echo MSBLDEXE=%MSBLDEXE%"
-    contents(7) = "echo BUILDLOG=%BUILDLOG%"
-    contents(8) = ""
-    contents(9) = "REM 各プロジェクトをビルド"
-    contents(10) = "echo Start Build > %BUILDLOG%"
-    contents(11) = ""
+    Contents(0) = "@echo off"
+    Contents(1) = "set VB6EXE=" & VB6EXE
+    Contents(2) = "set MSBLDEXE=" & MSBLDEXE
+    Contents(3) = "set BUILDLOG=" & BUILDLOG
+    Contents(4) = ""
+    Contents(5) = "echo VB6EXE=%VB6EXE%"
+    Contents(6) = "echo MSBLDEXE=%MSBLDEXE%"
+    Contents(7) = "echo BUILDLOG=%BUILDLOG%"
+    Contents(8) = ""
+    Contents(9) = "REM 各プロジェクトをビルド"
+    Contents(10) = "echo Start Build > %BUILDLOG%"
+    Contents(11) = ""
     
-    Dim OFFSET As Long: OFFSET = UBound(contents) + 1
+    Dim OFFSET As Long: OFFSET = UBound(Contents) + 1
 
     'VB6.exeの存在チェック
     'MSBuild.exeの存在チェック
@@ -811,46 +825,46 @@ Private Sub CreateBuildBatFile(ByRef vbprj_files() As String)
     'VBプロジェクトループ
     For i = LBound(vbprj_files) To UBound(vbprj_files)
         Dim path As String: path = vbprj_files(i)
-        Dim ext As String: ext = Common.GetFileExtension(path)
+        Dim Ext As String: Ext = Common.GetFileExtension(path)
         Dim renamed_dir As String: renamed_dir = main_param.GetMoveBaseDirName() & "_" & GetProjectName(path)
         Dim dst_path As String: dst_path = Replace(Common.GetStringByKeyword(path, main_param.GetMoveBaseDirName()), main_param.GetMoveBaseDirName() & SEP, renamed_dir & SEP)
         
         'D:\src_testVB6\base\testVB6.vbp
         Dim target_path As String: target_path = "D:\" & dst_path
         
-        contents_cnt = UBound(contents)
-        ReDim Preserve contents(contents_cnt + row_cnt)
+        contents_cnt = UBound(Contents)
+        ReDim Preserve Contents(contents_cnt + row_cnt)
         
-        If ext = "vbp" Then
+        If Ext = "vbp" Then
             
             'VB6でコンパイル
-            contents(i * row_cnt + OFFSET + 0) = "IF EXIST " & DQ & "%VB6EXE%" & DQ & " ("
-            contents(i * row_cnt + OFFSET + 1) = "  echo VB6 Build [" & target_path & "] >> %BUILDLOG%"
-            contents(i * row_cnt + OFFSET + 2) = "  " & DQ & "%VB6EXE%" & DQ & " /m " & DQ & target_path & DQ & " /out " & "%BUILDLOG%"
-            contents(i * row_cnt + OFFSET + 3) = ")"
-            contents(i * row_cnt + OFFSET + 4) = ""
+            Contents(i * row_cnt + OFFSET + 0) = "IF EXIST " & DQ & "%VB6EXE%" & DQ & " ("
+            Contents(i * row_cnt + OFFSET + 1) = "  echo VB6 Build [" & target_path & "] >> %BUILDLOG%"
+            Contents(i * row_cnt + OFFSET + 2) = "  " & DQ & "%VB6EXE%" & DQ & " /m " & DQ & target_path & DQ & " /out " & "%BUILDLOG%"
+            Contents(i * row_cnt + OFFSET + 3) = ")"
+            Contents(i * row_cnt + OFFSET + 4) = ""
         
-        ElseIf ext = "vbproj" Then
+        ElseIf Ext = "vbproj" Then
             
             'MSBuildでビルド
-            contents(i * row_cnt + OFFSET + 0) = "IF EXIST " & DQ & "%MSBLDEXE%" & DQ & " ("
-            contents(i * row_cnt + OFFSET + 1) = "  echo VB.NET Build [" & target_path & "] >> %BUILDLOG%"
-            contents(i * row_cnt + OFFSET + 2) = "  " & DQ & "%MSBLDEXE%" & DQ & " " & DQ & Replace(target_path, "D:\", "C:\") & DQ & " /t:clean;rebuild /p:Configuration=Release /fl"
-            contents(i * row_cnt + OFFSET + 3) = ")"
-            contents(i * row_cnt + OFFSET + 4) = ""
+            Contents(i * row_cnt + OFFSET + 0) = "IF EXIST " & DQ & "%MSBLDEXE%" & DQ & " ("
+            Contents(i * row_cnt + OFFSET + 1) = "  echo VB.NET Build [" & target_path & "] >> %BUILDLOG%"
+            Contents(i * row_cnt + OFFSET + 2) = "  " & DQ & "%MSBLDEXE%" & DQ & " " & DQ & Replace(target_path, "D:\", "C:\") & DQ & " /t:clean;rebuild /p:Configuration=Release /fl"
+            Contents(i * row_cnt + OFFSET + 3) = ")"
+            Contents(i * row_cnt + OFFSET + 4) = ""
         
         End If
         
     Next i
 
-    contents_cnt = UBound(contents)
-    ReDim Preserve contents(contents_cnt + SECOND_ROW_CNT)
-    contents(contents_cnt + SECOND_ROW_CNT - 1) = ""
-    contents(contents_cnt + SECOND_ROW_CNT) = "pause"
+    contents_cnt = UBound(Contents)
+    ReDim Preserve Contents(contents_cnt + SECOND_ROW_CNT)
+    Contents(contents_cnt + SECOND_ROW_CNT - 1) = ""
+    Contents(contents_cnt + SECOND_ROW_CNT) = "pause"
     
     'ファイルに出力する
     Dim bat_path As String: bat_path = main_param.GetDestDirPath() & SEP & "Build_" & Common.GetNowTimeString() & ".bat"
-    Common.CreateSJISTextFile contents, bat_path
+    Common.CreateSJISTextFile Contents, bat_path
     
     Common.WriteLog "CreateBuildBatFile E"
 End Sub
@@ -885,11 +899,11 @@ Private Sub OutputSheet(ByVal vbproj_path As String)
     Dim sheet_name As String: sheet_name = GetProjectName(vbproj_path)
     
     'VBプロジェクトファイルの内容を読み込む
-    Dim contents() As String: contents = GetVBPrjContents(vbproj_path)
+    Dim Contents() As String: Contents = GetVBPrjContents(vbproj_path)
     
-    Dim prj_path As String: prj_path = contents(UBound(contents))
+    Dim prj_path As String: prj_path = Contents(UBound(Contents))
     
-    Dim before_sheet_name As String: before_sheet_name = ActiveSheet.name
+    Dim before_sheet_name As String: before_sheet_name = ActiveSheet.Name
     
     Common.AddSheet ThisWorkbook, sheet_name
     

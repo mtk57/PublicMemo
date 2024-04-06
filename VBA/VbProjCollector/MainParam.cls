@@ -117,12 +117,12 @@ End Sub
 
 '検証
 Public Sub Validate()
-    Dim ext As String
+    Dim Ext As String
 
     If vbprj_file_name <> "" Then
-        ext = Common.GetFileExtension(vbprj_file_name)
+        Ext = Common.GetFileExtension(vbprj_file_name)
     
-        If ext <> "vbp" And ext <> "vbproj" Then
+        If Ext <> "vbp" And Ext <> "vbproj" Then
             Err.Raise 53, , "VBプロジェクトファイル名が未対応の拡張子です。(" & vbprj_file_name & ")"
         End If
     
@@ -250,9 +250,9 @@ Public Function GetIgnoreFiles() As String
 End Function
 
 Public Function GetAllValue() As String
-    Dim ret As String
+    Dim Ret As String
     
-    ret = "[Main Param] " & _
+    Ret = "[Main Param] " & _
           "vbprj_file_name=(" & vbprj_file_name & "), " & _
           "src_dir_path=(" & src_dir_path & "), " & _
           "dst_dir_path=(" & dst_dir_path & "), " & _
@@ -265,5 +265,5 @@ Public Function GetAllValue() As String
           "merge_dir_path=(" & merge_dir_path & "), " & _
           "is_continue=(" & is_continue_s & ")"
 
-    GetAllValue = ret
+    GetAllValue = Ret
 End Function

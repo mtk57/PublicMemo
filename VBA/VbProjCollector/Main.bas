@@ -23,7 +23,7 @@ On Error GoTo ErrorHandler
     Process.IS_EXTERNAL = True
     
     Dim msg As String: msg = "ê≥èÌÇ…èIóπÇµÇ‹ÇµÇΩ"
-    Dim ret As Boolean: ret = True
+    Dim Ret As Boolean: Ret = True
     
     If is_debug = True Then
         Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "VBPrjCollector.log"
@@ -42,13 +42,13 @@ On Error GoTo ErrorHandler
     
 ErrorHandler:
     msg = "ÉGÉâÅ[Ç™î≠ê∂ÇµÇ‹ÇµÇΩ!" & vbCrLf & "Reason=" & Err.Description
-    ret = False
+    Ret = False
 
 FINISH:
     Common.WriteLog msg
     Common.CloseLog
     Application.DisplayAlerts = True
-    Run = ret
+    Run = Ret
 End Function
 
 Public Sub Run_Click()
@@ -62,6 +62,7 @@ On Error GoTo ErrorHandler
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
     main_sheet.Range("A3").value = "èàóùíÜ..."
+    main_sheet.Range("J3").value = ""
     
     Process.IS_EXTERNAL = False
 
@@ -94,9 +95,9 @@ End Sub
 Private Function IsEnableDebugLog() As Boolean
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
-    Const clm = "O8"
+    Const Clm = "O8"
     
-    Dim is_debug_log_s As String: is_debug_log_s = main_sheet.Range(clm).value
+    Dim is_debug_log_s As String: is_debug_log_s = main_sheet.Range(Clm).value
     
     If is_debug_log_s = "" Or _
        is_debug_log_s = "NO" Then
