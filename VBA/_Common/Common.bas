@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.3"
+Private Const VERSION = "1.5.4"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -773,7 +773,7 @@ Public Function IsEmptyFolder(ByVal path As String) As Boolean
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set folder = fso.GetFolder(path)
     
-    IsEmptyFolder = folder.files.count = 0 And folder.SubFolders.count = 0
+    IsEmptyFolder = folder.Files.count = 0 And folder.SubFolders.count = 0
     
     Set fso = Nothing
     Set folder = Nothing
@@ -1468,25 +1468,79 @@ Public Function FindRowByKeywordFromArray(ByVal keyword As String, ByRef input_a
 End Function
 
 '-------------------------------------------------------------
+'ワークシートの指定列の全行を指定ワードで検索し、ヒットした行番号リストを返す
+' ws : I : ワークシート
+' find_clm : I : 指定列名(Ex."A")
+' find_start_row : I : 検索開始行(1始まり)
+' find_end_row : I : 検索終了行(0の場合は全行とする)
+' keyword : I : 検索ワード
+' Ret : ヒットした行番号リスト
+'-------------------------------------------------------------
+Public Function FindRowListByKeywordFromWorksheet( _
+  ByVal ws As Worksheet, _
+  ByVal find_clm As String, _
+  ByVal find_start_row As Long, _
+  ByVal find_end_row As Long, _
+  ByVal keyword As String _
+) As Long()
+    Dim rng As Range
+    Dim cell As Range
+    Dim cnt As Long
+    Dim found_rows() As Long
+    
+    If find_start_row > find_end_row Or find_end_row < 0 Then
+        find_end_row = 0
+    End If
+    
+    If find_end_row = 0 Then
+        Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
+    Else
+        Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(find_end_row, find_clm).End(xlUp).row)
+    End If
+
+    cnt = 0
+    
+    For Each cell In rng
+        If cell.value = keyword Then
+            ReDim Preserve found_rows(cnt)
+            found_rows(cnt) = cell.row
+            cnt = cnt + 1
+        End If
+    Next cell
+    
+    FindRowListByKeywordFromWorksheet = found_rows
+End Function
+
+'-------------------------------------------------------------
 'ワークシートの指定列の全行を指定ワードで検索し、ヒットした行番号を返す
 ' ws : I : ワークシート
 ' find_clm : I : 指定列名(Ex."A")
 ' find_start_row : I : 検索開始行(1始まり)
 ' keyword : I : 検索ワード
+' find_end_row : I : 検索終了行(任意。0の場合は全行とする)
 ' Ret : ヒットした行番号
 '-------------------------------------------------------------
 Public Function FindRowByKeywordFromWorksheet( _
   ByVal ws As Worksheet, _
   ByVal find_clm As String, _
   ByVal find_start_row As Long, _
-  ByVal keyword As String _
+  ByVal keyword As String, _
+  Optional ByVal find_end_row As Long = 0 _
 ) As Long
     Dim rng As Range
     Dim cell As Range
     Dim found_row As Long
     
-    Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
+    If find_start_row < find_end_row Or find_end_row < 0 Then
+        find_end_row = 0
+    End If
     
+    If find_end_row = 0 Then
+        Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
+    Else
+        Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(find_end_row, find_clm).End(xlUp).row)
+    End If
+
     found_row = 0
     For Each cell In rng
         If cell.value = keyword Then
@@ -1744,7 +1798,7 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     Set folder = fso.GetFolder(search_path)
     
     Dim file As Object
-    For Each file In folder.files
+    For Each file In folder.Files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like search_name Then
             '発見
             SearchFile = file.path
@@ -2125,7 +2179,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As Stri
         End If
     Next subfolder
     
-    For Each file In folder.files
+    For Each file In folder.Files
         If Right(file.Name, Len(Ext)) = Ext Then
             Set fso = Nothing
             Set folder = Nothing
@@ -2491,7 +2545,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     'コピー元のフォルダ内のファイルをコピーする
     Const OVERWRITE = True
     Dim file As Object
-    For Each file In fso.GetFolder(src_path).files
+    For Each file In fso.GetFolder(src_path).Files
         fso.CopyFile file.path, fso.BuildPath(dest_path, file.Name), OVERWRITE
     Next
     
@@ -2979,7 +3033,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Set folder = fso.GetFolder(target_folder)
     
     Dim fileobj As Object
-    For Each fileobj In folder.files
+    For Each fileobj In folder.Files
         If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
             '検索対象のファイルを読み込む
             Dim Contents As String: Contents = ReadTextFileBySJIS(fileobj.path)
@@ -3236,6 +3290,8 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
+
+
 
 
 
