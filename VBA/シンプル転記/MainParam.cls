@@ -20,6 +20,9 @@ Private is_not_close As Boolean
 Private is_not_close_s As String
 Private is_skip_blank As Boolean
 Private is_skip_blank_s As String
+Private is_multi_copy As Boolean
+Private is_multi_copy_s As String
+
 
 'コンストラクタ
 Private Sub Class_Initialize()
@@ -28,20 +31,22 @@ Private Sub Class_Initialize()
     is_backup = False
     is_not_close = False
     is_skip_blank = False
+    is_multi_copy = False
 End Sub
 
 '初期化
 Public Sub Init()
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
-    Const clm = "G"
+    Const Clm = "G"
     Const i = 7
     
-    dst_not_found_action = main_sheet.Range(clm & i).value
-    is_copy_format_s = main_sheet.Range(clm & i + 1).value
-    is_backup_s = main_sheet.Range(clm & i + 2).value
-    is_not_close_s = main_sheet.Range(clm & i + 3).value
-    is_skip_blank_s = main_sheet.Range(clm & i + 4).value
+    dst_not_found_action = main_sheet.Range(Clm & i).value
+    is_copy_format_s = main_sheet.Range(Clm & i + 1).value
+    is_backup_s = main_sheet.Range(Clm & i + 2).value
+    is_not_close_s = main_sheet.Range(Clm & i + 3).value
+    is_skip_blank_s = main_sheet.Range(Clm & i + 4).value
+    is_multi_copy_s = main_sheet.Range(Clm & i + 5).value
 End Sub
 
 '検証
@@ -79,6 +84,13 @@ Public Sub Validate()
        is_skip_blank = False
     Else
         is_skip_blank = True
+    End If
+    
+    If is_multi_copy_s = "" Or _
+       is_multi_copy_s = "NO" Then
+       is_multi_copy = False
+    Else
+        is_multi_copy = True
     End If
 
 End Sub
@@ -122,16 +134,21 @@ Public Function IsSkipBlank() As Boolean
     IsSkipBlank = is_skip_blank
 End Function
 
+Public Function IsMultiCopy() As Boolean
+    IsMultiCopy = is_multi_copy
+End Function
 
 Public Function GetAllValue() As String
-    Dim ret As String
+    Dim Ret As String
     
-    ret = "[Main Param] " & _
+    Ret = "[Main Param] " & _
           "dst_not_found_action=(" & dst_not_found_action & "), " & _
           "is_copy_format=(" & is_copy_format_s & "), " & _
           "is_backup=(" & is_backup_s & "), " & _
           "is_not_close=(" & is_not_close_s & "), " & _
-          "is_skip_blank=(" & is_skip_blank_s & ")"
+          "is_skip_blank=(" & is_skip_blank_s & "), " & _
+          "is_multi_copy=(" & is_multi_copy_s & ")"
 
-    GetAllValue = ret
+
+    GetAllValue = Ret
 End Function

@@ -12,17 +12,20 @@ Option Explicit
 'メンバー変数
 Private key As String
 Private value As String
+Private is_copied As Boolean
 
 'コンストラクタ
 Private Sub Class_Initialize()
     key = ""
     value = ""
+    is_copied = False
 End Sub
 
 '初期化
-Public Sub Init(ByVal in_key As String, ByVal in_value As String)
+Public Sub Init(ByVal in_key As String, ByVal in_value As String, Optional ByVal copied As Boolean = False)
     key = in_key
     value = in_value
+    is_copied = copied
 End Sub
 
 '=========================================
@@ -43,14 +46,19 @@ Public Function GetValue() As String
     GetValue = value
 End Function
 
+Public Function IsCopies() As Boolean
+    IsCopies = is_copied
+End Function
+
 
 Public Function GetAllValue() As String
-    Dim ret As String
+    Dim Ret As String
     
-    ret = "[Copy Data] " & _
+    Ret = "[Copy Data] " & _
           "key=(" & key & "), " & _
-          "value=(" & value & ")"
-    GetAllValue = ret
+          "value=(" & value & "), " & _
+          "is_copied=(" & is_copied & ")"
+    GetAllValue = Ret
 End Function
 
 

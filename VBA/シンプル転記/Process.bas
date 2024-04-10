@@ -41,7 +41,7 @@ Private Sub CheckAndCollectParam()
     Common.WriteLog main_param.GetAllValue()
 
     'Sub Params
-    Const START_ROW = 17
+    Const START_ROW = 18
     Dim row As Long: row = START_ROW
     Dim cnt As Long: cnt = 0
     
@@ -169,6 +169,15 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
     Dim found_row As Long
     Dim trans_rng As Range
     Dim copy_data As CopyData
+    Dim src_val As String
+    
+    Dim i As Long
+    
+    Dim copied_cnt As Long
+    Dim copied_data As CopyData
+    Dim copied_datas() As CopyData
+    Dim multicopy_start_row As Long
+    Dim multicopy_src_rows As Long
     
     'DSTファイルパスのDSTシート名を開く
     Const READ_ONLY_FLG = False
@@ -181,7 +190,11 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
              )
     book_name = Common.GetFileName(sub_param.GetDstFilePath())
     
-    Dim last_row As Long: last_row = Common.GetLastRowFromWorksheet(ws, sub_param.GetDstFindClm())
+    Dim last_row As Long: last_row = sub_param.GetDstFindMaxRow() + 1
+    If sub_param.GetDstFindMaxRow() = 0 Then
+        last_row = Common.GetLastRowFromWorksheet(ws, sub_param.GetDstFindClm())
+    End If
+    multicopy_start_row = last_row + 2
     
     'SRC検索列の値が、DST検索列にあるか検索する
     'あれば、SRC転記列の値をDST転記列に入れる
@@ -202,15 +215,46 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
             GoTo CONTINUE_ROW
         End If
         
+        
+        If main_param.IsMultiCopy() = True Then
+            If Common.IsEmptyArray(copied_datas) = False Then
+                'コピー済リストに存在するキーワードか?
+                Dim is_contain As Boolean: is_contain = False
+                
+                For i = 0 To UBound(copied_datas)
+                    If copied_datas(i).GetKey() = keyword Then
+                        is_contain = True
+                        Exit For
+                    End If
+                Next i
+                
+                If is_contain = True Then
+                    '既に転記済なので無視する
+                    GoTo CONTINUE_ROW
+                End If
+            End If
+            
+            'コピー元キーワードの数を数えておく
+            multicopy_src_rows = 0
+            For i = 0 To UBound(copy_datas)
+                If copy_datas(i).GetKey() = keyword Then
+                    multicopy_src_rows = multicopy_src_rows + 1
+                End If
+            Next i
+        End If
+        
+        
         Dim find_row As Long: find_row = 1
         
         Do
+
             '指定列の全行を指定ワードで検索し、ヒットした行番号を取得する
             found_row = Common.FindRowByKeywordFromWorksheet( _
                            ws, _
                            sub_param.GetDstFindClm(), _
                            find_row, _
-                           keyword _
+                           keyword, _
+                           last_row _
                         )
         
             If found_row = 0 Then
@@ -222,10 +266,38 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
                 Exit Do
             End If
             
+            
+            If main_param.IsMultiCopy() = True And multicopy_src_rows > 1 Then
+                '複数行コピーの場合、ここで一気にコピーする
+                
+                For i = 0 To UBound(copy_datas)
+                    If copy_datas(i).GetKey() = keyword Then
+                        Set trans_rng = ws.Range(sub_param.GetDstFindClm() & multicopy_start_row)
+                        trans_rng.value = keyword
+                    
+                        Set trans_rng = ws.Range(sub_param.GetDstTranClm() & multicopy_start_row)
+                        trans_rng.value = copy_datas(i).GetValue()
+
+                        multicopy_start_row = multicopy_start_row + 1
+                    End If
+                Next i
+                
+                'コピー済リストに登録
+                ReDim Preserve copied_datas(copied_cnt)
+                Set copied_data = New CopyData
+                copied_data.Init copy_data.GetKey(), copy_data.GetValue(), True
+                Set copied_datas(copied_cnt) = copied_data
+                copied_cnt = copied_cnt + 1
+
+                
+                GoTo CONTINUE_ROW
+            End If
+
+            
             '見つかったので転記
             Set trans_rng = ws.Range(sub_param.GetDstTranClm() & found_row)
             
-            Dim src_val As String: src_val = copy_data.GetValue()
+            src_val = copy_data.GetValue()
             trans_rng.value = src_val
             
             If last_row = found_row Then
@@ -249,6 +321,9 @@ CONTINUE_ROW:
     
     Common.WriteLog "Transcription E"
 End Sub
+
+
+'以下は未使用メソッド
 
 'コピー元の範囲をコピー先の範囲にコピー
 Private Sub CopyColumnToAnotherSheet( _
@@ -282,7 +357,7 @@ Private Sub CopyColumnToAnotherSheet( _
 End Sub
 
 Function GetYellowCellData( _
-  ByVal filePath As String, _
+  ByVal FilePath As String, _
   ByVal sheetName As String, _
   ByVal searchCol As String, _
   ByVal dataCol As String _
@@ -295,7 +370,7 @@ Function GetYellowCellData( _
     Dim result() As String
     Dim i As Long
 
-    Set wb = Workbooks.Open(filePath)
+    Set wb = Workbooks.Open(FilePath)
     Set ws = wb.Sheets(sheetName)
 
     Set searchRange = ws.Range(searchCol & "1:" & searchCol & ws.Cells(ws.Rows.count, searchCol).End(xlUp).row)

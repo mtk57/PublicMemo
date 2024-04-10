@@ -27,6 +27,7 @@ Private dst_sheet_name As String
 Private dst_find_clm As String
 Private dst_tran_clm As String
 Private dst_ext As String
+Private dst_find_max_row As String
 
 
 'コンストラクタ
@@ -45,6 +46,7 @@ Private Sub Class_Initialize()
     dst_find_clm = ""
     dst_tran_clm = ""
     dst_ext = ""
+    dst_find_max_row = ""
 End Sub
 
 '初期化
@@ -65,6 +67,7 @@ Public Sub Init(ByVal row_num As Long)
     dst_sheet_name = main_sheet.Range("J" & i).value
     dst_find_clm = main_sheet.Range("K" & i).value
     dst_tran_clm = main_sheet.Range("L" & i).value
+    dst_find_max_row = main_sheet.Range("M" & i).value
 End Sub
 
 '検証
@@ -152,6 +155,12 @@ Public Sub Validate()
         dst_tran_clm = src_tran_clm
     Else
         'TODO:列名の妥当性チェック
+    End If
+    
+    If dst_find_max_row = "" Then
+        dst_find_max_row = "0"
+    Else
+        'TODO:数値チェック、範囲チェック
     End If
 
 End Sub
@@ -265,11 +274,15 @@ Public Function GetDstExt() As String
     GetDstExt = dst_ext
 End Function
 
+Public Function GetDstFindMaxRow() As Long
+    GetDstFindMaxRow = CLng(dst_find_max_row)
+End Function
+
 
 Public Function GetAllValue() As String
-    Dim ret As String
+    Dim Ret As String
     
-    ret = "[Sub Param] " & _
+    Ret = "[Sub Param] " & _
           "is_enable=(" & is_enable & "), " & _
           "src_file_path=(" & src_file_path & "), " & _
           "src_sheet_name=(" & src_sheet_name & "), " & _
@@ -278,7 +291,8 @@ Public Function GetAllValue() As String
           "dst_file_path=(" & dst_file_path & "), " & _
           "dst_sheet_name=(" & dst_sheet_name & "), " & _
           "dst_find_clm=(" & dst_find_clm & "), " & _
-          "dst_tran_clm=(" & dst_tran_clm & ")"
-    GetAllValue = ret
+          "dst_tran_clm=(" & dst_tran_clm & "), " & _
+          "dst_find_max_row=(" & dst_find_max_row & ")"
+    GetAllValue = Ret
 End Function
 
