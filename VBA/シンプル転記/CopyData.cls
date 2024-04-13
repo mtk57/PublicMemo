@@ -52,13 +52,13 @@ End Function
 
 
 Public Function GetAllValue() As String
-    Dim Ret As String
+    Dim ret As String
     
-    Ret = "[Copy Data] " & _
+    ret = "[Copy Data] " & _
           "key=(" & key & "), " & _
           "value=(" & value & "), " & _
           "is_copied=(" & is_copied & ")"
-    GetAllValue = Ret
+    GetAllValue = ret
 End Function
 
 

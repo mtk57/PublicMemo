@@ -7,7 +7,7 @@ Private DQ As String
 
 'パラメータ
 Private main_param As MainParam
-Private sub_params() As SubParam
+Private sub_params() As subparam
 
 'メイン処理
 Public Sub Run()
@@ -41,13 +41,13 @@ Private Sub CheckAndCollectParam()
     Common.WriteLog main_param.GetAllValue()
 
     'Sub Params
-    Const START_ROW = 18
+    Const START_ROW = 17
     Dim row As Long: row = START_ROW
     Dim cnt As Long: cnt = 0
     
     Do
-        Dim sub_param As SubParam
-        Set sub_param = New SubParam
+        Dim sub_param As subparam
+        Set sub_param = New subparam
         
         Common.WriteLog "row=" & row
         sub_param.Init row
@@ -82,7 +82,7 @@ Private Sub ExecSubParam()
 
     Dim i As Integer
     Dim copy_datas() As CopyData
-    Dim sub_param As SubParam
+    Dim sub_param As subparam
     
     For i = LBound(sub_params) To UBound(sub_params)
         Set sub_param = sub_params(i)
@@ -98,7 +98,11 @@ Private Sub ExecSubParam()
         End If
             
         '転記元データを転記先に転記する
-        Transcription sub_param, copy_datas
+        If sub_param.IsDstMultiCopy() = False Then
+            Transcription sub_param, copy_datas
+        Else
+            TranscriptionForMultiCopy sub_param, copy_datas
+        End If
 
 CONTINUE_FOR:
 
@@ -108,7 +112,7 @@ CONTINUE_FOR:
 End Sub
 
 '転記元データを収集する
-Private Function CollectSrcDatas(ByRef sub_param As SubParam) As CopyData()
+Private Function CollectSrcDatas(ByRef sub_param As subparam) As CopyData()
     Common.WriteLog "CollectSrcDatas S"
 
     Dim ws As Worksheet
@@ -159,7 +163,7 @@ Private Function CollectSrcDatas(ByRef sub_param As SubParam) As CopyData()
 End Function
 
 '転記する
-Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As CopyData)
+Private Sub Transcription(ByRef sub_param As subparam, ByRef copy_datas() As CopyData)
     Common.WriteLog "Transcription S"
     
     Dim ws As Worksheet
@@ -169,32 +173,12 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
     Dim found_row As Long
     Dim trans_rng As Range
     Dim copy_data As CopyData
-    Dim src_val As String
-    
-    Dim i As Long
-    
-    Dim copied_cnt As Long
-    Dim copied_data As CopyData
-    Dim copied_datas() As CopyData
-    Dim multicopy_start_row As Long
-    Dim multicopy_src_rows As Long
     
     'DSTファイルパスのDSTシート名を開く
-    Const READ_ONLY_FLG = False
-    Const VISIBLE_FLG = True
-    Set ws = Common.GetSheet( _
-                sub_param.GetDstFilePath(), _
-                sub_param.GetDstSheetName(), _
-                READ_ONLY_FLG, _
-                VISIBLE_FLG _
-             )
+    Set ws = Common.GetSheet(sub_param.GetDstFilePath(), sub_param.GetDstSheetName(), False, True)
     book_name = Common.GetFileName(sub_param.GetDstFilePath())
     
-    Dim last_row As Long: last_row = sub_param.GetDstFindMaxRow() + 1
-    If sub_param.GetDstFindMaxRow() = 0 Then
-        last_row = Common.GetLastRowFromWorksheet(ws, sub_param.GetDstFindClm())
-    End If
-    multicopy_start_row = last_row + 2
+    Dim last_row As Long: last_row = Common.GetLastRowFromWorksheet(ws, sub_param.GetDstFindClm())
     
     'SRC検索列の値が、DST検索列にあるか検索する
     'あれば、SRC転記列の値をDST転記列に入れる
@@ -215,46 +199,15 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
             GoTo CONTINUE_ROW
         End If
         
-        
-        If main_param.IsMultiCopy() = True Then
-            If Common.IsEmptyArray(copied_datas) = False Then
-                'コピー済リストに存在するキーワードか?
-                Dim is_contain As Boolean: is_contain = False
-                
-                For i = 0 To UBound(copied_datas)
-                    If copied_datas(i).GetKey() = keyword Then
-                        is_contain = True
-                        Exit For
-                    End If
-                Next i
-                
-                If is_contain = True Then
-                    '既に転記済なので無視する
-                    GoTo CONTINUE_ROW
-                End If
-            End If
-            
-            'コピー元キーワードの数を数えておく
-            multicopy_src_rows = 0
-            For i = 0 To UBound(copy_datas)
-                If copy_datas(i).GetKey() = keyword Then
-                    multicopy_src_rows = multicopy_src_rows + 1
-                End If
-            Next i
-        End If
-        
-        
-        Dim find_row As Long: find_row = 1
+        Dim FIND_ROW As Long: FIND_ROW = 1
         
         Do
-
             '指定列の全行を指定ワードで検索し、ヒットした行番号を取得する
             found_row = Common.FindRowByKeywordFromWorksheet( _
                            ws, _
                            sub_param.GetDstFindClm(), _
-                           find_row, _
-                           keyword, _
-                           last_row _
+                           FIND_ROW, _
+                           keyword _
                         )
         
             If found_row = 0 Then
@@ -266,38 +219,10 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
                 Exit Do
             End If
             
-            
-            If main_param.IsMultiCopy() = True And multicopy_src_rows > 1 Then
-                '複数行コピーの場合、ここで一気にコピーする
-                
-                For i = 0 To UBound(copy_datas)
-                    If copy_datas(i).GetKey() = keyword Then
-                        Set trans_rng = ws.Range(sub_param.GetDstFindClm() & multicopy_start_row)
-                        trans_rng.value = keyword
-                    
-                        Set trans_rng = ws.Range(sub_param.GetDstTranClm() & multicopy_start_row)
-                        trans_rng.value = copy_datas(i).GetValue()
-
-                        multicopy_start_row = multicopy_start_row + 1
-                    End If
-                Next i
-                
-                'コピー済リストに登録
-                ReDim Preserve copied_datas(copied_cnt)
-                Set copied_data = New CopyData
-                copied_data.Init copy_data.GetKey(), copy_data.GetValue(), True
-                Set copied_datas(copied_cnt) = copied_data
-                copied_cnt = copied_cnt + 1
-
-                
-                GoTo CONTINUE_ROW
-            End If
-
-            
             '見つかったので転記
             Set trans_rng = ws.Range(sub_param.GetDstTranClm() & found_row)
             
-            src_val = copy_data.GetValue()
+            Dim src_val As String: src_val = copy_data.GetValue()
             trans_rng.value = src_val
             
             If last_row = found_row Then
@@ -306,7 +231,7 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
             End If
             
             '見つかった行の次行を再検索
-            find_row = found_row + 1
+            FIND_ROW = found_row + 1
                   
         Loop
         
@@ -322,72 +247,182 @@ CONTINUE_ROW:
     Common.WriteLog "Transcription E"
 End Sub
 
+'転記する(複数行コピー)
+Private Sub TranscriptionForMultiCopy(ByRef sub_param As subparam, ByRef copy_datas() As CopyData)
+    Common.WriteLog "TranscriptionForMultiCopy S"
+    
+    Dim ws As Worksheet
+    Dim book_name As String
+    
+    Dim i As Long
+    Dim j As Long
+    
+    Dim mgr As MultiCopyDataManager
+    Dim keyword_list() As String
+    Dim keyword As String
+    Dim find_start_row As Long
+    Dim find_end_row As Long
+    Dim found_row As Long
+    Dim keyword_rows_cnt As Long
+    Dim value_list() As String
+    Dim find_last_row_num As Long
+    
+    'DSTファイルパスのDSTシート名を開く
+    Set ws = Common.GetSheet(sub_param.GetDstFilePath(), sub_param.GetDstSheetName(), False, True)
+    book_name = Common.GetFileName(sub_param.GetDstFilePath())
+    
+    'キーワード検索範囲の最終行を取得する
+    find_end_row = Common.GetLastRowFromWorksheet(ws, sub_param.GetDstFindClm())
+    
+    '複数行マネージャを生成
+    Set mgr = New MultiCopyDataManager
+    mgr.Init sub_param, copy_datas
+    
+    'キーワードリストを取得
+    keyword_list = mgr.GetKeywordList()
+    
+    'コピー元キーワード数分ループ
+    For i = 0 To UBound(keyword_list)
+        keyword = keyword_list(i)
+        
+        If keyword = "" Then
+            'コピー元キーワードが空なので無視
+            GoTo CONTINUE_I
+        End If
+        
+        find_start_row = 1
 
-'以下は未使用メソッド
+FIND_ROW:
+        'キーワードを検索し､ヒットした行番号を取得する
+        found_row = Common.FindRowByKeywordFromWorksheet( _
+                       ws, sub_param.GetDstFindClm(), _
+                       find_start_row, keyword, find_end_row _
+                    )
+    
+        If found_row = 0 Then
+            '見つからないので無視
+            GoTo CONTINUE_I
+        End If
 
-'コピー元の範囲をコピー先の範囲にコピー
-Private Sub CopyColumnToAnotherSheet( _
-  ByVal src_sheet_name As String, _
-  ByVal src_clm As String, _
-  ByVal src_start_row As Long, _
-  ByVal dst_sheet_name As String, _
-  ByVal dst_clm As String, _
-  ByVal dst_start_row As Long _
-  )
-    Common.WriteLog "CopyColumnToAnotherSheet S"
+        'キーワードが見つかった
+        
+        keyword_rows_cnt = mgr.GetKeywordCount(keyword)
+        value_list = mgr.GetValues(keyword)
+        
+        If keyword_rows_cnt = 1 Then
+            'コピー元キーワードが1つの場合
+        
+            '転記する(1行のみ)
+            UpdateCellValue ws, sub_param.GetDstTranClm(), found_row, value_list(0)
+            
+            find_start_row = found_row + 1
+        Else
+            'コピー元キーワードが複数行の場合
+            
+            If IsInsertedRowBeforeSubParam(sub_param) = False Then
+                'コピー元行数分、現在行の下に行を挿入する
+                Common.InsertRows ws, found_row, keyword_rows_cnt - 1
+                
+                '挿入済のフラグを立てる
+                mgr.SetIsInserted (True)
+            End If
+            
+            '転記する(複数行)
+            UpdateMultiCellValues ws, sub_param, keyword, found_row, value_list
+            
+            '挿入した行数分、検索範囲を更新する
+            find_start_row = found_row + keyword_rows_cnt
+            find_end_row = find_end_row + keyword_rows_cnt - 1
+
+        End If
+        
+        find_last_row_num = Common.GetLastRowFromWorksheet(ws, sub_param.GetDstFindClm())
+        
+        If find_last_row_num < find_start_row Then
+            '最終行に達した
+            GoTo CONTINUE_I
+        End If
+        
+        GoTo FIND_ROW
+        
+CONTINUE_I:
+        
+    Next i
     
-    Dim src_sheet As Worksheet
-    Dim dst_sheet As Worksheet
-    Dim last_row As Long
-    Dim src_range As Range
-    Dim dst_range As Range
+    If main_param.IsNotClose() = False Then
+        'DSTファイルを保存して閉じる
+        Common.SaveAndCloseBook (book_name)
+    End If
     
-    Set src_sheet = ActiveWorkbook.Worksheets(src_sheet_name)
-    Set dst_sheet = ActiveWorkbook.Worksheets(dst_sheet_name)
-    
-    last_row = src_sheet.Cells(Rows.count, src_clm).End(xlUp).row
-    
-    Set src_range = src_sheet.Range(src_clm & src_start_row & ":" & src_clm & last_row)
-    Set dst_range = dst_sheet.Range(dst_clm & dst_start_row & ":" & dst_clm & last_row)
-    
-    'コピー元の範囲をコピー先の範囲にコピー
-    src_range.Copy dst_range
-    
-    Common.WriteLog "CopyColumnToAnotherSheet E"
+    Common.WriteLog "TranscriptionForMultiCopy E"
 End Sub
 
-Function GetYellowCellData( _
-  ByVal FilePath As String, _
-  ByVal sheetName As String, _
-  ByVal searchCol As String, _
-  ByVal dataCol As String _
-  ) As Variant
-    Dim wb As Workbook
-    Dim ws As Worksheet
-    Dim searchRange As Range
-    Dim dataRange As Range
-    Dim cell As Range
-    Dim result() As String
+'転記先のセルを更新する
+Private Sub UpdateCellValue(ByRef ws As Worksheet, ByVal clm_name As String, ByVal found_row As Long, ByRef value As String)
+    Common.WriteLog "UpdateCellValue S"
+
+    Dim rng As Range
+    
+    If main_param.IsSkipBlank() = True And value = "" Then
+        '転記元が空の場合はスキップするフラグが真 かつ 転記元が空なので転記しない
+        Common.WriteLog "UpdateCellValue E-1"
+        Exit Sub
+    End If
+    
+    Set rng = ws.Range(clm_name & found_row)
+    rng.value = value
+    
+    Set rng = Nothing
+    Common.WriteLog "UpdateCellValue E"
+End Sub
+
+'転記先のセルを更新する(複数行)
+Private Sub UpdateMultiCellValues(ByRef ws As Worksheet, ByRef sub_param As subparam, ByVal keyword As String, ByVal found_row As Long, ByRef value_list() As String)
+    Common.WriteLog "UpdateMultiCellValues S"
+
+    If Common.IsEmptyArray(value_list) = True Then
+        Common.WriteLog "UpdateMultiCellValues E-1"
+        Exit Sub
+    End If
+    
     Dim i As Long
+    For i = 0 To UBound(value_list)
+        '転記する(1行のみ)
+        
+        'キーワード
+        UpdateCellValue ws, sub_param.GetDstFindClm(), found_row + i, keyword
+        
+        '転記元の値
+        UpdateCellValue ws, sub_param.GetDstTranClm(), found_row + i, value_list(i)
+    Next i
+    
+    Common.WriteLog "UpdateMultiCellValues E"
+End Sub
 
-    Set wb = Workbooks.Open(FilePath)
-    Set ws = wb.Sheets(sheetName)
+'同じシートを対象としたSubParamにおいて既に複数行転記で行を挿入済か?
+Private Function IsInsertedRowBeforeSubParam(ByRef sub_param As subparam) As Boolean
+    Common.WriteLog "IsInsertedRowBeforeSubParam S"
 
-    Set searchRange = ws.Range(searchCol & "1:" & searchCol & ws.Cells(ws.Rows.count, searchCol).End(xlUp).row)
-    Set dataRange = ws.Range(dataCol & "1:" & dataCol & ws.Cells(ws.Rows.count, dataCol).End(xlUp).row)
+    Dim i As Long
+    Dim before_sub_param As subparam
+    Dim ret As Boolean: ret = False
 
-    ReDim result(0 To searchRange.Cells.count - 1, 0 To 1)
-
-    i = 0
-    For Each cell In searchRange
-        If cell.Interior.Color = RGB(255, 255, 0) Then
-            result(i, 0) = cell.value
-            result(i, 1) = dataRange.Cells(cell.row, 1).value
-            i = i + 1
+    For i = 0 To UBound(sub_params)
+        Set before_sub_param = sub_params(i)
+        
+        If before_sub_param.GetDstFilePath() = sub_param.GetDstFilePath() And _
+           before_sub_param.GetDstSheetName() = sub_param.GetDstSheetName() And _
+           before_sub_param.GetDstFindClm() = sub_param.GetDstFindClm() And _
+           before_sub_param.GetDstTranClm() <> sub_param.GetDstTranClm() And _
+           before_sub_param.IsDstMultiCopy() = True And _
+           before_sub_param.IsDstRowInserted() = True Then
+           ret = True
+           Exit For
         End If
-    Next cell
 
-    wb.Close SaveChanges:=False
+    Next i
 
-    GetYellowCellData = result
+    IsInsertedRowBeforeSubParam = ret
+    Common.WriteLog "IsInsertedRowBeforeSubParam E"
 End Function
+
