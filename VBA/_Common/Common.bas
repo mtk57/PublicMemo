@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.5"
+Private Const VERSION = "1.5.6"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -73,7 +73,52 @@ Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
 
+'-------------------------------------------------------------
+' 配列の指定位置に指定サイズの空行を挿入する
+'  例:["A", "B", "C"]という配列の場合、以下のようになる
+'    pos=2, size=2:["A", "B", "", "", "C"]
+'    pos=0, size=1:["", "A", "B", "C"]
+' ary : I : String配列
+' pos : I : 挿入位置(0=先頭)
+' size : I : 挿入行数
+' RET : 挿入後のString配列
+'-------------------------------------------------------------
+Public Function InsertEmptyRows(ByRef ary() As String, ByVal pos As Long, ByVal size As Long) As String()
+    '引数チェック
+    If Common.IsEmptyArray(ary) = True Then
+        InsertEmptyRows = ary
+        Exit Function
+    End If
+    
+    If UBound(ary) < pos Then
+        Err.Raise 53, , "[InsertEmptyRows] posが配列サイズを超えています! (pos=" & pos & ")"
+    End If
+    
+    If pos < 0 Then
+        pos = 0
+    End If
+    
+    If size < 1 Then
+        InsertEmptyRows = ary
+        Exit Function
+    End If
 
+    Dim i As Long
+    Dim ret() As String
+    ReDim ret(LBound(ary) To UBound(ary) + size)
+    
+    For i = LBound(ret) To UBound(ret)
+        If i < pos Then
+            ret(i) = ary(i)
+        ElseIf i >= pos And i < pos + size Then
+            ret(i) = ""
+        Else
+            ret(i) = ary(i - size)
+        End If
+    Next i
+    
+    InsertEmptyRows = ret
+End Function
 
 '-------------------------------------------------------------
 ' 指定した行の次の行から指定した行数分だけ行を追加する
@@ -1552,7 +1597,9 @@ Public Function FindRowByKeywordFromWorksheet( _
     
     If find_end_row = 0 Then
         Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
+        'Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlDown).row)
     Else
+        'Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(find_end_row, find_clm).End(xlUp).row)
         Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(find_end_row, find_clm).End(xlDown).row)
     End If
 
