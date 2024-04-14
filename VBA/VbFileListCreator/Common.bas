@@ -1,12 +1,12 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.3"
+Private Const VERSION = "1.5.6"
 
 Public Type MethodInfoStruct
     Raw As String
     Name As String
-    Ret As String
+    ret As String
     params() As String
 End Type
 
@@ -73,11 +73,71 @@ Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
 
-Enum Fruit
-    Apple
-    Banana
-    Orange
-End Enum
+'-------------------------------------------------------------
+' 配列の指定位置に指定サイズの空行を挿入する
+'  例:["A", "B", "C"]という配列の場合、以下のようになる
+'    pos=2, size=2:["A", "B", "", "", "C"]
+'    pos=0, size=1:["", "A", "B", "C"]
+' ary : I : String配列
+' pos : I : 挿入位置(0=先頭)
+' size : I : 挿入行数
+' RET : 挿入後のString配列
+'-------------------------------------------------------------
+Public Function InsertEmptyRows(ByRef ary() As String, ByVal pos As Long, ByVal size As Long) As String()
+    '引数チェック
+    If Common.IsEmptyArray(ary) = True Then
+        InsertEmptyRows = ary
+        Exit Function
+    End If
+    
+    If UBound(ary) < pos Then
+        Err.Raise 53, , "[InsertEmptyRows] posが配列サイズを超えています! (pos=" & pos & ")"
+    End If
+    
+    If pos < 0 Then
+        pos = 0
+    End If
+    
+    If size < 1 Then
+        InsertEmptyRows = ary
+        Exit Function
+    End If
+
+    Dim i As Long
+    Dim ret() As String
+    ReDim ret(LBound(ary) To UBound(ary) + size)
+    
+    For i = LBound(ret) To UBound(ret)
+        If i < pos Then
+            ret(i) = ary(i)
+        ElseIf i >= pos And i < pos + size Then
+            ret(i) = ""
+        Else
+            ret(i) = ary(i - size)
+        End If
+    Next i
+    
+    InsertEmptyRows = ret
+End Function
+
+'-------------------------------------------------------------
+' 指定した行の次の行から指定した行数分だけ行を追加する
+' ws : I : ワークシート
+' startRowNum : I : 指定行 (1～)
+' insertRowCnt : I : 追加行数 (1～)
+'-------------------------------------------------------------
+Public Sub InsertRows(ByRef ws As Worksheet, ByVal startRowNum As Long, ByVal insertRowCnt As Long)
+    '引数チェック
+    If startRowNum < 1 Then
+        startRowNum = 1
+    End If
+    
+    If insertRowCnt < 1 Then
+        Exit Sub
+    End If
+    
+    ws.Rows(startRowNum + 1 & ":" & startRowNum + insertRowCnt).Insert shift:=xlDown
+End Sub
 
 '-------------------------------------------------------------
 ' Grep結果を解析してメソッド情報を返す
@@ -94,26 +154,26 @@ Public Function GetMethodInfoFromGrepResult( _
     Optional ByVal lang As LangEnum = LangEnum.VB6 _
 ) As GrepResultInfoStruct()
 
-    Dim Ret() As GrepResultInfoStruct
+    Dim ret() As GrepResultInfoStruct
 
     '引数チェック
     If Common.IsEmptyArray(grepResults) = True Then
-         GetMethodInfoFromGrepResult = Ret
+         GetMethodInfoFromGrepResult = ret
          Exit Function
     End If
     
     If grepApp <> GrepAppEnum.sakura Then
-        GetMethodInfoFromGrepResult = Ret
+        GetMethodInfoFromGrepResult = ret
         Exit Function
     End If
 
     If lang <> LangEnum.VB6 Then
-        GetMethodInfoFromGrepResult = Ret
+        GetMethodInfoFromGrepResult = ret
         Exit Function
     End If
     
 
-    ReDim Preserve Ret(UBound(grepResults))
+    ReDim Preserve ret(UBound(grepResults))
 
     Dim i As Long
     Dim raw_contents() As String
@@ -151,12 +211,12 @@ Public Function GetMethodInfoFromGrepResult( _
         
 CONTINUE_A:
 
-        Ret(i) = cur_info
+        ret(i) = cur_info
         
     Next i
     
     
-    GetMethodInfoFromGrepResult = Ret
+    GetMethodInfoFromGrepResult = ret
 
 End Function
 
@@ -175,21 +235,21 @@ Public Function GetGrepInfo( _
     Optional ByVal lang As LangEnum = LangEnum.VB6 _
 ) As GrepResultInfoStruct
 
-    Dim Ret As GrepResultInfoStruct
+    Dim ret As GrepResultInfoStruct
 
     '引数チェック
     If grepResult = "" Then
-        GetGrepInfo = Ret
+        GetGrepInfo = ret
         Exit Function
     End If
     
     If grepApp <> GrepAppEnum.sakura Then
-        GetGrepInfo = Ret
+        GetGrepInfo = ret
         Exit Function
     End If
 
     If lang <> LangEnum.VB6 Then
-        GetGrepInfo = Ret
+        GetGrepInfo = ret
         Exit Function
     End If
 
@@ -197,19 +257,19 @@ Public Function GetGrepInfo( _
     regex_result = GetMatchByRegExp(grepResult, "^.*\(\d+,\d+\)", False)
     
     If IsEmptyArray(regex_result) Then
-        GetGrepInfo = Ret
+        GetGrepInfo = ret
         Exit Function
     End If
     
-    Ret.ResultRaw = grepResult
-    Ret.FilePath = ReplaceByRegExp(regex_result(0), "\(\d+,\d+\)", "", False)
-    Ret.Ext = GetFileExtension(Ret.FilePath)
+    ret.ResultRaw = grepResult
+    ret.FilePath = ReplaceByRegExp(regex_result(0), "\(\d+,\d+\)", "", False)
+    ret.Ext = GetFileExtension(ret.FilePath)
     Dim wk As String: wk = Trim(Replace(Replace(GetMatchByRegExp(regex_result(0), "\(\d+,\d+\)", False)(0), "(", ""), ")", ""))
-    Ret.row = CLng(Split(wk, ",")(0))
-    Ret.Clm = CLng(Split(wk, ",")(1))
-    Ret.Contents = ReplaceByRegExp(grepResult, "^.*\]:", "", False)
+    ret.row = CLng(Split(wk, ",")(0))
+    ret.Clm = CLng(Split(wk, ",")(1))
+    ret.Contents = ReplaceByRegExp(grepResult, "^.*\]:", "", False)
     
-    GetGrepInfo = Ret
+    GetGrepInfo = ret
 End Function
 
 '-------------------------------------------------------------
@@ -218,10 +278,10 @@ End Function
 ' Ret : 読み込んだ内容
 '-------------------------------------------------------------
 Public Function GetContents(ByVal path As String) As String()
-    Dim Ret() As String
+    Dim ret() As String
     
     If IsExistsFile(path) = False Then
-        GetContents = Ret
+        GetContents = ret
         Exit Function
     End If
     
@@ -248,21 +308,21 @@ Public Function FindMethodByGrepResultInfo( _
     Optional ByVal lang As LangEnum = LangEnum.VB6 _
 ) As MethodInfoStruct
 
-    Dim Ret As MethodInfoStruct
+    Dim ret As MethodInfoStruct
     
     '引数チェック
     If Common.IsEmptyArray(Contents) = True Then
-         FindMethodByGrepResultInfo = Ret
+         FindMethodByGrepResultInfo = ret
          Exit Function
     End If
     
     If grepApp <> GrepAppEnum.sakura Then
-        FindMethodByGrepResultInfo = Ret
+        FindMethodByGrepResultInfo = ret
         Exit Function
     End If
 
     If lang <> LangEnum.VB6 Then
-        FindMethodByGrepResultInfo = Ret
+        FindMethodByGrepResultInfo = ret
         Exit Function
     End If
     
@@ -276,7 +336,7 @@ Public Function FindMethodByGrepResultInfo( _
         
         If method_type = "" Then
             '発見できず。。
-            FindMethodByGrepResultInfo = Ret
+            FindMethodByGrepResultInfo = ret
             Exit Function
         End If
         
@@ -285,16 +345,16 @@ Public Function FindMethodByGrepResultInfo( _
         
         If method_start_row = -1 Then
             '発見できず。。
-            FindMethodByGrepResultInfo = Ret
+            FindMethodByGrepResultInfo = ret
             Exit Function
         End If
         
         'メソッド(Function/Sub)の開始行番号からメソッド情報を取得する
-        Ret = GetMethodInfoForVB(Contents, method_start_row, method_type)
+        ret = GetMethodInfoForVB(Contents, method_start_row, method_type)
         
     End If
     
-    FindMethodByGrepResultInfo = Ret
+    FindMethodByGrepResultInfo = ret
 
 End Function
 
@@ -310,16 +370,16 @@ Public Function FindMethodTypeForVB( _
     ByVal startRow As Long _
 ) As String
 
-    Dim Ret As String: Ret = ""
+    Dim ret As String: ret = ""
 
     '引数チェック
     If Common.IsEmptyArray(Contents) = True Then
-         FindMethodTypeForVB = Ret
+         FindMethodTypeForVB = ret
          Exit Function
     End If
 
     If startRow < 0 Then
-         FindMethodTypeForVB = Ret
+         FindMethodTypeForVB = ret
          Exit Function
     End If
     
@@ -343,14 +403,14 @@ Public Function FindMethodTypeForVB( _
         End If
         
         '発見
-        Ret = Trim(Replace(line, "End", ""))
+        ret = Trim(Replace(line, "End", ""))
         Exit For
         
 CONTINUE:
         
     Next i
     
-    FindMethodTypeForVB = Ret
+    FindMethodTypeForVB = ret
 
 End Function
 
@@ -368,16 +428,16 @@ Public Function FindMethodStartRowForVB( _
     ByVal methodType As String _
 ) As Long
 
-    Dim Ret As Long: Ret = -1
+    Dim ret As Long: ret = -1
 
     '引数チェック
     If Common.IsEmptyArray(Contents) = True Then
-         FindMethodStartRowForVB = Ret
+         FindMethodStartRowForVB = ret
          Exit Function
     End If
 
     If startRow < 0 Then
-         FindMethodStartRowForVB = Ret
+         FindMethodStartRowForVB = ret
          Exit Function
     End If
     
@@ -401,14 +461,14 @@ Public Function FindMethodStartRowForVB( _
         End If
         
         '発見
-        Ret = startRow - i
+        ret = startRow - i
         Exit For
         
 CONTINUE:
         
     Next i
     
-    FindMethodStartRowForVB = Ret
+    FindMethodStartRowForVB = ret
 
 End Function
 
@@ -425,21 +485,21 @@ Public Function GetMethodInfoForVB( _
     ByVal methodType As String _
 ) As MethodInfoStruct
 
-    Dim Ret As MethodInfoStruct
+    Dim ret As MethodInfoStruct
 
     '引数チェック
     If Common.IsEmptyArray(Contents) = True Then
-         GetMethodInfoForVB = Ret
+         GetMethodInfoForVB = ret
          Exit Function
     End If
 
     If startRow < 0 Then
-         GetMethodInfoForVB = Ret
+         GetMethodInfoForVB = ret
          Exit Function
     End If
     
     If methodType <> "Function" And methodType <> "Sub" Then
-         GetMethodInfoForVB = Ret
+         GetMethodInfoForVB = ret
          Exit Function
     End If
     
@@ -497,11 +557,11 @@ CONTINUE:
     
     
     '各情報を取得
-    Ret.Raw = merge_lines
+    ret.Raw = merge_lines
     
     'メソッド名
     Dim wk As String: wk = GetMatchByRegExp(merge_lines, "(Function|Sub)\s+[A-Za-z_][A-Za-z0-9_]*\(", True)(0)
-    Ret.Name = Replace(Replace(wk, methodType & " ", ""), "(", "")
+    ret.Name = Replace(Replace(wk, methodType & " ", ""), "(", "")
     
     start_clm = InStr(merge_lines, "(")
     end_clm = FindMatchingBracketPositionForVB(merge_lines)
@@ -512,23 +572,23 @@ CONTINUE:
         
         If wk = ")" Then
             '戻り値がないFunction
-            Ret.Ret = ""
+            ret.ret = ""
         Else
-            Ret.Ret = Replace(wk, ") As ", "")
+            ret.ret = Replace(wk, ") As ", "")
         End If
     Else
-        Ret.Ret = ""
+        ret.ret = ""
     End If
     
     '引数
     wk = Left(Mid(merge_lines, start_clm + 1), end_clm - start_clm - 1)
-    Ret.params = Split(wk, ",")
+    ret.params = Split(wk, ",")
     
-    For i = 0 To UBound(Ret.params)
-        Ret.params(i) = Trim(Ret.params(i))
+    For i = 0 To UBound(ret.params)
+        ret.params(i) = Trim(ret.params(i))
     Next i
     
-    GetMethodInfoForVB = Ret
+    GetMethodInfoForVB = ret
 
 End Function
 
@@ -539,12 +599,12 @@ End Function
 '-------------------------------------------------------------
 Public Function FindMatchingBracketPositionForVB(ByVal inputString As String) As Long
 
-    Dim Ret As Long: Ret = 0
+    Dim ret As Long: ret = 0
 
     '引数チェック
     If inputString = "" Or _
        InStr(inputString, "(") = 0 Or InStr(inputString, ")") = 0 Then
-        FindMatchingBracketPositionForVB = Ret
+        FindMatchingBracketPositionForVB = ret
         Exit Function
     End If
 
@@ -575,7 +635,7 @@ Public Function FindMatchingBracketPositionForVB(ByVal inputString As String) As
     Next i
     
     '対応する終了括弧が見つからない
-    FindMatchingBracketPositionForVB = Ret
+    FindMatchingBracketPositionForVB = ret
     
 End Function
 
@@ -773,7 +833,7 @@ Public Function IsEmptyFolder(ByVal path As String) As Boolean
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set folder = fso.GetFolder(path)
     
-    IsEmptyFolder = folder.files.count = 0 And folder.SubFolders.count = 0
+    IsEmptyFolder = folder.Files.count = 0 And folder.SubFolders.count = 0
     
     Set fso = Nothing
     Set folder = Nothing
@@ -814,7 +874,7 @@ End Function
 '-------------------------------------------------------------
 Public Function RemoveRightComment(ByVal str As String, ByVal Ext As String) As String
     Dim pos As Long
-    Dim Ret As String
+    Dim ret As String
     
     If Ext = "bas" Or _
        Ext = "frm" Or _
@@ -824,15 +884,15 @@ Public Function RemoveRightComment(ByVal str As String, ByVal Ext As String) As 
         pos = InStr(str, "'")
         
         If pos = 0 Then
-            Ret = str
+            ret = str
         Else
-            Ret = RTrim(Mid(str, 1, pos - 1))
+            ret = RTrim(Mid(str, 1, pos - 1))
         End If
     Else
         Err.Raise 53, , "[RemoveRightComment] 指定された拡張子は未サポートです (ext=" & Ext & ")"
     End If
     
-    RemoveRightComment = RTrim(Ret)
+    RemoveRightComment = RTrim(ret)
 
 End Function
 
@@ -1084,18 +1144,18 @@ Public Function JoinFromArray(ByRef ary() As String, ByVal delim As String, ByVa
         Exit Function
     End If
 
-    Dim Ret As String: Ret = ""
+    Dim ret As String: ret = ""
     Dim i As Long
     
     For i = LBound(ary) To UBound(ary)
         If with_dbl_quot = True Then
-            Ret = Ret & Chr(34) & ary(i) & Chr(34) & delim
+            ret = ret & Chr(34) & ary(i) & Chr(34) & delim
         Else
-            Ret = Ret & ary(i) & delim
+            ret = ret & ary(i) & delim
         End If
     Next i
     
-    JoinFromArray = Left(Ret, Len(Ret) - 1)
+    JoinFromArray = Left(ret, Len(ret) - 1)
 
 End Function
 
@@ -1468,25 +1528,81 @@ Public Function FindRowByKeywordFromArray(ByVal keyword As String, ByRef input_a
 End Function
 
 '-------------------------------------------------------------
+'ワークシートの指定列の全行を指定ワードで検索し、ヒットした行番号リストを返す
+' ws : I : ワークシート
+' find_clm : I : 指定列名(Ex."A")
+' find_start_row : I : 検索開始行(1始まり)
+' find_end_row : I : 検索終了行(0の場合は全行とする)
+' keyword : I : 検索ワード
+' Ret : ヒットした行番号リスト
+'-------------------------------------------------------------
+Public Function FindRowListByKeywordFromWorksheet( _
+  ByVal ws As Worksheet, _
+  ByVal find_clm As String, _
+  ByVal find_start_row As Long, _
+  ByVal find_end_row As Long, _
+  ByVal keyword As String _
+) As Long()
+    Dim rng As Range
+    Dim cell As Range
+    Dim cnt As Long
+    Dim found_rows() As Long
+    
+    If find_start_row > find_end_row Or find_end_row < 0 Then
+        find_end_row = 0
+    End If
+    
+    If find_end_row = 0 Then
+        Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
+    Else
+        Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(find_end_row, find_clm).End(xlUp).row)
+    End If
+
+    cnt = 0
+    
+    For Each cell In rng
+        If cell.value = keyword Then
+            ReDim Preserve found_rows(cnt)
+            found_rows(cnt) = cell.row
+            cnt = cnt + 1
+        End If
+    Next cell
+    
+    FindRowListByKeywordFromWorksheet = found_rows
+End Function
+
+'-------------------------------------------------------------
 'ワークシートの指定列の全行を指定ワードで検索し、ヒットした行番号を返す
 ' ws : I : ワークシート
 ' find_clm : I : 指定列名(Ex."A")
 ' find_start_row : I : 検索開始行(1始まり)
 ' keyword : I : 検索ワード
+' find_end_row : I : 検索終了行(任意。0の場合は全行とする)
 ' Ret : ヒットした行番号
 '-------------------------------------------------------------
 Public Function FindRowByKeywordFromWorksheet( _
   ByVal ws As Worksheet, _
   ByVal find_clm As String, _
   ByVal find_start_row As Long, _
-  ByVal keyword As String _
+  ByVal keyword As String, _
+  Optional ByVal find_end_row As Long = 0 _
 ) As Long
     Dim rng As Range
     Dim cell As Range
     Dim found_row As Long
     
-    Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
+    If find_start_row > find_end_row Or find_end_row < 0 Then
+        find_end_row = 0
+    End If
     
+    If find_end_row = 0 Then
+        Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
+        'Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlDown).row)
+    Else
+        'Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(find_end_row, find_clm).End(xlUp).row)
+        Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(find_end_row, find_clm).End(xlDown).row)
+    End If
+
     found_row = 0
     For Each cell In rng
         If cell.value = keyword Then
@@ -1744,7 +1860,7 @@ Public Function SearchFile(ByVal search_path As String, ByVal search_name As Str
     Set folder = fso.GetFolder(search_path)
     
     Dim file As Object
-    For Each file In folder.files
+    For Each file In folder.Files
         If fso.FileExists(file.path) And fso.GetFileName(file.path) Like search_name Then
             '発見
             SearchFile = file.path
@@ -2125,7 +2241,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As Stri
         End If
     Next subfolder
     
-    For Each file In folder.files
+    For Each file In folder.Files
         If Right(file.Name, Len(Ext)) = Ext Then
             Set fso = Nothing
             Set folder = Nothing
@@ -2491,7 +2607,7 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     'コピー元のフォルダ内のファイルをコピーする
     Const OVERWRITE = True
     Dim file As Object
-    For Each file In fso.GetFolder(src_path).files
+    For Each file In fso.GetFolder(src_path).Files
         fso.CopyFile file.path, fso.BuildPath(dest_path, file.Name), OVERWRITE
     Next
     
@@ -2979,7 +3095,7 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     Set folder = fso.GetFolder(target_folder)
     
     Dim fileobj As Object
-    For Each fileobj In folder.files
+    For Each fileobj In folder.Files
         If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
             '検索対象のファイルを読み込む
             Dim Contents As String: Contents = ReadTextFileBySJIS(fileobj.path)
@@ -3236,10 +3352,5 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
-
-
-
-
-
 
 

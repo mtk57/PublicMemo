@@ -16,7 +16,7 @@ On Error GoTo ErrorHandler
     Dim msg As String: msg = "ê≥èÌÇ…èIóπÇµÇ‹ÇµÇΩ"
 
     If IsEnableDebugLog() = True Then
-        Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "VBPrjCollector.log"
+        Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "VbFileListCreator.log"
     End If
 
     Common.WriteLog "------------------------------------"
@@ -42,9 +42,9 @@ End Sub
 Private Function IsEnableDebugLog() As Boolean
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
-    Const clm = "O7"
+    Const Clm = "O7"
     
-    Dim is_debug_log_s As String: is_debug_log_s = main_sheet.Range(clm).value
+    Dim is_debug_log_s As String: is_debug_log_s = main_sheet.Range(Clm).value
     
     If is_debug_log_s = "" Or _
        is_debug_log_s = "NO" Then
