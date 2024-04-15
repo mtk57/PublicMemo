@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.6"
+Private Const VERSION = "1.5.7"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -72,6 +72,70 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+' 配列をクイックソートで昇順ソートする
+' argAry : I/O : 配列
+' lngMin : I : ソート範囲(最小)  ※任意
+' lngMax : I : ソート範囲(最大)  ※任意
+' keyPos : I : ソートキーインデクス  ※任意
+' BASE : https://excel-ubara.com/excelvba5/EXCELVBA229.html
+'-------------------------------------------------------------
+Public Sub QuickSortArray( _
+    ByRef argAry() As Variant, _
+    Optional ByVal lngMin As Long = -1, _
+    Optional ByVal lngMax As Long = -1, _
+    Optional ByVal keyPos As Long = 0 _
+)
+    If IsEmptyArray(argAry) = True Then
+        Exit Sub
+    End If
+    
+    If lngMin = -1 Then
+        lngMin = LBound(argAry)
+    End If
+    If lngMax = -1 Then
+        lngMax = UBound(argAry)
+    End If
+
+    Dim i As Long
+    Dim j As Long
+    Dim k As Long
+    Dim vBase As Variant
+    Dim vSwap As Variant
+    
+    vBase = argAry(Int((lngMin + lngMax) / 2), keyPos)
+    i = lngMin
+    j = lngMax
+    
+    Do
+        Do While argAry(i, keyPos) < vBase
+            i = i + 1
+        Loop
+        
+        Do While argAry(j, keyPos) > vBase
+            j = j - 1
+        Loop
+        
+        If i >= j Then Exit Do
+        
+        For k = LBound(argAry, 2) To UBound(argAry, 2)
+            vSwap = argAry(i, k)
+            argAry(i, k) = argAry(j, k)
+            argAry(j, k) = vSwap
+        Next
+        i = i + 1
+        j = j - 1
+    Loop
+    
+    If (lngMin < i - 1) Then
+        Call QuickSortArray(argAry, lngMin, i - 1, keyPos)
+    End If
+    
+    If (lngMax > j + 1) Then
+        Call QuickSortArray(argAry, j + 1, lngMax, keyPos)
+    End If
+End Sub
 
 '-------------------------------------------------------------
 ' 配列の指定位置に指定サイズの空行を挿入する
@@ -581,7 +645,7 @@ CONTINUE:
     End If
     
     '引数
-    wk = Left(Mid(merge_lines, start_clm + 1), end_clm - start_clm - 1)
+    wk = left(Mid(merge_lines, start_clm + 1), end_clm - start_clm - 1)
     ret.params = Split(wk, ",")
     
     For i = 0 To UBound(ret.params)
@@ -658,11 +722,11 @@ Public Function GetColNumFromA1(ByVal a1 As String) As Long
     
     For i = 1 To Len(Clm)
         If (i = 1) Then
-            GetColNumFromA1 = GetColNumFromA1 + A_to_ColNum(Right(substr, 1))
+            GetColNumFromA1 = GetColNumFromA1 + A_to_ColNum(right(substr, 1))
         Else
-            GetColNumFromA1 = GetColNumFromA1 + (A_to_ColNum(Right(substr, 1)) * (i - 1) * 26)
+            GetColNumFromA1 = GetColNumFromA1 + (A_to_ColNum(right(substr, 1)) * (i - 1) * 26)
         End If
-        substr = Left(substr, Len(substr) - 1)
+        substr = left(substr, Len(substr) - 1)
     Next i
 End Function
 
@@ -776,7 +840,7 @@ Public Function GetStringLastChar(ByVal str As String, ByVal last_char As String
         
         '見つかった
         If ch = last_char Then
-            GetStringLastChar = Right(str, length - i)
+            GetStringLastChar = right(str, length - i)
             Exit Function
         End If
     Next i
@@ -807,7 +871,7 @@ Public Function StartsWith(ByVal target As String, ByVal search As String) As Bo
         Exit Function
     End If
     
-    If Left(target, Len(search)) = search Then
+    If left(target, Len(search)) = search Then
         StartsWith = True
     End If
     
@@ -936,8 +1000,8 @@ Public Function IsCommentCode(ByVal line As String, ByVal Ext As String) As Bool
        Ext = "cls" Or _
        Ext = "ctl" Or _
        Ext = "vb" Then
-        If Left(LTrim(wk), 1) = "'" Or _
-           Left(LTrim(wk), 4) = "REM " Then
+        If left(LTrim(wk), 1) = "'" Or _
+           left(LTrim(wk), 4) = "REM " Then
            IsCommentCode = True
            Exit Function
         End If
@@ -1005,7 +1069,7 @@ Public Function GetLastFolderName(ByVal path As String) As String
     End If
 
     Dim new_path As String: new_path = Common.RemoveTrailingBackslash(path)
-    GetLastFolderName = Right(new_path, Len(new_path) - InStrRev(new_path, Application.PathSeparator))
+    GetLastFolderName = right(new_path, Len(new_path) - InStrRev(new_path, Application.PathSeparator))
 End Function
 
 '-------------------------------------------------------------
@@ -1155,7 +1219,7 @@ Public Function JoinFromArray(ByRef ary() As String, ByVal delim As String, ByVa
         End If
     Next i
     
-    JoinFromArray = Left(ret, Len(ret) - 1)
+    JoinFromArray = left(ret, Len(ret) - 1)
 
 End Function
 
@@ -1839,7 +1903,7 @@ Public Function GetFolderPath(ByVal file_path As String) As String
     pos = InStrRev(file_path, "\")
     
     '\より左側の文字列をフォルダパスとして返す
-    GetFolderPath = Left(file_path, pos - 1)
+    GetFolderPath = left(file_path, pos - 1)
 End Function
 
 '-------------------------------------------------------------
@@ -2242,7 +2306,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As Stri
     Next subfolder
     
     For Each file In folder.Files
-        If Right(file.Name, Len(Ext)) = Ext Then
+        If right(file.Name, Len(Ext)) = Ext Then
             Set fso = Nothing
             Set folder = Nothing
         
@@ -2424,7 +2488,7 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     End If
       
     For i = 0 To UBound(path_list)
-        If Right(path_list(i), Len(Ext)) = Ext Then
+        If right(path_list(i), Len(Ext)) = Ext Then
             ReDim Preserve filtered_list(j)
             filtered_list(j) = path_list(i)
             j = j + 1
@@ -2700,7 +2764,7 @@ End Function
 '-------------------------------------------------------------
 Public Function RemoveQuotes(ByVal target As String) As String
     '""で囲まれているかをチェック
-    If Left(target, 1) = """" And Right(target, 1) = """" Then
+    If left(target, 1) = """" And right(target, 1) = """" Then
         '""を削除して返す
         RemoveQuotes = Mid(target, 2, Len(target) - 2)
     Else
@@ -2718,8 +2782,8 @@ Public Function RemoveTrailingBackslash(ByVal path As String) As String
         Err.Raise 53, , "[RemoveTrailingBackslash] パスが長すぎます (path=" & path & ")"
     End If
 
-    If Right(path, 1) = "\" Then
-        path = Left(path, Len(path) - 1)
+    If right(path, 1) = "\" Then
+        path = left(path, Len(path) - 1)
     End If
     RemoveTrailingBackslash = path
 End Function
@@ -2950,7 +3014,7 @@ Function GetCommonString(ByRef list() As String) As String
         '共通部分を取得する
         For j = 1 To Len(common_string)
             If Mid(common_string, j, 1) <> Mid(list(i), j, 1) Then
-                common_string = Left(common_string, j - 1)
+                common_string = left(common_string, j - 1)
                 flag = True
                 Exit For
             End If
@@ -2978,7 +3042,7 @@ Public Function GetFolderNameFromPath(ByVal path As String) As String
     last_separator = InStrRev(path, Application.PathSeparator)
     
     If last_separator > 0 Then
-        GetFolderNameFromPath = Left(path, last_separator - 1)
+        GetFolderNameFromPath = left(path, last_separator - 1)
     Else
         GetFolderNameFromPath = path
     End If
@@ -3067,9 +3131,9 @@ Public Function GetFileExtension(ByVal filename As String, Optional ByVal isRaw 
     ' 拡張子を取得
     If dot_pos > 0 Then
         If isRaw = False Then
-            GetFileExtension = LCase(Right(filename, Len(filename) - dot_pos))
+            GetFileExtension = LCase(right(filename, Len(filename) - dot_pos))
         Else
-            GetFileExtension = Right(filename, Len(filename) - dot_pos)
+            GetFileExtension = right(filename, Len(filename) - dot_pos)
         End If
     Else
         GetFileExtension = ""
@@ -3352,12 +3416,4 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
-
-
-
-
-
-
-
-
 
