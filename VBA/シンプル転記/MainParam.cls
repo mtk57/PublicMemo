@@ -21,7 +21,6 @@ Private is_not_close_s As String
 Private is_skip_blank As Boolean
 Private is_skip_blank_s As String
 
-
 'コンストラクタ
 Private Sub Class_Initialize()
     dst_not_found_action = ""
@@ -35,14 +34,14 @@ End Sub
 Public Sub Init()
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
-    Const Clm = "G"
+    Const clm = "G"
     Const i = 7
     
-    dst_not_found_action = main_sheet.Range(Clm & i).value
-    is_copy_format_s = main_sheet.Range(Clm & i + 1).value
-    is_backup_s = main_sheet.Range(Clm & i + 2).value
-    is_not_close_s = main_sheet.Range(Clm & i + 3).value
-    is_skip_blank_s = main_sheet.Range(Clm & i + 4).value
+    dst_not_found_action = main_sheet.Range(clm & i).value
+    is_copy_format_s = main_sheet.Range(clm & i + 1).value
+    is_backup_s = main_sheet.Range(clm & i + 2).value
+    is_not_close_s = main_sheet.Range(clm & i + 3).value
+    is_skip_blank_s = main_sheet.Range(clm & i + 4).value
 End Sub
 
 '検証
@@ -122,6 +121,7 @@ End Function
 Public Function IsSkipBlank() As Boolean
     IsSkipBlank = is_skip_blank
 End Function
+
 
 Public Function GetAllValue() As String
     Dim ret As String

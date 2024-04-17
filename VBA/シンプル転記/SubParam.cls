@@ -27,9 +27,6 @@ Private dst_sheet_name As String
 Private dst_find_clm As String
 Private dst_tran_clm As String
 Private dst_ext As String
-Private dst_is_multi_copy_s As String
-Private dst_is_multi_copy As Boolean
-Private dst_is_row_inserted As Boolean
 
 
 'コンストラクタ
@@ -48,9 +45,6 @@ Private Sub Class_Initialize()
     dst_find_clm = ""
     dst_tran_clm = ""
     dst_ext = ""
-    dst_is_multi_copy_s = ""
-    dst_is_multi_copy = False
-    dst_is_row_inserted = False
 End Sub
 
 '初期化
@@ -71,7 +65,6 @@ Public Sub Init(ByVal row_num As Long)
     dst_sheet_name = main_sheet.Range("J" & i).value
     dst_find_clm = main_sheet.Range("K" & i).value
     dst_tran_clm = main_sheet.Range("L" & i).value
-    dst_is_multi_copy_s = main_sheet.Range("M" & i).value
 End Sub
 
 '検証
@@ -159,13 +152,6 @@ Public Sub Validate()
         dst_tran_clm = src_tran_clm
     Else
         'TODO:列名の妥当性チェック
-    End If
-    
-    If dst_is_multi_copy_s = "" Or _
-       dst_is_multi_copy_s = "NO" Then
-        dst_is_multi_copy = False
-    Else
-        dst_is_multi_copy = True
     End If
 
 End Sub
@@ -279,17 +265,6 @@ Public Function GetDstExt() As String
     GetDstExt = dst_ext
 End Function
 
-Public Function IsDstMultiCopy() As Boolean
-    IsDstMultiCopy = dst_is_multi_copy
-End Function
-
-Public Function IsDstRowInserted() As Boolean
-    IsDstRowInserted = dst_is_row_inserted
-End Function
-
-Public Sub SetIsInserted(ByVal is_inserted As Boolean)
-    dst_is_row_inserted = is_inserted
-End Sub
 
 Public Function GetAllValue() As String
     Dim ret As String
@@ -303,8 +278,7 @@ Public Function GetAllValue() As String
           "dst_file_path=(" & dst_file_path & "), " & _
           "dst_sheet_name=(" & dst_sheet_name & "), " & _
           "dst_find_clm=(" & dst_find_clm & "), " & _
-          "dst_tran_clm=(" & dst_tran_clm & "), " & _
-          "dst_is_multi_copy=(" & dst_is_multi_copy_s & ")"
+          "dst_tran_clm=(" & dst_tran_clm & ")"
     GetAllValue = ret
 End Function
 

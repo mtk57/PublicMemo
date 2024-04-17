@@ -1,37 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.5"
-
-Public Type MethodInfoStruct
-    Raw As String
-    Name As String
-    ret As String
-    params() As String
-End Type
-
-Public Type GrepResultInfoStruct
-    ResultRaw As String
-    FilePath As String
-    Ext As String
-    row As Long
-    Clm As Long
-    Contents As String
-    IsError As Boolean
-    ErrorInfo As String
-    MethodInfo As MethodInfoStruct
-End Type
-
-Public Enum GrepAppEnum
-    sakura
-    hidemaru
-End Enum
-
-Public Enum LangEnum
-    VB6
-    VBNET
-    CSharp
-End Enum
+Private Const VERSION = "1.4.0"
 
 Private Declare PtrSafe Function GetPrivateProfileString Lib _
     "kernel32" Alias "GetPrivateProfileStringA" ( _
@@ -73,545 +43,24 @@ Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
 
-
-
-'-------------------------------------------------------------
-' 指定した行の次の行から指定した行数分だけ行を追加する
-' ws : I : ワークシート
-' startRowNum : I : 指定行 (1～)
-' insertRowCnt : I : 追加行数 (1～)
-'-------------------------------------------------------------
-Public Sub InsertRows(ByRef ws As Worksheet, ByVal startRowNum As Long, ByVal insertRowCnt As Long)
-    '引数チェック
-    If startRowNum < 1 Then
-        startRowNum = 1
-    End If
-    
-    If insertRowCnt < 1 Then
-        Exit Sub
-    End If
-    
-    ws.Rows(startRowNum + 1 & ":" & startRowNum + insertRowCnt).Insert shift:=xlDown
-End Sub
-
-'-------------------------------------------------------------
-' Grep結果を解析してメソッド情報を返す
-' grepResults : I :Grep結果の配列
-'                   <sakuraの場合>
-'                   ファイルフルパス + (行番号, 列番号) + " " + [エンコード] + ":" + 内容
-' grepApp : I : Grepしたアプリ (現時点ではsakuraのみサポート)  ※任意
-' lang : I : Grepした言語 (現時点ではVB6のみサポート)  ※任意
-' Ret : メソッド情報 (Grep結果のコードが属しているメソッド)
-'-------------------------------------------------------------
-Public Function GetMethodInfoFromGrepResult( _
-    ByRef grepResults() As String, _
-    Optional ByVal grepApp As GrepAppEnum = GrepAppEnum.sakura, _
-    Optional ByVal lang As LangEnum = LangEnum.VB6 _
-) As GrepResultInfoStruct()
-
-    Dim ret() As GrepResultInfoStruct
-
-    '引数チェック
-    If Common.IsEmptyArray(grepResults) = True Then
-         GetMethodInfoFromGrepResult = ret
-         Exit Function
-    End If
-    
-    If grepApp <> GrepAppEnum.sakura Then
-        GetMethodInfoFromGrepResult = ret
-        Exit Function
-    End If
-
-    If lang <> LangEnum.VB6 Then
-        GetMethodInfoFromGrepResult = ret
-        Exit Function
-    End If
-    
-
-    ReDim Preserve ret(UBound(grepResults))
-
-    Dim i As Long
-    Dim raw_contents() As String
-    Dim before_path As String: before_path = ""
-    
-    For i = 0 To UBound(grepResults)
-        Dim cur_info As GrepResultInfoStruct
-        
-        'Grep情報を取得する
-        cur_info = GetGrepInfo(grepResults(i), grepApp, lang)
-        
-        'コメントの場合は無視する
-        If IsCommentCode(cur_info.Contents, cur_info.Ext) Then
-            GoTo CONTINUE_A
-        End If
-        
-        If before_path = cur_info.FilePath Then
-            '前回と同じファイルなのでメモリ上の内容を使いまわす
-        Else
-            '前回と異なるファイルに切り替わったのでファイルの内容を読み込む
-            If IsExistsFile(cur_info.FilePath) = False Then
-                'ファイルが存在しないので無視する
-                cur_info.IsError = True
-                cur_info.ErrorInfo = "★File not exist.(" & cur_info.FilePath & ")"
-                GoTo CONTINUE_A
-            End If
-            
-            raw_contents = GetContents(cur_info.FilePath)
-            before_path = cur_info.FilePath
-        End If
-        
-
-        '行番号の位置から上に向かってメソッドを探す
-        cur_info.MethodInfo = FindMethodByGrepResultInfo(cur_info, raw_contents, grepApp, lang)
-        
-CONTINUE_A:
-
-        ret(i) = cur_info
-        
-    Next i
-    
-    
-    GetMethodInfoFromGrepResult = ret
-
-End Function
-
-'-------------------------------------------------------------
-' Grep結果を解析してGREP情報を返す
-' grepResult : I :Grep結果
-'                   <sakuraの場合>
-'                   ファイルフルパス + (行番号, 列番号) + " " + [エンコード] + ":" + 内容
-' grepApp : I : Grepしたアプリ (現時点ではsakuraのみサポート)  ※任意
-' lang : I : Grepした言語 (現時点ではVB6のみサポート)  ※任意
-' Ret : GREP情報
-'-------------------------------------------------------------
-Public Function GetGrepInfo( _
-    ByVal grepResult As String, _
-    Optional ByVal grepApp As GrepAppEnum = GrepAppEnum.sakura, _
-    Optional ByVal lang As LangEnum = LangEnum.VB6 _
-) As GrepResultInfoStruct
-
-    Dim ret As GrepResultInfoStruct
-
-    '引数チェック
-    If grepResult = "" Then
-        GetGrepInfo = ret
-        Exit Function
-    End If
-    
-    If grepApp <> GrepAppEnum.sakura Then
-        GetGrepInfo = ret
-        Exit Function
-    End If
-
-    If lang <> LangEnum.VB6 Then
-        GetGrepInfo = ret
-        Exit Function
-    End If
-
-    Dim regex_result() As String
-    regex_result = GetMatchByRegExp(grepResult, "^.*\(\d+,\d+\)", False)
-    
-    If IsEmptyArray(regex_result) Then
-        GetGrepInfo = ret
-        Exit Function
-    End If
-    
-    ret.ResultRaw = grepResult
-    ret.FilePath = ReplaceByRegExp(regex_result(0), "\(\d+,\d+\)", "", False)
-    ret.Ext = GetFileExtension(ret.FilePath)
-    Dim wk As String: wk = Trim(Replace(Replace(GetMatchByRegExp(regex_result(0), "\(\d+,\d+\)", False)(0), "(", ""), ")", ""))
-    ret.row = CLng(Split(wk, ",")(0))
-    ret.Clm = CLng(Split(wk, ",")(1))
-    ret.Contents = ReplaceByRegExp(grepResult, "^.*\]:", "", False)
-    
-    GetGrepInfo = ret
-End Function
-
-'-------------------------------------------------------------
-'対象ファイルを読み込んで内容を配列で返す
-' path : I : 対象ファイルパス
-' Ret : 読み込んだ内容
-'-------------------------------------------------------------
-Public Function GetContents(ByVal path As String) As String()
-    Dim ret() As String
-    
-    If IsExistsFile(path) = False Then
-        GetContents = ret
-        Exit Function
-    End If
-    
-    If IsUTF8(path) = False Then
-        GetContents = Split(ReadTextFileBySJIS(path), vbCrLf)
-    Else
-        GetContents = Split(Replace(ReadTextFileByUTF8(path), vbCrLf, vbLf), vbLf)
-    End If
-
-End Function
-
-'-------------------------------------------------------------
-' GREP結果情報からメソッドを探してメソッド情報として返す
-' grepResult : I : GREP結果情報
-' contents : I : 探す対象ファイルの内容
-' grepApp : I : Grepしたアプリ (現時点ではsakuraのみサポート)  ※任意
-' lang : I : Grepした言語 (現時点ではVB6のみサポート)  ※任意
-' Ret : メソッド情報
-'-------------------------------------------------------------
-Public Function FindMethodByGrepResultInfo( _
-    ByRef grepResult As GrepResultInfoStruct, _
-    ByRef Contents() As String, _
-    Optional ByVal grepApp As GrepAppEnum = GrepAppEnum.sakura, _
-    Optional ByVal lang As LangEnum = LangEnum.VB6 _
-) As MethodInfoStruct
-
-    Dim ret As MethodInfoStruct
-    
-    '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
-         FindMethodByGrepResultInfo = ret
-         Exit Function
-    End If
-    
-    If grepApp <> GrepAppEnum.sakura Then
-        FindMethodByGrepResultInfo = ret
-        Exit Function
-    End If
-
-    If lang <> LangEnum.VB6 Then
-        FindMethodByGrepResultInfo = ret
-        Exit Function
-    End If
-    
-    
-    If lang = LangEnum.VB6 Or lang = VBNET Then
-        Dim method_type As String
-        Dim method_start_row As Long
-    
-        'メソッド(Function/Sub)のタイプを見つける (複数行は考慮しない)
-        method_type = FindMethodTypeForVB(Contents, grepResult.row)
-        
-        If method_type = "" Then
-            '発見できず。。
-            FindMethodByGrepResultInfo = ret
-            Exit Function
-        End If
-        
-        'メソッド(Function/Sub)の開始行番号を見つける
-        method_start_row = FindMethodStartRowForVB(Contents, grepResult.row, method_type)
-        
-        If method_start_row = -1 Then
-            '発見できず。。
-            FindMethodByGrepResultInfo = ret
-            Exit Function
-        End If
-        
-        'メソッド(Function/Sub)の開始行番号からメソッド情報を取得する
-        ret = GetMethodInfoForVB(Contents, method_start_row, method_type)
-        
-    End If
-    
-    FindMethodByGrepResultInfo = ret
-
-End Function
-
-'-------------------------------------------------------------
-' VBのメソッド(Function/Sub)の種類を見つける
-' (複数行は考慮しない)
-' contents : I : 探す対象ファイルの内容
-' startRow : I : 開始行
-' Ret : 発見(Function/Sub), 発見できず。("")
-'-------------------------------------------------------------
-Public Function FindMethodTypeForVB( _
-    ByRef Contents() As String, _
-    ByVal startRow As Long _
-) As String
-
-    Dim ret As String: ret = ""
-
-    '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
-         FindMethodTypeForVB = ret
-         Exit Function
-    End If
-
-    If startRow < 0 Then
-         FindMethodTypeForVB = ret
-         Exit Function
-    End If
-    
-    Dim i As Long
-    
-    For i = 0 To UBound(Contents)
-        If (startRow + i) > UBound(Contents) Then
-            Exit For
-        End If
-        
-        Dim line As String: line = Contents(startRow + i)
-        
-        If IsCommentCode(line, "bas") Then
-            'コメント行は無視
-            GoTo CONTINUE
-        End If
-        
-        If IsMatchByRegExp(line, "End\s+(Function|Sub)\b", True) = False Then
-            '見つからない
-            GoTo CONTINUE
-        End If
-        
-        '発見
-        ret = Trim(Replace(line, "End", ""))
-        Exit For
-        
-CONTINUE:
-        
-    Next i
-    
-    FindMethodTypeForVB = ret
-
-End Function
-
-'-------------------------------------------------------------
-' VBのメソッド(Function/Sub)の開始行番号を見つける
-' (引数、戻り値以外の複数行は考慮しない)
-' contents : I : 探す対象ファイルの内容
-' startRow : I : 開始行
-' methodType : I : 種類(Function/Sub)
-' Ret : 発見(開始行番号), 発見できず。(-1)
-'-------------------------------------------------------------
-Public Function FindMethodStartRowForVB( _
-    ByRef Contents() As String, _
-    ByVal startRow As Long, _
-    ByVal methodType As String _
-) As Long
-
-    Dim ret As Long: ret = -1
-
-    '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
-         FindMethodStartRowForVB = ret
-         Exit Function
-    End If
-
-    If startRow < 0 Then
-         FindMethodStartRowForVB = ret
-         Exit Function
-    End If
-    
-    Dim i As Long
-    
-    For i = 0 To UBound(Contents)
-        If (startRow - i) < 0 Then
-            Exit For
-        End If
-    
-        Dim line As String: line = Contents(startRow - i)
-        
-        If IsCommentCode(line, "bas") Then
-            'コメント行は無視
-            GoTo CONTINUE
-        End If
-        
-        If IsMatchByRegExp(line, "(Function|Sub)\s+[A-Za-z_][A-Za-z0-9_]*\(", True) = False Then
-            '見つからない
-            GoTo CONTINUE
-        End If
-        
-        '発見
-        ret = startRow - i
-        Exit For
-        
-CONTINUE:
-        
-    Next i
-    
-    FindMethodStartRowForVB = ret
-
-End Function
-
-'-------------------------------------------------------------
-' VBのメソッド(Function/Sub)情報を返す
-' contents : I : 探す対象ファイルの内容
-' startRow : I : メソッド開始行
-' methodType : I : 種類(Function/Sub)
-' Ret : メソッド情報
-'-------------------------------------------------------------
-Public Function GetMethodInfoForVB( _
-    ByRef Contents() As String, _
-    ByVal startRow As Long, _
-    ByVal methodType As String _
-) As MethodInfoStruct
-
-    Dim ret As MethodInfoStruct
-
-    '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
-         GetMethodInfoForVB = ret
-         Exit Function
-    End If
-
-    If startRow < 0 Then
-         GetMethodInfoForVB = ret
-         Exit Function
-    End If
-    
-    If methodType <> "Function" And methodType <> "Sub" Then
-         GetMethodInfoForVB = ret
-         Exit Function
-    End If
-    
-    Dim i As Long
-    Dim merge_lines As String
-    
-    Dim start_clm As Long
-    Dim end_clm As Long
-    
-    'いったん複数行を1行にまとめる
-    For i = 0 To UBound(Contents)
-        If (startRow + i) > UBound(Contents) Then
-            Exit For
-        End If
-    
-        Dim line As String: line = Contents(startRow + i)
-        
-        If IsCommentCode(line, "bas") Then
-            'コメント行は無視
-            GoTo CONTINUE
-        End If
-        
-        'コメント削除
-        line = Trim(RemoveRightComment(line, "bas"))
-        
-        '"_"削除
-        line = Trim(ReplaceByRegExp(line, "_$", "", False))
-    
-        'マージ
-        merge_lines = merge_lines + line
-        
-        
-        '引数の終わりの括弧を探す
-        end_clm = FindMatchingBracketPositionForVB(merge_lines)
-        
-        If end_clm = 0 Then
-            '見つからない
-            GoTo CONTINUE
-        End If
-        
-        '見つかった
-        
-        If methodType = "Sub" Then
-            Exit For
-        End If
-        
-        'Functionの場合は戻り値までマージされているか確認する
-        If IsMatchByRegExp(merge_lines, "Function\s+[A-Za-z_][A-Za-z0-9_]*\(.*\)(\s+As\s+[A-Za-z_][A-Za-z0-9_]*\(*\)*)*$", True) = True Then
-            Exit For
-        End If
-        
-CONTINUE:
-        
-    Next i
-    
-    
-    '各情報を取得
-    ret.Raw = merge_lines
-    
-    'メソッド名
-    Dim wk As String: wk = GetMatchByRegExp(merge_lines, "(Function|Sub)\s+[A-Za-z_][A-Za-z0-9_]*\(", True)(0)
-    ret.Name = Replace(Replace(wk, methodType & " ", ""), "(", "")
-    
-    start_clm = InStr(merge_lines, "(")
-    end_clm = FindMatchingBracketPositionForVB(merge_lines)
-    
-    '戻り値
-    If methodType = "Function" Then
-        wk = Mid(merge_lines, end_clm)
-        
-        If wk = ")" Then
-            '戻り値がないFunction
-            ret.ret = ""
-        Else
-            ret.ret = Replace(wk, ") As ", "")
-        End If
-    Else
-        ret.ret = ""
-    End If
-    
-    '引数
-    wk = Left(Mid(merge_lines, start_clm + 1), end_clm - start_clm - 1)
-    ret.params = Split(wk, ",")
-    
-    For i = 0 To UBound(ret.params)
-        ret.params(i) = Trim(ret.params(i))
-    Next i
-    
-    GetMethodInfoForVB = ret
-
-End Function
-
-'-------------------------------------------------------------
-' 最初に見つけた"("に対応する")"を探して桁位置を返す
-' inputString : I : 対象文字列
-' Ret : 0=見つからなかった, 1以上=")"の桁位置
-'-------------------------------------------------------------
-Public Function FindMatchingBracketPositionForVB(ByVal inputString As String) As Long
-
-    Dim ret As Long: ret = 0
-
-    '引数チェック
-    If inputString = "" Or _
-       InStr(inputString, "(") = 0 Or InStr(inputString, ")") = 0 Then
-        FindMatchingBracketPositionForVB = ret
-        Exit Function
-    End If
-
-    Dim openBracket As String
-    Dim closeBracket As String
-    Dim i As Long
-    Dim stack As Long
-    
-    openBracket = "("
-    closeBracket = ")"
-    
-    ' スタックを初期化
-    stack = 0
-    
-    For i = 1 To Len(inputString)
-        If Mid(inputString, i, 1) = openBracket Then
-            ' 開始括弧
-            stack = stack + 1
-        ElseIf Mid(inputString, i, 1) = closeBracket Then
-            ' 終了括弧
-            stack = stack - 1
-            If stack = 0 Then
-                ' 対応する終了括弧が見つかった
-                FindMatchingBracketPositionForVB = i
-                Exit Function
-            End If
-        End If
-    Next i
-    
-    '対応する終了括弧が見つからない
-    FindMatchingBracketPositionForVB = ret
-    
-End Function
-
 '-------------------------------------------------------------
 ' A1形式の文字列から列番号を返す
 '  Ex. "A1" -> 1
 '      "ZZ12" -> 27
-' a1：I : A1形式の文字列
-' Ret：列番号
+' a1：A1形式の文字列
+' return：列番号
 '-------------------------------------------------------------
 Public Function GetColNumFromA1(ByVal a1 As String) As Long
-    Dim Clm As String
+    Dim clm As String
     Dim row As Long
-    Call SplitCellAddress(a1, Clm, row)
+    Call SplitCellAddress(a1, clm, row)
     
     Dim substr As String
-    substr = Clm
+    substr = clm
     
     Dim i As Integer
     
-    For i = 1 To Len(Clm)
+    For i = 1 To Len(clm)
         If (i = 1) Then
             GetColNumFromA1 = GetColNumFromA1 + A_to_ColNum(Right(substr, 1))
         Else
@@ -827,15 +276,15 @@ End Function
 ' Ret : コメントがあれば削除して返す。なければ元の文字列を返す
 ' Ex. "abc 'def" → "abc"
 '-------------------------------------------------------------
-Public Function RemoveRightComment(ByVal str As String, ByVal Ext As String) As String
+Public Function RemoveRightComment(ByVal str As String, ByVal ext As String) As String
     Dim pos As Long
     Dim ret As String
     
-    If Ext = "bas" Or _
-       Ext = "frm" Or _
-       Ext = "cls" Or _
-       Ext = "ctl" Or _
-       Ext = "vb" Then
+    If ext = "bas" Or _
+       ext = "frm" Or _
+       ext = "cls" Or _
+       ext = "ctl" Or _
+       ext = "vb" Then
         pos = InStr(str, "'")
         
         If pos = 0 Then
@@ -844,7 +293,7 @@ Public Function RemoveRightComment(ByVal str As String, ByVal Ext As String) As 
             ret = RTrim(Mid(str, 1, pos - 1))
         End If
     Else
-        Err.Raise 53, , "[RemoveRightComment] 指定された拡張子は未サポートです (ext=" & Ext & ")"
+        Err.Raise 53, , "[RemoveRightComment] 指定された拡張子は未サポートです (ext=" & ext & ")"
     End If
     
     RemoveRightComment = RTrim(ret)
@@ -877,8 +326,8 @@ End Function
 ' ext : I : 拡張子(Ex. "bas", "vb") ※VB系のみサポート
 ' Ret : True/False(True=コメント行)
 '-------------------------------------------------------------
-Public Function IsCommentCode(ByVal line As String, ByVal Ext As String) As Boolean
-    If line = "" Or Ext = "" Then
+Public Function IsCommentCode(ByVal line As String, ByVal ext As String) As Boolean
+    If line = "" Or ext = "" Then
         IsCommentCode = False
         Exit Function
     End If
@@ -886,18 +335,18 @@ Public Function IsCommentCode(ByVal line As String, ByVal Ext As String) As Bool
     Dim wk As String
     wk = Replace(line, vbTab, " ")
     
-    If Ext = "bas" Or _
-       Ext = "frm" Or _
-       Ext = "cls" Or _
-       Ext = "ctl" Or _
-       Ext = "vb" Then
+    If ext = "bas" Or _
+       ext = "frm" Or _
+       ext = "cls" Or _
+       ext = "ctl" Or _
+       ext = "vb" Then
         If Left(LTrim(wk), 1) = "'" Or _
            Left(LTrim(wk), 4) = "REM " Then
            IsCommentCode = True
            Exit Function
         End If
     Else
-        Err.Raise 53, , "[IsCommentCode] 指定された拡張子は未サポートです (ext=" & Ext & ")"
+        Err.Raise 53, , "[IsCommentCode] 指定された拡張子は未サポートです (ext=" & ext & ")"
     End If
     
     IsCommentCode = False
@@ -1004,17 +453,17 @@ Public Function ReplaceByRegExp( _
     ByVal replace_str As String, _
     ByVal is_ignore_case As Boolean _
 ) As String
-    Dim REG As New VBScript_RegExp_55.RegExp
+    Dim reg As New VBScript_RegExp_55.RegExp
     Dim mc As MatchCollection
     Dim m As Match
     Dim list() As String
     ReDim list(0)
     
-    REG.Global = True
-    REG.ignoreCase = is_ignore_case
-    REG.Pattern = ptn
+    reg.Global = True
+    reg.ignoreCase = is_ignore_case
+    reg.Pattern = ptn
     
-    ReplaceByRegExp = REG.Replace(test_str, replace_str)
+    ReplaceByRegExp = reg.Replace(test_str, replace_str)
 
 End Function
 
@@ -1033,17 +482,17 @@ Public Function GetMatchByRegExp( _
     ByVal ptn As String, _
     ByVal is_ignore_case As Boolean _
 ) As String()
-    Dim REG As New VBScript_RegExp_55.RegExp
+    Dim reg As New VBScript_RegExp_55.RegExp
     Dim mc As MatchCollection
     Dim m As Match
     Dim list() As String
     ReDim list(0)
     
-    REG.Global = True
-    REG.ignoreCase = is_ignore_case
-    REG.Pattern = ptn
+    reg.Global = True
+    reg.ignoreCase = is_ignore_case
+    reg.Pattern = ptn
     
-    Set mc = REG.Execute(test_str)
+    Set mc = reg.Execute(test_str)
     For Each m In mc
         Common.AppendArray list, m.value
     Next
@@ -1068,12 +517,12 @@ Public Function IsMatchByRegExp( _
     ByVal ptn As String, _
     ByVal is_ignore_case As Boolean _
 ) As Boolean
-    Dim REG As New VBScript_RegExp_55.RegExp
-    REG.Global = True
-    REG.ignoreCase = is_ignore_case
-    REG.Pattern = ptn
+    Dim reg As New VBScript_RegExp_55.RegExp
+    reg.Global = True
+    reg.ignoreCase = is_ignore_case
+    reg.Pattern = ptn
     
-    IsMatchByRegExp = REG.Test(test_str)
+    IsMatchByRegExp = reg.Test(test_str)
 End Function
 
 '-------------------------------------------------------------
@@ -1310,8 +759,7 @@ FINISH:
     If IsUTF8(temp) = False Then
         std_out = Split(ReadTextFileBySJIS(temp), vbCrLf)
     Else
-        'std_out = Split(ReadTextFileByUTF8(temp), vbLf)
-        std_out = Split(Replace(ReadTextFileByUTF8(temp), vbCrLf, vbLf), vbLf)
+        std_out = Split(ReadTextFileByUTF8(temp), vbLf)
     End If
 
 FINISH_2:
@@ -1404,7 +852,7 @@ Public Function RenameFolder(ByVal path As String, ByVal rename As String) As St
     For retry = 0 To 3
 
 On Error Resume Next
-        folder.Name = rename
+        folder.name = rename
     
         err_msg = Err.Description
         Err.Clear
@@ -1435,9 +883,9 @@ End Function
 '-------------------------------------------------------------
 Public Function GetLastRowFromWorksheet( _
   ByVal ws As Worksheet, _
-  ByVal Clm As String _
+  ByVal clm As String _
 ) As Long
-    GetLastRowFromWorksheet = ws.Cells(ws.Rows.count, Clm).End(xlUp).row
+    GetLastRowFromWorksheet = ws.Cells(ws.Rows.count, clm).End(xlUp).row
 End Function
 
 '-------------------------------------------------------------
@@ -1483,79 +931,25 @@ Public Function FindRowByKeywordFromArray(ByVal keyword As String, ByRef input_a
 End Function
 
 '-------------------------------------------------------------
-'ワークシートの指定列の全行を指定ワードで検索し、ヒットした行番号リストを返す
-' ws : I : ワークシート
-' find_clm : I : 指定列名(Ex."A")
-' find_start_row : I : 検索開始行(1始まり)
-' find_end_row : I : 検索終了行(0の場合は全行とする)
-' keyword : I : 検索ワード
-' Ret : ヒットした行番号リスト
-'-------------------------------------------------------------
-Public Function FindRowListByKeywordFromWorksheet( _
-  ByVal ws As Worksheet, _
-  ByVal find_clm As String, _
-  ByVal find_start_row As Long, _
-  ByVal find_end_row As Long, _
-  ByVal keyword As String _
-) As Long()
-    Dim rng As Range
-    Dim cell As Range
-    Dim cnt As Long
-    Dim found_rows() As Long
-    
-    If find_start_row > find_end_row Or find_end_row < 0 Then
-        find_end_row = 0
-    End If
-    
-    If find_end_row = 0 Then
-        Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
-    Else
-        Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(find_end_row, find_clm).End(xlUp).row)
-    End If
-
-    cnt = 0
-    
-    For Each cell In rng
-        If cell.value = keyword Then
-            ReDim Preserve found_rows(cnt)
-            found_rows(cnt) = cell.row
-            cnt = cnt + 1
-        End If
-    Next cell
-    
-    FindRowListByKeywordFromWorksheet = found_rows
-End Function
-
-'-------------------------------------------------------------
 'ワークシートの指定列の全行を指定ワードで検索し、ヒットした行番号を返す
 ' ws : I : ワークシート
 ' find_clm : I : 指定列名(Ex."A")
 ' find_start_row : I : 検索開始行(1始まり)
 ' keyword : I : 検索ワード
-' find_end_row : I : 検索終了行(任意。0の場合は全行とする)
 ' Ret : ヒットした行番号
 '-------------------------------------------------------------
 Public Function FindRowByKeywordFromWorksheet( _
   ByVal ws As Worksheet, _
   ByVal find_clm As String, _
   ByVal find_start_row As Long, _
-  ByVal keyword As String, _
-  Optional ByVal find_end_row As Long = 0 _
+  ByVal keyword As String _
 ) As Long
     Dim rng As Range
     Dim cell As Range
     Dim found_row As Long
     
-    If find_start_row > find_end_row Or find_end_row < 0 Then
-        find_end_row = 0
-    End If
+    Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
     
-    If find_end_row = 0 Then
-        Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(ws.Rows.count, find_clm).End(xlUp).row)
-    Else
-        Set rng = ws.Range(find_clm & find_start_row & ":" & find_clm & ws.Cells(find_end_row, find_clm).End(xlDown).row)
-    End If
-
     found_row = 0
     For Each cell In rng
         If cell.value = keyword Then
@@ -1600,7 +994,7 @@ End Function
 ' Ret : 変更後のファイルパス(絶対パス)
 '       pathのファイルが存在しない場合はpathを返す
 '-------------------------------------------------------------
-Public Function ChangeFileExt(ByVal path As String, ByVal Ext As String) As String
+Public Function ChangeFileExt(ByVal path As String, ByVal ext As String) As String
     If IsExistsFile(path) = False Then
         'Err.Raise 53, , "[ChangeFileExt] 指定されたファイルが存在しません (path=" & path & ")"
         ChangeFileExt = path
@@ -1620,7 +1014,7 @@ Public Function ChangeFileExt(ByVal path As String, ByVal Ext As String) As Stri
     Dim new_path As String
     
     '新しい拡張子に変更
-    file_name = file_name & Ext
+    file_name = file_name & ext
     new_path = fso.GetParentFolderName(path) & SEP & file_name
     
     'ファイル名を変更
@@ -1675,10 +1069,10 @@ End Function
 'ブックを保存して閉じる
 ' name : I : ブック名(Excelファイル名)
 '-------------------------------------------------------------
-Public Sub SaveAndCloseBook(ByVal Name As String)
+Public Sub SaveAndCloseBook(ByVal name As String)
     Dim wb As Workbook
     For Each wb In Workbooks
-        If InStr(wb.Name, Name) > 0 Then
+        If InStr(wb.name, name) > 0 Then
             wb.Save
             wb.Close
         End If
@@ -1689,10 +1083,10 @@ End Sub
 'ブックを閉じる
 ' name : I : ブック名(Excelファイル名)
 '-------------------------------------------------------------
-Public Sub CloseBook(ByVal Name As String)
+Public Sub CloseBook(ByVal name As String)
     Dim wb As Workbook
     For Each wb In Workbooks
-        If InStr(wb.Name, Name) > 0 Then
+        If InStr(wb.name, name) > 0 Then
             wb.Close SaveChanges:=False
         End If
     Next
@@ -1847,12 +1241,12 @@ End Function
 ' is_subdir : IN : サブフォルダ含むか (True=含む)
 ' Ret : ファイルリスト
 '-------------------------------------------------------------
-Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal Ext As String, ByVal is_subdir As Boolean)
+Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
     If IsExistsFolder(path) = False Then
         Err.Raise 53, , "[UTF8toSJIS_AllFile] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
     
-    If Ext = "" Then
+    If ext = "" Then
         Err.Raise 53, , "[UTF8toSJIS_AllFile] 拡張子が指定されていません"
     End If
 
@@ -1861,7 +1255,7 @@ Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal Ext As String, ByVal i
     End If
 
     Dim i As Long
-    Dim src_file_list() As String: src_file_list = CreateFileList(path, Ext, is_subdir)
+    Dim src_file_list() As String: src_file_list = CreateFileList(path, ext, is_subdir)
 
     For i = LBound(src_file_list) To UBound(src_file_list)
         UTF8toSJIS src_file_list(i), False
@@ -1875,12 +1269,12 @@ End Sub
 ' is_subdir : IN : サブフォルダ含むか (True=含む)
 ' Ret : ファイルリスト
 '-------------------------------------------------------------
-Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal Ext As String, ByVal is_subdir As Boolean)
+Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
     If IsExistsFolder(path) = False Then
         Err.Raise 53, , "[SJIStoUTF8_AllFile] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
     
-    If Ext = "" Then
+    If ext = "" Then
         Err.Raise 53, , "[SJIStoUTF8_AllFile] 拡張子が指定されていません"
     End If
 
@@ -1889,7 +1283,7 @@ Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal Ext As String, ByVal i
     End If
 
     Dim i As Long
-    Dim src_file_list() As String: src_file_list = CreateFileList(path, Ext, is_subdir)
+    Dim src_file_list() As String: src_file_list = CreateFileList(path, ext, is_subdir)
 
     For i = LBound(src_file_list) To UBound(src_file_list)
         SJIStoUTF8 src_file_list(i), False
@@ -2179,13 +1573,13 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As Stri
     Dim folder As Object
     Dim subfolder As Object
     Dim file As Object
-    Dim Ext As String: Ext = Replace(in_ext, "*", "")
+    Dim ext As String: ext = Replace(in_ext, "*", "")
     
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set folder = fso.GetFolder(path)
     
     For Each subfolder In folder.SubFolders
-        If IsExistsExtensionFile(subfolder.path, Ext) Then
+        If IsExistsExtensionFile(subfolder.path, ext) Then
             Set fso = Nothing
             Set folder = Nothing
             
@@ -2195,7 +1589,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As Stri
     Next subfolder
     
     For Each file In folder.Files
-        If Right(file.Name, Len(Ext)) = Ext Then
+        If Right(file.name, Len(ext)) = ext Then
             Set fso = Nothing
             Set folder = Nothing
         
@@ -2233,12 +1627,12 @@ End Sub
 'ログファイルに書き込む
 ' contents : IN : 書き込む内容
 '-------------------------------------------------------------
-Public Sub WriteLog(ByVal Contents As String)
+Public Sub WriteLog(ByVal contents As String)
     If is_log_opened = False Then
         'オープンされていないので無視
         Exit Sub
     End If
-    Print #logfile_num, Format(Date, "yyyy/mm/dd") & " " & Format(Now, "hh:mm:ss") & ":" & Contents
+    Print #logfile_num, Format(Date, "yyyy/mm/dd") & " " & Format(Now, "hh:mm:ss") & ":" & contents
 End Sub
 
 '-------------------------------------------------------------
@@ -2291,20 +1685,20 @@ End Function
 '-------------------------------------------------------------
 Public Function CreateFileList( _
     ByVal path As String, _
-    ByVal Ext As String, _
+    ByVal ext As String, _
     ByVal is_subdir As Boolean _
 ) As String()
     If IsMaxOverPath(path) = True Then
         Err.Raise 53, , "[CreateFileList] パスが長すぎます (path=" & path & ")"
     End If
 
-    Dim list() As String: list = CreateFileListMain(path, Ext, is_subdir)
-    CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), Ext)
+    Dim list() As String: list = CreateFileListMain(path, ext, is_subdir)
+    CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), ext)
 End Function
 
 Private Function CreateFileListMain( _
     ByVal path As String, _
-    ByVal Ext As String, _
+    ByVal ext As String, _
     ByVal is_subdir As Boolean _
 ) As String()
     Dim fso As Object
@@ -2314,7 +1708,7 @@ Private Function CreateFileListMain( _
     Dim cnt As Integer
 
     Dim file As String, f As Object
-    file = Dir(path & "\" & Ext)
+    file = Dir(path & "\" & ext)
     
     If file <> "" Then
         If IsEmptyArray(filelist) = True Then
@@ -2346,7 +1740,7 @@ Private Function CreateFileListMain( _
     Dim filelist_merge() As String
     
     For Each f In fso.GetFolder(path).SubFolders
-        filelist_sub = CreateFileListMain(f.path, Ext, is_subdir)
+        filelist_sub = CreateFileListMain(f.path, ext, is_subdir)
         filelist = MergeArray(filelist_sub, filelist)
     Next f
     
@@ -2364,7 +1758,7 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     Dim i As Long
     Dim j As Long: j = 0
     Dim filtered_list() As String
-    Dim Ext As String: Ext = Replace(in_ext, "*", "")
+    Dim ext As String: ext = Replace(in_ext, "*", "")
     
     If in_ext = "*.*" Then
         FilterFileListByExtension = path_list
@@ -2377,7 +1771,7 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     End If
       
     For i = 0 To UBound(path_list)
-        If Right(path_list(i), Len(Ext)) = Ext Then
+        If Right(path_list(i), Len(ext)) = ext Then
             ReDim Preserve filtered_list(j)
             filtered_list(j) = path_list(i)
             j = j + 1
@@ -2561,13 +1955,13 @@ Public Sub CopyFolder(ByVal src_path As String, dest_path As String)
     Const OVERWRITE = True
     Dim file As Object
     For Each file In fso.GetFolder(src_path).Files
-        fso.CopyFile file.path, fso.BuildPath(dest_path, file.Name), OVERWRITE
+        fso.CopyFile file.path, fso.BuildPath(dest_path, file.name), OVERWRITE
     Next
     
     'コピー元のフォルダ内のサブフォルダをコピーする
     Dim subfolder As Object
     For Each subfolder In fso.GetFolder(src_path).SubFolders
-        CopyFolder subfolder.path, fso.BuildPath(dest_path, subfolder.Name)
+        CopyFolder subfolder.path, fso.BuildPath(dest_path, subfolder.name)
     Next
     
     Set fso = Nothing
@@ -2732,7 +2126,7 @@ End Sub
 ' contents : IN : 内容
 ' path : IN : ファイルパス (絶対パス)
 '-------------------------------------------------------------
-Public Sub CreateSJISTextFile(ByRef Contents() As String, ByVal path As String)
+Public Sub CreateSJISTextFile(ByRef contents() As String, ByVal path As String)
     If IsMaxOverPath(path) = True Then
         Err.Raise 53, , "[CreateSJISTextFile] パスが長すぎます (path=" & path & ")"
     End If
@@ -2748,8 +2142,8 @@ Public Sub CreateSJISTextFile(ByRef Contents() As String, ByVal path As String)
     
     Set txt = fso.CreateTextFile(path, is_overwrite, IS_UNICODE)
     
-    For i = LBound(Contents) To UBound(Contents)
-        txt.WriteLine Contents(i)
+    For i = LBound(contents) To UBound(contents)
+        txt.WriteLine contents(i)
     Next i
     
     txt.Close
@@ -3006,12 +2400,11 @@ End Function
 '-------------------------------------------------------------
 'ファイル名から拡張子を返す
 ' filename : IN : ファイル名
-' isRaw    : IN : True=取得した拡張子をそのまま返す、False=小文字に変換して返す(デフォルト)
 ' Ret : ファイル名の拡張子
 '        Ex. "abc.txt"の場合、"txt"が返る
 '            "."が含まれていない場合は""が返る
 '-------------------------------------------------------------
-Public Function GetFileExtension(ByVal filename As String, Optional ByVal isRaw As Boolean = False) As String
+Public Function GetFileExtension(ByVal filename As String) As String
     Dim dot_pos As Integer
     
     ' "."の位置を取得
@@ -3019,11 +2412,7 @@ Public Function GetFileExtension(ByVal filename As String, Optional ByVal isRaw 
     
     ' 拡張子を取得
     If dot_pos > 0 Then
-        If isRaw = False Then
-            GetFileExtension = LCase(Right(filename, Len(filename) - dot_pos))
-        Else
-            GetFileExtension = Right(filename, Len(filename) - dot_pos)
-        End If
+        GetFileExtension = LCase(Right(filename, Len(filename) - dot_pos))
     Else
         GetFileExtension = ""
     End If
@@ -3051,10 +2440,10 @@ Public Function SearchAndReadFiles(ByVal target_folder As String, ByVal target_f
     For Each fileobj In folder.Files
         If fso.FileExists(fileobj.path) And fso.GetFileName(fileobj.path) Like target_file Then
             '検索対象のファイルを読み込む
-            Dim Contents As String: Contents = ReadTextFileBySJIS(fileobj.path)
+            Dim contents As String: contents = ReadTextFileBySJIS(fileobj.path)
 
             'ファイルの内容を配列に格納する
-            Dim lines() As String: lines = Split(Contents, vbCrLf)
+            Dim lines() As String: lines = Split(contents, vbCrLf)
             
             '末尾にファイルパスを追加する
             Dim lines_cnt As Integer: lines_cnt = UBound(lines)
@@ -3116,7 +2505,7 @@ Public Function ReadTextFileBySJIS(ByVal path As String) As String
     
     Dim fileobj As Object
     Set fileobj = fso.OpenTextFile(wk, READ_ONLY, IS_CREATE_FILE, FORMAT_ASCII)
-    Dim Contents As String: Contents = fileobj.ReadAll
+    Dim contents As String: contents = fileobj.ReadAll
     
     fileobj.Close
     Set fileobj = Nothing
@@ -3125,7 +2514,7 @@ Public Function ReadTextFileBySJIS(ByVal path As String) As String
     'ワークファイルを削除する
     DeleteFile wk
     
-    ReadTextFileBySJIS = RTrim(Contents)
+    ReadTextFileBySJIS = RTrim(contents)
 End Function
 
 '-------------------------------------------------------------
@@ -3138,17 +2527,17 @@ Public Function ReadTextFileByUTF8(ByVal file_path) As String
         Err.Raise 53, , "[ReadTextFileByUTF8] パスが長すぎます (file_path=" & file_path & ")"
     End If
     
-    Dim Contents As String
+    Dim contents As String
     
     With CreateObject("ADODB.Stream")
         .Charset = "UTF-8"
         .Open
         .LoadFromFile file_path
-        Contents = .ReadText
+        contents = .ReadText
         .Close
     End With
     
-    ReadTextFileByUTF8 = Contents
+    ReadTextFileByUTF8 = contents
 End Function
 
 '-------------------------------------------------------------
@@ -3230,7 +2619,7 @@ Public Function IsExistSheet(ByRef wb As Workbook, ByVal sheet_name As String) A
     Dim ws As Worksheet
     
     For Each ws In wb.Worksheets
-        If ws.Name = sheet_name Then
+        If ws.name = sheet_name Then
             IsExistSheet = True
             Exit Function
         End If
@@ -3261,7 +2650,7 @@ End Sub
 '-------------------------------------------------------------
 Public Sub AddSheet(ByRef wb As Workbook, ByVal sheet_name As String)
     DeleteSheet wb, sheet_name
-    wb.Worksheets.Add.Name = sheet_name
+    wb.Worksheets.Add.name = sheet_name
 End Sub
 
 '-------------------------------------------------------------
@@ -3290,7 +2679,7 @@ Public Sub UpdateSheet( _
     ByRef book_name As Workbook, _
     ByVal sheet_name As String, _
     ByVal cell_row As Long, ByVal cell_clm As Long, _
-    ByVal Contents As String)
+    ByVal contents As String)
     
     If IsExistSheet(book_name, sheet_name) = False Then
         Err.Raise 53, , "[UpdateSheet] シートが見つかりません (book_name=" & book_name & "), sheet_name=" & sheet_name & ")"
@@ -3303,12 +2692,8 @@ Public Sub UpdateSheet( _
     Dim ws As Worksheet
     Set ws = book_name.Sheets(sheet_name)
     
-    ws.Cells(cell_row, cell_clm).value = Contents
+    ws.Cells(cell_row, cell_clm).value = contents
 End Sub
-
-
-
-
 
 
 
