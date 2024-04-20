@@ -9,7 +9,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Private Const VERSION = "1.0.0"
+Private Const VERSION = "1.0.1"
 
 Private dict_ As Object
 
@@ -89,3 +89,25 @@ End Function
 Public Function GetValues() As Variant()
     GetValues = dict_.Items
 End Function
+
+'String配列のコピーを返す(ボツ)
+'Public Function CopyStringArray(ByRef dst_dict As Dict) As Boolean
+'    Set dst_dict = New Dict
+'
+'    Dim i As Long
+'    Dim j As Long
+'
+'    For i = 0 To GetKeyCount()
+'        Dim key As String: key = GetKeys()(i)
+'
+'        Dim values() As String
+'        values = GetValue(key)
+'
+'        For j = 0 To UBound(values)
+'            Dim value As String: value = values(j)
+'            dst_dict.AppendStringArray key, value
+'        Next j
+'    Next i
+'    CopyStringArray = True
+'End Function
+
