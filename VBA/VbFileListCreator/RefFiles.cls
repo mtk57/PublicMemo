@@ -14,6 +14,7 @@ Option Explicit
 Private vbp_file_path As String
 Private ref_file_path() As String
 
+
 'コンストラクタ
 Private Sub Class_Initialize()
     vbp_file_path = ""

@@ -5,6 +5,9 @@ Option Explicit
 Private SEP As String
 Private DQ As String
 
+'外部実行有無 (True=外部実行)
+Public IS_EXTERNAL As Boolean
+
 Const EXT_VBP = "*.vbp"
 Const EXT_VBPROJ = "*.vbproj"
 
@@ -15,10 +18,62 @@ Private vbprj_files() As String
 Private sheet_name As String
 
 '--------------------------------------------------------
+'メイン処理(外部実行用)
+'--------------------------------------------------------
+Public Function RunForExternal() As Dict
+    Common.WriteLog "RunForExternal S"
+    
+    If IS_EXTERNAL = False Then
+        RunForExternal = Empty
+        Common.WriteLog "RunForExternal E-1"
+        Exit Function
+    End If
+    
+    SEP = Application.PathSeparator
+    DQ = Chr(34)
+    
+    Erase vbprj_files
+    
+    'VBプロジェクトファイルを検索する
+    SearchVBProjFile
+    
+    Dim result As Dict
+    Set result = New Dict
+    
+    Dim i As Long
+    Dim j As Long
+    
+    'メインループ
+    For i = LBound(vbprj_files) To UBound(vbprj_files)
+    
+        Dim vbproj_path As String: vbproj_path = vbprj_files(i)
+        Common.WriteLog "i=" & i & ":[" & vbproj_path & "]"
+    
+        'VBプロジェクトファイルのパースを行い、出力するファイルリストを作成する
+        Dim ref_files As RefFiles
+        Set ref_files = CreateVbRefFileList(vbproj_path)
+        
+        'Dictに出力する
+        For j = 0 To ref_files.GetAppendRefFileCount
+            result.AppendStringArray ref_files.GetSrcDirPath(), ref_files.GetRefFile(j)
+        Next j
+    Next i
+    
+    Set RunForExternal = result
+
+    Common.WriteLog "RunForExternal E"
+End Function
+
+'--------------------------------------------------------
 'メイン処理
 '--------------------------------------------------------
 Public Sub Run()
     Common.WriteLog "Run S"
+    
+    If IS_EXTERNAL = True Then
+        Common.WriteLog "Run E-1"
+        Exit Sub
+    End If
     
     SEP = Application.PathSeparator
     DQ = Chr(34)
@@ -122,17 +177,17 @@ Private Function ParseContents(ByVal vbproj_path As String) As RefFiles
     Common.WriteLog "ParseContents S"
     
     'VBプロジェクトファイルの内容を読み込む
-    Dim contents() As String: contents = GetVBPrjContents(vbproj_path)
+    Dim Contents() As String: Contents = GetVBPrjContents(vbproj_path)
     
     '末尾にファイルパスを追加する
-    Dim cnt As Integer: cnt = UBound(contents)
-    ReDim Preserve contents(cnt + 1)
-    contents(cnt + 1) = vbproj_path
+    Dim cnt As Integer: cnt = UBound(Contents)
+    ReDim Preserve Contents(cnt + 1)
+    Contents(cnt + 1) = vbproj_path
     
     If Common.GetFileExtension(vbproj_path) = "vbp" Then
-        Set ParseContents = ParseVB6Project(contents)
+        Set ParseContents = ParseVB6Project(Contents)
     Else
-        Set ParseContents = ParseVBNETProject(contents)
+        Set ParseContents = ParseVBNETProject(Contents)
     End If
 
     Common.WriteLog "ParseContents E"
@@ -146,9 +201,9 @@ Private Function GetVBPrjContents(ByVal vbproj_path As String) As String()
     Dim raw_contents As String: raw_contents = Common.ReadTextFileBySJIS(vbproj_path)
     
     'ファイルの内容を配列に格納する
-    Dim contents() As String: contents = Split(raw_contents, vbCrLf)
+    Dim Contents() As String: Contents = Split(raw_contents, vbCrLf)
     
-    GetVBPrjContents = Common.DeleteEmptyArray(contents)
+    GetVBPrjContents = Common.DeleteEmptyArray(Contents)
     
     Common.WriteLog "GetVBPrjContents E"
 End Function
@@ -191,7 +246,7 @@ End Function
 '[13] :"C:\tmp\cmn\usercontrol2.ctl
 '[14] :"C:\tmp\base\sub\usercontrol3.ctl
 '[15] :"C:\tmp\base\test.vbp"
-Private Function ParseVB6Project(ByRef contents() As String) As RefFiles
+Private Function ParseVB6Project(ByRef Contents() As String) As RefFiles
     Common.WriteLog "ParseVB6Project S"
 
     Dim ref_files As RefFiles
@@ -202,19 +257,23 @@ Private Function ParseVB6Project(ByRef contents() As String) As RefFiles
     Dim key As String
     Dim value As String
     
-    Dim vbp_path As String: vbp_path = contents(UBound(contents))
+    Dim vbp_path As String: vbp_path = Contents(UBound(Contents))
     Dim base_path As String: base_path = Common.GetFolderNameFromPath(vbp_path)
+    
+    '収集対象拡張子リストを作成
+    Dim target_exts() As String
+    target_exts = Split(main_param.GetTargetExtensions(), ",")
 
     cnt = 0
 
-    For i = LBound(contents) To UBound(contents)
-        If InStr(contents(i), "=") = 0 Then
+    For i = LBound(Contents) To UBound(Contents)
+        If InStr(Contents(i), "=") = 0 Then
             '"="を含まないので無視
             GoTo CONTINUE
         End If
         
         'Key/Valueに分ける
-        datas = Split(contents(i), "=")
+        datas = Split(Contents(i), "=")
         
         'キーを取得
         key = datas(0)
@@ -238,6 +297,17 @@ Private Function ParseVB6Project(ByRef contents() As String) As RefFiles
         
         '絶対パスに変換する
         Dim abs_path As String: abs_path = Common.GetAbsolutePathName(base_path, path)
+        
+        If Common.IsEmptyArray(target_exts) = False Then
+            For j = LBound(target_exts) To UBound(target_exts)
+                Dim ext As String: ext = Common.GetFileExtension(abs_path)
+                If ext <> LCase(target_exts(j)) Then
+                    '収集対象拡張子ではないので無視
+                    GoTo CONTINUE
+                End If
+            Next j
+        End If
+        
         ref_files.AppendRefFilePath (abs_path)
         cnt = cnt + 1
         
@@ -269,7 +339,7 @@ End Function
 '[1] : "C:\tmp\cmn\cmn.vb"
 '[2] : "C:\tmp\base\sub\sub.vb"
 '[3] : "C:\tmp\base\test.vbproj"
-Private Function ParseVBNETProject(ByRef contents() As String) As RefFiles
+Private Function ParseVBNETProject(ByRef Contents() As String) As RefFiles
     Common.WriteLog "ParseVBNETProject S"
 
     Dim ref_files As RefFiles
@@ -280,23 +350,27 @@ Private Function ParseVBNETProject(ByRef contents() As String) As RefFiles
     Dim cnt As Long
     Dim filelist() As String
     
-    Dim vbproj_path As String: vbproj_path = contents(UBound(contents))
+    Dim vbproj_path As String: vbproj_path = Contents(UBound(Contents))
     Dim base_path As String: base_path = Common.GetFolderNameFromPath(vbproj_path)
     
     '除外ファイルリストを作成
     Dim ignore_files() As String
     ignore_files = Split(main_param.GetIgnoreFiles(), ",")
+    
+    '収集対象拡張子リストを作成
+    Dim target_exts() As String
+    target_exts = Split(main_param.GetTargetExtensions(), ",")
 
     cnt = 0
 
-    For i = LBound(contents) To UBound(contents)
+    For i = LBound(Contents) To UBound(Contents)
         'Common.WriteLog "contents(" & i & ")=" & contents(i)
     
-        If InStr(contents(i), "<Compile Include=") = 0 And _
-           InStr(contents(i), "<EmbeddedResource Include=") = 0 And _
-           InStr(contents(i), "<None Include=") = 0 And _
-           InStr(contents(i), "<HintPath>") = 0 And _
-           InStr(contents(i), "<ApplicationIcon>") = 0 Then
+        If InStr(Contents(i), "<Compile Include=") = 0 And _
+           InStr(Contents(i), "<EmbeddedResource Include=") = 0 And _
+           InStr(Contents(i), "<None Include=") = 0 And _
+           InStr(Contents(i), "<HintPath>") = 0 And _
+           InStr(Contents(i), "<ApplicationIcon>") = 0 Then
             'ビルドに必要なファイルを含まないので無視
             'Common.WriteLog "Skip contents(" & i & ")=" & contents(i)
             GoTo CONTINUE
@@ -304,14 +378,14 @@ Private Function ParseVBNETProject(ByRef contents() As String) As RefFiles
         
         If Common.IsEmptyArray(ignore_files) = False Then
             For j = LBound(ignore_files) To UBound(ignore_files)
-                If InStr(contents(i), ignore_files(j)) > 0 Then
+                If InStr(Contents(i), ignore_files(j)) > 0 Then
                     '除外ファイルを含むので無視
                     GoTo CONTINUE
                 End If
             Next j
         End If
         
-        If Common.StartsWith(Trim(Replace(Replace(contents(i), "<HintPath>", ""), "</HintPath>", "")), "packages") Then
+        If Common.StartsWith(Trim(Replace(Replace(Contents(i), "<HintPath>", ""), "</HintPath>", "")), "packages") Then
             'packagesは無視する
             GoTo CONTINUE
         End If
@@ -320,16 +394,16 @@ Private Function ParseVBNETProject(ByRef contents() As String) As RefFiles
         
         Dim path As String
         
-        If InStr(contents(i), "<Compile Include=") > 0 Then
-            path = Trim(Replace(Replace(contents(i), "<Compile Include=""", ""), """ />", ""))
-        ElseIf InStr(contents(i), "<EmbeddedResource Include=") > 0 Then
-            path = Trim(Replace(Replace(contents(i), "<EmbeddedResource Include=""", ""), """ />", ""))
-        ElseIf InStr(contents(i), "<None Include=") > 0 Then
-            path = Trim(Replace(Replace(contents(i), "<None Include=""", ""), """ />", ""))
-        ElseIf InStr(contents(i), "<HintPath>") > 0 Then
-            path = Trim(Replace(Replace(contents(i), "<HintPath>", ""), "</HintPath>", ""))
-        ElseIf InStr(contents(i), "<ApplicationIcon>") > 0 Then
-            path = Trim(Replace(Replace(contents(i), "<ApplicationIcon>", ""), "</ApplicationIcon>", ""))
+        If InStr(Contents(i), "<Compile Include=") > 0 Then
+            path = Trim(Replace(Replace(Contents(i), "<Compile Include=""", ""), """ />", ""))
+        ElseIf InStr(Contents(i), "<EmbeddedResource Include=") > 0 Then
+            path = Trim(Replace(Replace(Contents(i), "<EmbeddedResource Include=""", ""), """ />", ""))
+        ElseIf InStr(Contents(i), "<None Include=") > 0 Then
+            path = Trim(Replace(Replace(Contents(i), "<None Include=""", ""), """ />", ""))
+        ElseIf InStr(Contents(i), "<HintPath>") > 0 Then
+            path = Trim(Replace(Replace(Contents(i), "<HintPath>", ""), "</HintPath>", ""))
+        ElseIf InStr(Contents(i), "<ApplicationIcon>") > 0 Then
+            path = Trim(Replace(Replace(Contents(i), "<ApplicationIcon>", ""), "</ApplicationIcon>", ""))
         End If
         
         If path = "" Then
@@ -339,12 +413,24 @@ Private Function ParseVBNETProject(ByRef contents() As String) As RefFiles
         path = Replace(path, """>", "")
         
         '絶対パスに変換する
-        filelist(cnt) = Common.GetAbsolutePathName(base_path, path)
+        Dim abs_path As String: abs_path = Common.GetAbsolutePathName(base_path, path)
+        
+        If Common.IsEmptyArray(target_exts) = False Then
+            For j = LBound(target_exts) To UBound(target_exts)
+                Dim ext As String: ext = Common.GetFileExtension(abs_path)
+                If ext <> LCase(target_exts(j)) Then
+                    '収集対象拡張子ではないので無視
+                    GoTo CONTINUE
+                End If
+            Next j
+        End If
+        
+        filelist(cnt) = abs_path
         ref_files.AppendRefFilePath (filelist(cnt))
         cnt = cnt + 1
         
         'ActiveReport 特殊処理
-        If InStr(contents(i), "<Compile Include=""reports\") > 0 Then
+        If InStr(Contents(i), "<Compile Include=""reports\") > 0 Then
             'rpxの存在チェックを行い、あれば追加する
             Dim rpx_path As String: rpx_path = Replace(path, ".vb", ".rpx")
             Dim rpx_find_path As String: rpx_find_path = base_path & SEP & rpx_path

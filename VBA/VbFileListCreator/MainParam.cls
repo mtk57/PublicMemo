@@ -14,6 +14,7 @@ Option Explicit
 Private src_dir_path As String
 Private target_type As String
 Private ignore_files As String
+Private target_exts As String
 
 Private Const CLM_ = "O"
 Private Const ROW_ = 6
@@ -23,7 +24,25 @@ Private Sub Class_Initialize()
     src_dir_path = ""
     target_type = "vbp"
     ignore_files = ""
+    target_exts = ""
 End Sub
+
+'初期化(外部実行用)
+Public Sub InitForExternal( _
+    ByVal arg_src_dir_path As String, _
+    ByVal arg_target_type As String, _
+    ByVal arg_ignore_files As String, _
+    ByVal arg_target_exts As String _
+)
+    Dim main_sheet As Worksheet
+    Set main_sheet = ThisWorkbook.Sheets("main")
+    
+    src_dir_path = arg_src_dir_path
+    target_type = arg_target_type
+    ignore_files = arg_ignore_files
+    target_exts = arg_target_exts
+End Sub
+
 
 '初期化
 Public Sub Init()
@@ -33,6 +52,7 @@ Public Sub Init()
     src_dir_path = main_sheet.Range(CLM_ & ROW_).value
     target_type = main_sheet.Range(CLM_ & ROW_ + 2).value
     ignore_files = main_sheet.Range(CLM_ & ROW_ + 3).value
+    target_exts = main_sheet.Range(CLM_ & ROW_ + 4).value
 End Sub
 
 '検証
@@ -54,9 +74,6 @@ End Sub
 'Getter
 '=========================================
 
-'-----------------------------------------
-'検索するフォルダパス
-'-----------------------------------------
 Public Function GetSrcDirPath() As String
     GetSrcDirPath = src_dir_path
 End Function
@@ -69,13 +86,18 @@ Public Function GetIgnoreFiles() As String
     GetIgnoreFiles = ignore_files
 End Function
 
+Public Function GetTargetExtensions() As String
+    GetTargetExtensions = target_exts
+End Function
+
 Public Function GetAllValue() As String
     Dim ret As String
     
     ret = "[Main Param] " & _
           "src_dir_path=(" & src_dir_path & "), " & _
           "target_type=(" & target_type & "), " & _
-          "ignore_files=(" & ignore_files & ")"
+          "ignore_files=(" & ignore_files & "), " & _
+          "target_exts=(" & target_exts & ")"
 
     GetAllValue = ret
 End Function
