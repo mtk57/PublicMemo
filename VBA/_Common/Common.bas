@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.7"
+Private Const VERSION = "1.5.8"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -909,23 +909,23 @@ End Function
 ' Ret : 昇順ソートして重複行を削除した配列
 '-------------------------------------------------------------
 Public Function SortAndDistinctArray(ByRef arr() As String) As String()
-    Dim dict As Object
-    Set dict = CreateObject("Scripting.Dictionary")
+    Dim dict_ As Object
+    Set dict_ = CreateObject("Scripting.Dictionary")
     Dim i As Long
     For i = LBound(arr) To UBound(arr)
-        If Not dict.Exists(arr(i)) Then
-            dict.Add arr(i), 1
+        If Not dict_.Exists(arr(i)) Then
+            dict_.Add arr(i), 1
         End If
     Next i
     Dim result() As String
-    ReDim result(0 To dict.count - 1)
+    ReDim result(0 To dict_.count - 1)
     Dim key As Variant
     i = 0
-    For Each key In dict.Keys()
+    For Each key In dict_.Keys()
         result(i) = key
         i = i + 1
     Next key
-    Set dict = Nothing
+    Set dict_ = Nothing
     SortAndDistinctArray = result
 End Function
 
