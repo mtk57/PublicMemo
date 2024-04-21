@@ -171,7 +171,7 @@ Private Sub CreateVbprojMapping()
     
     
     '外部ツールを閉じる
-    Common.CloseBook (Common.GetFileName(main_param.GetVbFileListCreatorPath()))
+    Common.CloseBook Common.GetFileName(main_param.GetVbFileListCreatorPath()), True
     
     Set vbproj_mapping = New RefFiles
     vbproj_mapping.SetDict copy_dict
@@ -272,7 +272,7 @@ Private Sub CreateFinalMapping()
         '期待するキーが実際に収集したキーに存在するか?
         key = vbp_mapping.GetPrjPathList()(i)
         expect_key = Replace(key, main_param.GetVbpBaseDirPath(), main_param.GetVbprojBaseDirPath())
-        expect_key = Replace(expect_key, ".vbp", ".vbproj")
+        expect_key = Replace(expect_key, "." & Common.GetFileExtension(expect_key, True), ".vbproj")
         
         'If vbproj_mapping.IsExistKey(expect_key) = False Then
         '    Common.WriteLog "Project file is not exist. Expect=[" & expect_key & "]"
@@ -293,11 +293,7 @@ Private Sub CreateFinalMapping()
             '期待する値が実際に収集した値に存在するか?
             value = values(j)
             expect_val = Replace(value, main_param.GetVbpBaseDirPath(), main_param.GetVbprojBaseDirPath())
-            expect_val = Replace(expect_val, ".frm", ".vb")
-            expect_val = Replace(expect_val, ".bas", ".vb")
-            expect_val = Replace(expect_val, ".cls", ".vb")
-            expect_val = Replace(expect_val, ".ctl", ".vb")
-            
+            expect_val = Replace(expect_val, "." & Common.GetFileExtension(expect_val, True), ".vb")
             
             If vbproj_mapping.IsExistValue(final_key, expect_val) = False Then
             

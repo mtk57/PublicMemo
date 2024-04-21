@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.8"
+Private Const VERSION = "1.5.9"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -1785,13 +1785,21 @@ End Function
 '-------------------------------------------------------------
 'ブックを保存して閉じる
 ' name : I : ブック名(Excelファイル名)
+' is_textcmp : I : True=大文字・小文字を区別しない, False=大文字・小文字を区別する(デフォルト)
 '-------------------------------------------------------------
-Public Sub SaveAndCloseBook(ByVal Name As String)
+Public Sub SaveAndCloseBook(ByVal Name As String, Optional ByVal is_textcmp As Boolean = False)
     Dim wb As Workbook
     For Each wb In Workbooks
-        If InStr(wb.Name, Name) > 0 Then
-            wb.Save
-            wb.Close
+        If is_textcmp = False Then
+            If InStr(wb.Name, Name) > 0 Then
+                wb.Save
+                wb.Close
+            End If
+        Else
+            If InStr(1, wb.Name, Name, vbTextCompare) > 0 Then
+                wb.Save
+                wb.Close
+            End If
         End If
     Next
 End Sub
@@ -1799,12 +1807,19 @@ End Sub
 '-------------------------------------------------------------
 'ブックを閉じる
 ' name : I : ブック名(Excelファイル名)
+' is_textcmp : I : True=大文字・小文字を区別しない, False=大文字・小文字を区別する(デフォルト)
 '-------------------------------------------------------------
-Public Sub CloseBook(ByVal Name As String)
+Public Sub CloseBook(ByVal Name As String, Optional ByVal is_textcmp As Boolean = False)
     Dim wb As Workbook
     For Each wb In Workbooks
-        If InStr(wb.Name, Name) > 0 Then
-            wb.Close SaveChanges:=False
+        If is_textcmp = False Then
+            If InStr(wb.Name, Name) > 0 Then
+                wb.Close SaveChanges:=False
+            End If
+        Else
+            If InStr(1, wb.Name, Name, vbTextCompare) > 0 Then
+                wb.Close SaveChanges:=False
+            End If
         End If
     Next
 End Sub
@@ -3416,4 +3431,6 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
+
+
 
