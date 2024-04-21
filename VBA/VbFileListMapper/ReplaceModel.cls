@@ -19,17 +19,24 @@ Private Const CLM_DST_REF = 3
 Private ary_() As String
 Private now_row_cnt_ As Long
 Private max_row_cnt_ As Long
+Private is_empty As Boolean
 
 'コンストラクタ
 Private Sub Class_Initialize()
     now_row_cnt_ = 0
-    max_row_cnt_ = 0
+    max_row_cnt_ = -1
+    is_empty = True
 End Sub
 
 '初期化
 Public Sub Init(ByVal row_cnt As Long)
+    If row_cnt < 0 Then
+        Exit Sub
+    End If
+    
     ReDim Preserve ary_(row_cnt, MAX_CLMS)
     max_row_cnt_ = row_cnt
+    is_empty = False
 End Sub
 
 '=========================================

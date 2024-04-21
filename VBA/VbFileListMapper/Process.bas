@@ -151,6 +151,8 @@ Private Sub CreateVbprojMapping()
     Dim i As Long
     Dim j As Long
     
+    Common.WriteLog "GetAllValueCount=" & ret_dict.GetAllValueCount()
+    
     For i = 0 To ret_dict.GetKeyCount()
         Dim key As String: key = ret_dict.GetKeys()(i)
         
@@ -160,6 +162,8 @@ Private Sub CreateVbprojMapping()
         For j = 0 To UBound(values)
             Dim value As String: value = values(j)
             copy_dict.AppendStringArray key, value
+            
+            Common.WriteLog "key=[" & key & "], value=[" & value & "]"
         Next j
     Next i
     '--------------------------------------------------------------------------
@@ -204,14 +208,18 @@ Private Sub CreateRenameMapping()
             Exit Do
         End If
         
-        If src_key = "" Or src_val = "" Or dst_key = "" Or dst_val = "" Then
-            '1つでも空があれば不正なマッピングデータなのでそこで終了する
-            Common.WriteLog "★Bad data found.  src_key=[" & src_key & "], src_val=[" & src_val & "], dst_key=[" & dst_key & "], dst_val=[" & dst_val & "]"
-            Exit Do
-        End If
+        'If src_key = "" Or src_val = "" Or dst_key = "" Or dst_val = "" Then
+        '    '1つでも空があれば不正なマッピングデータなのでそこで終了する
+        '    Common.WriteLog "★Bad data found.  src_key=[" & src_key & "], src_val=[" & src_val & "], dst_key=[" & dst_key & "], dst_val=[" & dst_val & "]"
+        '    Exit Do
+        'End If
        
         i = i + 1
     Loop
+    
+    If i = 0 Then
+        Common.WriteLog "rename_mapping_row_cnt=" & rename_mapping_row_cnt
+    End If
     
     rename_mapping_row_cnt = i - 1
     
@@ -219,6 +227,11 @@ Private Sub CreateRenameMapping()
     'ReplaceModelを作成する
     Set repname_mapping = New ReplaceModel
     repname_mapping.Init rename_mapping_row_cnt
+    
+    If rename_mapping_row_cnt < 0 Then
+        Common.WriteLog "CreateRenameMapping E-1"
+        Exit Sub
+    End If
     
     For i = 0 To rename_mapping_row_cnt
         
@@ -288,19 +301,25 @@ Private Sub CreateFinalMapping()
             
             If vbproj_mapping.IsExistValue(final_key, expect_val) = False Then
             
+                If repname_mapping.IsEmpty() = True Then
+                    GoTo NOT_FOUND_RENAME
+                End If
+            
                 ren_key_num = repname_mapping.GetIndexSrcPrjPath(key)
                 ren_val_num = repname_mapping.GetIndexSrcRefPath(value)
             
                 'リネームマッピングにあるか確認してあれば採用する
-                If ren_key_num >= 0 And ren_val_num >= 0 Then
-                    
+                If ren_key_num >= 0 Then
                     final_key = repname_mapping.GetDstPrjPath(ren_key_num)
-                    final_val = repname_mapping.GetDstRefPath(ren_val_num)
+                   GoTo RENAMED
+                End If
                 
+                If ren_val_num >= 0 Then
+                    final_val = repname_mapping.GetDstRefPath(ren_val_num)
                    GoTo RENAMED
                 End If
             
-            
+NOT_FOUND_RENAME:
                 'リネームマッピングにも無い
                 Common.WriteLog "★Not found. Key=[" & key & "], ExpectKey=[" & expect_key & "], Value=[" & value & "], ExpectValue=[" & expect_val & "]"
                 
