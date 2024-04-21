@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.7"
+Private Const VERSION = "1.5.8"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -73,12 +73,6 @@ Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
 
-Public Function IsVariantNull(v As Variant) As Boolean
-    On Error Resume Next
-    IsVariantNull = IsEmpty(v)
-    On Error GoTo 0
-End Function
-
 '-------------------------------------------------------------
 ' 配列をクイックソートで昇順ソートする
 ' argAry : I/O : 配列
@@ -141,7 +135,6 @@ Public Sub QuickSortArray( _
     If (lngMax > j + 1) Then
         Call QuickSortArray(argAry, j + 1, lngMax, keyPos)
     End If
-    
 End Sub
 
 '-------------------------------------------------------------
@@ -916,23 +909,23 @@ End Function
 ' Ret : 昇順ソートして重複行を削除した配列
 '-------------------------------------------------------------
 Public Function SortAndDistinctArray(ByRef arr() As String) As String()
-    Dim Dict As Object
-    Set Dict = CreateObject("Scripting.Dictionary")
+    Dim dict_ As Object
+    Set dict_ = CreateObject("Scripting.Dictionary")
     Dim i As Long
     For i = LBound(arr) To UBound(arr)
-        If Not Dict.Exists(arr(i)) Then
-            Dict.Add arr(i), 1
+        If Not dict_.Exists(arr(i)) Then
+            dict_.Add arr(i), 1
         End If
     Next i
     Dim result() As String
-    ReDim result(0 To Dict.count - 1)
+    ReDim result(0 To dict_.count - 1)
     Dim key As Variant
     i = 0
-    For Each key In Dict.Keys()
+    For Each key In dict_.Keys()
         result(i) = key
         i = i + 1
     Next key
-    Set Dict = Nothing
+    Set dict_ = Nothing
     SortAndDistinctArray = result
 End Function
 
