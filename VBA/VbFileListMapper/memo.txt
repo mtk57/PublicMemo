@@ -1,0 +1,28 @@
+VB File List Mapper																																											
+ver.	1.0.0																																										
+																																											
+																																											
+	Main Param																															memo											
+		①デバッグログ出力												NO																		未指定の場合は出力しない。											
+		②vbprojを検索するフォルダパス(絶対パス)												C:\_git\PublicMemo\VBA\VbFileListMapper\testdata\src\vbproj																		末尾に"\"禁止											Ex.
+		③vbpベースフォルダパス(絶対パス)												C:\_git\PublicMemo\VBA\VbFileListMapper\testdata\src\vbp																		末尾に"\"禁止											Ex.
+		④vbprojベースフォルダパス(絶対パス)												C:\_git\PublicMemo\VBA\VbFileListMapper\testdata\src\vbproj																		末尾に"\"禁止											Ex.
+		⑤VbFileListCreator.xlsmファイルパス(絶対パス)												C:\_git\PublicMemo\VBA\VbFileListCreator\VbFileListCreator.xlsm																													Ex.
+		⑥VBPマッピングのシート名												VBP_Mapping																													Ex.
+		⑦リネームマッピングのシート名												Rename_Mapping																													Ex.
+
+
+
+
+VBP Mapping	
+	
+13	13
+vbp full path	vbp ref file full path
+
+
+
+
+Rename Mapping			
+			
+1	1	1	1
+vbp full path	vbp ref file full path	vbproj full path	vbproj ref file full path
