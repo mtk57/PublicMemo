@@ -1,16 +1,15 @@
 Module=module1; module1.bas
 Module=module2; ..\cmn\module2.bas
 Module=module3; sub\module3.bas
+
 Form=form1.frm
 Form=..\cmn\form2.frm
 Form=sub\form3.frm
+
 Class=class1; class1.cls
 Class=class2; ..\cmn\class2.cls
 Class=class3; sub\class3.cls
-ResFile32="resfile321.RES"
-ResFile32="..\cmn\resfile322.RES"
-ResFile32="sub\resfile323.RES"
+
 UserControl=usercontrol1.ctl
 UserControl=..\cmn\usercontrol2.ctl
 UserControl=sub\usercontrol3.ctl
-Path32=..\..\bin

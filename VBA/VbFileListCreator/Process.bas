@@ -252,7 +252,7 @@ Private Function ParseVB6Project(ByRef Contents() As String) As RefFiles
     Dim ref_files As RefFiles
     Set ref_files = New RefFiles
 
-    Dim i, cnt As Integer
+    Dim i, j, cnt As Integer
     Dim datas() As String
     Dim key As String
     Dim value As String
@@ -267,6 +267,8 @@ Private Function ParseVB6Project(ByRef Contents() As String) As RefFiles
     cnt = 0
 
     For i = LBound(Contents) To UBound(Contents)
+        'Common.WriteLog "i=" & i
+    
         If InStr(Contents(i), "=") = 0 Then
             '"="を含まないので無視
             GoTo CONTINUE
@@ -300,13 +302,18 @@ Private Function ParseVB6Project(ByRef Contents() As String) As RefFiles
         
         If Common.IsEmptyArray(target_exts) = False Then
             For j = LBound(target_exts) To UBound(target_exts)
+                'Common.WriteLog "i=" & i
                 Dim Ext As String: Ext = Common.GetFileExtension(abs_path)
-                If Ext <> LCase(target_exts(j)) Then
-                    '収集対象拡張子ではないので無視
-                    GoTo CONTINUE
+                If Ext = LCase(target_exts(j)) Then
+                    GoTo FIND_TARGET_EXT
                 End If
             Next j
+            
+            '収集対象拡張子ではないので無視
+            GoTo CONTINUE
         End If
+        
+FIND_TARGET_EXT:
         
         ref_files.AppendRefFilePath (abs_path)
         cnt = cnt + 1
@@ -417,13 +424,18 @@ Private Function ParseVBNETProject(ByRef Contents() As String) As RefFiles
         
         If Common.IsEmptyArray(target_exts) = False Then
             For j = LBound(target_exts) To UBound(target_exts)
+                'Common.WriteLog "j=" & j
                 Dim Ext As String: Ext = Common.GetFileExtension(abs_path)
-                If Ext <> LCase(target_exts(j)) Then
-                    '収集対象拡張子ではないので無視
-                    GoTo CONTINUE
+                If Ext = LCase(target_exts(j)) Then
+                    GoTo FIND_TARGET_EXT
                 End If
             Next j
+            
+            '収集対象拡張子ではないので無視
+            GoTo CONTINUE
         End If
+        
+FIND_TARGET_EXT:
         
         filelist(cnt) = abs_path
         ref_files.AppendRefFilePath (filelist(cnt))
