@@ -300,8 +300,8 @@ Private Function ParseVB6Project(ByRef Contents() As String) As RefFiles
         
         If Common.IsEmptyArray(target_exts) = False Then
             For j = LBound(target_exts) To UBound(target_exts)
-                Dim ext As String: ext = Common.GetFileExtension(abs_path)
-                If ext <> LCase(target_exts(j)) Then
+                Dim Ext As String: Ext = Common.GetFileExtension(abs_path)
+                If Ext <> LCase(target_exts(j)) Then
                     '収集対象拡張子ではないので無視
                     GoTo CONTINUE
                 End If
@@ -417,8 +417,8 @@ Private Function ParseVBNETProject(ByRef Contents() As String) As RefFiles
         
         If Common.IsEmptyArray(target_exts) = False Then
             For j = LBound(target_exts) To UBound(target_exts)
-                Dim ext As String: ext = Common.GetFileExtension(abs_path)
-                If ext <> LCase(target_exts(j)) Then
+                Dim Ext As String: Ext = Common.GetFileExtension(abs_path)
+                If Ext <> LCase(target_exts(j)) Then
                     '収集対象拡張子ではないので無視
                     GoTo CONTINUE
                 End If

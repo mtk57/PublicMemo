@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.6"
+Private Const VERSION = "1.5.8"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -13,7 +13,7 @@ End Type
 Public Type GrepResultInfoStruct
     ResultRaw As String
     FilePath As String
-    ext As String
+    Ext As String
     row As Long
     Clm As Long
     Contents As String
@@ -72,6 +72,70 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+' 配列をクイックソートで昇順ソートする
+' argAry : I/O : 配列
+' lngMin : I : ソート範囲(最小)  ※任意
+' lngMax : I : ソート範囲(最大)  ※任意
+' keyPos : I : ソートキーインデクス  ※任意
+' BASE : https://excel-ubara.com/excelvba5/EXCELVBA229.html
+'-------------------------------------------------------------
+Public Sub QuickSortArray( _
+    ByRef argAry() As Variant, _
+    Optional ByVal lngMin As Long = -1, _
+    Optional ByVal lngMax As Long = -1, _
+    Optional ByVal keyPos As Long = 0 _
+)
+    If IsEmptyArray(argAry) = True Then
+        Exit Sub
+    End If
+    
+    If lngMin = -1 Then
+        lngMin = LBound(argAry)
+    End If
+    If lngMax = -1 Then
+        lngMax = UBound(argAry)
+    End If
+
+    Dim i As Long
+    Dim j As Long
+    Dim k As Long
+    Dim vBase As Variant
+    Dim vSwap As Variant
+    
+    vBase = argAry(Int((lngMin + lngMax) / 2), keyPos)
+    i = lngMin
+    j = lngMax
+    
+    Do
+        Do While argAry(i, keyPos) < vBase
+            i = i + 1
+        Loop
+        
+        Do While argAry(j, keyPos) > vBase
+            j = j - 1
+        Loop
+        
+        If i >= j Then Exit Do
+        
+        For k = LBound(argAry, 2) To UBound(argAry, 2)
+            vSwap = argAry(i, k)
+            argAry(i, k) = argAry(j, k)
+            argAry(j, k) = vSwap
+        Next
+        i = i + 1
+        j = j - 1
+    Loop
+    
+    If (lngMin < i - 1) Then
+        Call QuickSortArray(argAry, lngMin, i - 1, keyPos)
+    End If
+    
+    If (lngMax > j + 1) Then
+        Call QuickSortArray(argAry, j + 1, lngMax, keyPos)
+    End If
+End Sub
 
 '-------------------------------------------------------------
 ' 配列の指定位置に指定サイズの空行を挿入する
@@ -186,7 +250,7 @@ Public Function GetMethodInfoFromGrepResult( _
         cur_info = GetGrepInfo(grepResults(i), grepApp, lang)
         
         'コメントの場合は無視する
-        If IsCommentCode(cur_info.Contents, cur_info.ext) Then
+        If IsCommentCode(cur_info.Contents, cur_info.Ext) Then
             GoTo CONTINUE_A
         End If
         
@@ -263,7 +327,7 @@ Public Function GetGrepInfo( _
     
     ret.ResultRaw = grepResult
     ret.FilePath = ReplaceByRegExp(regex_result(0), "\(\d+,\d+\)", "", False)
-    ret.ext = GetFileExtension(ret.FilePath)
+    ret.Ext = GetFileExtension(ret.FilePath)
     Dim wk As String: wk = Trim(Replace(Replace(GetMatchByRegExp(regex_result(0), "\(\d+,\d+\)", False)(0), "(", ""), ")", ""))
     ret.row = CLng(Split(wk, ",")(0))
     ret.Clm = CLng(Split(wk, ",")(1))
@@ -845,23 +909,23 @@ End Function
 ' Ret : 昇順ソートして重複行を削除した配列
 '-------------------------------------------------------------
 Public Function SortAndDistinctArray(ByRef arr() As String) As String()
-    Dim Dict As Object
-    Set Dict = CreateObject("Scripting.Dictionary")
+    Dim dict_ As Object
+    Set dict_ = CreateObject("Scripting.Dictionary")
     Dim i As Long
     For i = LBound(arr) To UBound(arr)
-        If Not Dict.Exists(arr(i)) Then
-            Dict.Add arr(i), 1
+        If Not dict_.Exists(arr(i)) Then
+            dict_.Add arr(i), 1
         End If
     Next i
     Dim result() As String
-    ReDim result(0 To Dict.count - 1)
+    ReDim result(0 To dict_.count - 1)
     Dim key As Variant
     i = 0
-    For Each key In Dict.Keys()
+    For Each key In dict_.Keys()
         result(i) = key
         i = i + 1
     Next key
-    Set Dict = Nothing
+    Set dict_ = Nothing
     SortAndDistinctArray = result
 End Function
 
@@ -872,15 +936,15 @@ End Function
 ' Ret : コメントがあれば削除して返す。なければ元の文字列を返す
 ' Ex. "abc 'def" → "abc"
 '-------------------------------------------------------------
-Public Function RemoveRightComment(ByVal str As String, ByVal ext As String) As String
+Public Function RemoveRightComment(ByVal str As String, ByVal Ext As String) As String
     Dim pos As Long
     Dim ret As String
     
-    If ext = "bas" Or _
-       ext = "frm" Or _
-       ext = "cls" Or _
-       ext = "ctl" Or _
-       ext = "vb" Then
+    If Ext = "bas" Or _
+       Ext = "frm" Or _
+       Ext = "cls" Or _
+       Ext = "ctl" Or _
+       Ext = "vb" Then
         pos = InStr(str, "'")
         
         If pos = 0 Then
@@ -889,7 +953,7 @@ Public Function RemoveRightComment(ByVal str As String, ByVal ext As String) As 
             ret = RTrim(Mid(str, 1, pos - 1))
         End If
     Else
-        Err.Raise 53, , "[RemoveRightComment] 指定された拡張子は未サポートです (ext=" & ext & ")"
+        Err.Raise 53, , "[RemoveRightComment] 指定された拡張子は未サポートです (ext=" & Ext & ")"
     End If
     
     RemoveRightComment = RTrim(ret)
@@ -922,8 +986,8 @@ End Function
 ' ext : I : 拡張子(Ex. "bas", "vb") ※VB系のみサポート
 ' Ret : True/False(True=コメント行)
 '-------------------------------------------------------------
-Public Function IsCommentCode(ByVal line As String, ByVal ext As String) As Boolean
-    If line = "" Or ext = "" Then
+Public Function IsCommentCode(ByVal line As String, ByVal Ext As String) As Boolean
+    If line = "" Or Ext = "" Then
         IsCommentCode = False
         Exit Function
     End If
@@ -931,18 +995,18 @@ Public Function IsCommentCode(ByVal line As String, ByVal ext As String) As Bool
     Dim wk As String
     wk = Replace(line, vbTab, " ")
     
-    If ext = "bas" Or _
-       ext = "frm" Or _
-       ext = "cls" Or _
-       ext = "ctl" Or _
-       ext = "vb" Then
+    If Ext = "bas" Or _
+       Ext = "frm" Or _
+       Ext = "cls" Or _
+       Ext = "ctl" Or _
+       Ext = "vb" Then
         If Left(LTrim(wk), 1) = "'" Or _
            Left(LTrim(wk), 4) = "REM " Then
            IsCommentCode = True
            Exit Function
         End If
     Else
-        Err.Raise 53, , "[IsCommentCode] 指定された拡張子は未サポートです (ext=" & ext & ")"
+        Err.Raise 53, , "[IsCommentCode] 指定された拡張子は未サポートです (ext=" & Ext & ")"
     End If
     
     IsCommentCode = False
@@ -1647,7 +1711,7 @@ End Function
 ' Ret : 変更後のファイルパス(絶対パス)
 '       pathのファイルが存在しない場合はpathを返す
 '-------------------------------------------------------------
-Public Function ChangeFileExt(ByVal path As String, ByVal ext As String) As String
+Public Function ChangeFileExt(ByVal path As String, ByVal Ext As String) As String
     If IsExistsFile(path) = False Then
         'Err.Raise 53, , "[ChangeFileExt] 指定されたファイルが存在しません (path=" & path & ")"
         ChangeFileExt = path
@@ -1667,7 +1731,7 @@ Public Function ChangeFileExt(ByVal path As String, ByVal ext As String) As Stri
     Dim new_path As String
     
     '新しい拡張子に変更
-    file_name = file_name & ext
+    file_name = file_name & Ext
     new_path = fso.GetParentFolderName(path) & SEP & file_name
     
     'ファイル名を変更
@@ -1894,12 +1958,12 @@ End Function
 ' is_subdir : IN : サブフォルダ含むか (True=含む)
 ' Ret : ファイルリスト
 '-------------------------------------------------------------
-Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
+Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal Ext As String, ByVal is_subdir As Boolean)
     If IsExistsFolder(path) = False Then
         Err.Raise 53, , "[UTF8toSJIS_AllFile] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
     
-    If ext = "" Then
+    If Ext = "" Then
         Err.Raise 53, , "[UTF8toSJIS_AllFile] 拡張子が指定されていません"
     End If
 
@@ -1908,7 +1972,7 @@ Public Sub UTF8toSJIS_AllFile(ByVal path As String, ByVal ext As String, ByVal i
     End If
 
     Dim i As Long
-    Dim src_file_list() As String: src_file_list = CreateFileList(path, ext, is_subdir)
+    Dim src_file_list() As String: src_file_list = CreateFileList(path, Ext, is_subdir)
 
     For i = LBound(src_file_list) To UBound(src_file_list)
         UTF8toSJIS src_file_list(i), False
@@ -1922,12 +1986,12 @@ End Sub
 ' is_subdir : IN : サブフォルダ含むか (True=含む)
 ' Ret : ファイルリスト
 '-------------------------------------------------------------
-Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal is_subdir As Boolean)
+Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal Ext As String, ByVal is_subdir As Boolean)
     If IsExistsFolder(path) = False Then
         Err.Raise 53, , "[SJIStoUTF8_AllFile] 指定されたフォルダが存在しません (path=" & path & ")"
     End If
     
-    If ext = "" Then
+    If Ext = "" Then
         Err.Raise 53, , "[SJIStoUTF8_AllFile] 拡張子が指定されていません"
     End If
 
@@ -1936,7 +2000,7 @@ Public Sub SJIStoUTF8_AllFile(ByVal path As String, ByVal ext As String, ByVal i
     End If
 
     Dim i As Long
-    Dim src_file_list() As String: src_file_list = CreateFileList(path, ext, is_subdir)
+    Dim src_file_list() As String: src_file_list = CreateFileList(path, Ext, is_subdir)
 
     For i = LBound(src_file_list) To UBound(src_file_list)
         SJIStoUTF8 src_file_list(i), False
@@ -2226,13 +2290,13 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As Stri
     Dim folder As Object
     Dim subfolder As Object
     Dim file As Object
-    Dim ext As String: ext = Replace(in_ext, "*", "")
+    Dim Ext As String: Ext = Replace(in_ext, "*", "")
     
     Set fso = CreateObject("Scripting.FileSystemObject")
     Set folder = fso.GetFolder(path)
     
     For Each subfolder In folder.SubFolders
-        If IsExistsExtensionFile(subfolder.path, ext) Then
+        If IsExistsExtensionFile(subfolder.path, Ext) Then
             Set fso = Nothing
             Set folder = Nothing
             
@@ -2242,7 +2306,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As Stri
     Next subfolder
     
     For Each file In folder.Files
-        If Right(file.Name, Len(ext)) = ext Then
+        If Right(file.Name, Len(Ext)) = Ext Then
             Set fso = Nothing
             Set folder = Nothing
         
@@ -2338,20 +2402,20 @@ End Function
 '-------------------------------------------------------------
 Public Function CreateFileList( _
     ByVal path As String, _
-    ByVal ext As String, _
+    ByVal Ext As String, _
     ByVal is_subdir As Boolean _
 ) As String()
     If IsMaxOverPath(path) = True Then
         Err.Raise 53, , "[CreateFileList] パスが長すぎます (path=" & path & ")"
     End If
 
-    Dim list() As String: list = CreateFileListMain(path, ext, is_subdir)
-    CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), ext)
+    Dim list() As String: list = CreateFileListMain(path, Ext, is_subdir)
+    CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), Ext)
 End Function
 
 Private Function CreateFileListMain( _
     ByVal path As String, _
-    ByVal ext As String, _
+    ByVal Ext As String, _
     ByVal is_subdir As Boolean _
 ) As String()
     Dim fso As Object
@@ -2361,7 +2425,7 @@ Private Function CreateFileListMain( _
     Dim cnt As Integer
 
     Dim file As String, f As Object
-    file = Dir(path & "\" & ext)
+    file = Dir(path & "\" & Ext)
     
     If file <> "" Then
         If IsEmptyArray(filelist) = True Then
@@ -2393,7 +2457,7 @@ Private Function CreateFileListMain( _
     Dim filelist_merge() As String
     
     For Each f In fso.GetFolder(path).SubFolders
-        filelist_sub = CreateFileListMain(f.path, ext, is_subdir)
+        filelist_sub = CreateFileListMain(f.path, Ext, is_subdir)
         filelist = MergeArray(filelist_sub, filelist)
     Next f
     
@@ -2411,7 +2475,7 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     Dim i As Long
     Dim j As Long: j = 0
     Dim filtered_list() As String
-    Dim ext As String: ext = Replace(in_ext, "*", "")
+    Dim Ext As String: Ext = Replace(in_ext, "*", "")
     
     If in_ext = "*.*" Then
         FilterFileListByExtension = path_list
@@ -2424,7 +2488,7 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     End If
       
     For i = 0 To UBound(path_list)
-        If Right(path_list(i), Len(ext)) = ext Then
+        If Right(path_list(i), Len(Ext)) = Ext Then
             ReDim Preserve filtered_list(j)
             filtered_list(j) = path_list(i)
             j = j + 1
@@ -3352,5 +3416,6 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
+
 
 

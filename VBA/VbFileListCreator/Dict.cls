@@ -9,7 +9,7 @@ Attribute VB_PredeclaredId = False
 Attribute VB_Exposed = False
 Option Explicit
 
-Private Const VERSION = "1.0.1"
+Private Const VERSION = "1.0.2"
 
 Private dict_ As Object
 
@@ -85,9 +85,22 @@ Public Function GetKeys() As Variant()
     GetKeys = dict_.Keys
 End Function
 
-'値の一覧を返す
-Public Function GetValues() As Variant()
-    GetValues = dict_.Items
+'値の総数を返す
+Public Function GetAllValueCount() As Long
+    Dim ret As Long
+    
+    Dim i As Long
+    Dim key As String
+    Dim values() As String
+    
+    For i = 0 To UBound(dict_.Keys)
+        key = GetKeys()(i)
+        values = dict_(key)
+        
+        ret = ret + UBound(values) + 1
+    Next i
+
+    GetAllValueCount = ret - 1
 End Function
 
 'String配列のコピーを返す(ボツ)
@@ -110,4 +123,6 @@ End Function
 '    Next i
 '    CopyStringArray = True
 'End Function
+
+
 
