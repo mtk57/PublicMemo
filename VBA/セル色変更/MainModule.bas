@@ -2,6 +2,8 @@ Attribute VB_Name = "MainModule"
 Option Explicit
 
 'íËêî
+Const MAIN_WS = "main"
+
 Const KEY_FILE_PATH = "FILE_PATH"
 Const KEY_INPUT_SHEET_NAME = "INPUT_SHEET_NAME"
 Const KEY_WORD = "WORD"
@@ -28,7 +30,7 @@ On Error GoTo Exception
     
     Dim searchInfos As Collection
     
-    Worksheets("main").Select
+    Worksheets(MAIN_WS).Select
 
     map.Add KEY_FILE_PATH, Range("B5").Value
     map.Add KEY_INPUT_SHEET_NAME, Range("B9").Value
@@ -47,7 +49,7 @@ On Error GoTo Exception
     If map(KEY_FILE_PATH) = "" Then
         Main map, searchInfos
         
-        Worksheets("main").Select
+        Worksheets(MAIN_WS).Select
     Else
         Application.DisplayAlerts = False
         Workbooks.Open map(KEY_FILE_PATH)
@@ -75,9 +77,17 @@ Exception:
 
 End Sub
 
+Sub Clear_Click()
+    If CommonModule.ShowYesNoMessageBox("åüçıèÓïÒÇÉNÉäÉAÇµÇ‹Ç∑Ç©?") = False Then
+        Exit Sub
+    End If
+    
+    ClearRange ("A16")
+    ClearRange ("B16")
+End Sub
 
 Function GetSearchInfo(ByVal map As Object) As Collection
-    Dim i, j, row, clm As Integer
+    Dim i, j, row, Clm As Integer
     Dim wk As String
     Dim ary_wk As Variant
     Dim word_clm, bgcol_clm, lookat_clm, matchcase_clm, matchbyte_clm As Integer
