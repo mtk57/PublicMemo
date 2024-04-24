@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.9"
+Private Const VERSION = "1.5.10"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -72,6 +72,24 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+' 指定されたセルから列内の最後の使用済みセルまでをクリアする
+' ws : I : ワークシート
+' cell_address : I : セルアドレス(Ex."A1")
+'-------------------------------------------------------------
+Public Sub ClearRange(ByRef ws As Worksheet, ByVal cell_address As String)
+    Dim last_row As Long
+    Dim range_to_clear As Range
+
+    ' 指定されたセルから列内の最後の使用済みセルまでの範囲を取得
+    last_row = ws.Cells(ws.Rows.Count, ws.Range(cell_address).Column).End(xlUp).row
+    Set range_to_clear = ws.Range(cell_address, ws.Cells(last_row, ws.Range(cell_address).Column))
+
+    ' 範囲をクリア
+    'range_to_clear.Clear
+    range_to_clear.Value = ""
+End Sub
 
 '-------------------------------------------------------------
 ' 配列をクイックソートで昇順ソートする
