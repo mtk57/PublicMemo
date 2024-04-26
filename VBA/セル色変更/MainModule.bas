@@ -6,6 +6,8 @@ Const MAIN_WS = "main"
 
 Const KEY_FILE_PATH = "FILE_PATH"
 Const KEY_INPUT_SHEET_NAME = "INPUT_SHEET_NAME"
+Const KEY_INPUT_MODE = "INPUT_MODE"
+
 Const KEY_WORD = "WORD"
 Const KEY_BGCOL = "BGCOL"
 Const KEY_LOOKAT = "LOOKAT"
@@ -34,6 +36,8 @@ On Error GoTo Exception
 
     map.Add KEY_FILE_PATH, Range("B5").Value
     map.Add KEY_INPUT_SHEET_NAME, Range("B9").Value
+    map.Add KEY_INPUT_MODE, Range("B11").Value
+    
     map.Add KEY_WORD, "B15"
     map.Add KEY_BGCOL, "C15"
     map.Add KEY_LOOKAT, "D15"
@@ -177,6 +181,7 @@ Function Main(ByVal map As Object, ByVal searchInfos As Collection)
     Dim obj As SearchInfoDataModel
     Dim obj_sheet As Worksheet
     Dim in_sheet As String
+    Dim in_mode As String
     Dim sheet As Variant
     Dim wk_range As Range
     
@@ -184,6 +189,7 @@ Function Main(ByVal map As Object, ByVal searchInfos As Collection)
     
     
     in_sheet = map(KEY_INPUT_SHEET_NAME)
+    in_mode = map(KEY_INPUT_MODE)
     
     
     If in_sheet = "" Then
@@ -207,14 +213,14 @@ Function Main(ByVal map As Object, ByVal searchInfos As Collection)
         Worksheets(sheet).Select
         
         For Each obj In searchInfos
-            UpdateCells obj
+            UpdateCells obj, in_mode
         Next
     Next
     
 End Function
 
 
-Function UpdateCells(ByRef obj As SearchInfoDataModel)
+Function UpdateCells(ByRef obj As SearchInfoDataModel, ByVal mode As String)
     'Debug.Print obj.ToString()
     
     Dim foundCell As Range, firstCell As Range, target As Range
@@ -223,6 +229,7 @@ Function UpdateCells(ByRef obj As SearchInfoDataModel)
     Dim bgcol As Long
     Dim lookat As Integer
     Dim matchcase, matchbyte As Boolean
+    Dim found_cnt As Long
         
     word = obj.GetWord()
     bgcol = obj.GetBgCol()
@@ -230,6 +237,7 @@ Function UpdateCells(ByRef obj As SearchInfoDataModel)
     matchcase = obj.GetMatchCase()
     matchbyte = obj.GetMatchByte()
     
+    found_cnt = 0
     
     Set foundCell = Cells.Find(What:=word, lookat:=lookat, matchcase:=matchcase, matchbyte:=matchbyte)
      
@@ -242,16 +250,28 @@ Function UpdateCells(ByRef obj As SearchInfoDataModel)
     
     Do
         Set foundCell = Cells.FindNext(foundCell)
+        
+        found_cnt = found_cnt + 1
+        
         If foundCell.Address = firstCell.Address Then
             Exit Do
         Else
+            If mode = "1" And found_cnt = 1 Then
+                Exit Do
+            End If
             Set target = Union(target, foundCell)
         End If
     Loop
     
-    target.Interior.Color = bgcol
-    obj.SetResult = True
-     
+    If mode = "2" And found_cnt > 1 Then
+        firstCell.Interior.Color = bgcol
+        obj.SetResult = True
+    ElseIf mode = "2" And found_cnt = 1 Then
+        obj.SetResult = False
+    Else
+        target.Interior.Color = bgcol
+        obj.SetResult = True
+    End If
 End Function
 
 
