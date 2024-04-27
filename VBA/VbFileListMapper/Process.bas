@@ -351,11 +351,6 @@ Private Sub CreateFinalMapping()
             'リネームマッピングにあるか確認してあれば採用する
             If repname_mapping.IsEmpty() = False Then
                 ren_val_num = repname_mapping.GetIndexSrcRefPath(value)
-
-                If ren_key_num >= 0 Then
-                    final_key = repname_mapping.GetDstPrjPath(ren_key_num)
-                   GoTo CONFIRMED
-                End If
                 
                 If ren_val_num >= 0 Then
                     final_val = repname_mapping.GetDstRefPath(ren_val_num)
