@@ -91,7 +91,7 @@ Private Sub CreateVbpMapping()
         
         If val = "" Then
             'ref_file_pathが空なのは不正なマッピングデータなので無視する
-            Common.WriteLog "★Bad data found.  key=[" & key & "], val=[" & val & "]"
+            Common.WriteLog "★Bad data found.  key=<" & key & ">, val=<" & val & ">"
             GoTo CONTINUE
         End If
         
@@ -163,7 +163,7 @@ Private Sub CreateVbprojMapping()
             Dim value As String: value = values(j)
             copy_dict.AppendStringArray key, value
             
-            Common.WriteLog "key=[" & key & "], value=[" & value & "]"
+            Common.WriteLog "key=<" & key & ">, value=<" & value & ">"
         Next j
     Next i
     '--------------------------------------------------------------------------
@@ -210,7 +210,7 @@ Private Sub CreateRenameMapping()
         
         'If src_key = "" Or src_val = "" Or dst_key = "" Or dst_val = "" Then
         '    '1つでも空があれば不正なマッピングデータなのでそこで終了する
-        '    Common.WriteLog "★Bad data found.  src_key=[" & src_key & "], src_val=[" & src_val & "], dst_key=[" & dst_key & "], dst_val=[" & dst_val & "]"
+        '    Common.WriteLog "★Bad data found.  src_key=<" & src_key & ">, src_val=<" & src_val & ">, dst_key=<" & dst_key & ">, dst_val=<" & dst_val & ">"
         '    Exit Do
         'End If
        
@@ -263,6 +263,7 @@ Private Sub CreateFinalMapping()
     Dim final_val As String
     Dim ren_key_num As Long
     Dim ren_val_num As Long
+    Dim search_key As String
 
     Set final_mapping = New ReplaceModel
     final_mapping.Init (vbp_mapping.GetAllRefCount())
@@ -275,7 +276,7 @@ Private Sub CreateFinalMapping()
         expect_key = Replace(expect_key, "." & Common.GetFileExtension(expect_key, True), ".vbproj")
         
         'If vbproj_mapping.IsExistKey(expect_key) = False Then
-        '    Common.WriteLog "Project file is not exist. Expect=[" & expect_key & "]"
+        '    Common.WriteLog "Project file is not exist. Expect=<" & expect_key & ">"
         '
         '    '紐づけできなかったことを表すため最終マッピングに登録
         '    final_mapping.Append key, value, "Not found.", "Not found."
@@ -284,53 +285,97 @@ Private Sub CreateFinalMapping()
         '    GoTo CONTINUE_I
         'End If
         
-        final_key = expect_key
+        If Common.IsExistsFile(expect_key) = True Then
+            'vbprojファイルが実際に存在するので確定
+            final_key = expect_key
+        Else
+            final_key = ""
+            
+            'リネームマッピングにあるか確認してあれば採用する
+            If repname_mapping.IsEmpty() = False Then
+                ren_key_num = repname_mapping.GetIndexSrcPrjPath(key)
+            
+                If ren_key_num >= 0 Then
+                    final_key = repname_mapping.GetDstPrjPath(ren_key_num)
+                Else
+                    'リネームマッピングにも無いのでファイル検索してみる
+                    search_key = Common.SearchFile(main_param.GetVbprojDirPath(), Common.GetFileName(expect_key))
+                    
+                    If search_key <> "" Then
+                        '見つかったのでヒントとして最終マッピングに登録
+                        Common.WriteLog "★VBPROJ PATH NOT FOUND(BUT SEARCH FOUND). vbp=<" & key & ">, vbproj(search)=<" & search_key & ">"
+                
+                        final_mapping.Append key, value, "★vbproj is search found.<" & search_key & ">", "unknown."
+                        
+                        GoTo CONTINUE_I
+                    End If
+                End If
+            End If
+        End If
         
+        If final_key = "" Then
+            Common.WriteLog "●VBPROJ PATH NOT FOUND. vbp=<" & key & ">, vbproj(expect)=<" & expect_key & ">"
+            
+            '紐づけできなかったことを表すため最終マッピングに登録
+            final_mapping.Append key, value, "vbproj is not found.", "unknown."
+            
+            '存在しないので無視
+            GoTo CONTINUE_I
+        End If
+        
+        'vbprojは確定
+        Common.WriteLog "●VBPROJ PATH CONFIRM. vbp=<" & key & ">, vbproj=<" & final_key & ">"
+        
+        
+        '次は参照ファイル群
         values = vbp_mapping.GetRefPath(key)
         
         For j = 0 To UBound(values)
             
             '期待する値が実際に収集した値に存在するか?
             value = values(j)
+            
             expect_val = Replace(value, main_param.GetVbpBaseDirPath(), main_param.GetVbprojBaseDirPath())
             expect_val = Replace(expect_val, "." & Common.GetFileExtension(expect_val, True), ".vb")
             
-            If vbproj_mapping.IsExistValue(final_key, expect_val) = False Then
+            If Common.IsExistsFile(expect_val) = True Then
+                '期待する参照ファイルが実際に存在するので確定
+                final_val = expect_val
             
-                If repname_mapping.IsEmpty() = True Then
-                    GoTo NOT_FOUND_RENAME
-                End If
+                GoTo CONFIRMED
+            End If
             
-                ren_key_num = repname_mapping.GetIndexSrcPrjPath(key)
+            
+            final_val = ""
+
+            'リネームマッピングにあるか確認してあれば採用する
+            If repname_mapping.IsEmpty() = False Then
                 ren_val_num = repname_mapping.GetIndexSrcRefPath(value)
-            
-                'リネームマッピングにあるか確認してあれば採用する
+
                 If ren_key_num >= 0 Then
                     final_key = repname_mapping.GetDstPrjPath(ren_key_num)
-                   GoTo RENAMED
+                   GoTo CONFIRMED
                 End If
                 
                 If ren_val_num >= 0 Then
                     final_val = repname_mapping.GetDstRefPath(ren_val_num)
-                   GoTo RENAMED
+                   GoTo CONFIRMED
                 End If
+            End If
             
-NOT_FOUND_RENAME:
-                'リネームマッピングにも無い
-                Common.WriteLog "★Not found. Key=[" & key & "], ExpectKey=[" & expect_key & "], Value=[" & value & "], ExpectValue=[" & expect_val & "]"
+            If final_val = "" Then
+                Common.WriteLog "●VBPROJ REF PATH NOT FOUND. vbp ref=<" & value & ">, vbproj ref(expect)=<" & expect_val & ">"
                 
                 '紐づけできなかったことを表すため最終マッピングに登録
-                final_mapping.Append key, value, "Not found.", "Not found."
+                final_mapping.Append key, value, final_key, "vbproj ref is not found."
                 
                 '存在しないので無視
                 GoTo CONTINUE_J
             End If
             
-            final_val = expect_val
-            
-RENAMED:
-            
-            Common.WriteLog "vbp=[" & key & "], vbp ref=[" & value & "], vbproj=[" & final_key & "], vbproj ref=[" & final_val & "]"
+CONFIRMED:
+            'vbproj refは確定
+            Common.WriteLog "●VBPROJ REF PATH CONFIRM.  vbp ref=<" & value & ">, vbproj ref=<" & final_val & ">"
             
             'キー/値が実際に存在するので最終マッピングとして採用
             final_mapping.Append key, value, final_key, final_val
