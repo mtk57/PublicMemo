@@ -16,6 +16,7 @@
         public const string CLM_DST_START_ROW = "ClmDstStartRow";
         public const string CLM_DST_KEY = "ClmDstKey";
         public const string CLM_DST_COPY = "ClmDstCopy";
+        public const string CLM_MULTI_LINE = "ClmMultiLine";
 
         public const string CLM_GREP_RAW = "ClmGrepRaw";
         public const string CLM_GREP_FULL_PATH = "ClmGrepFullPath";
@@ -32,6 +33,7 @@
         public const string HEADER_DST_START_ROW = "DstStartRow";
         public const string HEADER_DST_KEY = "DstKey";
         public const string HEADER_DST_COPY = "DstCopy";
+        public const string HEADER_MULTI_LINE = "MultiLine";
 
 
     }

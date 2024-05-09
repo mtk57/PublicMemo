@@ -106,6 +106,11 @@ namespace GrepMapping.Proc
                 {
                     throw new Exception( $"{Const.CLM_DST_COPY} is bad value!!" );
                 }
+
+                if ( !bool.TryParse( row [ Const.CLM_MULTI_LINE ].ToString(), out result_bool ) )
+                {
+                    throw new Exception( $"{Const.CLM_MULTI_LINE} is bad value!!" );
+                }
             }
 
             return true;
@@ -122,6 +127,7 @@ namespace GrepMapping.Proc
             Columns.Add( Const.CLM_DST_START_ROW, typeof( int ) );
             Columns.Add( Const.CLM_DST_KEY, typeof( int ) );
             Columns.Add( Const.CLM_DST_COPY, typeof( int ) );
+            Columns.Add( Const.CLM_MULTI_LINE, typeof( bool ) );
         }
 
         private void UpdateFromConfig ()
@@ -139,6 +145,7 @@ namespace GrepMapping.Proc
                 dr [ Const.CLM_DST_START_ROW ] = rule.DstStartRow;
                 dr [ Const.CLM_DST_KEY ] = rule.DstKey;
                 dr [ Const.CLM_DST_COPY ] = rule.DstCopy;
+                dr [ Const.CLM_MULTI_LINE ] = rule.IsMultiLine;
 
                 Rows.Add( dr );
             }

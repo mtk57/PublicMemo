@@ -60,9 +60,11 @@ namespace GrepMapping
             this.ClmDstStartRow = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ClmDstKey = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ClmDstCopy = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ClmMultiLine = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.btnLoad = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnGrepResultEditStart = new System.Windows.Forms.Button();
+            this.cbIsDebugLog = new System.Windows.Forms.CheckBox();
             this.tabControl.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.tabPage2.SuspendLayout();
@@ -305,7 +307,8 @@ namespace GrepMapping
             this.ClmSrcCopy,
             this.ClmDstStartRow,
             this.ClmDstKey,
-            this.ClmDstCopy});
+            this.ClmDstCopy,
+            this.ClmMultiLine});
             this.dgvTranscription.Location = new System.Drawing.Point(6, 17);
             this.dgvTranscription.Name = "dgvTranscription";
             this.dgvTranscription.RowTemplate.Height = 21;
@@ -368,6 +371,14 @@ namespace GrepMapping
             this.ClmDstCopy.HeaderText = "DstCopy";
             this.ClmDstCopy.Name = "ClmDstCopy";
             // 
+            // ClmMultiLine
+            // 
+            this.ClmMultiLine.HeaderText = "MultiLine";
+            this.ClmMultiLine.Name = "ClmMultiLine";
+            this.ClmMultiLine.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.ClmMultiLine.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.ClmMultiLine.Width = 76;
+            // 
             // btnLoad
             // 
             this.btnLoad.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
@@ -402,11 +413,23 @@ namespace GrepMapping
             this.btnGrepResultEditStart.UseVisualStyleBackColor = true;
             this.btnGrepResultEditStart.Click += new System.EventHandler(this.btnGrepResultEditStart_Click);
             // 
+            // cbIsDebugLog
+            // 
+            this.cbIsDebugLog.AutoSize = true;
+            this.cbIsDebugLog.Location = new System.Drawing.Point(175, 412);
+            this.cbIsDebugLog.Name = "cbIsDebugLog";
+            this.cbIsDebugLog.Size = new System.Drawing.Size(78, 16);
+            this.cbIsDebugLog.TabIndex = 15;
+            this.cbIsDebugLog.Text = "Debug Log";
+            this.cbIsDebugLog.UseVisualStyleBackColor = true;
+            this.cbIsDebugLog.CheckedChanged += new System.EventHandler(this.cbIsDebugLog_CheckedChanged);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(801, 445);
+            this.Controls.Add(this.cbIsDebugLog);
             this.Controls.Add(this.btnGrepResultEditStart);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.btnLoad);
@@ -459,6 +482,7 @@ namespace GrepMapping
         private System.Windows.Forms.TabControl tabControl2;
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.DataGridView dgvTranscription;
+        private System.Windows.Forms.Button btnGrepResultEditStart;
         private System.Windows.Forms.DataGridViewTextBoxColumn ClmApplyOrder;
         private System.Windows.Forms.DataGridViewCheckBoxColumn ClmEnable;
         private System.Windows.Forms.DataGridViewTextBoxColumn ClmMappingFilePath;
@@ -468,7 +492,8 @@ namespace GrepMapping
         private System.Windows.Forms.DataGridViewTextBoxColumn ClmDstStartRow;
         private System.Windows.Forms.DataGridViewTextBoxColumn ClmDstKey;
         private System.Windows.Forms.DataGridViewTextBoxColumn ClmDstCopy;
-        private System.Windows.Forms.Button btnGrepResultEditStart;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn ClmMultiLine;
+        private System.Windows.Forms.CheckBox cbIsDebugLog;
     }
 }
 

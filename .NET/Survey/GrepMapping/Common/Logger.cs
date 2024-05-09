@@ -14,6 +14,8 @@ namespace GrepMapping.Common
 
         private static StreamWriter _sw = null;
 
+        public static bool IsEnabled { get; set; }
+
         public static bool IsInitSuccess
         {
             get { return _sw != null; }
@@ -53,7 +55,7 @@ namespace GrepMapping.Common
 
         private static void Write(string data)
         {
-            if (_sw == null) return;
+            if (_sw == null || !IsEnabled ) return;
 
             var writeData = string.Format(
                                     FORMAT,

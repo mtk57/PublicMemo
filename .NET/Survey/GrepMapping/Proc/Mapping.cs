@@ -66,6 +66,10 @@ namespace GrepMapping.Proc
                         }
                         else
                         {
+                            if ( !rule.IsMultiLine ) continue;
+
+                            // 複数行コピー
+
                             // 転記元と同じ?
                             if ( srcVal == dstVal )
                             {

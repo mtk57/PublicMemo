@@ -141,6 +141,9 @@ namespace GrepMapping.Config
         [DataMember( Name = "dst_copy" )]
         public int DstCopy { get; set; }
 
+        [DataMember( Name = "multi_line" )]
+        public Boolean IsMultiLine { get; set; }
+
         public int GetMaxDstClm ()
         {
             if ( DstCopy >= DstKey ) return DstCopy;
@@ -157,7 +160,8 @@ namespace GrepMapping.Config
                    $"SrcCopy=<{SrcCopy}>, " +
                    $"DstStartRow=<{DstStartRow}>, " +
                    $"DstKey=<{DstKey}>, " +
-                   $"DstCopy=<{DstCopy}>";
+                   $"DstCopy=<{DstCopy}>, " +
+                   $"IsMultiLine=<{IsMultiLine}>";
         }
     }
 }

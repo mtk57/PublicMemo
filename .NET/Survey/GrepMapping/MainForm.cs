@@ -77,8 +77,11 @@ namespace GrepMapping
         {
             try
             {
+                Logger.Debug( "btnGrepResultEditStart_Click S" );
+
                 if ( Utils.ShowOkCancelMessageBox() == DialogResult.Cancel )
                 {
+                    Logger.Debug( "btnGrepResultEditStart_Click E-1" );
                     return;
                 }
 
@@ -97,6 +100,8 @@ namespace GrepMapping
                 btnMappingStart.Enabled = true;
 
                 //MessageBox.Show( "Succeess!" );
+
+                Logger.Debug( "btnGrepResultEditStart_Click E" );
             }
             catch ( Exception ex )
             {
@@ -109,8 +114,11 @@ namespace GrepMapping
         {
             try
             {
+                Logger.Debug( "btnMappingStart_Click S" );
+
                 if ( Utils.ShowOkCancelMessageBox() == DialogResult.Cancel )
                 {
+                    Logger.Debug( "btnMappingStart_Click E-1" );
                     return;
                 }
 
@@ -136,6 +144,8 @@ namespace GrepMapping
                 _resultForm.Show();
 
                 MessageBox.Show("Succeess!");
+
+                Logger.Debug( "btnMappingStart_Click E" );
             }
             catch ( Exception ex )
             {
@@ -148,14 +158,19 @@ namespace GrepMapping
         {
             try
             {
+                Logger.Debug( "btnLoad_Click S" );
+
                 if ( Utils.ShowOkCancelMessageBox() == DialogResult.Cancel )
                 {
+                    Logger.Debug( "btnLoad_Click E-1" );
                     return;
                 }
 
                 _config = ConfigUtil.ReadSettings();
 
                 ConfigToForm();
+
+                Logger.Debug( "btnLoad_Click E" );
             }
             catch ( Exception ex )
             {
@@ -168,14 +183,19 @@ namespace GrepMapping
         {
             try
             {
+                Logger.Debug( "btnSave_Click S" );
+
                 if ( Utils.ShowOkCancelMessageBox() == DialogResult.Cancel )
                 {
+                    Logger.Debug( "btnSave_Click E-1" );
                     return;
                 }
 
                 ConfigFromForm();
 
                 ConfigUtil.WriteSetting( _config );
+
+                Logger.Debug( "btnSave_Click E" );
             }
             catch ( Exception ex )
             {
@@ -183,10 +203,17 @@ namespace GrepMapping
                 MessageBox.Show( ex.ToString() );
             }
         }
+
+        private void cbIsDebugLog_CheckedChanged ( object sender, EventArgs e )
+        {
+            Logger.IsEnabled = cbIsDebugLog.Checked;
+        }
         #endregion Event handler
 
         private void ConfigToForm ()
         {
+            Logger.Debug( "ConfigToForm S" );
+
             tbGrepResultFilePath.Text = _config.GrepResultFilePath;
             tbMappingResultDirPath.Text = _config.MappingResultDirPath;
 
@@ -212,10 +239,14 @@ namespace GrepMapping
             _mapping = new MappingDataTable( _config );
 
             dgvTranscription.DataSource = _mapping;
+
+            Logger.Debug( "ConfigToForm E" );
         }
 
         private void ConfigFromForm ()
         {
+            Logger.Debug( "ConfigFromForm S" );
+
             _config.GrepResultFilePath = tbGrepResultFilePath.Text;
             _config.MappingResultDirPath = tbMappingResultDirPath.Text;
 
@@ -254,12 +285,13 @@ namespace GrepMapping
                     rule.DstStartRow = int.Parse( row [ Const.CLM_DST_START_ROW ].ToString() );
                     rule.DstKey = int.Parse( row [ Const.CLM_DST_KEY ].ToString() );
                     rule.DstCopy = int.Parse( row [ Const.CLM_DST_COPY ].ToString() );
+                    rule.IsMultiLine = bool.Parse( row [ Const.CLM_MULTI_LINE ].ToString() );
 
                     _config.MappingRules.Add( rule );
                 }
             }
+
+            Logger.Debug( "ConfigFromForm E" );
         }
-
-
     }
 }
