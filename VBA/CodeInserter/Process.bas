@@ -312,20 +312,20 @@ End Sub
 Private Sub InsertCode(ByVal target_path As String)
     Common.WriteLog "InsertCode S"
     
-    Dim contents() As String: contents = GetTargetContents(target_path)
+    Dim Contents() As String: Contents = GetTargetContents(target_path)
     
-    If Common.IsEmptyArrayLong(contents) = True Then
+    If Common.IsEmptyArrayLong(Contents) = True Then
         Common.WriteLog "InsertCode E1"
         Exit Sub
     End If
     
-    Const METHOD_START = "(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+.*"
+    Const METHOD_START = "(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+.*\("
 
     Dim new_contents() As String
     Dim i As Long
  
-    For i = LBound(contents) To UBound(contents)
-        Dim line As String: line = contents(i)
+    For i = LBound(Contents) To UBound(Contents)
+        Dim line As String: line = Contents(i)
         
         Common.WriteLog "InsertCode i=" & i & ":" & line
         
@@ -345,7 +345,7 @@ Private Sub InsertCode(ByVal target_path As String)
             i = i + InsertCodeForMethod( _
                         target_path, _
                         i, _
-                        contents, _
+                        Contents, _
                         new_contents _
                     ) - 1
             
@@ -372,7 +372,7 @@ End Sub
 Private Function InsertCodeForMethod( _
     ByVal target_path As String, _
     ByVal start As Long, _
-    ByRef contents() As String, _
+    ByRef Contents() As String, _
     ByRef new_contents() As String _
 ) As Long
     Common.WriteLog "InsertCodeForMethod S"
@@ -383,42 +383,42 @@ Private Function InsertCodeForMethod( _
     Const METHOD_RET = "^[ \t]*(Return|Throw) *"
     
     Dim i As Long
-    Dim line As String: line = contents(start)  '解析中の行データ
+    Dim line As String: line = Contents(start)  '解析中の行データ
     Dim method_name As String: method_name = GetMethodName(line)
     Dim cnt As Long     '解析を進めた行数。ただし開始行および追加行は含まない。
     Dim offset As Long  '関数開始位置のオフセット行数(関数の引数が複数行の場合は2行以上になる)
     Dim seq As Long: seq = 1    '関数途中終了時を区別するための連番
-    Dim ext As String: ext = Common.GetFileExtension(target_path)
+    Dim Ext As String: Ext = Common.GetFileExtension(target_path)
     Dim filename As String: filename = Common.GetFileName(target_path)
 
     Common.AppendArrayLong new_contents, line
     cnt = cnt + 1
     
     '関数開始定義の終了行を取得する
-    offset = GetMethodStartOffset(target_path, start, contents)
+    offset = GetMethodStartOffset(target_path, start, Contents)
     
     If offset > 0 Then
         For i = 0 To offset - 1
-            Common.AppendArrayLong new_contents, contents(start + i + 1)
+            Common.AppendArrayLong new_contents, Contents(start + i + 1)
         Next i
         cnt = cnt + 1 + offset - 1
     End If
     Common.AppendArrayLong new_contents, GetMethodStartLine(method_name, filename)
     
-    For i = start + offset + 1 To UBound(contents)
-        line = contents(i)
+    For i = start + offset + 1 To UBound(Contents)
+        line = Contents(i)
         
-        If Common.IsCommentCode(line, ext) = True Then
+        If Common.IsCommentCode(line, Ext) = True Then
             'コメント行なので次の行へ
             GoTo METHOD_BODY
         End If
         
         '右コメントを除去しておく
-        Dim del_comment_line As String: del_comment_line = Common.RemoveRightComment(line, ext)
+        Dim del_comment_line As String: del_comment_line = Common.RemoveRightComment(line, Ext)
         
         If Common.IsMatchByRegExp(del_comment_line, METHOD_APP_END, True) = True Or _
            Common.IsMatchByRegExp(del_comment_line, METHOD_EXIT, True) = True Or _
-           (IsVBNETExt(ext) = True And Common.IsMatchByRegExp(del_comment_line, METHOD_RET, True) = True) Then
+           (IsVBNETExt(Ext) = True And Common.IsMatchByRegExp(del_comment_line, METHOD_RET, True) = True) Then
             '関数の途中終了行を発見
             
             Common.AppendArrayLong new_contents, GetMethodExitLine(method_name, filename, seq)
@@ -475,7 +475,7 @@ End Function
 Private Function GetMethodStartOffset( _
     ByVal target_path As String, _
     ByVal start As Long, _
-    ByRef contents() As String _
+    ByRef Contents() As String _
 ) As Long
     Common.WriteLog "GetMethodStartOffset S"
     
@@ -485,10 +485,10 @@ Private Function GetMethodStartOffset( _
     Dim line As String
     Dim ch As String    'Character
     Dim kc As Long: kc = -1      '括弧カウンタ(-1:1つ目の"("が未発見、-2:戻り値より前の括弧は全ての対応確認済(戻り値モードON))
-    Dim mode As String: mode = GetMethodType(contents(start))   '関数モード("Sub" or "Function")
+    Dim mode As String: mode = GetMethodType(Contents(start))   '関数モード("Sub" or "Function")
     
-    For r = start To UBound(contents)
-        line = contents(r)
+    For r = start To UBound(Contents)
+        line = Contents(r)
         
         If Right(line, 1) <> "_" Then
             '複数行では無いので処理終了
@@ -672,7 +672,7 @@ Private Function GetTargetContents(ByVal path As String) As String()
     Common.WriteLog "GetTargetContents S"
     
     Dim raw_contents As String
-    Dim contents() As String
+    Dim Contents() As String
     
     'ファイルを開いて、全行を配列に格納する
     If Common.IsSJIS(path) = True Then
@@ -692,33 +692,33 @@ Private Function GetTargetContents(ByVal path As String) As String()
         End If
         
         Common.WriteLog "GetTargetContents E1"
-        GetTargetContents = contents
+        GetTargetContents = Contents
         Exit Function
     End If
     
-    contents = Split(raw_contents, vbCrLf)
+    Contents = Split(raw_contents, vbCrLf)
     
-    GetTargetContents = contents
+    GetTargetContents = Contents
 
     Common.WriteLog "GetTargetContents E"
 End Function
 
-Private Function IsVB6Ext(ByVal ext As String) As Boolean
+Private Function IsVB6Ext(ByVal Ext As String) As Boolean
     IsVB6Ext = False
 
-    If ext = "bas" Or _
-       ext = "frm" Or _
-       ext = "cls" Or _
-       ext = "ctl" Then
+    If Ext = "bas" Or _
+       Ext = "frm" Or _
+       Ext = "cls" Or _
+       Ext = "ctl" Then
        IsVB6Ext = True
        Exit Function
     End If
 End Function
 
-Private Function IsVBNETExt(ByVal ext As String) As Boolean
+Private Function IsVBNETExt(ByVal Ext As String) As Boolean
     IsVBNETExt = False
 
-    If ext = "vb" Then
+    If Ext = "vb" Then
        IsVBNETExt = True
        Exit Function
     End If
