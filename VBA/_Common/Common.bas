@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.10"
+Private Const VERSION = "1.5.11"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -83,12 +83,12 @@ Public Sub ClearRange(ByRef ws As Worksheet, ByVal cell_address As String)
     Dim range_to_clear As Range
 
     ' 指定されたセルから列内の最後の使用済みセルまでの範囲を取得
-    last_row = ws.Cells(ws.Rows.Count, ws.Range(cell_address).Column).End(xlUp).row
+    last_row = ws.Cells(ws.Rows.count, ws.Range(cell_address).Column).End(xlUp).row
     Set range_to_clear = ws.Range(cell_address, ws.Cells(last_row, ws.Range(cell_address).Column))
 
     ' 範囲をクリア
     'range_to_clear.Clear
-    range_to_clear.Value = ""
+    range_to_clear.value = ""
 End Sub
 
 '-------------------------------------------------------------
@@ -663,7 +663,7 @@ CONTINUE:
     End If
     
     '引数
-    wk = left(Mid(merge_lines, start_clm + 1), end_clm - start_clm - 1)
+    wk = Left(Mid(merge_lines, start_clm + 1), end_clm - start_clm - 1)
     ret.params = Split(wk, ",")
     
     For i = 0 To UBound(ret.params)
@@ -740,11 +740,11 @@ Public Function GetColNumFromA1(ByVal a1 As String) As Long
     
     For i = 1 To Len(Clm)
         If (i = 1) Then
-            GetColNumFromA1 = GetColNumFromA1 + A_to_ColNum(right(substr, 1))
+            GetColNumFromA1 = GetColNumFromA1 + A_to_ColNum(Right(substr, 1))
         Else
-            GetColNumFromA1 = GetColNumFromA1 + (A_to_ColNum(right(substr, 1)) * (i - 1) * 26)
+            GetColNumFromA1 = GetColNumFromA1 + (A_to_ColNum(Right(substr, 1)) * (i - 1) * 26)
         End If
-        substr = left(substr, Len(substr) - 1)
+        substr = Left(substr, Len(substr) - 1)
     Next i
 End Function
 
@@ -858,7 +858,7 @@ Public Function GetStringLastChar(ByVal str As String, ByVal last_char As String
         
         '見つかった
         If ch = last_char Then
-            GetStringLastChar = right(str, length - i)
+            GetStringLastChar = Right(str, length - i)
             Exit Function
         End If
     Next i
@@ -889,7 +889,7 @@ Public Function StartsWith(ByVal target As String, ByVal search As String) As Bo
         Exit Function
     End If
     
-    If left(target, Len(search)) = search Then
+    If Left(target, Len(search)) = search Then
         StartsWith = True
     End If
     
@@ -1018,8 +1018,8 @@ Public Function IsCommentCode(ByVal line As String, ByVal Ext As String) As Bool
        Ext = "cls" Or _
        Ext = "ctl" Or _
        Ext = "vb" Then
-        If left(LTrim(wk), 1) = "'" Or _
-           left(LTrim(wk), 4) = "REM " Then
+        If Left(LTrim(wk), 1) = "'" Or _
+           Left(LTrim(wk), 4) = "REM " Then
            IsCommentCode = True
            Exit Function
         End If
@@ -1087,7 +1087,7 @@ Public Function GetLastFolderName(ByVal path As String) As String
     End If
 
     Dim new_path As String: new_path = Common.RemoveTrailingBackslash(path)
-    GetLastFolderName = right(new_path, Len(new_path) - InStrRev(new_path, Application.PathSeparator))
+    GetLastFolderName = Right(new_path, Len(new_path) - InStrRev(new_path, Application.PathSeparator))
 End Function
 
 '-------------------------------------------------------------
@@ -1237,7 +1237,7 @@ Public Function JoinFromArray(ByRef ary() As String, ByVal delim As String, ByVa
         End If
     Next i
     
-    JoinFromArray = left(ret, Len(ret) - 1)
+    JoinFromArray = Left(ret, Len(ret) - 1)
 
 End Function
 
@@ -1936,7 +1936,7 @@ Public Function GetFolderPath(ByVal file_path As String) As String
     pos = InStrRev(file_path, "\")
     
     '\より左側の文字列をフォルダパスとして返す
-    GetFolderPath = left(file_path, pos - 1)
+    GetFolderPath = Left(file_path, pos - 1)
 End Function
 
 '-------------------------------------------------------------
@@ -2339,7 +2339,7 @@ Public Function IsExistsExtensionFile(ByVal path As String, ByVal in_ext As Stri
     Next subfolder
     
     For Each file In folder.Files
-        If right(file.Name, Len(Ext)) = Ext Then
+        If Right(file.Name, Len(Ext)) = Ext Then
             Set fso = Nothing
             Set folder = Nothing
         
@@ -2442,8 +2442,8 @@ Public Function CreateFileList( _
         Err.Raise 53, , "[CreateFileList] パスが長すぎます (path=" & path & ")"
     End If
 
-    Dim list() As String: list = CreateFileListMain(path, Ext, is_subdir)
-    CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), Ext)
+    Dim list() As String: list = CreateFileListMain(path, LCase(Ext), is_subdir)
+    CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), LCase(Ext))
 End Function
 
 Private Function CreateFileListMain( _
@@ -2521,7 +2521,7 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     End If
       
     For i = 0 To UBound(path_list)
-        If right(path_list(i), Len(Ext)) = Ext Then
+        If LCase(Right(path_list(i), Len(Ext))) = Ext Then
             ReDim Preserve filtered_list(j)
             filtered_list(j) = path_list(i)
             j = j + 1
@@ -2797,7 +2797,7 @@ End Function
 '-------------------------------------------------------------
 Public Function RemoveQuotes(ByVal target As String) As String
     '""で囲まれているかをチェック
-    If left(target, 1) = """" And right(target, 1) = """" Then
+    If Left(target, 1) = """" And Right(target, 1) = """" Then
         '""を削除して返す
         RemoveQuotes = Mid(target, 2, Len(target) - 2)
     Else
@@ -2815,8 +2815,8 @@ Public Function RemoveTrailingBackslash(ByVal path As String) As String
         Err.Raise 53, , "[RemoveTrailingBackslash] パスが長すぎます (path=" & path & ")"
     End If
 
-    If right(path, 1) = "\" Then
-        path = left(path, Len(path) - 1)
+    If Right(path, 1) = "\" Then
+        path = Left(path, Len(path) - 1)
     End If
     RemoveTrailingBackslash = path
 End Function
@@ -3047,7 +3047,7 @@ Function GetCommonString(ByRef list() As String) As String
         '共通部分を取得する
         For j = 1 To Len(common_string)
             If Mid(common_string, j, 1) <> Mid(list(i), j, 1) Then
-                common_string = left(common_string, j - 1)
+                common_string = Left(common_string, j - 1)
                 flag = True
                 Exit For
             End If
@@ -3075,7 +3075,7 @@ Public Function GetFolderNameFromPath(ByVal path As String) As String
     last_separator = InStrRev(path, Application.PathSeparator)
     
     If last_separator > 0 Then
-        GetFolderNameFromPath = left(path, last_separator - 1)
+        GetFolderNameFromPath = Left(path, last_separator - 1)
     Else
         GetFolderNameFromPath = path
     End If
@@ -3164,9 +3164,9 @@ Public Function GetFileExtension(ByVal filename As String, Optional ByVal isRaw 
     ' 拡張子を取得
     If dot_pos > 0 Then
         If isRaw = False Then
-            GetFileExtension = LCase(right(filename, Len(filename) - dot_pos))
+            GetFileExtension = LCase(Right(filename, Len(filename) - dot_pos))
         Else
-            GetFileExtension = right(filename, Len(filename) - dot_pos)
+            GetFileExtension = Right(filename, Len(filename) - dot_pos)
         End If
     Else
         GetFileExtension = ""
@@ -3449,6 +3449,8 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
+
+
 
 
 
