@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.11"
+Private Const VERSION = "1.5.12"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -239,7 +239,7 @@ Public Function GetMethodInfoFromGrepResult( _
     Dim ret() As GrepResultInfoStruct
 
     '引数チェック
-    If Common.IsEmptyArray(grepResults) = True Then
+    If Common.IsEmptyArrayLong(grepResults) = True Then
          GetMethodInfoFromGrepResult = ret
          Exit Function
     End If
@@ -393,7 +393,7 @@ Public Function FindMethodByGrepResultInfo( _
     Dim ret As MethodInfoStruct
     
     '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
+    If Common.IsEmptyArrayLong(Contents) = True Then
          FindMethodByGrepResultInfo = ret
          Exit Function
     End If
@@ -455,7 +455,7 @@ Public Function FindMethodTypeForVB( _
     Dim ret As String: ret = ""
 
     '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
+    If Common.IsEmptyArrayLong(Contents) = True Then
          FindMethodTypeForVB = ret
          Exit Function
     End If
@@ -513,7 +513,7 @@ Public Function FindMethodStartRowForVB( _
     Dim ret As Long: ret = -1
 
     '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
+    If Common.IsEmptyArrayLong(Contents) = True Then
          FindMethodStartRowForVB = ret
          Exit Function
     End If
@@ -570,7 +570,7 @@ Public Function GetMethodInfoForVB( _
     Dim ret As MethodInfoStruct
 
     '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
+    If Common.IsEmptyArrayLong(Contents) = True Then
          GetMethodInfoForVB = ret
          Exit Function
     End If
@@ -3449,6 +3449,8 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
+
+
 
 
 
