@@ -11,6 +11,9 @@ Private sub_param As SubParam
 
 Private targets() As String
 Public results() As GrepResultInfoStruct
+Private sheet_name_ As String
+
+Private mgr_ As CallMethodManager
     
 '--------------------------------------------------------
 'メイン処理
@@ -36,7 +39,23 @@ Public Sub Run()
     
     'シートに結果を出力する
     Call OutputSheet
-
+    
+    
+    If main_param.IsEnabledCallstack = False Then
+        Common.WriteLog "Run E-1"
+        Exit Sub
+    End If
+    
+    '------------------------------
+    'ここからコールスタック機能
+    '------------------------------
+    Set mgr_ = New CallMethodManager
+    mgr_.Init main_param, results
+    
+    mgr_.Parse
+    
+    mgr_.OutputSheet sheet_name_
+    
     Common.WriteLog "Run E"
 End Sub
 
@@ -88,8 +107,8 @@ Private Sub OutputSheet()
     Common.WriteLog "OutputSheet S"
         
     'シートを追加
-    Dim sheet_name As String: sheet_name = Common.GetNowTimeString()
-    Common.AddSheet ActiveWorkbook, sheet_name
+    sheet_name_ = Common.GetNowTimeString()
+    Common.AddSheet ActiveWorkbook, sheet_name_
     
     Dim ws As Worksheet
     Set ws = ActiveSheet
@@ -158,12 +177,12 @@ Private Sub OutputSheet()
         
         ws.Cells(row + i, 6).value = result.MethodInfo.Raw
         ws.Cells(row + i, 7).value = result.MethodInfo.Name
-        ws.Cells(row + i, 8).value = result.MethodInfo.Ret
+        ws.Cells(row + i, 8).value = result.MethodInfo.ret
 
         '引数リスト
         params = result.MethodInfo.params
         
-        If Common.IsEmptyArray(params) Then
+        If Common.IsEmptyArrayLong(params) Then
             Common.WriteLog "params is empty."
             GoTo CONTINUE_I
         End If

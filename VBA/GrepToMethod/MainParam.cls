@@ -66,7 +66,7 @@ Public Sub Validate()
         Err.Raise 53, , "未サポートの言語です (" & lang_s & ")"
     End If
     
-    If enabled_callstack_s = "" Or lang_s = "NO" Then
+    If enabled_callstack_s = "" Or enabled_callstack_s = "NO" Then
         enabled_callstack = False
     Else
         enabled_callstack = True
@@ -98,6 +98,15 @@ Public Sub Validate()
     If Common.IsExistSheet(ActiveWorkbook, vbp_ref_list_sheet) = False Then
         Err.Raise 53, , "VBP参照ファイル一覧のシートが存在しません。(" & vbp_ref_list_sheet & ")"
     End If
+    
+    Dim target_sheet As Worksheet
+    Set target_sheet = ThisWorkbook.Sheets(vbp_ref_list_sheet)
+    
+    If target_sheet.Range("A1").value = "" Or target_sheet.Range("B1").value = "" Then
+        Err.Raise 53, , "VBP参照ファイル一覧のシートにデータが存在しません。(" & vbp_ref_list_sheet & ")"
+    End If
+    
+    Set target_sheet = Nothing
 End Sub
 
 '=========================================
@@ -130,14 +139,14 @@ Public Function GetVbpRefListSheetName() As String
 End Function
 
 Public Function GetAllValue() As String
-    Dim Ret As String
+    Dim ret As String
     
-    Ret = "[Main Param] " & _
+    ret = "[Main Param] " & _
           "format_type=(" & format_type_s & "), " & _
           "lang=(" & lang_s & "), " & _
           "enabled_callstack=" & enabled_callstack & "), " & _
           "max_depth=(" & max_depth_ & "), " & _
           "vbp_ref_list_sheet=(" & vbp_ref_list_sheet & ")"
 
-    GetAllValue = Ret
+    GetAllValue = ret
 End Function
