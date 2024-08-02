@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.8"
+Private Const VERSION = "1.5.14"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -72,6 +72,24 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+' 指定されたセルから列内の最後の使用済みセルまでをクリアする
+' ws : I : ワークシート
+' cell_address : I : セルアドレス(Ex."A1")
+'-------------------------------------------------------------
+Public Sub ClearRange(ByRef ws As Worksheet, ByVal cell_address As String)
+    Dim last_row As Long
+    Dim range_to_clear As Range
+
+    ' 指定されたセルから列内の最後の使用済みセルまでの範囲を取得
+    last_row = ws.Cells(ws.Rows.count, ws.Range(cell_address).Column).End(xlUp).row
+    Set range_to_clear = ws.Range(cell_address, ws.Cells(last_row, ws.Range(cell_address).Column))
+
+    ' 範囲をクリア
+    'range_to_clear.Clear
+    range_to_clear.value = ""
+End Sub
 
 '-------------------------------------------------------------
 ' 配列をクイックソートで昇順ソートする
@@ -221,7 +239,7 @@ Public Function GetMethodInfoFromGrepResult( _
     Dim ret() As GrepResultInfoStruct
 
     '引数チェック
-    If Common.IsEmptyArray(grepResults) = True Then
+    If Common.IsEmptyArrayLong(grepResults) = True Then
          GetMethodInfoFromGrepResult = ret
          Exit Function
     End If
@@ -375,7 +393,7 @@ Public Function FindMethodByGrepResultInfo( _
     Dim ret As MethodInfoStruct
     
     '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
+    If Common.IsEmptyArrayLong(Contents) = True Then
          FindMethodByGrepResultInfo = ret
          Exit Function
     End If
@@ -437,7 +455,7 @@ Public Function FindMethodTypeForVB( _
     Dim ret As String: ret = ""
 
     '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
+    If Common.IsEmptyArrayLong(Contents) = True Then
          FindMethodTypeForVB = ret
          Exit Function
     End If
@@ -495,7 +513,7 @@ Public Function FindMethodStartRowForVB( _
     Dim ret As Long: ret = -1
 
     '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
+    If Common.IsEmptyArrayLong(Contents) = True Then
          FindMethodStartRowForVB = ret
          Exit Function
     End If
@@ -552,7 +570,7 @@ Public Function GetMethodInfoForVB( _
     Dim ret As MethodInfoStruct
 
     '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
+    If Common.IsEmptyArrayLong(Contents) = True Then
          GetMethodInfoForVB = ret
          Exit Function
     End If
@@ -1785,13 +1803,21 @@ End Function
 '-------------------------------------------------------------
 'ブックを保存して閉じる
 ' name : I : ブック名(Excelファイル名)
+' is_textcmp : I : True=大文字・小文字を区別しない, False=大文字・小文字を区別する(デフォルト)
 '-------------------------------------------------------------
-Public Sub SaveAndCloseBook(ByVal Name As String)
+Public Sub SaveAndCloseBook(ByVal Name As String, Optional ByVal is_textcmp As Boolean = False)
     Dim wb As Workbook
     For Each wb In Workbooks
-        If InStr(wb.Name, Name) > 0 Then
-            wb.Save
-            wb.Close
+        If is_textcmp = False Then
+            If InStr(wb.Name, Name) > 0 Then
+                wb.Save
+                wb.Close
+            End If
+        Else
+            If InStr(1, wb.Name, Name, vbTextCompare) > 0 Then
+                wb.Save
+                wb.Close
+            End If
         End If
     Next
 End Sub
@@ -1799,12 +1825,19 @@ End Sub
 '-------------------------------------------------------------
 'ブックを閉じる
 ' name : I : ブック名(Excelファイル名)
+' is_textcmp : I : True=大文字・小文字を区別しない, False=大文字・小文字を区別する(デフォルト)
 '-------------------------------------------------------------
-Public Sub CloseBook(ByVal Name As String)
+Public Sub CloseBook(ByVal Name As String, Optional ByVal is_textcmp As Boolean = False)
     Dim wb As Workbook
     For Each wb In Workbooks
-        If InStr(wb.Name, Name) > 0 Then
-            wb.Close SaveChanges:=False
+        If is_textcmp = False Then
+            If InStr(wb.Name, Name) > 0 Then
+                wb.Close SaveChanges:=False
+            End If
+        Else
+            If InStr(1, wb.Name, Name, vbTextCompare) > 0 Then
+                wb.Close SaveChanges:=False
+            End If
         End If
     Next
 End Sub
@@ -2409,8 +2442,8 @@ Public Function CreateFileList( _
         Err.Raise 53, , "[CreateFileList] パスが長すぎます (path=" & path & ")"
     End If
 
-    Dim list() As String: list = CreateFileListMain(path, Ext, is_subdir)
-    CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), Ext)
+    Dim list() As String: list = CreateFileListMain(path, LCase(Ext), is_subdir)
+    CreateFileList = FilterFileListByExtension(DeleteEmptyArray(list), LCase(Ext))
 End Function
 
 Private Function CreateFileListMain( _
@@ -2488,7 +2521,7 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     End If
       
     For i = 0 To UBound(path_list)
-        If Right(path_list(i), Len(Ext)) = Ext Then
+        If LCase(Right(path_list(i), Len(Ext))) = LCase(Ext) Then
             ReDim Preserve filtered_list(j)
             filtered_list(j) = path_list(i)
             j = j + 1
@@ -3272,6 +3305,7 @@ Public Function IsEmptyArray(arr As Variant) As Boolean
     Dim i As Integer
     i = UBound(arr)
     If i >= 0 And Err.Number = 0 Then
+        WriteLog "★IsEmptyArray Faile! (" & Err.Description & ")"
         IsEmptyArray = False
     Else
         IsEmptyArray = True
@@ -3285,6 +3319,7 @@ Public Function IsEmptyArrayLong(arr As Variant) As Boolean
     Dim i As Long
     i = UBound(arr)
     If i >= 0 And Err.Number = 0 Then
+        WriteLog "★IsEmptyArrayLong Faile! (" & Err.Description & ")"
         IsEmptyArrayLong = False
     Else
         IsEmptyArrayLong = True
@@ -3416,6 +3451,12 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
+
+
+
+
+
+
 
 
 
