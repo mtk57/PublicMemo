@@ -397,7 +397,8 @@ Private Function ParseVBNETProject(ByRef Contents() As String) As String()
            InStr(Contents(i), "<EmbeddedResource Include=") = 0 And _
            InStr(Contents(i), "<None Include=") = 0 And _
            InStr(Contents(i), "<HintPath>") = 0 And _
-           InStr(Contents(i), "<ApplicationIcon>") = 0 Then
+           InStr(Contents(i), "<ApplicationIcon>") = 0 And _
+           InStr(Contents(i), "Content Include=") = 0 Then
             'ビルドに必要なファイルを含まないので無視
             'Common.WriteLog "Skip contents(" & i & ")=" & contents(i)
             GoTo CONTINUE
@@ -431,6 +432,8 @@ Private Function ParseVBNETProject(ByRef Contents() As String) As String()
             path = Trim(Replace(Replace(Contents(i), "<HintPath>", ""), "</HintPath>", ""))
         ElseIf InStr(Contents(i), "<ApplicationIcon>") > 0 Then
             path = Trim(Replace(Replace(Contents(i), "<ApplicationIcon>", ""), "</ApplicationIcon>", ""))
+        ElseIf InStr(Contents(i), "<Content Include=") > 0 Then
+            path = Trim(Replace(Replace(Contents(i), "<Content Include=""", ""), """ />", ""))
         End If
         
         If path = "" Then
