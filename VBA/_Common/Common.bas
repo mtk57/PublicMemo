@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.13"
+Private Const VERSION = "1.5.14"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -2521,7 +2521,7 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     End If
       
     For i = 0 To UBound(path_list)
-        If LCase(Right(path_list(i), Len(Ext))) = Ext Then
+        If LCase(Right(path_list(i), Len(Ext))) = LCase(Ext) Then
             ReDim Preserve filtered_list(j)
             filtered_list(j) = path_list(i)
             j = j + 1
