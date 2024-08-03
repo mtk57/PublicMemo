@@ -75,3 +75,53 @@ protected override void OnHandleCreated(EventArgs e)
 
 適切なメソッドを選択することで、コントロールのライフサイクルの異なる段階で初期化処理を行うことができます。
 
+------------
+■動的に他のプログラムのメソッドを実行する方法:
+CreateObject()
+GetObject()
+
+------------
+■VB6 のプロジェクトファイル (.vbp) で使用される設定項目
+AutoIncrementVer：ビルド時にバージョン番号を自動的に増加させるかどうか
+AutoRefresh：プロジェクトの自動更新を行うかどうか
+BoundsCheck：配列の境界チェックを行うかどうか
+Class：クラスモジュールの定義
+CodeViewDebugInfo：CodeView デバッグ情報を生成するかどうか
+Command32：32ビットコマンドラインの設定
+CompatibleMode：互換モードの設定
+CompilationType：コンパイルの種類（例：ネイティブコード、P-code）
+DebugStartupOption：デバッグ時の起動オプション
+Designer：デザイナーファイルの指定
+ExeName32：32ビット実行ファイルの名前
+FDIVCheck：FDIV バグチェックを行うかどうか
+FIPointCheck：浮動小数点の整数性チェックを行うかどうか
+FavorPentiumPro(tm)：Pentium Pro 最適化を行うかどうか
+Form：フォームの定義
+HelpContextID：ヘルプコンテキストID
+HelpFile：ヘルプファイルの指定
+IconForm：アイコンとして使用するフォーム
+MajorVer：メジャーバージョン番号
+MaxNumberOfThreads：最大スレッド数
+MinorVer：マイナーバージョン番号
+Module：モジュールの定義
+Name：プロジェクト名
+NoAliasing：エイリアシングの無効化
+Object：オブジェクトの定義
+Optimization Type：最適化の種類
+OverflowCheck：オーバーフローチェックを行うかどうか
+Path32：32ビットパスの指定
+Reference：参照設定
+RemoveUnusedControlInfo：未使用のコントロール情報を削除するかどうか
+Retained：保持されたモジュールの指定
+RevisionVer：リビジョンバージョン番号
+ServerSupportFiles：サーバーサポートファイルの指定
+StartMode：起動モード
+Startup：スタートアップオブジェクトの指定
+ThreadPerObject：オブジェクトごとのスレッド使用
+Title：プロジェクトのタイトル
+Type：プロジェクトの種類
+Unattended：無人実行モード
+UnroundedFP：丸めなし浮動小数点計算の使用
+VersionComments：バージョンコメント
+VersionCompanyName：会社名
+-----------
