@@ -1,0 +1,8 @@
+VBPプロット																																
+ver.	1.0.0																															
+																																
+Main Param																																
+																																
+		①vbpを検索するフォルダパス(絶対パス)												C:\_git\PublicMemo\VBA\VbpPlot\testdata\src																		
+		②デバッグログ出力												NO																		
+		③除外キー												Module,Form,Class,ResFile32,UserControl,Reference																		複数指定時は半角カンマで連結する。
