@@ -9,6 +9,7 @@ Const LOG_NAME = "VbFileListCreator.log"
 ' target_prj : I : 対象プロジェクト(vbp/vbproj)
 ' ignore_files : I : 収集除外ファイル (vbprojのみ対象。半角カンマで繋げる)
 ' target_exts : I : 収集対象拡張子(半角カンマで繋げる。Ex "vb,frm,bas,cls,ctl")
+' target_keys : I : 収集対象キー(半角カンマで繋げる。Ex "reference")
 ' is_debug : I : デバッグログ出力有無(True=出力する)
 ' Ret : 収集結果 (Dict)
 '--------------------------------------------------------
@@ -17,6 +18,7 @@ Public Function Run( _
     ByVal target_prj As String, _
     ByVal ignore_files As String, _
     ByVal target_exts As String, _
+    ByVal target_keys As String, _
     ByVal is_debug As Boolean _
 ) As Dict
     
@@ -38,9 +40,10 @@ On Error GoTo ErrorHandler
                                   "(" & target_prj & "), " & _
                                   "(" & ignore_files & "), " & _
                                   "(" & target_exts & "), " & _
+                                  "(" & target_keys & "), " & _
                                   "(" & is_debug & ")"
 
-    CreateParamForExternal search_dir_path, target_prj, ignore_files, target_exts
+    CreateParamForExternal search_dir_path, target_prj, ignore_files, target_exts, target_keys
     Set ret = Process.RunForExternal
 
     Common.WriteLog "★End"
@@ -114,14 +117,15 @@ Private Sub CreateParamForExternal( _
     ByVal search_dir_path As String, _
     ByVal target_prj As String, _
     ByVal ignore_files As String, _
-    ByVal target_exts As String _
+    ByVal target_exts As String, _
+    ByVal target_keys As String _
 )
     Common.WriteLog "CreateParamForExternal S"
     
     Dim main_param As MainParam
     Set main_param = New MainParam
 
-    main_param.InitForExternal search_dir_path, target_prj, ignore_files, target_exts
+    main_param.InitForExternal search_dir_path, target_prj, ignore_files, target_exts, target_keys
     
     Set Process.main_param = main_param
     

@@ -15,6 +15,7 @@ Private src_dir_path As String
 Private target_type As String
 Private ignore_files As String
 Private target_exts As String
+Private target_keys As String
 
 Private Const CLM_ = "O"
 Private Const ROW_ = 6
@@ -25,6 +26,7 @@ Private Sub Class_Initialize()
     target_type = "vbp"
     ignore_files = ""
     target_exts = ""
+    target_keys = ""
 End Sub
 
 'èâä˙âª(äOïîé¿çsóp)
@@ -32,7 +34,8 @@ Public Sub InitForExternal( _
     ByVal arg_src_dir_path As String, _
     ByVal arg_target_type As String, _
     ByVal arg_ignore_files As String, _
-    ByVal arg_target_exts As String _
+    ByVal arg_target_exts As String, _
+    ByVal arg_target_keys As String _
 )
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
@@ -41,6 +44,7 @@ Public Sub InitForExternal( _
     target_type = arg_target_type
     ignore_files = arg_ignore_files
     target_exts = arg_target_exts
+    target_keys = arg_target_keys
 End Sub
 
 
@@ -53,6 +57,7 @@ Public Sub Init()
     target_type = main_sheet.Range(CLM_ & ROW_ + 2).value
     ignore_files = main_sheet.Range(CLM_ & ROW_ + 3).value
     target_exts = main_sheet.Range(CLM_ & ROW_ + 4).value
+    target_keys = main_sheet.Range(CLM_ & ROW_ + 5).value
 End Sub
 
 'åüèÿ
@@ -90,6 +95,10 @@ Public Function GetTargetExtensions() As String
     GetTargetExtensions = target_exts
 End Function
 
+Public Function GetTargetKeys() As String
+    GetTargetKeys = target_keys
+End Function
+
 Public Function GetAllValue() As String
     Dim ret As String
     
@@ -97,7 +106,8 @@ Public Function GetAllValue() As String
           "src_dir_path=(" & src_dir_path & "), " & _
           "target_type=(" & target_type & "), " & _
           "ignore_files=(" & ignore_files & "), " & _
-          "target_exts=(" & target_exts & ")"
+          "target_exts=(" & target_exts & ")," & _
+          "target_keys=(" & target_keys & ")"
 
     GetAllValue = ret
 End Function

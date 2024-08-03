@@ -286,7 +286,7 @@ Private Function ParseVB6Project(ByRef Contents() As String) As RefFiles
            key <> "class" And _
            key <> "resfile32" And _
            key <> "usercontrol" And _
-           key <> "reference" Then
+           IsExistVbpKey(key) = False Then
             '対象外なので無視
             GoTo CONTINUE
         End If
@@ -337,6 +337,27 @@ CONTINUE:
     
     Set ParseVB6Project = ref_files
     Common.WriteLog "ParseVB6Project E"
+End Function
+
+Private Function IsExistVbpKey(ByVal key As String) As Boolean
+    IsExistVbpKey = False
+
+    '収集対象キーリストを作成
+    Dim target_keys() As String
+    target_keys = Split(main_param.GetTargetKeys(), ",")
+
+    If Common.IsEmptyArray(target_keys) = True Then
+        Exit Function
+    End If
+        
+    Dim i As Integer
+    For i = LBound(target_keys) To UBound(target_keys)
+        If InStr(LCase(key), LCase(target_keys(i))) > 0 Then
+            'キーを含む
+            IsExistVbpKey = True
+            Exit Function
+        End If
+    Next i
 End Function
 
 'vbprojファイルのパースを行う
