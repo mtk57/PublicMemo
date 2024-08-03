@@ -278,10 +278,15 @@ Private Function ParseVB6Project(ByRef Contents() As String) As RefFiles
         datas = Split(Contents(i), "=")
         
         'キーを取得
-        key = datas(0)
+        key = LCase(datas(0))
         
         '対象キーか?
-        If key <> "Module" And key <> "Form" And key <> "Class" And key <> "ResFile32" And key <> "UserControl" Then
+        If key <> "module" And _
+           key <> "form" And _
+           key <> "class" And _
+           key <> "resfile32" And _
+           key <> "usercontrol" And _
+           key <> "reference" Then
             '対象外なので無視
             GoTo CONTINUE
         End If
@@ -290,6 +295,12 @@ Private Function ParseVB6Project(ByRef Contents() As String) As RefFiles
         value = Replace(datas(1), """", "")
         
         Dim path As String
+        Dim abs_path As String
+        
+        If key = "reference" Then
+            abs_path = value
+            GoTo FIND_TARGET_EXT
+        End If
         
         If InStr(value, ";") > 0 Then
             path = Trim(Split(value, ";")(1))
@@ -298,7 +309,7 @@ Private Function ParseVB6Project(ByRef Contents() As String) As RefFiles
         End If
         
         '絶対パスに変換する
-        Dim abs_path As String: abs_path = Common.GetAbsolutePathName(base_path, path)
+        abs_path = Common.GetAbsolutePathName(base_path, path)
         
         If Common.IsEmptyArray(target_exts) = False Then
             For j = LBound(target_exts) To UBound(target_exts)

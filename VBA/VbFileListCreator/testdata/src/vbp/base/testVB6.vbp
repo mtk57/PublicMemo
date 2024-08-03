@@ -1,3 +1,5 @@
+Reference=*\G{00020430-0000-0000-C000-000000000046}#2.0#0#D:\WINNT\System32\stdole2.tlb#OLE Automation
+
 Module=module1; module1.bas
 Module=module2; ..\cmn\module2.bas
 Module=module3; sub\module3.bas
