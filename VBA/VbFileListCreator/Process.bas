@@ -297,7 +297,7 @@ Private Function ParseVB6Project(ByRef Contents() As String) As RefFiles
         Dim path As String
         Dim abs_path As String
         
-        If key = "reference" Then
+        If IsExistVbpKey(key) = True Then
             abs_path = value
             GoTo FIND_TARGET_EXT
         End If
@@ -352,8 +352,8 @@ Private Function IsExistVbpKey(ByVal key As String) As Boolean
         
     Dim i As Integer
     For i = LBound(target_keys) To UBound(target_keys)
-        If InStr(LCase(key), LCase(target_keys(i))) > 0 Then
-            'キーを含む
+        If LCase(key) = LCase(target_keys(i)) Then
+            'キーと一致
             IsExistVbpKey = True
             Exit Function
         End If
