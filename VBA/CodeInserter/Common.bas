@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.11"
+Private Const VERSION = "1.5.14"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -239,7 +239,7 @@ Public Function GetMethodInfoFromGrepResult( _
     Dim ret() As GrepResultInfoStruct
 
     '引数チェック
-    If Common.IsEmptyArray(grepResults) = True Then
+    If Common.IsEmptyArrayLong(grepResults) = True Then
          GetMethodInfoFromGrepResult = ret
          Exit Function
     End If
@@ -393,7 +393,7 @@ Public Function FindMethodByGrepResultInfo( _
     Dim ret As MethodInfoStruct
     
     '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
+    If Common.IsEmptyArrayLong(Contents) = True Then
          FindMethodByGrepResultInfo = ret
          Exit Function
     End If
@@ -455,7 +455,7 @@ Public Function FindMethodTypeForVB( _
     Dim ret As String: ret = ""
 
     '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
+    If Common.IsEmptyArrayLong(Contents) = True Then
          FindMethodTypeForVB = ret
          Exit Function
     End If
@@ -513,7 +513,7 @@ Public Function FindMethodStartRowForVB( _
     Dim ret As Long: ret = -1
 
     '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
+    If Common.IsEmptyArrayLong(Contents) = True Then
          FindMethodStartRowForVB = ret
          Exit Function
     End If
@@ -570,7 +570,7 @@ Public Function GetMethodInfoForVB( _
     Dim ret As MethodInfoStruct
 
     '引数チェック
-    If Common.IsEmptyArray(Contents) = True Then
+    If Common.IsEmptyArrayLong(Contents) = True Then
          GetMethodInfoForVB = ret
          Exit Function
     End If
@@ -2521,7 +2521,7 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     End If
       
     For i = 0 To UBound(path_list)
-        If LCase(Right(path_list(i), Len(Ext))) = Ext Then
+        If LCase(Right(path_list(i), Len(Ext))) = LCase(Ext) Then
             ReDim Preserve filtered_list(j)
             filtered_list(j) = path_list(i)
             j = j + 1
@@ -3305,6 +3305,7 @@ Public Function IsEmptyArray(arr As Variant) As Boolean
     Dim i As Integer
     i = UBound(arr)
     If i >= 0 And Err.Number = 0 Then
+        WriteLog "★IsEmptyArray Faile! (" & Err.Description & ")"
         IsEmptyArray = False
     Else
         IsEmptyArray = True
@@ -3318,6 +3319,7 @@ Public Function IsEmptyArrayLong(arr As Variant) As Boolean
     Dim i As Long
     i = UBound(arr)
     If i >= 0 And Err.Number = 0 Then
+        WriteLog "★IsEmptyArrayLong Faile! (" & Err.Description & ")"
         IsEmptyArrayLong = False
     Else
         IsEmptyArrayLong = True
@@ -3449,6 +3451,10 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
+
+
+
+
 
 
 

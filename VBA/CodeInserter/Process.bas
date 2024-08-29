@@ -558,9 +558,11 @@ End Function
 
 '関数開始直後に挿入するコードを作成する
 Private Function GetMethodStartLine(ByVal method_name As String, ByVal file_name As String) As String
+    Dim a As String
+    a = "Form1.vb" & vbTab & "Form1_Load" & vbTab & "START"
     Common.WriteLog "GetMethodStartLine S"
     Dim ret As String
-    ret = ReplaceMethodLine(method_name, file_name, " START")
+    ret = ReplaceMethodLine(method_name, file_name, """ & vbTab & ""START")
     GetMethodStartLine = ret
     Common.WriteLog "GetMethodStartLine E"
 End Function
@@ -569,7 +571,7 @@ End Function
 Private Function GetMethodEndLine(ByVal method_name As String, ByVal file_name As String) As String
     Common.WriteLog "GetMethodEndLine S"
     Dim ret As String
-    ret = ReplaceMethodLine(method_name, file_name, " END")
+    ret = ReplaceMethodLine(method_name, file_name, """ & vbTab & ""END")
     GetMethodEndLine = ret
     Common.WriteLog "GetMethodEndLine E"
 End Function
@@ -579,7 +581,7 @@ Private Function GetMethodExitLine(ByVal method_name As String, ByVal file_name 
     Common.WriteLog "GetMethodExitLine S"
     Common.WriteLog "seq=" & seq
     Dim ret As String
-    ret = ReplaceMethodLine(method_name, file_name, " END " & seq)
+    ret = ReplaceMethodLine(method_name, file_name, """ & vbTab & ""END_" & seq)
     GetMethodExitLine = ret
     Common.WriteLog "GetMethodExitLine E"
 End Function
