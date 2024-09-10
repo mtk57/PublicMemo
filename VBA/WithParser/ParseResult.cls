@@ -148,7 +148,7 @@ Public Function GetWithCodes() As String()
 End Function
 
 Public Function GetWithCodesCount() As Long
-    If Common.IsEmptyArray(with_codes) = True Then
+    If Common.IsEmptyArrayLong(with_codes) = True Then
         GetWithCodesCount = 0
         Exit Function
     End If
@@ -167,7 +167,7 @@ Public Function GetWithMembers() As String()
 End Function
 
 Public Function GetWithMembersCount() As Long
-    If Common.IsEmptyArray(with_members) = True Then
+    If Common.IsEmptyArrayLong(with_members) = True Then
         GetWithMembersCount = 0
         Exit Function
     End If

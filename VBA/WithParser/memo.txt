@@ -1,0 +1,15 @@
+With Parser																																																	
+ver.	1.0.1																																																
+																																																	
+																																																	
+Main Param																																memo																	
+	①デバッグログ出力										NO																					未指定の場合は"NO"とする。																	
+	②GREP結果フォーマット										sakura																					未指定の場合は"sakura"とする。																	
+	③対応するEnd Withの桁ズレ許容										前後2文字																					未指定の場合は"なし"とする。																	
+																																																	
+Sub Param																																																	
+	↓ここから下に、VB系ソースを" With "でGREPした結果を貼り付ける。空行を連続5行以上検知するまでが有効行。																																																
+	C:\_git\PublicMemo\VBA\WithParser\testdata\src\with_sample.bas(2,4)  [UTF-8]:     With MyObject 																																																
+	C:\_git\PublicMemo\VBA\WithParser\testdata\src\with_sample.bas(8,5)  [UTF-8]:      With .Font 																																																
+	C:\_git\PublicMemo\VBA\WithParser\testdata\src\with_sample.bas(19,4)  [UTF-8]:     With Zure_1																																																
+	C:\_git\PublicMemo\VBA\WithParser\testdata\src\with_sample.bas(23,4)  [UTF-8]:     With Zure_2																																																

@@ -138,7 +138,7 @@ Private Sub GetWithCodes( _
     Dim i As Long
     Dim cnt As Long: cnt = 0
     Dim line As String
-    Dim ext As String: ext = result.GetExtension()
+    Dim Ext As String: Ext = result.GetExtension()
     Dim is_find As Boolean: is_find = False
     Dim clm_wk As Long
     Dim first_clm As Long: first_clm = 0
@@ -151,13 +151,13 @@ Private Sub GetWithCodes( _
     For i = result.GetRowNum() - 1 To UBound(raw_contents)
         line = raw_contents(i)
 
-        If Common.IsCommentCode(line, ext) = True Then
+        If Common.IsCommentCode(line, Ext) = True Then
             'コメント行なので次の行へ
             GoTo CONTINUE
         End If
 
         '右コメントを除去しておく
-        line = Common.RemoveRightComment(line, ext)
+        line = Common.RemoveRightComment(line, Ext)
         
         If Common.IsMatchByRegExp(line, "^ *With .*$", True) = True Then
         
@@ -193,6 +193,17 @@ Private Sub GetWithCodes( _
                 with_codes(cnt) = line
                 is_find = True
                 Exit For
+            Else
+                'ズレの誤差を許容
+                Dim diff As Integer: diff = Max(Abs(first_clm - clm_wk), Abs(clm_wk - first_clm))
+                
+                If main_param.GetCheckLen() >= diff Then
+                    'Grep結果のWithに対応するEnd Withを発見したので終了
+                    ReDim Preserve with_codes(cnt)
+                    with_codes(cnt) = line
+                    is_find = True
+                    Exit For
+                End If
             End If
         
         Else
@@ -264,7 +275,7 @@ Private Sub ParseWithCode( _
         End If
         
         temp_ary = Common.DeleteEmptyArray(Common.GetMatchByRegExp(line, MEMBER, True))
-        If Common.IsEmptyArray(temp_ary) = True Then
+        If Common.IsEmptyArrayLong(temp_ary) = True Then
             'ドットで始まるメソッド・プロパティが存在しないので次の行へ
             GoTo CONTINUE
         End If
@@ -279,7 +290,7 @@ CONTINUE:
     
     Next i
     
-    If Common.IsEmptyArray(with_members) = True Then
+    If Common.IsEmptyArrayLong(with_members) = True Then
         Common.WriteLog "ParseWithCode E1"
         Exit Sub
     End If
@@ -294,7 +305,7 @@ End Sub
 Private Sub OutputSheet()
     Common.WriteLog "OutputSheet S"
     
-    If Common.IsEmptyArray(results) = True Then
+    If Common.IsEmptyArrayLong(results) = True Then
         Common.WriteLog "OutputSheet E1"
         Exit Sub
     End If
@@ -370,7 +381,7 @@ Private Function GetTargetContents( _
     Common.WriteLog "GetTargetContents S"
     
     Dim raw_contents As String
-    Dim contents() As String
+    Dim Contents() As String
     
     'ファイルを開いて、全行を配列に格納する
     If result.GetEncode() = "SJIS" Then
@@ -390,13 +401,13 @@ Private Function GetTargetContents( _
         End If
         
         Common.WriteLog "GetTargetContents E1"
-        GetTargetContents = contents
+        GetTargetContents = Contents
         Exit Function
     End If
     
-    contents = Split(raw_contents, vbCrLf)
+    Contents = Split(raw_contents, vbCrLf)
     
-    GetTargetContents = contents
+    GetTargetContents = Contents
 
     Common.WriteLog "GetTargetContents E"
 End Function

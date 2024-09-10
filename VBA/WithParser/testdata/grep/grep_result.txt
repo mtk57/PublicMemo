@@ -1,6 +1,6 @@
 
 □検索条件  " With "
-検索対象       *.bas;*.cls;*.frm;*.ctl
+検索対象       *.bas
 フォルダー       C:\_git\PublicMemo\VBA\WithParser\testdata\src
 除外ファイル   
 除外フォルダー   
@@ -12,4 +12,6 @@
 
 C:\_git\PublicMemo\VBA\WithParser\testdata\src\with_sample.bas(2,4)  [UTF-8]:     With MyObject 
 C:\_git\PublicMemo\VBA\WithParser\testdata\src\with_sample.bas(8,5)  [UTF-8]:      With .Font 
-2 個が検索されました。
+C:\_git\PublicMemo\VBA\WithParser\testdata\src\with_sample.bas(19,4)  [UTF-8]:     With Zure_1
+C:\_git\PublicMemo\VBA\WithParser\testdata\src\with_sample.bas(23,4)  [UTF-8]:     With Zure_2
+4 個が検索されました。

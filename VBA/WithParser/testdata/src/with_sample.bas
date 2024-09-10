@@ -15,4 +15,12 @@ Private Sub Hoge()
       .Bold = True ' Same as MyObject.Font.Bold = True. 
      End With
     End With
+    
+    With Zure_1
+     .hoge
+     End With
+     
+    With Zure_2
+     .hoge
+      End With
 End Sub

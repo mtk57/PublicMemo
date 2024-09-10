@@ -12,6 +12,8 @@ Option Explicit
 'メンバー変数
 
 Private format_type As String
+Private check_len As Integer
+Private check_len_s As String
 
 Private Const CLM_ = "L"
 Private Const ROW_ = 7
@@ -19,6 +21,7 @@ Private Const ROW_ = 7
 'コンストラクタ
 Private Sub Class_Initialize()
     format_type = ""
+    check_len = 0
 End Sub
 
 '初期化
@@ -27,6 +30,7 @@ Public Sub Init()
     Set main_sheet = ThisWorkbook.Sheets("main")
 
     format_type = main_sheet.Range(CLM_ & ROW_).value
+    check_len_s = main_sheet.Range(CLM_ & ROW_ + 1).value
 End Sub
 
 '検証
@@ -35,6 +39,16 @@ Public Sub Validate()
         format_type = "sakura"
     Else
         Err.Raise 53, , "未サポートのGREP結果フォーマットです (" & format_type & ")"
+    End If
+    
+    If check_len_s = "" Or check_len_s = "なし" Then
+        check_len = 0
+    ElseIf check_len_s = "前後1文字" Then
+        check_len = 1
+    ElseIf check_len_s = "前後2文字" Then
+        check_len = 2
+    Else
+        check_len = 0
     End If
 End Sub
 
@@ -46,11 +60,17 @@ Public Function GetFormatType() As String
     GetFormatType = format_type
 End Function
 
+Public Function GetCheckLen() As Integer
+    GetCheckLen = check_len
+End Function
+
 Public Function GetAllValue() As String
     Dim ret As String
     
     ret = "[Main Param] " & _
-          "format_type=(" & format_type & ")"
+          "format_type=(" & format_type & ")," & _
+          "check_len=(" & check_len & ")"
+          
 
     GetAllValue = ret
 End Function

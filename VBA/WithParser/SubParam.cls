@@ -13,7 +13,7 @@ Option Explicit
 Private grep_results() As String
 
 Private Const CLM_ = "B"
-Private Const START_ROW_ = 11
+Private Const START_ROW_ = 12
 
 'コンストラクタ
 Private Sub Class_Initialize()
@@ -79,7 +79,7 @@ Public Function GetGrepResults() As String()
 End Function
 
 Public Function GetGrepResultsCount() As Long
-    If Common.IsEmptyArray(grep_results) = True Then
+    If Common.IsEmptyArrayLong(grep_results) = True Then
         GetGrepResultsCount = 0
         Exit Function
     End If
