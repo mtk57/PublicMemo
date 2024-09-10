@@ -1,7 +1,6 @@
-Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.14"
+Private Const VERSION = "1.5.15"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -3305,7 +3304,7 @@ Public Function IsEmptyArray(arr As Variant) As Boolean
     Dim i As Integer
     i = UBound(arr)
     If i >= 0 And Err.Number = 0 Then
-        WriteLog "ÅöIsEmptyArray Faile! (" & Err.Description & ")"
+        'WriteLog "ÅöIsEmptyArray Faile! (" & Err.Description & ")"
         IsEmptyArray = False
     Else
         IsEmptyArray = True
@@ -3319,7 +3318,7 @@ Public Function IsEmptyArrayLong(arr As Variant) As Boolean
     Dim i As Long
     i = UBound(arr)
     If i >= 0 And Err.Number = 0 Then
-        WriteLog "ÅöIsEmptyArrayLong Faile! (" & Err.Description & ")"
+        'WriteLog "ÅöIsEmptyArrayLong Faile! (" & Err.Description & ")"
         IsEmptyArrayLong = False
     Else
         IsEmptyArrayLong = True
@@ -3451,10 +3450,3 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
-
-
-
-
-
-
-
