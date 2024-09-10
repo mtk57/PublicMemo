@@ -1,6 +1,7 @@
+Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.15"
+Private Const VERSION = "1.5.16"
 
 Public Type MethodInfoStruct
     Raw As String
@@ -71,6 +72,17 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+' 最大値を返す
+'-------------------------------------------------------------
+Public Function Max(ByVal a As Variant, ByVal b As Variant) As Variant
+    If a > b Then
+        Max = a
+    Else
+        Max = b
+    End If
+End Function
 
 '-------------------------------------------------------------
 ' 指定されたセルから列内の最後の使用済みセルまでをクリアする
