@@ -57,18 +57,19 @@ namespace NonSJISCharDetector
             {
                 foreach ( var filePath in Directory.GetFiles( folderPath, $"*.{ext}", SearchOption.AllDirectories ) )
                 {
-                    FindInvalidShiftJISBytes( filePath, results );
+                    FindAndReplaceInvalidShiftJISBytes( filePath, results );
                 }
             }
 
             File.WriteAllLines( outputPath, results, Encoding.UTF8 );
         }
 
-        private void FindInvalidShiftJISBytes ( string filePath, List<string> results )
+        private void FindAndReplaceInvalidShiftJISBytes ( string filePath, List<string> results )
         {
             List<(long offset, byte value)> invalidData = new List<(long, byte)>();
+            bool fileModified = false;
 
-            using ( FileStream fs = new FileStream( filePath, FileMode.Open, FileAccess.Read ) )
+            using ( FileStream fs = new FileStream( filePath, FileMode.Open, FileAccess.ReadWrite ) )
             {
                 byte [] buffer = new byte [ 1024 ];
                 int bytesRead;
@@ -76,6 +77,8 @@ namespace NonSJISCharDetector
 
                 while ( ( bytesRead = fs.Read( buffer, 0, buffer.Length ) ) > 0 )
                 {
+                    bool bufferModified = false;
+
                     for ( int i = 0; i < bytesRead; i++ )
                     {
                         byte b1 = buffer [ i ];
@@ -87,6 +90,10 @@ namespace NonSJISCharDetector
                                 if ( !IsValidShiftJISCharacter( b1, b2 ) )
                                 {
                                     invalidData.Add( (offset + i, b1) );
+                                    buffer [ i ] = 0x20;
+                                    buffer [ i + 1 ] = 0x20;
+                                    bufferModified = true;
+                                    fileModified = true;
                                 }
                                 i++; // 2バイト文字なので、次のバイトをスキップ
                             }
@@ -94,13 +101,26 @@ namespace NonSJISCharDetector
                             {
                                 // ファイルの最後で不完全な2バイト文字がある場合
                                 invalidData.Add( (offset + i, b1) );
+                                buffer [ i ] = 0x20;
+                                bufferModified = true;
+                                fileModified = true;
                             }
                         }
                         else if ( !IsValidShiftJISSingleByte( b1 ) )
                         {
                             invalidData.Add( (offset + i, b1) );
+                            buffer [ i ] = 0x20;
+                            bufferModified = true;
+                            fileModified = true;
                         }
                     }
+
+                    if ( bufferModified )
+                    {
+                        fs.Position = offset;
+                        fs.Write( buffer, 0, bytesRead );
+                    }
+
                     offset += bytesRead;
                 }
             }
@@ -111,6 +131,11 @@ namespace NonSJISCharDetector
                 {
                     results.Add( $"{filePath}\t{offset}\t0x{value:X2}" );
                 }
+            }
+
+            if ( fileModified )
+            {
+                results.Add( $"{filePath}\tFile was modified" );
             }
         }
 
