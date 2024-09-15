@@ -32,7 +32,7 @@
             this.textBoxDirPath = new System.Windows.Forms.TextBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.label1 = new System.Windows.Forms.Label();
-            this.checkBox1 = new System.Windows.Forms.CheckBox();
+            this.checkBoxReplaceSpace = new System.Windows.Forms.CheckBox();
             this.buttonRun = new System.Windows.Forms.Button();
             this.buttonRefDir = new System.Windows.Forms.Button();
             this.textBoxExt = new System.Windows.Forms.TextBox();
@@ -67,15 +67,15 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "Target Dir path";
             // 
-            // checkBox1
+            // checkBoxReplaceSpace
             // 
-            this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(35, 198);
-            this.checkBox1.Name = "checkBox1";
-            this.checkBox1.Size = new System.Drawing.Size(106, 16);
-            this.checkBox1.TabIndex = 3;
-            this.checkBox1.Text = "Replace SPACE";
-            this.checkBox1.UseVisualStyleBackColor = true;
+            this.checkBoxReplaceSpace.AutoSize = true;
+            this.checkBoxReplaceSpace.Location = new System.Drawing.Point(35, 198);
+            this.checkBoxReplaceSpace.Name = "checkBoxReplaceSpace";
+            this.checkBoxReplaceSpace.Size = new System.Drawing.Size(106, 16);
+            this.checkBoxReplaceSpace.TabIndex = 3;
+            this.checkBoxReplaceSpace.Text = "Replace SPACE";
+            this.checkBoxReplaceSpace.UseVisualStyleBackColor = true;
             // 
             // buttonRun
             // 
@@ -166,7 +166,7 @@
             this.Controls.Add(this.textBoxExt);
             this.Controls.Add(this.buttonRefDir);
             this.Controls.Add(this.buttonRun);
-            this.Controls.Add(this.checkBox1);
+            this.Controls.Add(this.checkBoxReplaceSpace);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textBoxDirPath);
             this.Name = "Form1";
@@ -181,7 +181,7 @@
         private System.Windows.Forms.TextBox textBoxDirPath;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.CheckBox checkBoxReplaceSpace;
         private System.Windows.Forms.Button buttonRun;
         private System.Windows.Forms.Button buttonRefDir;
         private System.Windows.Forms.TextBox textBoxExt;

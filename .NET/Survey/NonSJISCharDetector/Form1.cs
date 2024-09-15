@@ -21,12 +21,12 @@ namespace NonSJISCharDetector
 
         private void buttonRefDir_Click ( object sender, EventArgs e )
         {
-            this.textBoxDirPath.Text = ChooseDirPath();
+            textBoxDirPath.Text = ChooseDirPath();
         }
 
         private void buttonRefOutDir_Click ( object sender, EventArgs e )
         {
-            this.textBoxOutDirPath.Text = ChooseDirPath();
+            textBoxOutDirPath.Text = ChooseDirPath();
         }
 
         private void buttonRun_Click ( object sender, EventArgs e )
@@ -45,18 +45,24 @@ namespace NonSJISCharDetector
 
         private void Run ()
         {
-            var folderPath = this.textBoxDirPath.Text;
+            var folderPath = textBoxDirPath.Text;
 
-            var extensions = this.textBoxExt.Text.Split( ',' );
+            var extensions = textBoxExt.Text
+                            .Split( ',' )
+                            .Select( ext => ext.Trim().ToLowerInvariant() )
+                            .Where( ext => !string.IsNullOrEmpty( ext ) )
+                            .ToArray();
 
-            var outputPath = this.textBoxOutDirPath.Text + @"\" + DateTime.Now.ToString( "yyyyMMdd_HHmmss" ) + ".tsv";
+            var outputPath = textBoxOutDirPath.Text + @"\" + DateTime.Now.ToString( "yyyyMMdd_HHmmss" ) + ".tsv";
 
-            List<string> results = new List<string>();
+            var results = new List<string>();
 
             foreach ( var ext in extensions )
             {
                 foreach ( var filePath in Directory.GetFiles( folderPath, $"*.{ext}", SearchOption.AllDirectories ) )
                 {
+                    if ( IsSkipFileExtension( filePath, extensions ) ) continue;
+
                     FindAndReplaceInvalidShiftJISBytes( filePath, results );
                 }
             }
@@ -64,24 +70,32 @@ namespace NonSJISCharDetector
             File.WriteAllLines( outputPath, results, Encoding.UTF8 );
         }
 
+        private bool IsSkipFileExtension ( string filePath, string [] extensions )
+        {
+            return ! extensions.Contains( Path.GetExtension( filePath ).ToLower().Replace(".", "") );
+        }
+
         private void FindAndReplaceInvalidShiftJISBytes ( string filePath, List<string> results )
         {
             List<(long offset, byte value)> invalidData = new List<(long, byte)>();
-            bool fileModified = false;
+            var fileModified = false;
+
+            CreateBackupFileName( filePath );
 
             using ( FileStream fs = new FileStream( filePath, FileMode.Open, FileAccess.ReadWrite ) )
             {
-                byte [] buffer = new byte [ 1024 ];
-                int bytesRead;
-                long offset = 0;
+                var buffer = new byte [ 1024 ];
+                var bytesRead = 0;
+                var offset = 0;
 
                 while ( ( bytesRead = fs.Read( buffer, 0, buffer.Length ) ) > 0 )
                 {
-                    bool bufferModified = false;
+                    var bufferModified = false;
 
-                    for ( int i = 0; i < bytesRead; i++ )
+                    for ( var i = 0; i < bytesRead; i++ )
                     {
-                        byte b1 = buffer [ i ];
+                        var b1 = buffer [ i ];
+
                         if ( IsShiftJISLeadByte( b1 ) )
                         {
                             if ( i + 1 < bytesRead )
@@ -90,8 +104,8 @@ namespace NonSJISCharDetector
                                 if ( !IsValidShiftJISCharacter( b1, b2 ) )
                                 {
                                     invalidData.Add( (offset + i, b1) );
-                                    buffer [ i ] = 0x20;
-                                    buffer [ i + 1 ] = 0x20;
+                                    ReplaceSpace( buffer, i );
+                                    ReplaceSpace( buffer, i+1 );
                                     bufferModified = true;
                                     fileModified = true;
                                 }
@@ -101,15 +115,15 @@ namespace NonSJISCharDetector
                             {
                                 // ファイルの最後で不完全な2バイト文字がある場合
                                 invalidData.Add( (offset + i, b1) );
-                                buffer [ i ] = 0x20;
+                                ReplaceSpace( buffer, i );
                                 bufferModified = true;
                                 fileModified = true;
                             }
                         }
-                        else if ( !IsValidShiftJISSingleByte( b1 ) )
+                        else if ( !IsValidShiftJISSingleByte( b1 ) && !IsExcludedControlCharacter( b1 ) )
                         {
                             invalidData.Add( (offset + i, b1) );
-                            buffer [ i ] = 0x20;
+                            ReplaceSpace( buffer, i );
                             bufferModified = true;
                             fileModified = true;
                         }
@@ -141,25 +155,58 @@ namespace NonSJISCharDetector
 
         private bool IsShiftJISLeadByte ( byte b )
         {
-            return ( b >= 0x81 && b <= 0x9F ) || ( b >= 0xE0 && b <= 0xFC );
+            return ( b >= 0x81 && b <= 0x9F ) ||
+                   ( b >= 0xE0 && b <= 0xFC );
         }
 
         private bool IsValidShiftJISSingleByte ( byte b )
         {
-            return ( b >= 0x20 && b <= 0x7E ) || ( b >= 0xA1 && b <= 0xDF );
+            return ( b >= 0x20 && b <= 0x7E ) ||
+                   ( b >= 0xA1 && b <= 0xDF );
         }
 
         private bool IsValidShiftJISCharacter ( byte b1, byte b2 )
         {
             if ( b1 >= 0x81 && b1 <= 0x9F )
             {
-                return ( b2 >= 0x40 && b2 <= 0x7E ) || ( b2 >= 0x80 && b2 <= 0xFC );
+                return ( b2 >= 0x40 && b2 <= 0x7E ) ||
+                       ( b2 >= 0x80 && b2 <= 0xFC );
             }
             else if ( b1 >= 0xE0 && b1 <= 0xFC )
             {
-                return ( b2 >= 0x40 && b2 <= 0x7E ) || ( b2 >= 0x80 && b2 <= 0xFC );
+                return ( b2 >= 0x40 && b2 <= 0x7E ) ||
+                       ( b2 >= 0x80 && b2 <= 0xFC );
             }
             return false;
+        }
+
+        private bool IsExcludedControlCharacter ( byte b )
+        {
+        	// タブ、LF、CR は置換しない
+            return b == 0x09 ||
+                   b == 0x0A ||
+                   b == 0x0D;
+        }
+
+        private void CreateBackupFileName ( string filePath )
+        {
+            if ( !checkBoxCreateBackup.Checked ) return;
+
+            var directory = Path.GetDirectoryName( filePath );
+            var fileName = Path.GetFileNameWithoutExtension( filePath );
+            var extension = Path.GetExtension( filePath );
+            var timestamp = DateTime.Now.ToString( "yyyyMMddHHmmssfff" );
+
+            var backupFilePath = Path.Combine( directory, $"{fileName}_{timestamp}{extension}" );
+
+            File.Copy( filePath, backupFilePath, true );
+        }
+
+        private void ReplaceSpace ( byte [] array, int index )
+        {
+            if ( !checkBoxReplaceSpace.Checked ) return;
+
+            array [ index ] = 0x20;
         }
 
         private string ChooseDirPath ()
