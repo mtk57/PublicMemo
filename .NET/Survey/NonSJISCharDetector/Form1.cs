@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace NonSJISCharDetector
 {
@@ -14,7 +15,8 @@ namespace NonSJISCharDetector
             InitializeComponent();
 
 #if DEBUG
-            textBoxDirPath.Text = @"C:\_git\PublicMemo\.NET\Survey\NonSJISCharDetector\testdata";
+            //textBoxDirPath.Text = @"C:\_git\PublicMemo\.NET\Survey\NonSJISCharDetector\testdata";
+            textBoxDirPath.Text = @"C:\_git\PublicMemo\.NET\Survey\NonSJISCharDetector\testdata2";
             textBoxOutDirPath.Text = @"C:\_git\PublicMemo\.NET\Survey\NonSJISCharDetector\output";
 #endif
         }
@@ -75,6 +77,24 @@ namespace NonSJISCharDetector
             return ! extensions.Contains( Path.GetExtension( filePath ).ToLower().Replace(".", "") );
         }
 
+        // ------------------------------------------------------------------------
+        // http://charset.7jp.net/sjis.html
+        //
+        // シフトJISの1バイトコード（半角文字）のエリア
+        //   0x00～0x1F、0x7F：制御コード
+        //   0x20～0x7E      ：ASCII
+        //   0xA1～0xDF      ：半角カタカナ
+        //
+        // シフトJISの2バイトコード（全角文字）のエリア（JIS X 0208の漢字エリア）
+        //　 上位1バイト　 0x81～0x9F、 0xE0～0xEF
+        //　 下位1バイト　 0x40～0x7E、 0x80～0xFC
+        //
+        // ですが機種に依存しない観点より、以下エリアは使用しないのが無難です
+        //   0x8540～ 0x889E
+        //   0xEB40～ 0xEFFC
+        //   0xF040～
+        // ------------------------------------------------------------------------
+
         private void FindAndReplaceInvalidShiftJISBytes ( string filePath, List<string> results )
         {
             List<(long offset, byte value)> invalidData = new List<(long, byte)>();
@@ -120,7 +140,8 @@ namespace NonSJISCharDetector
                                 fileModified = true;
                             }
                         }
-                        else if ( !IsValidShiftJISSingleByte( b1 ) && !IsExcludedControlCharacter( b1 ) )
+                        else if ( !IsValidShiftJISSingleByte( b1 ) &&
+                                  !IsExcludedControlCharacter( b1 ) )
                         {
                             invalidData.Add( (offset + i, b1) );
                             ReplaceSpace( buffer, i );
@@ -153,18 +174,14 @@ namespace NonSJISCharDetector
             }
         }
 
+        // 全角文字の上位1バイトのみ
         private bool IsShiftJISLeadByte ( byte b )
         {
             return ( b >= 0x81 && b <= 0x9F ) ||
-                   ( b >= 0xE0 && b <= 0xFC );
+                   ( b >= 0xE0 && b <= 0xEF );
         }
 
-        private bool IsValidShiftJISSingleByte ( byte b )
-        {
-            return ( b >= 0x20 && b <= 0x7E ) ||
-                   ( b >= 0xA1 && b <= 0xDF );
-        }
-
+        // 全角文字の上位1バイトと下位1バイト
         private bool IsValidShiftJISCharacter ( byte b1, byte b2 )
         {
             if ( b1 >= 0x81 && b1 <= 0x9F )
@@ -172,7 +189,7 @@ namespace NonSJISCharDetector
                 return ( b2 >= 0x40 && b2 <= 0x7E ) ||
                        ( b2 >= 0x80 && b2 <= 0xFC );
             }
-            else if ( b1 >= 0xE0 && b1 <= 0xFC )
+            else if ( b1 >= 0xE0 && b1 <= 0xEF )
             {
                 return ( b2 >= 0x40 && b2 <= 0x7E ) ||
                        ( b2 >= 0x80 && b2 <= 0xFC );
@@ -180,12 +197,19 @@ namespace NonSJISCharDetector
             return false;
         }
 
+        // 半角文字
+        private bool IsValidShiftJISSingleByte ( byte b )
+        {
+            return ( b >= 0x20 && b <= 0x7E ) ||   // ASCII
+                   ( b >= 0xA1 && b <= 0xDF );     // 半角カタカナ
+        }
+
+        // SPACE置換を除外する制御コード
         private bool IsExcludedControlCharacter ( byte b )
         {
-        	// タブ、LF、CR は置換しない
-            return b == 0x09 ||
-                   b == 0x0A ||
-                   b == 0x0D;
+            return b == 0x09 ||     // TAB
+                   b == 0x0A ||     // LF
+                   b == 0x0D;       // CR
         }
 
         private void CreateBackupFileName ( string filePath )
