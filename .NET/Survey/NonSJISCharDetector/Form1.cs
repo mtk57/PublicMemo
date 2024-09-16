@@ -15,9 +15,8 @@ namespace NonSJISCharDetector
             InitializeComponent();
 
 #if DEBUG
-            //textBoxDirPath.Text = @"C:\_git\PublicMemo\.NET\Survey\NonSJISCharDetector\testdata";
-            textBoxDirPath.Text = @"C:\_git\PublicMemo\.NET\Survey\NonSJISCharDetector\testdata2";
-            textBoxOutDirPath.Text = @"C:\_git\PublicMemo\.NET\Survey\NonSJISCharDetector\output";
+            textBoxDirPath.Text = @"C:\_git\PublicMemo\.NET\Survey\NonSJISCharDetector\testdata";
+            textBoxOutDirPath.Text = @"C:\_git\PublicMemo\.NET\Survey\NonSJISCharDetector\testdata";
 #endif
         }
 
@@ -82,7 +81,7 @@ namespace NonSJISCharDetector
         //
         // シフトJISの1バイトコード（半角文字）のエリア
         //   0x00～0x1F、0x7F：制御コード
-        //   0x20～0x7E      ：ASCII
+        //   0x20～0x7E      ：ASCIIコード
         //   0xA1～0xDF      ：半角カタカナ
         //
         // シフトJISの2バイトコード（全角文字）のエリア（JIS X 0208の漢字エリア）
@@ -94,15 +93,40 @@ namespace NonSJISCharDetector
         //   0xEB40～ 0xEFFC
         //   0xF040～
         // ------------------------------------------------------------------------
+        //
+        // 1byte Check					
+        //   00～08：SP置換
+        //   09～0A：無視
+        //   0B～0C：SP置換
+        //   0D    ：無視
+        //   0E～1F：SP置換
+        //   20～7E：無視
+        //   7F    ： SP置換
+        //   80～8F：SP置換
+        //   81～9F：上位byte
+        //   A0～AF：SP置換
+        //   A1～DF：無視
+        //   E0～EF：上位byte
+        //   F0～  ：SP置換
+        //
+        // 2byte Check					
+        //   00～3F：SP置換 (1byte目も)
+        //   40～7E：無視
+        //   7F    ：SP置換 (1byte目も)
+        //   80～FC：無視
+        //   FD～  ：SP置換 (1byte目も)
+        //
+        // 機種依存
+        //   8540～889E：SP置換 (1byte目も)
+        //   EB40～EFFC：SP置換 (1byte目も)
 
         private void FindAndReplaceInvalidShiftJISBytes ( string filePath, List<string> results )
         {
             List<(long offset, byte value)> invalidData = new List<(long, byte)>();
-            var fileModified = false;
 
             CreateBackupFileName( filePath );
 
-            using ( FileStream fs = new FileStream( filePath, FileMode.Open, FileAccess.ReadWrite ) )
+            using ( var fs = new FileStream( filePath, FileMode.Open, FileAccess.ReadWrite ) )
             {
                 var buffer = new byte [ 1024 ];
                 var bytesRead = 0;
@@ -114,41 +138,77 @@ namespace NonSJISCharDetector
 
                     for ( var i = 0; i < bytesRead; i++ )
                     {
+                        // まずは1byteを判定する
+
                         var b1 = buffer [ i ];
 
-                        if ( IsShiftJISLeadByte( b1 ) )
+                        if ( IsControlCode( b1 ) )
                         {
-                            if ( i + 1 < bytesRead )
+                            // 制御コード
+
+                            if ( !IsIgnoreControlCode( b1 ) )
                             {
-                                byte b2 = buffer [ i + 1 ];
-                                if ( !IsValidShiftJISCharacter( b1, b2 ) )
-                                {
-                                    invalidData.Add( (offset + i, b1) );
-                                    ReplaceSpace( buffer, i );
-                                    ReplaceSpace( buffer, i+1 );
-                                    bufferModified = true;
-                                    fileModified = true;
-                                }
-                                i++; // 2バイト文字なので、次のバイトをスキップ
-                            }
-                            else
-                            {
-                                // ファイルの最後で不完全な2バイト文字がある場合
+                                // 無視しない制御コード
+
                                 invalidData.Add( (offset + i, b1) );
                                 ReplaceSpace( buffer, i );
                                 bufferModified = true;
-                                fileModified = true;
                             }
                         }
-                        else if ( !IsValidShiftJISSingleByte( b1 ) &&
-                                  !IsExcludedControlCharacter( b1 ) )
+                        else if ( IsSingleByteCode( b1 ) )
                         {
-                            invalidData.Add( (offset + i, b1) );
-                            ReplaceSpace( buffer, i );
-                            bufferModified = true;
-                            fileModified = true;
+                            // 1byte文字 (ASCIIコード, 半角カタカナ)
+
+                            // 無視する
                         }
-                    }
+                        else
+                        {
+                            // 上記以外
+
+                            if ( IsHibyteCode( b1 ) )
+                            {
+                                // 2byte文字の上位byte
+
+                                if ( i + 1 < bytesRead )
+                                {
+                                    byte b2 = buffer [ i + 1 ];
+
+                                    if ( IsLowbyteCode( b2 ) )
+                                    {
+                                        // 2byte文字の下位byte
+
+                                        if ( IsMachineDependentCode( b1, b2 ) )
+                                        {
+                                            // 機種依存コード
+
+                                            invalidData.Add( (offset + i, b1) );
+                                            ReplaceSpace( buffer, i );
+                                            ReplaceSpace( buffer, i + 1 );
+                                            bufferModified = true;
+                                        }
+                                    }
+                                    i++;
+                                }
+                                else
+                                {
+                                    // ファイルの最後で不完全な2バイト文字がある場合
+
+                                    invalidData.Add( (offset + i, b1) );
+                                    ReplaceSpace( buffer, i );
+                                    bufferModified = true;
+                                }
+                            }
+                            else
+                            {
+                                // 2byte文字以外
+
+                                invalidData.Add( (offset + i, b1) );
+                                ReplaceSpace( buffer, i );
+                                bufferModified = true;
+                            }
+                        }
+
+                    }// for
 
                     if ( bufferModified )
                     {
@@ -157,8 +217,10 @@ namespace NonSJISCharDetector
                     }
 
                     offset += bytesRead;
-                }
-            }
+
+                }// while
+
+            }// stream
 
             if ( invalidData.Any() )
             {
@@ -167,49 +229,50 @@ namespace NonSJISCharDetector
                     results.Add( $"{filePath}\t{offset}\t0x{value:X2}" );
                 }
             }
-
-            if ( fileModified )
-            {
-                results.Add( $"{filePath}\tFile was modified" );
-            }
         }
 
-        // 全角文字の上位1バイトのみ
-        private bool IsShiftJISLeadByte ( byte b )
+        // 制御コード (0x00～0x1F、0x7F)
+        private bool IsControlCode ( byte b )
+        {
+            return ( b >= 0x00 && b <= 0x1F ) ||
+                   ( b == 0x7F );
+        }
+
+        // 1バイト文字 (0x20～0x7E, 0xA1～0xDF)
+        private bool IsSingleByteCode ( byte b )
+        {
+            return ( b >= 0x20 && b <= 0x7E ) ||
+                   ( b >= 0xA1 && b <= 0xDF );
+        }
+
+        // 無視する制御コード
+        private bool IsIgnoreControlCode ( byte b )
+        {
+            return b == 0x09 ||     // TAB
+                   b == 0x0A ||     // LF
+                   b == 0x0D;       // CR
+        }
+
+        // 2byte文字の上位byte
+        private bool IsHibyteCode ( byte b )
         {
             return ( b >= 0x81 && b <= 0x9F ) ||
                    ( b >= 0xE0 && b <= 0xEF );
         }
 
-        // 全角文字の上位1バイトと下位1バイト
-        private bool IsValidShiftJISCharacter ( byte b1, byte b2 )
+        // 2byte文字の下位byte
+        private bool IsLowbyteCode ( byte b )
         {
-            if ( b1 >= 0x81 && b1 <= 0x9F )
-            {
-                return ( b2 >= 0x40 && b2 <= 0x7E ) ||
-                       ( b2 >= 0x80 && b2 <= 0xFC );
-            }
-            else if ( b1 >= 0xE0 && b1 <= 0xEF )
-            {
-                return ( b2 >= 0x40 && b2 <= 0x7E ) ||
-                       ( b2 >= 0x80 && b2 <= 0xFC );
-            }
-            return false;
+            return ( b >= 0x40 && b <= 0x7E ) ||
+                   ( b >= 0x80 && b <= 0xFC );
         }
 
-        // 半角文字
-        private bool IsValidShiftJISSingleByte ( byte b )
+        // 機種依存コード
+        private bool IsMachineDependentCode ( byte b1, byte b2 )
         {
-            return ( b >= 0x20 && b <= 0x7E ) ||   // ASCII
-                   ( b >= 0xA1 && b <= 0xDF );     // 半角カタカナ
-        }
-
-        // SPACE置換を除外する制御コード
-        private bool IsExcludedControlCharacter ( byte b )
-        {
-            return b == 0x09 ||     // TAB
-                   b == 0x0A ||     // LF
-                   b == 0x0D;       // CR
+            int code = ( b1 << 8 ) | b2;
+            return ( code >= 0x8540 && code <= 0x889E ) ||
+                   ( code >= 0xEB40 && code <= 0xEFFC );
         }
 
         private void CreateBackupFileName ( string filePath )
@@ -221,7 +284,7 @@ namespace NonSJISCharDetector
             var extension = Path.GetExtension( filePath );
             var timestamp = DateTime.Now.ToString( "yyyyMMddHHmmssfff" );
 
-            var backupFilePath = Path.Combine( directory, $"{fileName}_{timestamp}{extension}" );
+            var backupFilePath = Path.Combine( directory, $"{fileName}.{extension}.bak_{timestamp}" );
 
             File.Copy( filePath, backupFilePath, true );
         }

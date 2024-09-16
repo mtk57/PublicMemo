@@ -70,6 +70,8 @@
             // checkBoxReplaceSpace
             // 
             this.checkBoxReplaceSpace.AutoSize = true;
+            this.checkBoxReplaceSpace.Checked = true;
+            this.checkBoxReplaceSpace.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxReplaceSpace.Location = new System.Drawing.Point(35, 198);
             this.checkBoxReplaceSpace.Name = "checkBoxReplaceSpace";
             this.checkBoxReplaceSpace.Size = new System.Drawing.Size(106, 16);
@@ -117,6 +119,8 @@
             // checkBoxCreateBackup
             // 
             this.checkBoxCreateBackup.AutoSize = true;
+            this.checkBoxCreateBackup.Checked = true;
+            this.checkBoxCreateBackup.CheckState = System.Windows.Forms.CheckState.Checked;
             this.checkBoxCreateBackup.Location = new System.Drawing.Point(184, 198);
             this.checkBoxCreateBackup.Name = "checkBoxCreateBackup";
             this.checkBoxCreateBackup.Size = new System.Drawing.Size(100, 16);
