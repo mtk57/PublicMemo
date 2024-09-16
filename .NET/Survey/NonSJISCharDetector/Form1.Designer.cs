@@ -41,6 +41,7 @@
             this.textBoxOutDirPath = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
             this.buttonRefOutDir = new System.Windows.Forms.Button();
+            this.checkBoxReplaceSpaceByMachineDependent = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // textBoxDirPath
@@ -157,11 +158,24 @@
             this.buttonRefOutDir.UseVisualStyleBackColor = true;
             this.buttonRefOutDir.Click += new System.EventHandler(this.buttonRefOutDir_Click);
             // 
+            // checkBoxReplaceSpaceByMachineDependent
+            // 
+            this.checkBoxReplaceSpaceByMachineDependent.AutoSize = true;
+            this.checkBoxReplaceSpaceByMachineDependent.Checked = true;
+            this.checkBoxReplaceSpaceByMachineDependent.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxReplaceSpaceByMachineDependent.Location = new System.Drawing.Point(325, 198);
+            this.checkBoxReplaceSpaceByMachineDependent.Name = "checkBoxReplaceSpaceByMachineDependent";
+            this.checkBoxReplaceSpaceByMachineDependent.Size = new System.Drawing.Size(222, 16);
+            this.checkBoxReplaceSpaceByMachineDependent.TabIndex = 12;
+            this.checkBoxReplaceSpaceByMachineDependent.Text = "Replace SPACE by MachineDependent";
+            this.checkBoxReplaceSpaceByMachineDependent.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(562, 299);
+            this.Controls.Add(this.checkBoxReplaceSpaceByMachineDependent);
             this.Controls.Add(this.buttonRefOutDir);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.textBoxOutDirPath);
@@ -194,6 +208,7 @@
         private System.Windows.Forms.TextBox textBoxOutDirPath;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button buttonRefOutDir;
+        private System.Windows.Forms.CheckBox checkBoxReplaceSpaceByMachineDependent;
     }
 }
 

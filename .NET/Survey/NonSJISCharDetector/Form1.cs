@@ -4,15 +4,18 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace NonSJISCharDetector
 {
     public partial class Form1 : Form
     {
+        private byte [] _buffer = null;
+
         public Form1 ()
         {
             InitializeComponent();
+
+            _buffer = new byte [1024 * 10000];
 
 #if DEBUG
             textBoxDirPath.Text = @"C:\_git\PublicMemo\.NET\Survey\NonSJISCharDetector\testdata";
@@ -128,11 +131,11 @@ namespace NonSJISCharDetector
 
             using ( var fs = new FileStream( filePath, FileMode.Open, FileAccess.ReadWrite ) )
             {
-                var buffer = new byte [ 1024 ];
+                Array.Clear( _buffer, 0x00, _buffer.Length );
                 var bytesRead = 0;
                 var offset = 0;
 
-                while ( ( bytesRead = fs.Read( buffer, 0, buffer.Length ) ) > 0 )
+                while ( ( bytesRead = fs.Read( _buffer, 0, _buffer.Length ) ) > 0 )
                 {
                     var bufferModified = false;
 
@@ -140,7 +143,7 @@ namespace NonSJISCharDetector
                     {
                         // まずは1byteを判定する
 
-                        var b1 = buffer [ i ];
+                        var b1 = _buffer [ i ];
 
                         if ( IsControlCode( b1 ) )
                         {
@@ -151,7 +154,7 @@ namespace NonSJISCharDetector
                                 // 無視しない制御コード
 
                                 invalidData.Add( (offset + i, b1) );
-                                ReplaceSpace( buffer, i );
+                                ReplaceSpace( _buffer, i );
                                 bufferModified = true;
                             }
                         }
@@ -171,7 +174,7 @@ namespace NonSJISCharDetector
 
                                 if ( i + 1 < bytesRead )
                                 {
-                                    byte b2 = buffer [ i + 1 ];
+                                    byte b2 = _buffer [ i + 1 ];
 
                                     if ( IsLowbyteCode( b2 ) )
                                     {
@@ -182,10 +185,27 @@ namespace NonSJISCharDetector
                                             // 機種依存コード
 
                                             invalidData.Add( (offset + i, b1) );
-                                            ReplaceSpace( buffer, i );
-                                            ReplaceSpace( buffer, i + 1 );
+                                            ReplaceSpace( _buffer, i );
+                                            ReplaceSpace( _buffer, i + 1 );
                                             bufferModified = true;
                                         }
+                                    }
+                                    else if ( IsIgnoreControlCode( b2 ) )
+                                    {
+                                        // 無視しない制御コード
+
+                                        invalidData.Add( (offset + i, b1) );
+                                        ReplaceSpace( _buffer, i );
+                                        bufferModified = true;
+
+                                        continue;
+                                    }
+                                    else
+                                    {
+                                        invalidData.Add( (offset + i, b1) );
+                                        ReplaceSpace( _buffer, i );
+                                        ReplaceSpace( _buffer, i + 1 );
+                                        bufferModified = true;
                                     }
                                     i++;
                                 }
@@ -194,7 +214,7 @@ namespace NonSJISCharDetector
                                     // ファイルの最後で不完全な2バイト文字がある場合
 
                                     invalidData.Add( (offset + i, b1) );
-                                    ReplaceSpace( buffer, i );
+                                    ReplaceSpace( _buffer, i );
                                     bufferModified = true;
                                 }
                             }
@@ -203,7 +223,7 @@ namespace NonSJISCharDetector
                                 // 2byte文字以外
 
                                 invalidData.Add( (offset + i, b1) );
-                                ReplaceSpace( buffer, i );
+                                ReplaceSpace( _buffer, i );
                                 bufferModified = true;
                             }
                         }
@@ -213,7 +233,7 @@ namespace NonSJISCharDetector
                     if ( bufferModified )
                     {
                         fs.Position = offset;
-                        fs.Write( buffer, 0, bytesRead );
+                        fs.Write( _buffer, 0, bytesRead );
                     }
 
                     offset += bytesRead;
@@ -270,6 +290,8 @@ namespace NonSJISCharDetector
         // 機種依存コード
         private bool IsMachineDependentCode ( byte b1, byte b2 )
         {
+            if ( !checkBoxReplaceSpaceByMachineDependent.Checked ) return false;
+
             int code = ( b1 << 8 ) | b2;
             return ( code >= 0x8540 && code <= 0x889E ) ||
                    ( code >= 0xEB40 && code <= 0xEFFC );
