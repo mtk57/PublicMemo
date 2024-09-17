@@ -417,3 +417,35 @@ Private Function GetTargetContents( _
     Common.WriteLog "GetTargetContents E"
 End Function
 
+Private Function MySplit(ByVal Expression As String, Optional ByVal Delimiter As String = " ") As Variant
+    Dim result() As String
+    Dim startPos As Long
+    Dim delimPos As Long
+    Dim itemCount As Long
+    
+    ' ”z—ñ‚ğ‰Šú‰»
+    ReDim result(0 To 0)
+    itemCount = 0
+    startPos = 1
+    
+    ' •¶š—ñ‚ğŒJ‚è•Ô‚µˆ—
+    Do
+        ' ‹æØ‚è•¶š‚ÌˆÊ’u‚ğŒ©‚Â‚¯‚é
+        delimPos = InStr(startPos, Expression, Delimiter)
+        
+        If delimPos = 0 Then
+            ' ÅŒã‚Ì€–Ú‚ğ’Ç‰Á
+            ReDim Preserve result(0 To itemCount)
+            result(itemCount) = Mid(Expression, startPos)
+            Exit Do
+        Else
+            ' €–Ú‚ğ’Ç‰Á
+            ReDim Preserve result(0 To itemCount)
+            result(itemCount) = Mid(Expression, startPos, delimPos - startPos)
+            itemCount = itemCount + 1
+            startPos = delimPos + Len(Delimiter)
+        End If
+    Loop
+    
+    MySplit = result
+End Function
