@@ -46,3 +46,22 @@ class Program
         }
     }
 }
+
+
+Sub ExportArrayToTextFile(arr() As String, filePath As String)
+    Dim fileNum As Integer
+    Dim i As Long
+    
+    fileNum = FreeFile
+    
+    ' ファイルをSJISエンコーディングで開く
+    Open filePath For Output As #fileNum
+    
+    ' 配列の内容をファイルに書き込む
+    For i = LBound(arr) To UBound(arr)
+        Print #fileNum, arr(i)
+    Next i
+    
+    ' ファイルを閉じる
+    Close #fileNum
+End Sub
