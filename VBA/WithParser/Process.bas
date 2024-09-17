@@ -227,16 +227,19 @@ CONTINUE:
     If is_find = False Then
         Dim err_msg As String
     
-        err_msg = "Grep結果のWithに対応するEnd Withが見つかりません (target=" & result.GetTarget() & ")"
+        err_msg = "★Grep結果のWithに対応するEnd Withが見つかりません (target=" & result.GetTarget() & ")"
     
-        If Common.ShowYesNoMessageBox( _
-            "[GetWithCodes]でエラーが発生しました。処理を続行しますか?" & vbCrLf & _
-            "err_msg=" & err_msg _
+        Common.WriteLog err_msg
+    
+        If main_param.IsConfirm() = True Then
+            If Common.ShowYesNoMessageBox( _
+                "[GetWithCodes]でエラーが発生しました。処理を続行しますか?" & vbCrLf & _
+                "err_msg=" & err_msg _
             ) = False Then
             Err.Raise 53, , "[GetWithCodes] エラー! (err_msg=" & err_msg & ")"
+            End If
         End If
         
-        Common.WriteLog err_msg
         Common.WriteLog "GetWithCodes E1"
         Exit Sub
     End If
@@ -267,7 +270,7 @@ Private Sub ParseWithCode( _
     For i = 0 To UBound(with_codes)
         line = with_codes(i)
         
-        Common.WriteLog "[" & i & "]=" & line
+        'Common.WriteLog "[" & i & "]=" & line
         
         If i = 0 Then
             with_class = Trim(Replace(line, "With", ""))
@@ -393,11 +396,13 @@ Private Function GetTargetContents( _
                   "path=" & result.GetFilePath()
         Common.WriteLog "[GetTargetContents] ★★エラー! err_msg=" & err_msg
         
-        If Common.ShowYesNoMessageBox( _
-            "[GetTargetContents]でエラーが発生しました。処理を続行しますか?" & vbCrLf & _
-            "err_msg=" & err_msg _
+        If main_param.IsConfirm() = True Then
+            If Common.ShowYesNoMessageBox( _
+                "[GetTargetContents]でエラーが発生しました。処理を続行しますか?" & vbCrLf & _
+                "err_msg=" & err_msg _
             ) = False Then
-            Err.Raise 53, , "[GetTargetContents] エラー! (err_msg=" & err_msg & ")"
+                Err.Raise 53, , "[GetTargetContents] エラー! (err_msg=" & err_msg & ")"
+            End If
         End If
         
         Common.WriteLog "GetTargetContents E1"

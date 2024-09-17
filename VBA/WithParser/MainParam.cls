@@ -14,6 +14,8 @@ Option Explicit
 Private format_type As String
 Private check_len As Integer
 Private check_len_s As String
+Private is_confirm As Boolean
+Private is_confirm_s As String
 
 Private Const CLM_ = "L"
 Private Const ROW_ = 7
@@ -22,6 +24,7 @@ Private Const ROW_ = 7
 Private Sub Class_Initialize()
     format_type = ""
     check_len = 0
+    is_confirm = True
 End Sub
 
 'èâä˙âª
@@ -31,6 +34,7 @@ Public Sub Init()
 
     format_type = main_sheet.Range(CLM_ & ROW_).value
     check_len_s = main_sheet.Range(CLM_ & ROW_ + 1).value
+    is_confirm_s = main_sheet.Range(CLM_ & ROW_ + 2).value
 End Sub
 
 'åüèÿ
@@ -50,6 +54,12 @@ Public Sub Validate()
     Else
         check_len = 0
     End If
+    
+    If is_confirm_s = "" Or is_confirm_s = "YES" Then
+        is_confirm = True
+    Else
+        is_confirm = False
+    End If
 End Sub
 
 '=========================================
@@ -64,12 +74,17 @@ Public Function GetCheckLen() As Integer
     GetCheckLen = check_len
 End Function
 
+Public Function IsConfirm() As Boolean
+    IsConfirm = is_confirm
+End Function
+
 Public Function GetAllValue() As String
     Dim ret As String
     
     ret = "[Main Param] " & _
           "format_type=(" & format_type & ")," & _
-          "check_len=(" & check_len & ")"
+          "check_len=(" & check_len & "), " & _
+          "is_confirm=(" & is_confirm_s & ")"
           
 
     GetAllValue = ret
