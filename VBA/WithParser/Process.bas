@@ -450,48 +450,68 @@ Private Function MySplit(ByVal Expression As String, Optional ByVal Delimiter As
     MySplit = result
 End Function
 
+Option Explicit
+
 Sub AnalyzeFileContent()
     Dim fso As Object
     Dim textFile As Object
+    Dim outputFile As Object
     Dim content As String
     Dim lines() As String
     Dim i As Long
     Dim filePath As String
+    Dim outputPath As String
+    Dim analysisResult As String
     
     ' ファイルパスを設定（適宜変更してください）
-    filePath = "C:\path\to\your\file.txt"
+    filePath = "C:\path\to\your\input\file.txt"
+    outputPath = "C:\path\to\your\output\analysis_result.txt"
     
     ' FileSystemObjectを作成
     Set fso = CreateObject("Scripting.FileSystemObject")
     
-    ' ファイルを開く
+    ' 入力ファイルを開く
     Set textFile = fso.OpenTextFile(filePath, 1) ' 1 = 読み取り専用
     
     ' ファイルの内容を読み込む
     content = textFile.ReadAll
     
-    ' ファイルを閉じる
+    ' 入力ファイルを閉じる
     textFile.Close
     
     ' 内容をCRLFで分割
     lines = Split(content, vbCrLf)
     
-    ' 分析結果を表示
-    Debug.Print "総バイト数: " & Len(content)
-    Debug.Print "Split後の行数: " & UBound(lines) - LBound(lines) + 1
+    ' 分析結果を文字列に格納
+    analysisResult = "ファイル分析結果:" & vbCrLf & vbCrLf
+    analysisResult = analysisResult & "入力ファイル: " & filePath & vbCrLf
+    analysisResult = analysisResult & "総バイト数: " & Len(content) & vbCrLf
+    analysisResult = analysisResult & "Split後の行数: " & UBound(lines) - LBound(lines) + 1 & vbCrLf & vbCrLf
     
     ' 各行の詳細を分析
     For i = LBound(lines) To UBound(lines)
         If Len(lines(i)) = 0 Then
-            Debug.Print "行 " & i + 1 & ": 空行"
+            analysisResult = analysisResult & "行 " & i + 1 & ": 空行" & vbCrLf
         Else
-            Debug.Print "行 " & i + 1 & ": 長さ " & Len(lines(i)) & " 文字, ASCII: " & AsciiDump(lines(i))
+            analysisResult = analysisResult & "行 " & i + 1 & ": 長さ " & Len(lines(i)) & " 文字, ASCII: " & AsciiDump(lines(i)) & vbCrLf
         End If
     Next i
     
+    ' 出力ファイルを作成または上書き
+    Set outputFile = fso.CreateTextFile(outputPath, True)
+    
+    ' 分析結果を出力ファイルに書き込む
+    outputFile.Write analysisResult
+    
+    ' 出力ファイルを閉じる
+    outputFile.Close
+    
     ' オブジェクトの解放
     Set textFile = Nothing
+    Set outputFile = Nothing
     Set fso = Nothing
+    
+    MsgBox "分析が完了し、結果が保存されました: " & outputPath, vbInformation
 End Sub
 
 Function AsciiDump(str As String) As String
@@ -502,8 +522,6 @@ Function AsciiDump(str As String) As String
     Next i
     AsciiDump = Trim(result)
 End Function
-
-Option Explicit
 
 Function ReadFileToArray(ByVal filePath As String) As String()
     Dim fso As Object
