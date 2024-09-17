@@ -449,3 +449,56 @@ Private Function MySplit(ByVal Expression As String, Optional ByVal Delimiter As
     
     MySplit = result
 End Function
+
+Sub AnalyzeFileContent()
+    Dim fso As Object
+    Dim textFile As Object
+    Dim content As String
+    Dim lines() As String
+    Dim i As Long
+    Dim filePath As String
+    
+    ' ファイルパスを設定（適宜変更してください）
+    filePath = "C:\path\to\your\file.txt"
+    
+    ' FileSystemObjectを作成
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' ファイルを開く
+    Set textFile = fso.OpenTextFile(filePath, 1) ' 1 = 読み取り専用
+    
+    ' ファイルの内容を読み込む
+    content = textFile.ReadAll
+    
+    ' ファイルを閉じる
+    textFile.Close
+    
+    ' 内容をCRLFで分割
+    lines = Split(content, vbCrLf)
+    
+    ' 分析結果を表示
+    Debug.Print "総バイト数: " & Len(content)
+    Debug.Print "Split後の行数: " & UBound(lines) - LBound(lines) + 1
+    
+    ' 各行の詳細を分析
+    For i = LBound(lines) To UBound(lines)
+        If Len(lines(i)) = 0 Then
+            Debug.Print "行 " & i + 1 & ": 空行"
+        Else
+            Debug.Print "行 " & i + 1 & ": 長さ " & Len(lines(i)) & " 文字, ASCII: " & AsciiDump(lines(i))
+        End If
+    Next i
+    
+    ' オブジェクトの解放
+    Set textFile = Nothing
+    Set fso = Nothing
+End Sub
+
+Function AsciiDump(str As String) As String
+    Dim i As Long
+    Dim result As String
+    For i = 1 To Len(str)
+        result = result & " " & Right("0" & Hex(Asc(Mid(str, i, 1))), 2)
+    Next i
+    AsciiDump = Trim(result)
+End Function
