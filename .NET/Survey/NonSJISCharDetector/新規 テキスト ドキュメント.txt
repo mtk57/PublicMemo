@@ -1,0 +1,48 @@
+using System;
+using System.IO;
+using System.Text;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        string inputFilePath = "input.txt";  // 入力ファイルのパス
+        string outputFilePath = "output.txt";  // 出力ファイルのパス
+
+        try
+        {
+            using (FileStream fs = new FileStream(inputFilePath, FileMode.Open, FileAccess.Read))
+            using (StreamWriter writer = new StreamWriter(outputFilePath, false, Encoding.UTF8))
+            {
+                int byteCount = 0;
+                int prevByte = -1;
+                int currentByte;
+
+                while ((currentByte = fs.ReadByte()) != -1)
+                {
+                    byteCount++;
+
+                    if (prevByte == 13 && currentByte == 10)  // CRLF (改行) を検出
+                    {
+                        writer.WriteLine(byteCount - 1);  // CRLFの2バイトを除いたバイト数を出力
+                        byteCount = 0;
+                    }
+
+                    prevByte = currentByte;
+                }
+
+                // 最後の行のバイト数を出力（ファイルが改行で終わっていない場合）
+                if (byteCount > 0)
+                {
+                    writer.WriteLine(byteCount);
+                }
+            }
+
+            Console.WriteLine("処理が完了しました。結果は " + outputFilePath + " に保存されました。");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("エラーが発生しました: " + ex.Message);
+        }
+    }
+}
