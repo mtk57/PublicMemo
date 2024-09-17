@@ -502,3 +502,66 @@ Function AsciiDump(str As String) As String
     Next i
     AsciiDump = Trim(result)
 End Function
+
+Option Explicit
+
+Function ReadFileToArray(ByVal filePath As String) As String()
+    Dim fso As Object
+    Dim textFile As Object
+    Dim lines() As String
+    Dim lineCount As Long
+    Dim tempLine As String
+    
+    ' FileSystemObjectを作成
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    
+    ' ファイルが存在するか確認
+    If Not fso.FileExists(filePath) Then
+        MsgBox "指定されたファイルが見つかりません: " & filePath, vbExclamation
+        Exit Function
+    End If
+    
+    ' ファイルを開く
+    Set textFile = fso.OpenTextFile(filePath, 1) ' 1 = 読み取り専用
+    
+    ' 配列を初期化
+    ReDim lines(0 To 0)
+    lineCount = 0
+    
+    ' ファイルを1行ずつ読み込む
+    Do Until textFile.AtEndOfStream
+        tempLine = textFile.ReadLine
+        ReDim Preserve lines(0 To lineCount)
+        lines(lineCount) = tempLine
+        lineCount = lineCount + 1
+    Loop
+    
+    ' ファイルを閉じる
+    textFile.Close
+    
+    ' オブジェクトの解放
+    Set textFile = Nothing
+    Set fso = Nothing
+    
+    ' 結果を返す
+    ReadFileToArray = lines
+End Function
+
+Sub TestReadFileToArray()
+    Dim filePath As String
+    Dim fileLines() As String
+    Dim i As Long
+    
+    ' テスト用のファイルパス（適宜変更してください）
+    filePath = "C:\path\to\your\file.txt"
+    
+    ' 関数を呼び出す
+    fileLines = ReadFileToArray(filePath)
+    
+    ' 結果を表示
+    Debug.Print "ファイル内の行数: " & UBound(fileLines) + 1
+    
+    For i = 0 To UBound(fileLines)
+        Debug.Print "行 " & i + 1 & ": " & fileLines(i)
+    Next i
+End Sub
