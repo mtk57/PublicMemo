@@ -1,7 +1,10 @@
-Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.16"
+Private Const VERSION = "1.5.17"
+
+Public Const REG_EX_VB_METHOD = "(Function|Sub)\s+[^\(\)\s]+\("
+Public Const REG_EX_VB_METHOD_WITH_RET = "Function\s+[^\(\)\s]*\(.*\)(\s+As\s+[^\(\)\s]*\(*\)*)*$"
+
 
 Public Type MethodInfoStruct
     Raw As String
@@ -548,7 +551,7 @@ Public Function FindMethodStartRowForVB( _
             GoTo CONTINUE
         End If
         
-        If IsMatchByRegExp(line, "(Function|Sub)\s+[A-Za-z_][A-Za-z0-9_]*\(", True) = False Then
+        If IsMatchByRegExp(line, REG_EX_VB_METHOD, True) = False Then
             '見つからない
             GoTo CONTINUE
         End If
@@ -640,7 +643,7 @@ Public Function GetMethodInfoForVB( _
         End If
         
         'Functionの場合は戻り値までマージされているか確認する
-        If IsMatchByRegExp(merge_lines, "Function\s+[A-Za-z_][A-Za-z0-9_]*\(.*\)(\s+As\s+[A-Za-z_][A-Za-z0-9_]*\(*\)*)*$", True) = True Then
+        If IsMatchByRegExp(merge_lines, REG_EX_VB_METHOD_WITH_RET, True) = True Then
             Exit For
         End If
         
@@ -653,7 +656,7 @@ CONTINUE:
     ret.Raw = merge_lines
     
     'メソッド名
-    Dim wk As String: wk = GetMatchByRegExp(merge_lines, "(Function|Sub)\s+[A-Za-z_][A-Za-z0-9_]*\(", True)(0)
+    Dim wk As String: wk = GetMatchByRegExp(merge_lines, REG_EX_VB_METHOD, True)(0)
     ret.Name = Replace(Replace(wk, methodType & " ", ""), "(", "")
     
     start_clm = InStr(merge_lines, "(")
@@ -3462,3 +3465,5 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
+
+
