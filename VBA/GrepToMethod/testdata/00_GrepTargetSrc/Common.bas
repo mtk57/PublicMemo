@@ -102,7 +102,28 @@ Public Sub Sub5(ByVal a() As Long, _
 
 End Sub
 
+Public Sub 日本語関数1()
+
+●日本語関数1
+
+End Sub
+
+Public Sub Method日本語関数2()
+
+●Func日本語関数2
+
+End Sub
+
+Public Function 日本語関数3()
+
+●日本語関数3
+
+End Function
+
+Public Function Method日本語関数4()
+
+●Func日本語関数4
+
+End Function
+
 ●関数定義より下
-
-
-

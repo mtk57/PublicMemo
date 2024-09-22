@@ -1,7 +1,11 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.12"
+Private Const VERSION = "1.5.17"
+
+Public Const REG_EX_VB_METHOD = "(Function|Sub)\s+[^\(\)\s]+\("
+Public Const REG_EX_VB_METHOD_WITH_RET = "Function\s+[^\(\)\s]*\(.*\)(\s+As\s+[^\(\)\s]*\(*\)*)*$"
+
 
 Public Type MethodInfoStruct
     Raw As String
@@ -72,6 +76,17 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+' 最大値を返す
+'-------------------------------------------------------------
+Public Function Max(ByVal a As Variant, ByVal b As Variant) As Variant
+    If a > b Then
+        Max = a
+    Else
+        Max = b
+    End If
+End Function
 
 '-------------------------------------------------------------
 ' 指定されたセルから列内の最後の使用済みセルまでをクリアする
@@ -537,7 +552,7 @@ Public Function FindMethodStartRowForVB( _
             GoTo CONTINUE
         End If
         
-        If IsMatchByRegExp(line, "(Function|Sub)\s+[A-Za-z_][A-Za-z0-9_]*\(", True) = False Then
+        If IsMatchByRegExp(line, REG_EX_VB_METHOD, True) = False Then
             '見つからない
             GoTo CONTINUE
         End If
@@ -629,7 +644,7 @@ Public Function GetMethodInfoForVB( _
         End If
         
         'Functionの場合は戻り値までマージされているか確認する
-        If IsMatchByRegExp(merge_lines, "Function\s+[A-Za-z_][A-Za-z0-9_]*\(.*\)(\s+As\s+[A-Za-z_][A-Za-z0-9_]*\(*\)*)*$", True) = True Then
+        If IsMatchByRegExp(merge_lines, REG_EX_VB_METHOD_WITH_RET, True) = True Then
             Exit For
         End If
         
@@ -642,7 +657,7 @@ CONTINUE:
     ret.Raw = merge_lines
     
     'メソッド名
-    Dim wk As String: wk = GetMatchByRegExp(merge_lines, "(Function|Sub)\s+[A-Za-z_][A-Za-z0-9_]*\(", True)(0)
+    Dim wk As String: wk = GetMatchByRegExp(merge_lines, REG_EX_VB_METHOD, True)(0)
     ret.Name = Replace(Replace(wk, methodType & " ", ""), "(", "")
     
     start_clm = InStr(merge_lines, "(")
@@ -2521,7 +2536,7 @@ Function FilterFileListByExtension(ByRef path_list() As String, in_ext As String
     End If
       
     For i = 0 To UBound(path_list)
-        If LCase(Right(path_list(i), Len(Ext))) = Ext Then
+        If LCase(Right(path_list(i), Len(Ext))) = LCase(Ext) Then
             ReDim Preserve filtered_list(j)
             filtered_list(j) = path_list(i)
             j = j + 1
@@ -3305,6 +3320,7 @@ Public Function IsEmptyArray(arr As Variant) As Boolean
     Dim i As Integer
     i = UBound(arr)
     If i >= 0 And Err.Number = 0 Then
+        'WriteLog "★IsEmptyArray Faile! (" & Err.Description & ")"
         IsEmptyArray = False
     Else
         IsEmptyArray = True
@@ -3318,6 +3334,7 @@ Public Function IsEmptyArrayLong(arr As Variant) As Boolean
     Dim i As Long
     i = UBound(arr)
     If i >= 0 And Err.Number = 0 Then
+        'WriteLog "★IsEmptyArrayLong Faile! (" & Err.Description & ")"
         IsEmptyArrayLong = False
     Else
         IsEmptyArrayLong = True
@@ -3449,10 +3466,5 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
-
-
-
-
-
 
 

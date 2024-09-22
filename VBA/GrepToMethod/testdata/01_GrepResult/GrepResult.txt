@@ -27,5 +27,9 @@ C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(81,1)  
 C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(87,1)  [SJIS]: ●Sub3 引数あり(複数・改行なし)
 C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(94,1)  [SJIS]: ●Sub4 引数あり(複数・改行あり)
 C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(101,1)  [SJIS]: ●Sub5 引数あり(複数・改行あり)2
-C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(105,1)  [SJIS]: ●関数定義より下
-17 個が検索されました。
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(107,1)  [SJIS]: ●日本語関数1
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(113,1)  [SJIS]: ●Func日本語関数2
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(119,1)  [SJIS]: ●日本語関数3
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(125,1)  [SJIS]: ●Func日本語関数4
+C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(129,1)  [SJIS]: ●関数定義より下
+21 個が検索されました。
