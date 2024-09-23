@@ -1,0 +1,88 @@
+Imports System.ComponentModel
+
+Public Class VB6StyleForm
+    Inherits Form
+
+    Public Event Initialize()
+    Public Event QueryUnload(ByVal Cancel As Boolean)
+    Public Event Unload(ByVal Cancel As Boolean)
+    Public Event Terminate()
+
+    Private _isInitialized As Boolean = False
+    Private _isLoaded As Boolean = False
+    Private _isClosing As Boolean = False
+    Private _isUnloaded As Boolean = False
+
+    Public Sub New()
+        MyBase.New()
+        RaiseEvent Initialize()
+        _isInitialized = True
+    End Sub
+
+    Protected Overrides Sub OnLoad(e As EventArgs)
+        If Not _isLoaded Then
+            MyBase.OnLoad(e)
+            _isLoaded = True
+        End If
+    End Sub
+
+    Protected Overrides Sub OnShown(e As EventArgs)
+        MyBase.OnShown(e)
+        If Not Visible Then
+            Show()
+        End If
+    End Sub
+
+    Public Shadows Sub Show()
+        _isUnloaded = False
+        MyBase.Show()
+        If Not _isLoaded Then
+            OnLoad(EventArgs.Empty)
+        End If
+    End Sub
+
+    Protected Overrides Sub OnFormClosing(e As FormClosingEventArgs)
+        If Not _isClosing Then
+            _isClosing = True
+            Dim cancel As Boolean = False
+            RaiseEvent QueryUnload(cancel)
+            e.Cancel = cancel
+
+            If Not cancel Then
+                RaiseEvent Unload(cancel)
+                e.Cancel = cancel
+
+                If Not cancel Then
+                    _isUnloaded = True
+                    Me.Hide() ' フォームを隠すだけで、破棄しない
+                    e.Cancel = True ' フォームを閉じる操作をキャンセル
+                End If
+            End If
+            _isClosing = False
+        Else
+            MyBase.OnFormClosing(e)
+        End If
+    End Sub
+
+    ' Unload メソッドを模倣
+    Public Sub Unload()
+        OnFormClosing(New FormClosingEventArgs(CloseReason.UserClosing, False))
+    End Sub
+
+    ' 明示的に破棄するためのメソッド
+    Public Sub Dispose() Implements IDisposable.Dispose
+        If Not IsDisposed Then
+            RaiseEvent Terminate()
+            MyBase.Dispose()
+        End If
+    End Sub
+
+    ' フォームが本当に必要なくなったときに呼び出すメソッド
+    Public Sub FinalizeForm()
+        If Not IsDisposed Then
+            RaiseEvent Terminate()
+            MyBase.Close()
+            MyBase.Dispose()
+        End If
+    End Sub
+End Class
