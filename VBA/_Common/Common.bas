@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.18"
+Private Const VERSION = "1.5.19"
 
 Public Const REG_EX_VB_METHOD = "(Function|Sub)\s+[^\(\)\s]+\("
 Public Const REG_EX_VB_METHOD_WITH_RET = "Function\s+[^\(\)\s]*\(.*\)(\s+As\s+[^\(\)\s]*\(*\)*)*$"
@@ -77,6 +77,36 @@ Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
 
+
+'-------------------------------------------------------------
+' VBの関数名を抽出する
+'-------------------------------------------------------------
+Public Function ExtractVBFunctionName(ByVal codeLine As String) As String
+    Dim regex As Object
+    Dim matches As Object
+    Dim functionName As String
+    
+    ' 正規表現オブジェクトを作成
+    Set regex = CreateObject("VBScript.RegExp")
+    
+    ' 関数定義を検出する正規表現パターン
+    regex.Pattern = "(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\("
+    regex.IgnoreCase = True
+    regex.Global = False
+    
+    ' 正規表現でマッチングを実行
+    Set matches = regex.Execute(codeLine)
+    
+    ' マッチした場合、関数名を抽出
+    If matches.count > 0 Then
+        functionName = matches(0).SubMatches(3)
+    Else
+        functionName = ""
+    End If
+    
+    ExtractVBFunctionName = functionName
+End Function
+
 '-------------------------------------------------------------
 ' Function: FindWord
 ' 目的: 指定された条件に基づいて、ターゲット文字列内で検索文字列を見つけます。
@@ -105,13 +135,20 @@ Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
 '   result = FindWord("Hello World", "world", False, False, False) ' 大小文字区別なし、部分一致
 '   result = FindWord("Hello World", "^Hello World$", False, False, True) ' 正規表現による完全一致
 '-------------------------------------------------------------
-Public Function FindWord(targetStr As String, findStr As String, letterCase As Boolean, exactMatch As Boolean, useRegEx As Boolean) As Boolean
-    Dim regEx As Object
+Public Function FindWord( _
+    targetStr As String, _
+    findStr As String, _
+    Optional letterCase As Boolean = False, _
+    Optional exactMatch As Boolean = False, _
+    Optional useRegEx As Boolean = False _
+) As Boolean
+    
+    Dim regex As Object
     
     If useRegEx Then
         ' 正規表現を使用する場合
-        Set regEx = CreateObject("VBScript.RegExp")
-        With regEx
+        Set regex = CreateObject("VBScript.RegExp")
+        With regex
             .Pattern = findStr
             .IgnoreCase = Not letterCase
             .Global = True
@@ -1658,19 +1695,19 @@ Public Function FindRowByKeywordFromArray(ByVal keyword As String, ByRef input_a
     Dim row As Long
     Dim isMatch As Boolean
     Dim line As String
-    Dim regEx As Object
-    Set regEx = Nothing
+    Dim regex As Object
+    Set regex = Nothing
     
     If is_use_regexp = True Then
-        Set regEx = CreateObject("VBScript.RegExp")
-        regEx.Pattern = keyword
+        Set regex = CreateObject("VBScript.RegExp")
+        regex.Pattern = keyword
     End If
    
     For row = LBound(input_array) To UBound(input_array)
         line = input_array(row)
         
         If is_use_regexp = True Then
-            isMatch = regEx.Test(line)
+            isMatch = regex.Test(line)
         ElseIf InStr(1, line, keyword) > 0 Then
             isMatch = True
         End If
