@@ -1,6 +1,7 @@
+Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.17"
+Private Const VERSION = "1.5.18"
 
 Public Const REG_EX_VB_METHOD = "(Function|Sub)\s+[^\(\)\s]+\("
 Public Const REG_EX_VB_METHOD_WITH_RET = "Function\s+[^\(\)\s]*\(.*\)(\s+As\s+[^\(\)\s]*\(*\)*)*$"
@@ -75,6 +76,66 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+' Function: FindWord
+' 目的: 指定された条件に基づいて、ターゲット文字列内で検索文字列を見つけます。
+'
+' パラメータ:
+'   targetStr (String) - 検索対象の文字列
+'   findStr (String) - 検索する文字列またはパターン
+'   letterCase (Boolean) - 大文字小文字を区別するかどうか
+'                          True: 区別する、False: 区別しない
+'   exactMatch (Boolean) - 完全一致で検索するかどうか
+'                          True: 完全一致、False: 部分一致
+'   useRegEx (Boolean) - 正規表現を使用するかどうか
+'                        True: 使用する、False: 使用しない
+'
+' 戻り値:
+'   Boolean - 検索文字列が見つかった場合はTrue、そうでない場合はFalse
+'
+' 注意:
+'   1. 正規表現を使用する場合は、VBScriptの正規表現構文に従ってください。
+'   2. 正規表現使用時は、exactMatchパラメータは無視されます。
+'      完全一致を行いたい場合は、正規表現パターンで ^ と $ を使用してください。
+'   3. 正規表現を使用する場合、「Microsoft VBScript Regular Expressions 5.5」
+'      への参照設定が必要です。
+'
+' 使用例:
+'   result = FindWord("Hello World", "world", False, False, False) ' 大小文字区別なし、部分一致
+'   result = FindWord("Hello World", "^Hello World$", False, False, True) ' 正規表現による完全一致
+'-------------------------------------------------------------
+Public Function FindWord(targetStr As String, findStr As String, letterCase As Boolean, exactMatch As Boolean, useRegEx As Boolean) As Boolean
+    Dim regEx As Object
+    
+    If useRegEx Then
+        ' 正規表現を使用する場合
+        Set regEx = CreateObject("VBScript.RegExp")
+        With regEx
+            .Pattern = findStr
+            .IgnoreCase = Not letterCase
+            .Global = True
+            FindWord = .Test(targetStr)
+        End With
+    Else
+        ' 正規表現を使用しない場合
+        If exactMatch Then
+            ' 完全一致の場合
+            If letterCase Then
+                FindWord = (targetStr = findStr)
+            Else
+                FindWord = (StrComp(targetStr, findStr, vbTextCompare) = 0)
+            End If
+        Else
+            ' 部分一致の場合
+            If letterCase Then
+                FindWord = (InStr(1, targetStr, findStr, vbBinaryCompare) > 0)
+            Else
+                FindWord = (InStr(1, targetStr, findStr, vbTextCompare) > 0)
+            End If
+        End If
+    End If
+End Function
 
 '-------------------------------------------------------------
 ' 最大値を返す
@@ -1152,7 +1213,7 @@ Public Function ReplaceByRegExp( _
     ReDim list(0)
     
     REG.Global = True
-    REG.ignoreCase = is_ignore_case
+    REG.IgnoreCase = is_ignore_case
     REG.Pattern = ptn
     
     ReplaceByRegExp = REG.Replace(test_str, replace_str)
@@ -1181,7 +1242,7 @@ Public Function GetMatchByRegExp( _
     ReDim list(0)
     
     REG.Global = True
-    REG.ignoreCase = is_ignore_case
+    REG.IgnoreCase = is_ignore_case
     REG.Pattern = ptn
     
     Set mc = REG.Execute(test_str)
@@ -1211,7 +1272,7 @@ Public Function IsMatchByRegExp( _
 ) As Boolean
     Dim REG As New VBScript_RegExp_55.RegExp
     REG.Global = True
-    REG.ignoreCase = is_ignore_case
+    REG.IgnoreCase = is_ignore_case
     REG.Pattern = ptn
     
     IsMatchByRegExp = REG.Test(test_str)
@@ -1597,19 +1658,19 @@ Public Function FindRowByKeywordFromArray(ByVal keyword As String, ByRef input_a
     Dim row As Long
     Dim isMatch As Boolean
     Dim line As String
-    Dim regex As Object
-    Set regex = Nothing
+    Dim regEx As Object
+    Set regEx = Nothing
     
     If is_use_regexp = True Then
-        Set regex = CreateObject("VBScript.RegExp")
-        regex.Pattern = keyword
+        Set regEx = CreateObject("VBScript.RegExp")
+        regEx.Pattern = keyword
     End If
    
     For row = LBound(input_array) To UBound(input_array)
         line = input_array(row)
         
         If is_use_regexp = True Then
-            isMatch = regex.Test(line)
+            isMatch = regEx.Test(line)
         ElseIf InStr(1, line, keyword) > 0 Then
             isMatch = True
         End If
@@ -3465,5 +3526,7 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
+
+
 
 
