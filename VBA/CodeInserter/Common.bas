@@ -1,7 +1,11 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.14"
+Private Const VERSION = "1.5.19"
+
+Public Const REG_EX_VB_METHOD = "(Function|Sub)\s+[^\(\)\s]+\("
+Public Const REG_EX_VB_METHOD_WITH_RET = "Function\s+[^\(\)\s]*\(.*\)(\s+As\s+[^\(\)\s]*\(*\)*)*$"
+
 
 Public Type MethodInfoStruct
     Raw As String
@@ -72,6 +76,114 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+
+'-------------------------------------------------------------
+' VBの関数名を抽出する
+'-------------------------------------------------------------
+Public Function ExtractVBFunctionName(ByVal codeLine As String) As String
+    Dim regex As Object
+    Dim matches As Object
+    Dim functionName As String
+    
+    ' 正規表現オブジェクトを作成
+    Set regex = CreateObject("VBScript.RegExp")
+    
+    ' 関数定義を検出する正規表現パターン
+    regex.Pattern = "(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\("
+    regex.IgnoreCase = True
+    regex.Global = False
+    
+    ' 正規表現でマッチングを実行
+    Set matches = regex.Execute(codeLine)
+    
+    ' マッチした場合、関数名を抽出
+    If matches.count > 0 Then
+        functionName = matches(0).SubMatches(3)
+    Else
+        functionName = ""
+    End If
+    
+    ExtractVBFunctionName = functionName
+End Function
+
+'-------------------------------------------------------------
+' Function: FindWord
+' 目的: 指定された条件に基づいて、ターゲット文字列内で検索文字列を見つけます。
+'
+' パラメータ:
+'   targetStr (String) - 検索対象の文字列
+'   findStr (String) - 検索する文字列またはパターン
+'   letterCase (Boolean) - 大文字小文字を区別するかどうか
+'                          True: 区別する、False: 区別しない
+'   exactMatch (Boolean) - 完全一致で検索するかどうか
+'                          True: 完全一致、False: 部分一致
+'   useRegEx (Boolean) - 正規表現を使用するかどうか
+'                        True: 使用する、False: 使用しない
+'
+' 戻り値:
+'   Boolean - 検索文字列が見つかった場合はTrue、そうでない場合はFalse
+'
+' 注意:
+'   1. 正規表現を使用する場合は、VBScriptの正規表現構文に従ってください。
+'   2. 正規表現使用時は、exactMatchパラメータは無視されます。
+'      完全一致を行いたい場合は、正規表現パターンで ^ と $ を使用してください。
+'   3. 正規表現を使用する場合、「Microsoft VBScript Regular Expressions 5.5」
+'      への参照設定が必要です。
+'
+' 使用例:
+'   result = FindWord("Hello World", "world", False, False, False) ' 大小文字区別なし、部分一致
+'   result = FindWord("Hello World", "^Hello World$", False, False, True) ' 正規表現による完全一致
+'-------------------------------------------------------------
+Public Function FindWord( _
+    targetStr As String, _
+    findStr As String, _
+    Optional letterCase As Boolean = False, _
+    Optional exactMatch As Boolean = False, _
+    Optional useRegEx As Boolean = False _
+) As Boolean
+    
+    Dim regex As Object
+    
+    If useRegEx Then
+        ' 正規表現を使用する場合
+        Set regex = CreateObject("VBScript.RegExp")
+        With regex
+            .Pattern = findStr
+            .IgnoreCase = Not letterCase
+            .Global = True
+            FindWord = .Test(targetStr)
+        End With
+    Else
+        ' 正規表現を使用しない場合
+        If exactMatch Then
+            ' 完全一致の場合
+            If letterCase Then
+                FindWord = (targetStr = findStr)
+            Else
+                FindWord = (StrComp(targetStr, findStr, vbTextCompare) = 0)
+            End If
+        Else
+            ' 部分一致の場合
+            If letterCase Then
+                FindWord = (InStr(1, targetStr, findStr, vbBinaryCompare) > 0)
+            Else
+                FindWord = (InStr(1, targetStr, findStr, vbTextCompare) > 0)
+            End If
+        End If
+    End If
+End Function
+
+'-------------------------------------------------------------
+' 最大値を返す
+'-------------------------------------------------------------
+Public Function Max(ByVal a As Variant, ByVal b As Variant) As Variant
+    If a > b Then
+        Max = a
+    Else
+        Max = b
+    End If
+End Function
 
 '-------------------------------------------------------------
 ' 指定されたセルから列内の最後の使用済みセルまでをクリアする
@@ -537,7 +649,7 @@ Public Function FindMethodStartRowForVB( _
             GoTo CONTINUE
         End If
         
-        If IsMatchByRegExp(line, "(Function|Sub)\s+[A-Za-z_][A-Za-z0-9_]*\(", True) = False Then
+        If IsMatchByRegExp(line, REG_EX_VB_METHOD, True) = False Then
             '見つからない
             GoTo CONTINUE
         End If
@@ -629,7 +741,7 @@ Public Function GetMethodInfoForVB( _
         End If
         
         'Functionの場合は戻り値までマージされているか確認する
-        If IsMatchByRegExp(merge_lines, "Function\s+[A-Za-z_][A-Za-z0-9_]*\(.*\)(\s+As\s+[A-Za-z_][A-Za-z0-9_]*\(*\)*)*$", True) = True Then
+        If IsMatchByRegExp(merge_lines, REG_EX_VB_METHOD_WITH_RET, True) = True Then
             Exit For
         End If
         
@@ -642,7 +754,7 @@ CONTINUE:
     ret.Raw = merge_lines
     
     'メソッド名
-    Dim wk As String: wk = GetMatchByRegExp(merge_lines, "(Function|Sub)\s+[A-Za-z_][A-Za-z0-9_]*\(", True)(0)
+    Dim wk As String: wk = GetMatchByRegExp(merge_lines, REG_EX_VB_METHOD, True)(0)
     ret.Name = Replace(Replace(wk, methodType & " ", ""), "(", "")
     
     start_clm = InStr(merge_lines, "(")
@@ -1138,7 +1250,7 @@ Public Function ReplaceByRegExp( _
     ReDim list(0)
     
     REG.Global = True
-    REG.ignoreCase = is_ignore_case
+    REG.IgnoreCase = is_ignore_case
     REG.Pattern = ptn
     
     ReplaceByRegExp = REG.Replace(test_str, replace_str)
@@ -1167,7 +1279,7 @@ Public Function GetMatchByRegExp( _
     ReDim list(0)
     
     REG.Global = True
-    REG.ignoreCase = is_ignore_case
+    REG.IgnoreCase = is_ignore_case
     REG.Pattern = ptn
     
     Set mc = REG.Execute(test_str)
@@ -1197,7 +1309,7 @@ Public Function IsMatchByRegExp( _
 ) As Boolean
     Dim REG As New VBScript_RegExp_55.RegExp
     REG.Global = True
-    REG.ignoreCase = is_ignore_case
+    REG.IgnoreCase = is_ignore_case
     REG.Pattern = ptn
     
     IsMatchByRegExp = REG.Test(test_str)
@@ -3305,7 +3417,7 @@ Public Function IsEmptyArray(arr As Variant) As Boolean
     Dim i As Integer
     i = UBound(arr)
     If i >= 0 And Err.Number = 0 Then
-        WriteLog "★IsEmptyArray Faile! (" & Err.Description & ")"
+        'WriteLog "★IsEmptyArray Faile! (" & Err.Description & ")"
         IsEmptyArray = False
     Else
         IsEmptyArray = True
@@ -3319,7 +3431,7 @@ Public Function IsEmptyArrayLong(arr As Variant) As Boolean
     Dim i As Long
     i = UBound(arr)
     If i >= 0 And Err.Number = 0 Then
-        WriteLog "★IsEmptyArrayLong Faile! (" & Err.Description & ")"
+        'WriteLog "★IsEmptyArrayLong Faile! (" & Err.Description & ")"
         IsEmptyArrayLong = False
     Else
         IsEmptyArrayLong = True
@@ -3451,11 +3563,6 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
-
-
-
-
-
 
 
 

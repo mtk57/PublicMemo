@@ -21,6 +21,22 @@ Private ignore_files As String
 Private ignore_keywords As String
 Private base_dir As String
 Private insert_seq As String
+Private ignore_method_keywords As String
+Private is_use_reg_ex_for_ignore_method As Boolean
+Private is_use_reg_ex_for_ignore_method_s As String
+Private is_use_letter_case_for_ignore_method As Boolean
+Private is_use_letter_case_for_ignore_method_s As String
+Private is_use_exact_match_for_ignore_method As Boolean
+Private is_use_exact_match_for_ignore_method_s As String
+
+Private ignore_files_list() As String
+Private ignore_files_is_empty As Boolean
+
+Private ignore_keywords_list() As String
+Private ignore_keywords_is_empty As Boolean
+
+Private ignore_method_keywords_list() As String
+Private ignore_method_keywords_is_empty As Boolean
 
 Private Const CLM_ = "L"
 Private Const ROW_ = 6
@@ -35,7 +51,15 @@ Private Sub Class_Initialize()
     ignore_files = ""
     ignore_keywords = ""
     base_dir = ""
-    insert_seq = False
+    insert_seq = ""
+    ignore_method_keywords = ""
+    is_use_reg_ex_for_ignore_method = False
+    is_use_letter_case_for_ignore_method = False
+    is_use_exact_match_for_ignore_method = False
+    
+    ignore_files_is_empty = False
+    ignore_keywords_is_empty = False
+    ignore_method_keywords_is_empty = False
 End Sub
 
 '初期化
@@ -52,6 +76,10 @@ Public Sub Init()
     ignore_keywords = main_sheet.Range(CLM_ & ROW_ + 7).value
     base_dir = main_sheet.Range(CLM_ & ROW_ + 8).value
     insert_seq = main_sheet.Range(CLM_ & ROW_ + 9).value
+    ignore_method_keywords = main_sheet.Range(CLM_ & ROW_ + 10).value
+    is_use_reg_ex_for_ignore_method_s = main_sheet.Range(CLM_ & ROW_ + 11).value
+    is_use_letter_case_for_ignore_method_s = main_sheet.Range(CLM_ & ROW_ + 12).value
+    is_use_exact_match_for_ignore_method_s = main_sheet.Range(CLM_ & ROW_ + 13).value
 End Sub
 
 '検証
@@ -85,6 +113,42 @@ Public Sub Validate()
     
     If insert_seq = "" Then
         insert_seq = "しない"
+    End If
+    
+    If is_use_reg_ex_for_ignore_method_s = "" Or is_use_reg_ex_for_ignore_method_s = "NO" Then
+        is_use_reg_ex_for_ignore_method = False
+    Else
+        is_use_reg_ex_for_ignore_method = True
+    End If
+    
+    If is_use_letter_case_for_ignore_method_s = "" Or is_use_letter_case_for_ignore_method_s = "NO" Then
+        is_use_letter_case_for_ignore_method = False
+    Else
+        is_use_letter_case_for_ignore_method = True
+    End If
+    
+    If is_use_exact_match_for_ignore_method_s = "" Or is_use_exact_match_for_ignore_method_s = "NO" Then
+        is_use_exact_match_for_ignore_method = False
+    Else
+        is_use_exact_match_for_ignore_method = True
+    End If
+    
+    '除外ファイルリストを作成
+    ignore_files_list = Split(ignore_files, ",")
+    If Common.IsEmptyArray(ignore_files_list) = True Then
+        ignore_files_is_empty = True
+    End If
+    
+    '除外キーワードリストを作成
+    ignore_keywords_list = Split(ignore_keywords, ",")
+    If Common.IsEmptyArray(ignore_keywords_list) = True Then
+        ignore_keywords_is_empty = True
+    End If
+    
+    '除外メソッドキーワードリストを作成
+    ignore_method_keywords_list = Split(ignore_method_keywords, ",")
+    If Common.IsEmptyArray(ignore_method_keywords_list) = True Then
+        ignore_method_keywords_is_empty = True
     End If
 End Sub
 
@@ -124,8 +188,32 @@ Public Function GetBaseDir() As String
     GetBaseDir = base_dir
 End Function
 
-Public Function GetInsertSeq() As Boolean
+Public Function GetInsertSeq() As String
     GetInsertSeq = insert_seq
+End Function
+
+Public Function GetIgnoreMethodKeywords() As String
+    GetIgnoreMethodKeywords = ignore_method_keywords
+End Function
+
+Public Function IsUseRegExForIgnoreMethod() As Boolean
+    IsUseRegExForIgnoreMethod = is_use_reg_ex_for_ignore_method
+End Function
+
+Public Function IsUseLetterCaseForIgnoreMethod() As Boolean
+    IsUseLetterCaseForIgnoreMethod = is_use_letter_case_for_ignore_method
+End Function
+
+Public Function IsUseExactMatchForIgnoreMethod() As Boolean
+    IsUseExactMatchForIgnoreMethod = is_use_exact_match_for_ignore_method
+End Function
+
+Public Function GetIgnoreMethodKeywordsList() As String()
+    GetIgnoreMethodKeywordsList = ignore_method_keywords_list
+End Function
+
+Public Function IsIgnoreMethodKeywordsEmpty() As Boolean
+    IsIgnoreMethodKeywordsEmpty = ignore_method_keywords_is_empty
 End Function
 
 Public Function GetAllValue() As String
@@ -140,7 +228,65 @@ Public Function GetAllValue() As String
           "ignore_files=(" & ignore_files & "), " & _
           "ignore_keywords=(" & ignore_keywords & "), " & _
           "base_dir=(" & base_dir & ")," & _
-          "insert_seq=(" & insert_seq & ")"
+          "insert_seq=(" & insert_seq & "), " & _
+          "ignore_method_keywords=(" & ignore_method_keywords & "), " & _
+          "is_use_reg_ex_for_ignore_method=(" & is_use_reg_ex_for_ignore_method_s & "), " & _
+          "is_use_letter_case_for_ignore_method=(" & is_use_letter_case_for_ignore_method_s & "), " & _
+          "is_use_exact_match_for_ignore_method=(" & is_use_exact_match_for_ignore_method_s & ")"
 
     GetAllValue = ret
+End Function
+
+'除外ファイルかを返す
+Public Function IsIgnoreFile(ByVal path As String) As Boolean
+    If ignore_files_is_empty = True Then
+        IsIgnoreFile = False
+        Exit Function
+    End If
+
+    Dim i As Long
+    For i = LBound(ignore_files_list) To UBound(ignore_files_list)
+        If Common.GetFileName(path) = ignore_files_list(i) Then
+            IsIgnoreFile = True
+            Exit Function
+        End If
+    Next i
+    
+    IsIgnoreFile = False
+End Function
+
+'除外キーワードを含むかを返す
+Public Function IsIgnoreKeyword(ByVal path As String) As Boolean
+    If ignore_keywords_is_empty = True Then
+        IsIgnoreKeyword = False
+        Exit Function
+    End If
+
+    Dim i As Long
+    For i = LBound(ignore_keywords_list) To UBound(ignore_keywords_list)
+        If InStr(Common.GetFileName(path), ignore_keywords_list(i)) > 0 Then
+            IsIgnoreKeyword = True
+            Exit Function
+        End If
+    Next i
+    
+    IsIgnoreKeyword = False
+End Function
+
+'除外メソッドキーワードを含むかを返す
+Public Function IsIgnoreMethodKeyword(ByVal methodName As String) As Boolean
+    If ignore_method_keywords_is_empty = True Then
+        IsIgnoreMethodKeyword = False
+        Exit Function
+    End If
+
+    Dim i As Long
+    For i = LBound(ignore_method_keywords_list) To UBound(ignore_method_keywords_list)
+        If InStr(methodName, ignore_method_keywords_list(i)) > 0 Then
+            IsIgnoreMethodKeyword = True
+            Exit Function
+        End If
+    Next i
+    
+    IsIgnoreMethodKeyword = False
 End Function

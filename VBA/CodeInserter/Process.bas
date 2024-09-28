@@ -9,6 +9,15 @@ Private Const VBNET_EXT = "vb"
 Private Const REPLACE_METHOD = "＠"
 Private Const REPLACE_FILENAME = "＊"
 
+Private Const METHOD = "\s*(Function|Sub)\s+.*"
+Private Const METHOD_START = "(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+.*\("
+Private Const METHOD_END = "End\s(Function|Sub)$"
+Private Const METHOD_EXIT = "Exit\s(Function|Sub)$"
+Private Const METHOD_APP_END = "^(\t|\s)*\bEnd$"
+Private Const METHOD_RET = "^[ \t]*(Return|Throw) *"
+
+Private Const IGNORE_WORDS = "Declare,PtrSafe,Lib,Alias"
+
 'パラメータ
 Private main_param As MainParam
 
@@ -25,7 +34,7 @@ Public Sub Run()
 
     'パラメータのチェックと収集を行う
     CheckAndCollectParam
-    
+
     '対象ファイルを検索する
     SearchTargetFile
     
@@ -138,15 +147,15 @@ Private Sub CopyTargetFiles()
             GoTo CONTINUE
         End If
         
-        If IsIgnoreFile(src) = True Then
+        If main_param.IsIgnoreFile(src) = True Then
             '除外ファイルは除外する
-            Common.WriteLog "除外=" & src
+            Common.WriteLog "除外ファイル=" & src
             GoTo CONTINUE
         End If
         
-        If IsIgnoreKeyword(src) = True Then
+        If main_param.IsIgnoreKeyword(src) = True Then
             '除外キーワードを含むので除外する
-            Common.WriteLog "除外=" & src
+            Common.WriteLog "除外ファイル=" & src
             GoTo CONTINUE
         End If
         
@@ -182,71 +191,7 @@ CONTINUE:
     Common.WriteLog "CopyTargetFiles E"
 End Sub
 
-'除外ファイルかを返す
-Private Function IsIgnoreFile(ByVal path As String) As Boolean
-    Common.WriteLog "IsIgnoreFile S"
-    
-    If main_param.GetIgnoreFiles() = "" Then
-        IsIgnoreFile = False
-        Common.WriteLog "IsIgnoreFile E1"
-        Exit Function
-    End If
 
-    '除外ファイルリストを作成
-    Dim ignore_files() As String
-    ignore_files = Split(main_param.GetIgnoreFiles(), ",")
-
-    If Common.IsEmptyArray(ignore_files) = True Then
-        IsIgnoreFile = False
-        Common.WriteLog "IsIgnoreFile E2"
-        Exit Function
-    End If
-
-    Dim i As Long
-    For i = LBound(ignore_files) To UBound(ignore_files)
-        If Common.GetFileName(path) = ignore_files(i) Then
-            IsIgnoreFile = True
-            Common.WriteLog "IsIgnoreFile E3"
-            Exit Function
-        End If
-    Next i
-    
-    IsIgnoreFile = False
-    Common.WriteLog "IsIgnoreFile E"
-End Function
-
-'除外キーワードを含むかを返す
-Private Function IsIgnoreKeyword(ByVal path As String) As Boolean
-    Common.WriteLog "IsIgnoreKeyword S"
-    
-    If main_param.GetIgnoreKeywords() = "" Then
-        IsIgnoreKeyword = False
-        Common.WriteLog "IsIgnoreKeyword E1"
-        Exit Function
-    End If
-
-    '除外ファイルリストを作成
-    Dim ignore_keywords() As String
-    ignore_keywords = Split(main_param.GetIgnoreKeywords(), ",")
-
-    If Common.IsEmptyArray(ignore_keywords) = True Then
-        IsIgnoreKeyword = False
-        Common.WriteLog "IsIgnoreKeyword E2"
-        Exit Function
-    End If
-
-    Dim i As Long
-    For i = LBound(ignore_keywords) To UBound(ignore_keywords)
-        If InStr(Common.GetFileName(path), ignore_keywords(i)) > 0 Then
-            IsIgnoreKeyword = True
-            Common.WriteLog "IsIgnoreKeyword E3"
-            Exit Function
-        End If
-    Next i
-    
-    IsIgnoreKeyword = False
-    Common.WriteLog "IsIgnoreKeyword E"
-End Function
 
 '起点フォルダを移動する
 Private Sub MoveBaseFolder()
@@ -318,8 +263,6 @@ Private Sub InsertCode(ByVal target_path As String)
         Common.WriteLog "InsertCode E1"
         Exit Sub
     End If
-    
-    Const METHOD_START = "(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+.*\("
 
     Dim new_contents() As String
     Dim i As Long
@@ -376,11 +319,6 @@ Private Function InsertCodeForMethod( _
     ByRef new_contents() As String _
 ) As Long
     Common.WriteLog "InsertCodeForMethod S"
-    
-    Const METHOD_END = "End\s(Function|Sub)$"
-    Const METHOD_EXIT = "Exit\s(Function|Sub)$"
-    Const METHOD_APP_END = "^(\t|\s)*\bEnd$"
-    Const METHOD_RET = "^[ \t]*(Return|Throw) *"
     
     Dim i As Long
     Dim line As String: line = Contents(start)  '解析中の行データ
@@ -608,8 +546,6 @@ End Function
 Private Function GetMethodName(ByVal line As String) As String
     Common.WriteLog "GetMethodName S"
     
-    Const METHOD = "\s*(Function|Sub)\s+.*"
-    
     Dim list() As String
     list = Common.GetMatchByRegExp(line, METHOD, True)
     
@@ -644,8 +580,6 @@ End Function
 Private Function IsExistIgnoreMethodWord(ByVal line As String) As Boolean
     Common.WriteLog "IsExistIgnoreMethodWord S"
 
-    Const IGNORE_WORDS = "Declare,PtrSafe,Lib,Alias"
-
     Dim list() As String
     Dim ignores() As String
     list = Split(line, " ")
@@ -658,10 +592,29 @@ Private Function IsExistIgnoreMethodWord(ByVal line As String) As Boolean
             If list(i) = ignores(j) Then
                 '除外ワード発見
                 IsExistIgnoreMethodWord = True
-                Common.WriteLog "IsExistIgnoreMethodWord E1"
+                Common.WriteLog "IsExistIgnoreMethodWord E1  Ignore Line=[" & line & "]"
                 Exit Function
             End If
         Next j
+    Next i
+    
+    'メソッド名の除外チェック
+    If main_param.IsIgnoreMethodKeywordsEmpty() = True Then
+        IsExistIgnoreMethodWord = False
+        Exit Function
+    End If
+    
+    Dim methodName As String: methodName = Common.ExtractVBFunctionName(line)
+    Dim ignoreMethods() As String
+    ignoreMethods = main_param.GetIgnoreMethodKeywordsList()
+
+    For i = 0 To UBound(ignoreMethods)
+         If Common.FindWord(methodName, ignoreMethods(i)) = True Then
+            '除外ワード発見
+            IsExistIgnoreMethodWord = True
+            Common.WriteLog "IsExistIgnoreMethodWord E2  Ignore Line=[" & line & "]"
+            Exit Function
+         End If
     Next i
     
     IsExistIgnoreMethodWord = False
