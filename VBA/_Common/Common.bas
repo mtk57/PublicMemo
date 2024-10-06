@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.19"
+Private Const VERSION = "1.5.20"
 
 Public Const REG_EX_VB_METHOD = "(Function|Sub)\s+[^\(\)\s]+\("
 Public Const REG_EX_VB_METHOD_WITH_RET = "Function\s+[^\(\)\s]*\(.*\)(\s+As\s+[^\(\)\s]*\(*\)*)*$"
@@ -77,6 +77,97 @@ Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
 
+'-------------------------------------------------------------
+' 指定されたExcelシート上の2つのセルの内容を比較し、違いがある部分を
+' 視覚的にハイライトします。
+'
+' 引数:
+' - sheetName (String): 比較を行うシートの名前
+' - cellA_Ref (String): 比較元セルの参照（例: "A1"）
+' - cellB_Ref (String): 比較先セルの参照（例: "B1"）
+'
+' 動作:
+' 1. 指定されたシートをアクティブにします。
+' 2. 比較元と比較先のセルの内容を取得します。
+' 3. 2つの文字列を1文字ずつ比較します。
+' 4. 比較先（cellB）で異なる部分を赤色でハイライトします。
+' 5. 比較元（cellA）の内容は変更しません。
+'
+' 注意:
+' - シートが存在しない場合、エラーメッセージを表示して処理を終了します。
+' - 比較先の文字列が比較元よりも長い場合、余分な部分も赤くハイライトされます。
+'-------------------------------------------------------------
+Public Sub CompareCellsAndHighlight(ByVal sheetName As String, ByVal cellA_Ref As String, ByVal cellB_Ref As String)
+    Dim ws As Worksheet
+    Dim cellA As Range, cellB As Range
+    Dim textA As String, textB As String
+    Dim i As Long, j As Long, k As Long
+    Dim diffStart As Long, diffLength As Long
+    
+    ' 指定されたシートを取得し、アクティブにする
+    On Error Resume Next
+    Set ws = ThisWorkbook.Worksheets(sheetName)
+    On Error GoTo 0
+    
+    If ws Is Nothing Then
+        MsgBox "指定されたシート '" & sheetName & "' が見つかりません。", vbExclamation
+        Exit Sub
+    End If
+    
+    ws.Activate
+    
+    ' 指定されたセルを取得
+    Set cellA = ws.Range(cellA_Ref)
+    Set cellB = ws.Range(cellB_Ref)
+    
+    ' セルの内容を取得
+    textA = cellA.Value
+    textB = cellB.Value
+    
+    ' セルBの書式をリセット
+    cellB.Font.Color = RGB(0, 0, 0)
+    
+    i = 1
+    j = 1
+    
+    Do While i <= Len(textA) Or j <= Len(textB)
+        If i > Len(textA) Then
+            ' textAの終わりに達した場合、残りのtextBを全てハイライト
+            cellB.Characters(j, Len(textB) - j + 1).Font.Color = RGB(255, 0, 0)
+            Exit Do
+        ElseIf j > Len(textB) Then
+            ' textBの終わりに達した場合、ループを終了
+            Exit Do
+        ElseIf Mid(textA, i, 1) = Mid(textB, j, 1) Then
+            ' 文字が一致する場合
+            i = i + 1
+            j = j + 1
+        Else
+            ' 不一致を検出
+            diffStart = j
+            k = j
+            
+            ' 次の一致を探す
+            Do While k <= Len(textB)
+                If Mid(textA, i, 1) = Mid(textB, k, 1) Then
+                    Exit Do
+                End If
+                k = k + 1
+            Loop
+            
+            diffLength = k - j
+            
+            ' 不一致部分をハイライト
+            cellB.Characters(diffStart, diffLength).Font.Color = RGB(255, 0, 0)
+            
+            j = k
+            If k <= Len(textB) Then
+                i = i + 1
+                j = j + 1
+            End If
+        End If
+    Loop
+End Sub
 
 '-------------------------------------------------------------
 ' VBの関数名を抽出する
