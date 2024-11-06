@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.20"
+Private Const VERSION = "1.5.21"
 
 Public Const REG_EX_VB_METHOD = "(Function|Sub)\s+[^\(\)\s]+\("
 Public Const REG_EX_VB_METHOD_WITH_RET = "Function\s+[^\(\)\s]*\(.*\)(\s+As\s+[^\(\)\s]*\(*\)*)*$"
@@ -121,8 +121,8 @@ Public Sub CompareCellsAndHighlight(ByVal sheetName As String, ByVal cellA_Ref A
     Set cellB = ws.Range(cellB_Ref)
     
     ' セルの内容を取得
-    textA = cellA.Value
-    textB = cellB.Value
+    textA = cellA.value
+    textB = cellB.value
     
     ' セルBの書式をリセット
     cellB.Font.Color = RGB(0, 0, 0)
@@ -1863,6 +1863,7 @@ End Function
 ' find_start_row : I : 検索開始行(1始まり)
 ' keyword : I : 検索ワード
 ' find_end_row : I : 検索終了行(任意。0の場合は全行とする)
+' is_ignore_case : I : 大文字小文字を区別する(任意。True=区別する(デフォルト), False=区別しない)
 ' Ret : ヒットした行番号
 '-------------------------------------------------------------
 Public Function FindRowByKeywordFromWorksheet( _
@@ -1870,7 +1871,8 @@ Public Function FindRowByKeywordFromWorksheet( _
   ByVal find_clm As String, _
   ByVal find_start_row As Long, _
   ByVal keyword As String, _
-  Optional ByVal find_end_row As Long = 0 _
+  Optional ByVal find_end_row As Long = 0, _
+  Optional ByVal is_ignore_case As Boolean = True _
 ) As Long
     Dim rng As Range
     Dim cell As Range
@@ -1890,9 +1892,17 @@ Public Function FindRowByKeywordFromWorksheet( _
 
     found_row = 0
     For Each cell In rng
-        If cell.value = keyword Then
-            found_row = cell.row
-            Exit For
+        If is_ignore_case = True Then
+            If cell.value = keyword Then
+                found_row = cell.row
+                Exit For
+            End If
+        Else
+            '大文字小文字を区別しない
+            If UCase(cell.value) = UCase(keyword) Then
+                found_row = cell.row
+                Exit For
+            End If
         End If
     Next cell
     
@@ -3654,6 +3664,8 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
+
+
 
 
 
