@@ -41,7 +41,7 @@ Private Sub CheckAndCollectParam()
     Common.WriteLog main_param.GetAllValue()
 
     'Sub Params
-    Const START_ROW = 17
+    Const START_ROW = 18
     Dim row As Long: row = START_ROW
     Dim cnt As Long: cnt = 0
     
@@ -76,7 +76,7 @@ End Sub
 Private Sub ExecSubParam()
     Common.WriteLog "ExecSubParam S"
     
-    If Common.IsEmptyArray(sub_params) = True Then
+    If Common.IsEmptyArrayLong(sub_params) = True Then
         Err.Raise 53, , "有効なSub paramがありません"
     End If
 
@@ -92,7 +92,7 @@ Private Sub ExecSubParam()
         '転記元データを収集する
         copy_datas = CollectSrcDatas(sub_param)
             
-        If Common.IsEmptyArray(copy_datas) = True Then
+        If Common.IsEmptyArrayLong(copy_datas) = True Then
             Common.WriteLog "転記元データがありません。"
             GoTo CONTINUE_FOR
         End If
@@ -210,7 +210,9 @@ Private Sub Transcription(ByRef sub_param As SubParam, ByRef copy_datas() As Cop
                            ws, _
                            sub_param.GetDstFindClm(), _
                            find_row, _
-                           keyword _
+                           keyword, _
+                           0, _
+                           main_param.IsIgnoreCase() _
                         )
         
             If found_row = 0 Then
@@ -282,7 +284,7 @@ Private Sub CopyColumnToAnotherSheet( _
 End Sub
 
 Function GetYellowCellData( _
-  ByVal filePath As String, _
+  ByVal FilePath As String, _
   ByVal sheetName As String, _
   ByVal searchCol As String, _
   ByVal dataCol As String _
@@ -295,7 +297,7 @@ Function GetYellowCellData( _
     Dim result() As String
     Dim i As Long
 
-    Set wb = Workbooks.Open(filePath)
+    Set wb = Workbooks.Open(FilePath)
     Set ws = wb.Sheets(sheetName)
 
     Set searchRange = ws.Range(searchCol & "1:" & searchCol & ws.Cells(ws.Rows.count, searchCol).End(xlUp).row)

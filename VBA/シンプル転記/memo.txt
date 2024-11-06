@@ -1,4 +1,4 @@
-シンプル転記				ver.1.2.0																																																	
+シンプル転記				ver.1.3.0																																																	
 													パスは全て絶対パスで指定すること																																								
 													関連するフォルダ・ファイルは他アプリで開いている場合は実行前に閉じておくこと。																																								
 													Sub paramはいくらでも追加してよい。																																								
@@ -8,7 +8,8 @@
 			(3)書式もコピーするか?			YES		※まだ未サポート					(3)			※未指定の場合は「NO」とする。xls, xlsx, xlsm指定時のみ。																																					
 			(4)バックアップ作成			YES		※まだ未サポート					(4)			※未指定の場合は「NO」とする。「YES」の場合はDSTファイルと同じフォルダに作成する。																																					
 			(5)転記後にファイルを閉じない			YES							(5)			※未指定の場合は「NO」とする。																																					
-			(6)転記元が空の場合は無視する			YES							(6)			※未指定の場合は「NO」とする。																																					
+			(6)転記元が空の場合は無視する			NO							(6)			※未指定の場合は「NO」とする。																																					
+			(7)検索時に大文字小文字を区別する										(7)			※未指定の場合は「YES」とする。																																					
 																																																					
 	Sub Params																																																				
 																																																					
@@ -22,6 +23,11 @@
 		5	DISABLE	src.xlsx	src	E	F	src.xlsx	dst	D	E																																										
 		6	DISABLE	src.xlsx	src	E	G	src.xlsx	dst	D	F																																										
 		7	DISABLE	src.xlsx	src	E	H	src.xlsx	dst	D	G																																										
-		8																																																			
+		8	ENABLE	SimpleTranscription.xlsm	src	B	C	SimpleTranscription.xlsm	dst	B	C																																										
+			ENABLE	SimpleTranscription.xlsm	src	B	D	SimpleTranscription.xlsm	dst	B	D																																										
+			ENABLE	SimpleTranscription.xlsm	src	B	E	SimpleTranscription.xlsm	dst	B	E																																										
+			ENABLE	SimpleTranscription.xlsm	src	B	F	SimpleTranscription.xlsm	dst	B	F																																										
+																																																					
+																																																					
 		9																																																			
 																																																					

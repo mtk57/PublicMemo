@@ -20,6 +20,8 @@ Private is_not_close As Boolean
 Private is_not_close_s As String
 Private is_skip_blank As Boolean
 Private is_skip_blank_s As String
+Private is_ignore_case As Boolean
+Private is_ignore_case_s As String
 
 'コンストラクタ
 Private Sub Class_Initialize()
@@ -28,20 +30,22 @@ Private Sub Class_Initialize()
     is_backup = False
     is_not_close = False
     is_skip_blank = False
+    is_ignore_case = True
 End Sub
 
 '初期化
 Public Sub Init()
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
-    Const clm = "G"
+    Const Clm = "G"
     Const i = 7
     
-    dst_not_found_action = main_sheet.Range(clm & i).value
-    is_copy_format_s = main_sheet.Range(clm & i + 1).value
-    is_backup_s = main_sheet.Range(clm & i + 2).value
-    is_not_close_s = main_sheet.Range(clm & i + 3).value
-    is_skip_blank_s = main_sheet.Range(clm & i + 4).value
+    dst_not_found_action = main_sheet.Range(Clm & i).value
+    is_copy_format_s = main_sheet.Range(Clm & i + 1).value
+    is_backup_s = main_sheet.Range(Clm & i + 2).value
+    is_not_close_s = main_sheet.Range(Clm & i + 3).value
+    is_skip_blank_s = main_sheet.Range(Clm & i + 4).value
+    is_ignore_case_s = main_sheet.Range(Clm & i + 5).value
 End Sub
 
 '検証
@@ -73,7 +77,7 @@ Public Sub Validate()
     Else
         is_not_close = True
     End If
-
+    
     If is_skip_blank_s = "" Or _
        is_skip_blank_s = "NO" Then
        is_skip_blank = False
@@ -81,6 +85,12 @@ Public Sub Validate()
         is_skip_blank = True
     End If
 
+    If is_ignore_case_s = "" Or _
+       is_ignore_case_s = "YES" Then
+       is_ignore_case = True
+    Else
+        is_ignore_case = False
+    End If
 End Sub
 
 '=========================================
@@ -122,6 +132,13 @@ Public Function IsSkipBlank() As Boolean
     IsSkipBlank = is_skip_blank
 End Function
 
+'-----------------------------------------
+'検索時に大文字小文字を区別する
+' True=区別する, False=区別しない
+'-----------------------------------------
+Public Function IsIgnoreCase() As Boolean
+    IsIgnoreCase = is_ignore_case
+End Function
 
 Public Function GetAllValue() As String
     Dim ret As String
@@ -131,7 +148,8 @@ Public Function GetAllValue() As String
           "is_copy_format=(" & is_copy_format_s & "), " & _
           "is_backup=(" & is_backup_s & "), " & _
           "is_not_close=(" & is_not_close_s & "), " & _
-          "is_skip_blank=(" & is_skip_blank_s & ")"
+          "is_skip_blank=(" & is_skip_blank_s & "), " & _
+          "is_ignore_case=(" & is_ignore_case_s & ")"
 
     GetAllValue = ret
 End Function
