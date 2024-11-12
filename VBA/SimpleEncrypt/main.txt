@@ -1,7 +1,22 @@
 Simple Encrypt																																																													
-1.0.0																																																													
+1.0.1																																																													
 																																																													
 																																																													
 																																																													
-		暗号化前	 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~																													95			 !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}~																										
-		暗号化後	pqrstuvwxyz{|}~ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmno																													95			pqrstuvwxyz{|}~ !"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmno																										
+		暗号化前																														0			!#$%'()+,-/0123456789:?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{}~																										
+		暗号化後																														0			qstuwxy{|} !"#$%&'()*+0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklno																										
+																																																													
+																																																													
+	以下の文字が使用されている場合は処理を中止します。																																																												
+	・ASCIIコード範囲外（0x20～0x7E）																																																												
+	・以下のパスワード使用不可文字																																																												
+		SP	※半角スペース																																																										
+		"																																																											
+		&																																																											
+		*																																																											
+		.																																																											
+		;																																																											
+		<																																																											
+		=																																																											
+		>																																																											
+		|																																																											

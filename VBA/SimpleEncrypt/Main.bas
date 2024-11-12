@@ -22,9 +22,7 @@ On Error GoTo ErrorHandler
 
     Worksheets("main").Activate
 
-    Dim ret As String
-    ret = EncryptDecrypt(True, main_sheet.Range("D6").value)
-    main_sheet.Range("D7").value = ret
+    main_sheet.Range("D7").value = EncryptDecrypt(True, main_sheet.Range("D6").value)
 
     GoTo FINISH
     
@@ -86,11 +84,38 @@ Private Function EncryptDecrypt_OLD_VERSION(ByVal isEncrypt As Boolean, ByVal wo
 End Function
 
 Private Function EncryptDecrypt(ByVal isEncrypt As Boolean, ByVal word As String) As String
-    Dim ret As String
+    Const NG_CHARS = " ""&*.;<=>|"  'パスワードに使用できない文字
     Dim i As Integer
     Dim currentChar As String
     Dim currentAsc As Integer
-    
+ 
+    EncryptDecrypt = ""
+ 
+    'パスワードのバリデーション（暗号化時のみチェック）
+    If isEncrypt Then
+        ' 文字列が空の場合はエラー
+        If Len(word) = 0 Then
+            Err.Raise 53, , "String is empty."
+        End If
+        
+        'ASCII範囲外文字とNG文字のチェック
+        For i = 1 To Len(word)
+            currentChar = Mid(word, i, 1)
+            currentAsc = Asc(currentChar)
+            
+            'ASCII範囲外チェック（0-127以外はエラー）
+            If currentAsc < 0 Or currentAsc > 127 Then
+                Err.Raise 53, , "Out of ASCII code range."
+            End If
+            
+            'NG文字チェック
+            If InStr(NG_CHARS, currentChar) > 0 Then
+                Err.Raise 53, , "The password contains characters that cannot be used..NG char=[" & currentChar & "]"
+            End If
+        Next i
+    End If
+ 
+    Dim ret As String
     ret = ""
     
     For i = 1 To Len(word)

@@ -1,98 +1,208 @@
-ASCII														
-														
-	#	10進	16進	文字	制御文字?	説明		変換前				変換後		
-1	33	32	20	space	NO	スペース (空白文字)		32	20	space		112	70	p
-2	34	33	21	!	NO	エクスクラメーションマーク		33	21	!		113	71	q
-3	35	34	22	"	NO	ダブルクォーテーション		34	22	"		114	72	r
-4	36	35	23	#	NO	ハッシュ、井桁		35	23	#		115	73	s
-5	37	36	24	$	NO	ドル		36	24	$		116	74	t
-6	38	37	25	%	NO	パーセント		37	25	%		117	75	u
-7	39	38	26	&	NO	アンパサンド、アンド		38	26	&		118	76	v
-8	40	39	27	'	NO	シングルクォーテーション		39	27	'		119	77	w
-9	41	40	28	(	NO	左丸括弧		40	28	(		120	78	x
-10	42	41	29	)	NO	右丸括弧		41	29	)		121	79	y
-11	43	42	2A	*	NO	アスタリスク		42	2A	*		122	7A	z
-12	44	43	2B	+	NO	プラス		43	2B	+		123	7B	{
-13	45	44	2C	,	NO	カンマ、コンマ		44	2C	,		124	7C	|
-14	46	45	2D	-	NO	マイナス、ハイフン		45	2D	-		125	7D	}
-15	47	46	2E	.	NO	ピリオド、ドット		46	2E	.		126	7E	~
-	48	47	2F	/	NO	スラッシュ		47	2F	/		32	20	space
-	49	48	30	0	NO			48	30	0		33	21	!
-	50	49	31	1	NO			49	31	1		34	22	"
-	51	50	32	2	NO			50	32	2		35	23	#
-	52	51	33	3	NO			51	33	3		36	24	$
-	53	52	34	4	NO			52	34	4		37	25	%
-	54	53	35	5	NO			53	35	5		38	26	&
-	55	54	36	6	NO			54	36	6		39	27	'
-	56	55	37	7	NO			55	37	7		40	28	(
-	57	56	38	8	NO			56	38	8		41	29	)
-	58	57	39	9	NO			57	39	9		42	2A	*
-	59	58	3A	:	NO	コロン		58	3A	:		43	2B	+
-	60	59	3B	;	NO	セミコロン		59	3B	;		44	2C	,
-	61	60	3C	<	NO	小なり		60	3C	<		45	2D	-
-	62	61	3D	=	NO	イコール		61	3D	=		46	2E	.
-	63	62	3E	>	NO	大なり		62	3E	>		47	2F	/
-	64	63	3F	?	NO	クエスチョンマーク		63	3F	?		48	30	0
-	65	64	40	@	NO	アットマーク		64	40	@		49	31	1
-	66	65	41	A	NO			65	41	A		50	32	2
-	67	66	42	B	NO			66	42	B		51	33	3
-	68	67	43	C	NO			67	43	C		52	34	4
-	69	68	44	D	NO			68	44	D		53	35	5
-	70	69	45	E	NO			69	45	E		54	36	6
-	71	70	46	F	NO			70	46	F		55	37	7
-	72	71	47	G	NO			71	47	G		56	38	8
-	73	72	48	H	NO			72	48	H		57	39	9
-	74	73	49	I	NO			73	49	I		58	3A	:
-	75	74	4A	J	NO			74	4A	J		59	3B	;
-	76	75	4B	K	NO			75	4B	K		60	3C	<
-	77	76	4C	L	NO			76	4C	L		61	3D	=
-	78	77	4D	M	NO			77	4D	M		62	3E	>
-	79	78	4E	N	NO			78	4E	N		63	3F	?
-	80	79	4F	O	NO			79	4F	O		64	40	@
-	81	80	50	P	NO			80	50	P		65	41	A
-	82	81	51	Q	NO			81	51	Q		66	42	B
-	83	82	52	R	NO			82	52	R		67	43	C
-	84	83	53	S	NO			83	53	S		68	44	D
-	85	84	54	T	NO			84	54	T		69	45	E
-	86	85	55	U	NO			85	55	U		70	46	F
-	87	86	56	V	NO			86	56	V		71	47	G
-	88	87	57	W	NO			87	57	W		72	48	H
-	89	88	58	X	NO			88	58	X		73	49	I
-	90	89	59	Y	NO			89	59	Y		74	4A	J
-	91	90	5A	Z	NO			90	5A	Z		75	4B	K
-	92	91	5B	[	NO	左ブラケット、左角括弧		91	5B	[		76	4C	L
-	93	92	5C	\	NO	バックスラッシュ		92	5C	\		77	4D	M
-	94	93	5D	]	NO	右ブラケット、右角括弧		93	5D	]		78	4E	N
-	95	94	5E	^	NO	キャレット、ハット		94	5E	^		79	4F	O
-	96	95	5F	_	NO	アンダースコア、アンダーバー		95	5F	_		80	50	P
-	97	96	60	`	NO	バッククォート		96	60	`		81	51	Q
-	98	97	61	a	NO			97	61	a		82	52	R
-	99	98	62	b	NO			98	62	b		83	53	S
-	100	99	63	c	NO			99	63	c		84	54	T
-	101	100	64	d	NO			100	64	d		85	55	U
-	102	101	65	e	NO			101	65	e		86	56	V
-	103	102	66	f	NO			102	66	f		87	57	W
-	104	103	67	g	NO			103	67	g		88	58	X
-	105	104	68	h	NO			104	68	h		89	59	Y
-	106	105	69	i	NO			105	69	i		90	5A	Z
-	107	106	6A	j	NO			106	6A	j		91	5B	[
-	108	107	6B	k	NO			107	6B	k		92	5C	\
-	109	108	6C	l	NO			108	6C	l		93	5D	]
-	110	109	6D	m	NO			109	6D	m		94	5E	^
-	111	110	6E	n	NO			110	6E	n		95	5F	_
-	112	111	6F	o	NO			111	6F	o		96	60	`
-	113	112	70	p	NO			112	70	p		97	61	a
-	114	113	71	q	NO			113	71	q		98	62	b
-	115	114	72	r	NO			114	72	r		99	63	c
-	116	115	73	s	NO			115	73	s		100	64	d
-	117	116	74	t	NO			116	74	t		101	65	e
-	118	117	75	u	NO			117	75	u		102	66	f
-	119	118	76	v	NO			118	76	v		103	67	g
-	120	119	77	w	NO			119	77	w		104	68	h
-	121	120	78	x	NO			120	78	x		105	69	i
-	122	121	79	y	NO			121	79	y		106	6A	j
-	123	122	7A	z	NO			122	7A	z		107	6B	k
-	124	123	7B	{	NO	左波括弧		123	7B	{		108	6C	l
-	125	124	7C	|	NO	バーティカルバー、縦棒		124	7C	|		109	6D	m
-	126	125	7D	}	NO	右波括弧		125	7D	}		110	6E	n
-	127	126	7E	~	NO	チルダ		126	7E	~		111	6F	o
+ASCII								
+								
+	#	10進	16進	文字	制御文字?		パスワードに使える？	https://docs.oracle.com/cd/E17327_01/doc.910/b54369/app_special_char.htm
+	1	0	0x00	NUL	YES		-	
+	2	1	0x01	SOH	YES		-	
+	3	2	0x02	STX	YES		-	
+	4	3	0x03	ETX	YES		-	
+	5	4	0x04	EOT	YES		-	
+	6	5	0x05	ENQ	YES		-	
+	7	6	0x06	ACK	YES		-	
+	8	7	0x07	BEL	YES		-	
+	9	8	0x08	BS	YES		-	
+	10	9	0x09	HT	YES		-	
+	11	10	0x0A	LF	YES		-	
+	12	11	0x0B	VT	YES		-	
+	13	12	0x0C	FF	YES		-	
+	14	13	0x0D	CR	YES		-	
+	15	14	0x0E	SO	YES		-	
+	16	15	0x0F	SI	YES		-	
+	17	16	0x10	DLE	YES		-	
+	18	17	0x11	DC1	YES		-	
+	19	18	0x12	DC2	YES		-	
+	20	19	0x13	DC3	YES		-	
+	21	20	0x14	DC4	YES		-	
+	22	21	0x15	NAK	YES		-	
+	23	22	0x16	SYN	YES		-	
+	24	23	0x17	ETB	YES		-	
+	25	24	0x18	CAN	YES		-	
+	26	25	0x19	EM	YES		-	
+	27	26	0x1A	SUB	YES		-	
+	28	27	0x1B	ESC	YES		-	
+	29	28	0x1C	FS	YES		-	
+	30	29	0x1D	GS	YES		-	
+	31	30	0x1E	RS	YES		-	
+	32	31	0x1F	US	YES		-	
+1	33	32	0x20	SP	NO		NO	
+2	34	33	0x21	!	NO		YES	
+3	35	34	0x22	"	NO		NO	
+4	36	35	0x23	#	NO		YES	
+5	37	36	0x24	$	NO		YES	
+6	38	37	0x25	%	NO		YES	
+7	39	38	0x26	&	NO		NO	
+8	40	39	0x27	'	NO		YES	
+9	41	40	0x28	(	NO		YES	
+10	42	41	0x29	)	NO		YES	
+11	43	42	0x2A	*	NO		NO	
+12	44	43	0x2B	+	NO		YES	
+13	45	44	0x2C	,	NO		YES	
+14	46	45	0x2D	-	NO		YES	
+15	47	46	0x2E	.	NO		NO	
+	48	47	0x2F	/	NO		YES	
+	49	48	0x30	0	NO		YES	
+	50	49	0x31	1	NO		YES	
+	51	50	0x32	2	NO		YES	
+	52	51	0x33	3	NO		YES	
+	53	52	0x34	4	NO		YES	
+	54	53	0x35	5	NO		YES	
+	55	54	0x36	6	NO		YES	
+	56	55	0x37	7	NO		YES	
+	57	56	0x38	8	NO		YES	
+	58	57	0x39	9	NO		YES	
+	59	58	0x3A	:	NO		YES	
+	60	59	0x3B	;	NO		NO	
+	61	60	0x3C	<	NO		NO	
+	62	61	0x3D	=	NO		NO	
+	63	62	0x3E	>	NO		NO	
+	64	63	0x3F	?	NO		YES	
+	65	64	0x40	@	NO		YES	
+	66	65	0x41	A	NO		YES	
+	67	66	0x42	B	NO		YES	
+	68	67	0x43	C	NO		YES	
+	69	68	0x44	D	NO		YES	
+	70	69	0x45	E	NO		YES	
+	71	70	0x46	F	NO		YES	
+	72	71	0x47	G	NO		YES	
+	73	72	0x48	H	NO		YES	
+	74	73	0x49	I	NO		YES	
+	75	74	0x4A	J	NO		YES	
+	76	75	0x4B	K	NO		YES	
+	77	76	0x4C	L	NO		YES	
+	78	77	0x4D	M	NO		YES	
+	79	78	0x4E	N	NO		YES	
+	80	79	0x4F	O	NO		YES	
+	81	80	0x50	P	NO		YES	
+	82	81	0x51	Q	NO		YES	
+	83	82	0x52	R	NO		YES	
+	84	83	0x53	S	NO		YES	
+	85	84	0x54	T	NO		YES	
+	86	85	0x55	U	NO		YES	
+	87	86	0x56	V	NO		YES	
+	88	87	0x57	W	NO		YES	
+	89	88	0x58	X	NO		YES	
+	90	89	0x59	Y	NO		YES	
+	91	90	0x5A	Z	NO		YES	
+	92	91	0x5B	[	NO		YES	
+	93	92	0x5C	\	NO		YES	
+	94	93	0x5D	]	NO		YES	
+	95	94	0x5E	^	NO		YES	
+	96	95	0x5F	_	NO		YES	
+	97	96	0x60	`	NO		YES	
+	98	97	0x61	a	NO		YES	
+	99	98	0x62	b	NO		YES	
+	100	99	0x63	c	NO		YES	
+	101	100	0x64	d	NO		YES	
+	102	101	0x65	e	NO		YES	
+	103	102	0x66	f	NO		YES	
+	104	103	0x67	g	NO		YES	
+	105	104	0x68	h	NO		YES	
+	106	105	0x69	i	NO		YES	
+	107	106	0x6A	j	NO		YES	
+	108	107	0x6B	k	NO		YES	
+	109	108	0x6C	l	NO		YES	
+	110	109	0x6D	m	NO		YES	
+	111	110	0x6E	n	NO		YES	
+	112	111	0x6F	o	NO		YES	
+	113	112	0x70	p	NO		YES	
+	114	113	0x71	q	NO		YES	
+	115	114	0x72	r	NO		YES	
+	116	115	0x73	s	NO		YES	
+	117	116	0x74	t	NO		YES	
+	118	117	0x75	u	NO		YES	
+	119	118	0x76	v	NO		YES	
+	120	119	0x77	w	NO		YES	
+	121	120	0x78	x	NO		YES	
+	122	121	0x79	y	NO		YES	
+	123	122	0x7A	z	NO		YES	
+	124	123	0x7B	{	NO		YES	
+	125	124	0x7C	|	NO		NO	
+	126	125	0x7D	}	NO		YES	
+	127	126	0x7E	~	NO		YES	
+	128	127	0x7F	DEL	YES		-	
+
+
+
+
+-------------
+Private Const NG_CHARS As String = " ;""" '空白、セミコロン、ダブルクォート
+
+Private Function EncryptDecrypt(ByVal isEncrypt As Boolean, ByVal word As String) As String
+    ' エラーを示す戻り値として空文字を使用
+    EncryptDecrypt = ""
+    
+    ' パスワードのバリデーション（暗号化時のみチェック）
+    If isEncrypt Then
+        ' 文字列が空の場合はエラー
+        If Len(word) = 0 Then
+            Exit Function
+        End If
+        
+        ' 先頭が数字かどうかのチェック
+        If IsNumeric(Left(word, 1)) Then
+            Exit Function
+        End If
+        
+        ' ASCII範囲外文字とNG文字のチェック
+        Dim i As Integer
+        Dim currentChar As String
+        Dim currentAsc As Integer
+        
+        For i = 1 To Len(word)
+            currentChar = Mid(word, i, 1)
+            currentAsc = Asc(currentChar)
+            
+            ' ASCII範囲外チェック（0-127以外はエラー）
+            If currentAsc < 0 Or currentAsc > 127 Then
+                Exit Function
+            End If
+            
+            ' NG文字チェック
+            If InStr(NG_CHARS, currentChar) > 0 Then
+                Exit Function
+            End If
+        Next i
+    End If
+    
+    Dim ret As String
+    currentChar = ""
+    currentAsc = 0
+    
+    ret = ""
+    
+    For i = 1 To Len(word)
+        currentChar = Mid(word, i, 1)
+        currentAsc = Asc(currentChar)
+        
+        If isEncrypt Then
+            '暗号化処理
+            If currentAsc >= &H20 And currentAsc <= &H2E Then
+                '0x20-0x2Eの範囲の文字は0x70-0x7Eにマッピング
+                ret = ret & Chr(currentAsc + &H50)  '0x50 = 80を加算
+            Else
+                '通常の暗号化（15を引く）
+                ret = ret & Chr(currentAsc - 15)
+            End If
+        Else
+            '復号化処理
+            If currentAsc >= &H70 And currentAsc <= &H7E Then
+                '0x70-0x7Eの範囲の文字は0x20-0x2Eに戻す
+                ret = ret & Chr(currentAsc - &H50)  '0x50 = 80を減算
+            Else
+                '通常の復号化（15を足す）
+                ret = ret & Chr(currentAsc + 15)
+            End If
+        End If
+    Next i
+    
+    EncryptDecrypt = ret
+End Function
