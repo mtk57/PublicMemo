@@ -33,7 +33,8 @@ Public Sub Run()
     results = Common.GetMethodInfoFromGrepResult( _
                 targets, _
                 main_param.GetFormatType(), _
-                main_param.GetLang() _
+                main_param.GetLang(), _
+                main_param.IsIgnoreComment() _
               )
     
     

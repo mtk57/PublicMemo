@@ -13,12 +13,14 @@ Option Explicit
 
 Private format_type As GrepAppEnum
 Private lang As LangEnum
+Private ignore_comment As Boolean
 Private enabled_callstack As Boolean
 Private max_depth_ As Long
 Private vbp_ref_list_sheet As String
 
 Private format_type_s As String
 Private lang_s As String
+Private ignore_comment_s As String
 Private enabled_callstack_s As String
 Private max_depth_s As String
 
@@ -30,6 +32,7 @@ Private Const MAX_DEPTH = 10
 Private Sub Class_Initialize()
     format_type = GrepAppEnum.sakura
     lang = LangEnum.VB6
+    ignore_comment = True
     enabled_callstack = False
     max_depth_ = 0
     vbp_ref_list_sheet = ""
@@ -47,9 +50,10 @@ Public Sub Init()
 
     format_type_s = main_sheet.Range(CLM_ & ROW_).value
     lang_s = main_sheet.Range(CLM_ & ROW_ + 1).value
-    enabled_callstack_s = main_sheet.Range(CLM_ & ROW_ + 2).value
-    max_depth_s = main_sheet.Range(CLM_ & ROW_ + 3).value
-    vbp_ref_list_sheet = main_sheet.Range(CLM_ & ROW_ + 4).value
+    ignore_comment_s = main_sheet.Range(CLM_ & ROW_ + 2).value
+    enabled_callstack_s = main_sheet.Range(CLM_ & ROW_ + 3).value
+    max_depth_s = main_sheet.Range(CLM_ & ROW_ + 4).value
+    vbp_ref_list_sheet = main_sheet.Range(CLM_ & ROW_ + 5).value
 End Sub
 
 '検証
@@ -64,6 +68,12 @@ Public Sub Validate()
         lang = LangEnum.VB6
     Else
         Err.Raise 53, , "未サポートの言語です (" & lang_s & ")"
+    End If
+    
+    If ignore_comment_s = "" Or ignore_comment_s = "YES" Then
+        ignore_comment = True
+    Else
+        ignore_comment = False
     End If
     
     If enabled_callstack_s = "" Or enabled_callstack_s = "NO" Then
@@ -126,6 +136,10 @@ Public Function GetLang() As LangEnum
     GetLang = lang
 End Function
 
+Public Function IsIgnoreComment() As Boolean
+    IsIgnoreComment = ignore_comment
+End Function
+
 Public Function IsEnabledCallstack() As Boolean
     IsEnabledCallstack = enabled_callstack
 End Function
@@ -144,6 +158,7 @@ Public Function GetAllValue() As String
     ret = "[Main Param] " & _
           "format_type=(" & format_type_s & "), " & _
           "lang=(" & lang_s & "), " & _
+          "ignore_comment=(" & ignore_comment_s & "), " & _
           "enabled_callstack=" & enabled_callstack & "), " & _
           "max_depth=(" & max_depth_ & "), " & _
           "vbp_ref_list_sheet=(" & vbp_ref_list_sheet & ")"

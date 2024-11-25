@@ -1,5 +1,5 @@
 Grep to Method																																																	
-ver.	1.1.1																																																
+ver.	1.2.2																																																
 																																																	
 Grep結果とメソッド定義を紐づける。(引数は15個を最大とする)																																																	
 																																																	
@@ -7,11 +7,42 @@ Main Param																																memo
 	①デバッグログ出力										NO																					未指定の場合は"NO"とする。																	
 	②GREP結果フォーマット										sakura																					未指定の場合は"sakura"とする。																	
 	③言語										VB6																					未指定の場合は"VB6"とする。																	
-	④コールスタック出力										NO																					未指定の場合は"NO"とする。																	
-	⑤最大スタック数										10																					未指定の場合は10とする。																	
-	⑥VBP参照ファイル一覧のシート名										list																					VbFileListCreator.xlsmの出力結果																	
+	④コメントを除外する										YES																					未指定の場合は"YES"とする。																	
+	⑤コールスタック出力										NO																					未指定の場合は"NO"とする。										※2024/6/1 現在  まだ実装途中。。。							
+	⑥最大スタック数										10																					未指定の場合は10とする。																	
+	⑦VBP参照ファイル一覧のシート名										list																					VbFileListCreator.xlsmの出力結果																	
 																																																	
 																																																	
 Sub Param																																																	
 	↓ここから下にGREP結果を貼り付ける。空行を連続5行以上検知するまでが有効行。\tはSPに変換しておくこと。																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(3,1)  [SJIS]: ●関数定義より上																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(7,1)  [SJIS]: ●Function1 引数あり・戻り値あり																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(13,1)  [SJIS]: ●Function2 引数あり・戻り値なし																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(19,1)  [SJIS]: ●Function3 引数なし・戻り値なし																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(25,1)  [SJIS]: ●Function4 引数なし・戻り値あり																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(31,1)  [SJIS]: ●Function5 引数あり(複数・改行なし)・戻り値なし																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(38,1)  [SJIS]: ●Function6 引数あり(複数・改行あり)・戻り値なし																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(45,1)  [SJIS]: ●Function7 引数あり(複数・改行あり)・戻り値あり																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(53,1)  [SJIS]: ●Function8 引数あり(複数・改行あり)・戻り値あり2																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(61,1)  [SJIS]: ●Function9 引数あり(複数・改行あり)・戻り値あり3																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(69,1)  [SJIS]: ●Function10 引数あり(複数・改行あり)・戻り値あり10																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(75,1)  [SJIS]: ●Sub1 引数あり																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(81,1)  [SJIS]: ●Sub2 引数なし																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(87,1)  [SJIS]: ●Sub3 引数あり(複数・改行なし)																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(94,1)  [SJIS]: ●Sub4 引数あり(複数・改行あり)																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(101,1)  [SJIS]: ●Sub5 引数あり(複数・改行あり)2																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(107,1)  [SJIS]: ●日本語関数1																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(113,1)  [SJIS]: ●Func日本語関数2																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(119,1)  [SJIS]: ●日本語関数3																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(125,1)  [SJIS]: ●Func日本語関数4																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(129,1)  [SJIS]: ●関数定義より下																																																
+	C:\_git\PublicMemo\VBA\GrepToMethod\testdata\00_GrepTargetSrc\Common.bas(7,1)  [SJIS]: 'コメント●Function1 引数あり・戻り値あり																																																
+																																																	
+																																																	
+																																																	
+																																																	
+																																																	
+																																																	
+																																																	
+																																																	
 																																																	
