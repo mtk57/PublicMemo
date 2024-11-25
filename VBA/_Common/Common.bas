@@ -1,7 +1,7 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.21"
+Private Const VERSION = "1.5.22"
 
 Public Const REG_EX_VB_METHOD = "(Function|Sub)\s+[^\(\)\s]+\("
 Public Const REG_EX_VB_METHOD_WITH_RET = "Function\s+[^\(\)\s]*\(.*\)(\s+As\s+[^\(\)\s]*\(*\)*)*$"
@@ -431,12 +431,14 @@ End Sub
 '                   ファイルフルパス + (行番号, 列番号) + " " + [エンコード] + ":" + 内容
 ' grepApp : I : Grepしたアプリ (現時点ではsakuraのみサポート)  ※任意
 ' lang : I : Grepした言語 (現時点ではVB6のみサポート)  ※任意
+' igonore_comment : I : コメント行を無視する  ※任意
 ' Ret : メソッド情報 (Grep結果のコードが属しているメソッド)
 '-------------------------------------------------------------
 Public Function GetMethodInfoFromGrepResult( _
     ByRef grepResults() As String, _
     Optional ByVal grepApp As GrepAppEnum = GrepAppEnum.sakura, _
-    Optional ByVal lang As LangEnum = LangEnum.VB6 _
+    Optional ByVal lang As LangEnum = LangEnum.VB6, _
+    Optional ByVal igonore_comment As Boolean = True _
 ) As GrepResultInfoStruct()
 
     Dim ret() As GrepResultInfoStruct
@@ -471,7 +473,8 @@ Public Function GetMethodInfoFromGrepResult( _
         cur_info = GetGrepInfo(grepResults(i), grepApp, lang)
         
         'コメントの場合は無視する
-        If IsCommentCode(cur_info.Contents, cur_info.Ext) Then
+        If IsCommentCode(cur_info.Contents, cur_info.Ext) And _
+           igonore_comment = True Then
             GoTo CONTINUE_A
         End If
         
@@ -3664,6 +3667,8 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
+
+
 
 
 
