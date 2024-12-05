@@ -432,3 +432,34 @@ Sub RecursivelySearchFolder(ByVal sRootFolder As String)
     Next
 End Sub
 
+
+
+---------------------------------------
+■再帰コード例
+Sub SecureFTPScript()
+    Dim tempFilePath As String
+    Dim fileNum As Integer
+    Dim ftpCommands As String
+    
+    ' テンポラリファイルのパスを取得
+    tempFilePath = Environ$("TEMP") & "\secure_ftp_script.txt"
+    
+    ' FTPコマンドを文字列として準備
+    ftpCommands = "open ftp.example.com" & vbCrLf & _
+                  "username" & vbCrLf & _
+                  "password" & vbCrLf & _
+                  "get filename.txt" & vbCrLf & _
+                  "bye"
+    
+    ' テンポラリファイルを作成
+    fileNum = FreeFile
+    Open tempFilePath For Output As #fileNum
+    Print #fileNum, ftpCommands
+    Close #fileNum
+    
+    ' シェルコマンドを実行
+    Shell "ftp -s:" & tempFilePath, vbHide
+    
+    ' テンポラリファイルを削除
+    Kill tempFilePath
+End Sub
