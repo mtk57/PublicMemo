@@ -102,6 +102,11 @@ CONTINUE_I:
     Common.WriteLog "Run E"
 End Sub
 
+Public Sub Clear()
+    Set sub_param = New SubParam
+    sub_param.Clear
+End Sub
+
 'パラメータのチェックと収集を行う
 Private Sub CheckAndCollectParam()
     Common.WriteLog "CheckAndCollectParam S"

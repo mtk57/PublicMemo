@@ -23,7 +23,7 @@ On Error GoTo ErrorHandler
     Process.IS_EXTERNAL = True
     
     Dim msg As String: msg = "正常に終了しました"
-    Dim Ret As Boolean: Ret = True
+    Dim ret As Boolean: ret = True
     
     If is_debug = True Then
         Common.OpenLog ThisWorkbook.path + Application.PathSeparator + "VBPrjCollector.log"
@@ -42,13 +42,13 @@ On Error GoTo ErrorHandler
     
 ErrorHandler:
     msg = "エラーが発生しました!" & vbCrLf & "Reason=" & Err.Description
-    Ret = False
+    ret = False
 
 FINISH:
     Common.WriteLog msg
     Common.CloseLog
     Application.DisplayAlerts = True
-    Run = Ret
+    Run = ret
 End Function
 
 Public Sub Run_Click()
@@ -90,6 +90,31 @@ FINISH:
     main_sheet.Range("A3").value = ""
     Application.DisplayAlerts = True
     MsgBox msg
+End Sub
+
+Public Sub Clear_Click()
+On Error GoTo ErrorHandler
+    If Common.ShowYesNoMessageBox("クリアします") = False Then
+        Exit Sub
+    End If
+    
+    Application.DisplayAlerts = False
+    
+    Worksheets("main").Activate
+    
+    Dim main_sheet As Worksheet
+    Set main_sheet = ThisWorkbook.Sheets("main")
+
+    Process.Clear
+
+    GoTo FINISH
+    
+ErrorHandler:
+    MsgBox "エラーが発生しました!" & vbCrLf & "Reason=" & Err.Description
+
+FINISH:
+    Application.DisplayAlerts = True
+    
 End Sub
 
 Private Function IsEnableDebugLog() As Boolean
