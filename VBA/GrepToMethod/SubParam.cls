@@ -32,7 +32,7 @@ Public Sub Clear()
     Set ws = ActiveSheet
     
     lastRow = ws.Cells(ws.Rows.count, CLM_).End(xlUp).row
-    ws.Range(CLM_ & START_ROW_ & ":" & CLM_ & lastRow).Clear
+    ws.Range(CLM_ & START_ROW_ & ":" & CLM_ & lastRow).ClearContents
 End Sub
 
 Private Sub CollectParam()
