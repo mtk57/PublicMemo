@@ -39,6 +39,31 @@ FINISH:
     MsgBox msg
 End Sub
 
+Public Sub Clear_Click()
+On Error GoTo ErrorHandler
+    If Common.ShowYesNoMessageBox("クリアします") = False Then
+        Exit Sub
+    End If
+    
+    Application.DisplayAlerts = False
+    
+    Worksheets("main").Activate
+    
+    Dim main_sheet As Worksheet
+    Set main_sheet = ThisWorkbook.Sheets("main")
+
+    Process.Clear
+
+    GoTo FINISH
+    
+ErrorHandler:
+    MsgBox "エラーが発生しました!" & vbCrLf & "Reason=" & Err.Description
+
+FINISH:
+    Application.DisplayAlerts = True
+    
+End Sub
+
 Private Function IsEnableDebugLog() As Boolean
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")

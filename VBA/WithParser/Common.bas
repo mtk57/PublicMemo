@@ -1,7 +1,11 @@
 Attribute VB_Name = "Common"
 Option Explicit
 
-Private Const VERSION = "1.5.16"
+Private Const VERSION = "1.5.22"
+
+Public Const REG_EX_VB_METHOD = "(Function|Sub)\s+[^\(\)\s]+\("
+Public Const REG_EX_VB_METHOD_WITH_RET = "Function\s+[^\(\)\s]*\(.*\)(\s+As\s+[^\(\)\s]*\(*\)*)*$"
+
 
 Public Type MethodInfoStruct
     Raw As String
@@ -72,6 +76,194 @@ Private logfile_num As Integer
 Private is_log_opened As Boolean
 
 Private Const GIT_BASH = "C:\Program Files\Git\usr\bin\bash.exe"
+
+'-------------------------------------------------------------
+' 指定されたExcelシート上の2つのセルの内容を比較し、違いがある部分を
+' 視覚的にハイライトします。
+'
+' 引数:
+' - sheetName (String): 比較を行うシートの名前
+' - cellA_Ref (String): 比較元セルの参照（例: "A1"）
+' - cellB_Ref (String): 比較先セルの参照（例: "B1"）
+'
+' 動作:
+' 1. 指定されたシートをアクティブにします。
+' 2. 比較元と比較先のセルの内容を取得します。
+' 3. 2つの文字列を1文字ずつ比較します。
+' 4. 比較先（cellB）で異なる部分を赤色でハイライトします。
+' 5. 比較元（cellA）の内容は変更しません。
+'
+' 注意:
+' - シートが存在しない場合、エラーメッセージを表示して処理を終了します。
+' - 比較先の文字列が比較元よりも長い場合、余分な部分も赤くハイライトされます。
+'-------------------------------------------------------------
+Public Sub CompareCellsAndHighlight(ByVal sheetName As String, ByVal cellA_Ref As String, ByVal cellB_Ref As String)
+    Dim ws As Worksheet
+    Dim cellA As Range, cellB As Range
+    Dim textA As String, textB As String
+    Dim i As Long, j As Long, k As Long
+    Dim diffStart As Long, diffLength As Long
+    
+    ' 指定されたシートを取得し、アクティブにする
+    On Error Resume Next
+    Set ws = ThisWorkbook.Worksheets(sheetName)
+    On Error GoTo 0
+    
+    If ws Is Nothing Then
+        MsgBox "指定されたシート '" & sheetName & "' が見つかりません。", vbExclamation
+        Exit Sub
+    End If
+    
+    ws.Activate
+    
+    ' 指定されたセルを取得
+    Set cellA = ws.Range(cellA_Ref)
+    Set cellB = ws.Range(cellB_Ref)
+    
+    ' セルの内容を取得
+    textA = cellA.value
+    textB = cellB.value
+    
+    ' セルBの書式をリセット
+    cellB.Font.Color = RGB(0, 0, 0)
+    
+    i = 1
+    j = 1
+    
+    Do While i <= Len(textA) Or j <= Len(textB)
+        If i > Len(textA) Then
+            ' textAの終わりに達した場合、残りのtextBを全てハイライト
+            cellB.Characters(j, Len(textB) - j + 1).Font.Color = RGB(255, 0, 0)
+            Exit Do
+        ElseIf j > Len(textB) Then
+            ' textBの終わりに達した場合、ループを終了
+            Exit Do
+        ElseIf Mid(textA, i, 1) = Mid(textB, j, 1) Then
+            ' 文字が一致する場合
+            i = i + 1
+            j = j + 1
+        Else
+            ' 不一致を検出
+            diffStart = j
+            k = j
+            
+            ' 次の一致を探す
+            Do While k <= Len(textB)
+                If Mid(textA, i, 1) = Mid(textB, k, 1) Then
+                    Exit Do
+                End If
+                k = k + 1
+            Loop
+            
+            diffLength = k - j
+            
+            ' 不一致部分をハイライト
+            cellB.Characters(diffStart, diffLength).Font.Color = RGB(255, 0, 0)
+            
+            j = k
+            If k <= Len(textB) Then
+                i = i + 1
+                j = j + 1
+            End If
+        End If
+    Loop
+End Sub
+
+'-------------------------------------------------------------
+' VBの関数名を抽出する
+'-------------------------------------------------------------
+Public Function ExtractVBFunctionName(ByVal codeLine As String) As String
+    Dim regex As Object
+    Dim matches As Object
+    Dim functionName As String
+    
+    ' 正規表現オブジェクトを作成
+    Set regex = CreateObject("VBScript.RegExp")
+    
+    ' 関数定義を検出する正規表現パターン
+    regex.Pattern = "(Private|Public|Protected)?\s*(Shared|MustOverride|Overridable|Overrides|Delegate|Overloads|Shadows|Static)?\s*(Function|Sub)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\("
+    regex.IgnoreCase = True
+    regex.Global = False
+    
+    ' 正規表現でマッチングを実行
+    Set matches = regex.Execute(codeLine)
+    
+    ' マッチした場合、関数名を抽出
+    If matches.count > 0 Then
+        functionName = matches(0).SubMatches(3)
+    Else
+        functionName = ""
+    End If
+    
+    ExtractVBFunctionName = functionName
+End Function
+
+'-------------------------------------------------------------
+' Function: FindWord
+' 目的: 指定された条件に基づいて、ターゲット文字列内で検索文字列を見つけます。
+'
+' パラメータ:
+'   targetStr (String) - 検索対象の文字列
+'   findStr (String) - 検索する文字列またはパターン
+'   letterCase (Boolean) - 大文字小文字を区別するかどうか
+'                          True: 区別する、False: 区別しない
+'   exactMatch (Boolean) - 完全一致で検索するかどうか
+'                          True: 完全一致、False: 部分一致
+'   useRegEx (Boolean) - 正規表現を使用するかどうか
+'                        True: 使用する、False: 使用しない
+'
+' 戻り値:
+'   Boolean - 検索文字列が見つかった場合はTrue、そうでない場合はFalse
+'
+' 注意:
+'   1. 正規表現を使用する場合は、VBScriptの正規表現構文に従ってください。
+'   2. 正規表現使用時は、exactMatchパラメータは無視されます。
+'      完全一致を行いたい場合は、正規表現パターンで ^ と $ を使用してください。
+'   3. 正規表現を使用する場合、「Microsoft VBScript Regular Expressions 5.5」
+'      への参照設定が必要です。
+'
+' 使用例:
+'   result = FindWord("Hello World", "world", False, False, False) ' 大小文字区別なし、部分一致
+'   result = FindWord("Hello World", "^Hello World$", False, False, True) ' 正規表現による完全一致
+'-------------------------------------------------------------
+Public Function FindWord( _
+    targetStr As String, _
+    findStr As String, _
+    Optional letterCase As Boolean = False, _
+    Optional exactMatch As Boolean = False, _
+    Optional useRegEx As Boolean = False _
+) As Boolean
+    
+    Dim regex As Object
+    
+    If useRegEx Then
+        ' 正規表現を使用する場合
+        Set regex = CreateObject("VBScript.RegExp")
+        With regex
+            .Pattern = findStr
+            .IgnoreCase = Not letterCase
+            .Global = True
+            FindWord = .Test(targetStr)
+        End With
+    Else
+        ' 正規表現を使用しない場合
+        If exactMatch Then
+            ' 完全一致の場合
+            If letterCase Then
+                FindWord = (targetStr = findStr)
+            Else
+                FindWord = (StrComp(targetStr, findStr, vbTextCompare) = 0)
+            End If
+        Else
+            ' 部分一致の場合
+            If letterCase Then
+                FindWord = (InStr(1, targetStr, findStr, vbBinaryCompare) > 0)
+            Else
+                FindWord = (InStr(1, targetStr, findStr, vbTextCompare) > 0)
+            End If
+        End If
+    End If
+End Function
 
 '-------------------------------------------------------------
 ' 最大値を返す
@@ -239,12 +431,14 @@ End Sub
 '                   ファイルフルパス + (行番号, 列番号) + " " + [エンコード] + ":" + 内容
 ' grepApp : I : Grepしたアプリ (現時点ではsakuraのみサポート)  ※任意
 ' lang : I : Grepした言語 (現時点ではVB6のみサポート)  ※任意
+' igonore_comment : I : コメント行を無視する  ※任意
 ' Ret : メソッド情報 (Grep結果のコードが属しているメソッド)
 '-------------------------------------------------------------
 Public Function GetMethodInfoFromGrepResult( _
     ByRef grepResults() As String, _
     Optional ByVal grepApp As GrepAppEnum = GrepAppEnum.sakura, _
-    Optional ByVal lang As LangEnum = LangEnum.VB6 _
+    Optional ByVal lang As LangEnum = LangEnum.VB6, _
+    Optional ByVal igonore_comment As Boolean = True _
 ) As GrepResultInfoStruct()
 
     Dim ret() As GrepResultInfoStruct
@@ -279,7 +473,8 @@ Public Function GetMethodInfoFromGrepResult( _
         cur_info = GetGrepInfo(grepResults(i), grepApp, lang)
         
         'コメントの場合は無視する
-        If IsCommentCode(cur_info.Contents, cur_info.Ext) Then
+        If IsCommentCode(cur_info.Contents, cur_info.Ext) And _
+           igonore_comment = True Then
             GoTo CONTINUE_A
         End If
         
@@ -548,7 +743,7 @@ Public Function FindMethodStartRowForVB( _
             GoTo CONTINUE
         End If
         
-        If IsMatchByRegExp(line, "(Function|Sub)\s+[A-Za-z_][A-Za-z0-9_]*\(", True) = False Then
+        If IsMatchByRegExp(line, REG_EX_VB_METHOD, True) = False Then
             '見つからない
             GoTo CONTINUE
         End If
@@ -640,7 +835,7 @@ Public Function GetMethodInfoForVB( _
         End If
         
         'Functionの場合は戻り値までマージされているか確認する
-        If IsMatchByRegExp(merge_lines, "Function\s+[A-Za-z_][A-Za-z0-9_]*\(.*\)(\s+As\s+[A-Za-z_][A-Za-z0-9_]*\(*\)*)*$", True) = True Then
+        If IsMatchByRegExp(merge_lines, REG_EX_VB_METHOD_WITH_RET, True) = True Then
             Exit For
         End If
         
@@ -653,7 +848,7 @@ CONTINUE:
     ret.Raw = merge_lines
     
     'メソッド名
-    Dim wk As String: wk = GetMatchByRegExp(merge_lines, "(Function|Sub)\s+[A-Za-z_][A-Za-z0-9_]*\(", True)(0)
+    Dim wk As String: wk = GetMatchByRegExp(merge_lines, REG_EX_VB_METHOD, True)(0)
     ret.Name = Replace(Replace(wk, methodType & " ", ""), "(", "")
     
     start_clm = InStr(merge_lines, "(")
@@ -1149,7 +1344,7 @@ Public Function ReplaceByRegExp( _
     ReDim list(0)
     
     REG.Global = True
-    REG.ignoreCase = is_ignore_case
+    REG.IgnoreCase = is_ignore_case
     REG.Pattern = ptn
     
     ReplaceByRegExp = REG.Replace(test_str, replace_str)
@@ -1178,7 +1373,7 @@ Public Function GetMatchByRegExp( _
     ReDim list(0)
     
     REG.Global = True
-    REG.ignoreCase = is_ignore_case
+    REG.IgnoreCase = is_ignore_case
     REG.Pattern = ptn
     
     Set mc = REG.Execute(test_str)
@@ -1208,7 +1403,7 @@ Public Function IsMatchByRegExp( _
 ) As Boolean
     Dim REG As New VBScript_RegExp_55.RegExp
     REG.Global = True
-    REG.ignoreCase = is_ignore_case
+    REG.IgnoreCase = is_ignore_case
     REG.Pattern = ptn
     
     IsMatchByRegExp = REG.Test(test_str)
@@ -1671,6 +1866,7 @@ End Function
 ' find_start_row : I : 検索開始行(1始まり)
 ' keyword : I : 検索ワード
 ' find_end_row : I : 検索終了行(任意。0の場合は全行とする)
+' is_ignore_case : I : 大文字小文字を区別する(任意。True=区別する(デフォルト), False=区別しない)
 ' Ret : ヒットした行番号
 '-------------------------------------------------------------
 Public Function FindRowByKeywordFromWorksheet( _
@@ -1678,7 +1874,8 @@ Public Function FindRowByKeywordFromWorksheet( _
   ByVal find_clm As String, _
   ByVal find_start_row As Long, _
   ByVal keyword As String, _
-  Optional ByVal find_end_row As Long = 0 _
+  Optional ByVal find_end_row As Long = 0, _
+  Optional ByVal is_ignore_case As Boolean = True _
 ) As Long
     Dim rng As Range
     Dim cell As Range
@@ -1698,9 +1895,17 @@ Public Function FindRowByKeywordFromWorksheet( _
 
     found_row = 0
     For Each cell In rng
-        If cell.value = keyword Then
-            found_row = cell.row
-            Exit For
+        If is_ignore_case = True Then
+            If cell.value = keyword Then
+                found_row = cell.row
+                Exit For
+            End If
+        Else
+            '大文字小文字を区別しない
+            If UCase(cell.value) = UCase(keyword) Then
+                found_row = cell.row
+                Exit For
+            End If
         End If
     Next cell
     
@@ -3462,3 +3667,15 @@ Public Sub UpdateSheet( _
     
     ws.Cells(cell_row, cell_clm).value = Contents
 End Sub
+
+
+
+
+
+
+
+
+
+
+
+
