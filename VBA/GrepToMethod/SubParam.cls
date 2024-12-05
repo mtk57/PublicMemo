@@ -25,6 +25,16 @@ Public Sub Init()
     CollectParam
 End Sub
 
+Public Sub Clear()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    
+    Set ws = ActiveSheet
+    
+    lastRow = ws.Cells(ws.Rows.count, CLM_).End(xlUp).row
+    ws.Range(CLM_ & START_ROW_ & ":" & CLM_ & lastRow).Clear
+End Sub
+
 Private Sub CollectParam()
     Dim main_sheet As Worksheet
     Set main_sheet = ThisWorkbook.Sheets("main")
