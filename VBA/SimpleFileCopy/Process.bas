@@ -45,6 +45,11 @@ Public Function GetResult() As String
     GetResult = success_cnt & "/" & sub_param.GetFilePathListCount()
 End Function
 
+Public Sub Clear()
+    Set sub_param = New SubParam
+    sub_param.Clear
+End Sub
+
 'パラメータのチェックと収集を行う
 Private Sub CheckAndCollectParam()
     Common.WriteLog "CheckAndCollectParam S"
