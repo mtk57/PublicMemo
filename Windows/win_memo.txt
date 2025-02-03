@@ -154,7 +154,96 @@ symchk /r C:\MyApp\bin /s SRV*C:\SymbolCache*https://msdl.microsoft.com/download
 
 
 -----------------
+以下は、VB.NETでP/Invokeを使い、現在のスタック領域の情報を取得するためのサンプルコードです。  
+この例では、GCHandleで配列をピン留めし、そのアドレス（現在のスタック上の一部）を基準に、Windows APIの VirtualQuery 関数を呼び出して、MEMORY_BASIC_INFORMATION 構造体にスタック領域の情報を取得します。
 
+```vbnet
+Imports System
+Imports System.Runtime.InteropServices
+
+Module Module1
+
+    ' VirtualQueryで返される情報を格納する構造体
+    <StructLayout(LayoutKind.Sequential)>
+    Public Structure MEMORY_BASIC_INFORMATION
+        Public BaseAddress As IntPtr         ' この領域の開始アドレス
+        Public AllocationBase As IntPtr      ' 仮想メモリ領域の割り当て開始アドレス（スタック全体の先頭）
+        Public AllocationProtect As UInteger ' 割り当て時の保護属性
+        Public RegionSize As UIntPtr         ' この領域のサイズ（バイト単位）
+        Public State As UInteger             ' 領域の状態
+        Public Protect As UInteger           ' 現在の保護属性
+        Public Type As UInteger              ' 領域の種類
+    End Structure
+
+    ' VirtualQuery関数の宣言
+    <DllImport("kernel32.dll")>
+    Public Function VirtualQuery( _
+        ByVal lpAddress As IntPtr, _
+        ByRef lpBuffer As MEMORY_BASIC_INFORMATION, _
+        ByVal dwLength As UIntPtr) As UIntPtr
+    End Function
+
+    Sub Main()
+        ' ローカル変数として配列を作成し、ピン留めしてそのアドレスを取得します。
+        Dim dummyArray() As Integer = {0}
+        Dim handle As GCHandle = GCHandle.Alloc(dummyArray, GCHandleType.Pinned)
+        Try
+            Dim localAddress As IntPtr = handle.AddrOfPinnedObject()
+
+            Dim mbi As New MEMORY_BASIC_INFORMATION()
+            Dim mbiSize As UIntPtr = CType(Marshal.SizeOf(GetType(MEMORY_BASIC_INFORMATION)), UIntPtr)
+
+            ' localAddressが属する仮想メモリ領域の情報を取得
+            Dim result As UIntPtr = VirtualQuery(localAddress, mbi, mbiSize)
+
+            If result = UIntPtr.Zero Then
+                Console.WriteLine("VirtualQueryの呼び出しに失敗しました。")
+            Else
+                Console.WriteLine("取得したスタック領域の情報:")
+                Console.WriteLine("  BaseAddress     : 0x" & mbi.BaseAddress.ToString("X"))
+                Console.WriteLine("  AllocationBase  : 0x" & mbi.AllocationBase.ToString("X"))
+                Console.WriteLine("  RegionSize      : " & mbi.RegionSize.ToUInt64() & " バイト")
+                Console.WriteLine("  State           : 0x" & mbi.State.ToString("X"))
+                Console.WriteLine("  Protect         : 0x" & mbi.Protect.ToString("X"))
+                Console.WriteLine("  Type            : 0x" & mbi.Type.ToString("X"))
+
+                ' Windowsではスタックは下方向に成長します。
+                ' 通常、AllocationBaseはスタックの「上端」（高アドレス側）、
+                ' BaseAddressはスタックの「下端」（低アドレス側）を示します。
+                ' 現在のスタック使用量の概算として、AllocationBaseと現在のローカル変数のアドレスとの差を求めることができます。
+                Dim remainingStack As ULong = CULng(CType(localAddress, Long) - CType(mbi.BaseAddress, Long))
+                Console.WriteLine("現在のローカル変数から下端までの推定残りスタック容量: " & remainingStack & " バイト")
+            End If
+        Finally
+            handle.Free()
+        End Try
+
+        Console.WriteLine("終了するには何かキーを押してください...")
+        Console.ReadKey()
+    End Sub
+
+End Module
+```
+
+### コードのポイント
+
+1. **MEMORY_BASIC_INFORMATION構造体**  
+   Windows APIの VirtualQuery 関数で返される情報を受け取るための構造体です。  
+   ・BaseAddress：現在のメモリ領域の開始アドレス  
+   ・AllocationBase：このメモリ領域（スタック全体）の割り当て開始アドレス  
+   ・RegionSize：この領域のサイズ（バイト単位）などの情報が含まれます。
+
+2. **GCHandleによるピン留め**  
+   VB.NETでは、ローカル変数のアドレスを直接取得することはできません。そのため、簡単な配列を作成し、GCHandle.Allocでピン留めすることで、そのアドレス（スタック上の位置）を取得しています。
+
+3. **VirtualQueryの呼び出し**  
+   ピン留めしたアドレスを渡し、そのアドレスが属するメモリ領域（通常、スタック領域）の情報を取得します。
+
+4. **スタックの残り容量の概算**  
+   Windowsのスタックは下方向に成長するため、AllocationBase（スタックの上端：高アドレス）とBaseAddress（スタックの下端：低アドレス）の差などから、現在のローカル変数の位置と下限との距離を概算できます。
+
+このコードを実行すると、コンソールにスタック領域の各種情報と、現在のローカル変数位置からの残り容量の概算値が表示されます。  
+※なお、取得できる情報はプロセスの仮想メモリの状態によるため、実際の「使用中のスタック容量」や「残り容量」は環境や状況により変動する点に注意してください。
 
 
 
