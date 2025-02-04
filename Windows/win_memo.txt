@@ -248,3 +248,96 @@ End Module
 
 
 
+-----------------
+Imports System
+Imports System.Runtime.InteropServices
+
+Namespace StackPointerTest
+
+    ' 浮動小数点レジスタ関連の情報を保持する構造体
+    <StructLayout(LayoutKind.Sequential)>
+    Public Structure FLOATING_SAVE_AREA
+        Public ControlWord As UInteger
+        Public StatusWord As UInteger
+        Public TagWord As UInteger
+        Public ErrorOffset As UInteger
+        Public ErrorSelector As UInteger
+        Public DataOffset As UInteger
+        Public DataSelector As UInteger
+        <MarshalAs(UnmanagedType.ByValArray, SizeConst:=80)>
+        Public RegisterArea() As Byte
+        Public Cr0NpxState As UInteger
+    End Structure
+
+    ' スレッドのレジスタ情報を保持する構造体（x86 用）
+    <StructLayout(LayoutKind.Sequential)>
+    Public Structure CONTEXT
+        Public ContextFlags As UInteger
+        Public Dr0 As UInteger
+        Public Dr1 As UInteger
+        Public Dr2 As UInteger
+        Public Dr3 As UInteger
+        Public Dr6 As UInteger
+        Public Dr7 As UInteger
+        Public FloatSave As FLOATING_SAVE_AREA
+        Public SegGs As UInteger
+        Public SegFs As UInteger
+        Public SegEs As UInteger
+        Public SegDs As UInteger
+        Public Edi As UInteger
+        Public Esi As UInteger
+        Public Ebx As UInteger
+        Public Edx As UInteger
+        Public Ecx As UInteger
+        Public Eax As UInteger
+        Public Ebp As UInteger
+        Public Eip As UInteger
+        Public SegCs As UInteger
+        Public EFlags As UInteger
+        Public Esp As UInteger   ' ここにスタックポインタ (ESP) が入る
+        Public SegSs As UInteger
+        <MarshalAs(UnmanagedType.ByValArray, SizeConst:=512)>
+        Public ExtendedRegisters() As Byte
+    End Structure
+
+    Friend Class Program
+
+        ' RtlCaptureContext 関数の宣言（kernel32.dll 経由）
+        <DllImport("kernel32.dll", SetLastError:=False)>
+        Public Shared Sub RtlCaptureContext(ByRef context As CONTEXT)
+        End Sub
+
+        Shared Sub Main(ByVal args As String())
+            Try
+                Recursion()
+            Catch ex As Exception
+                Logger.WriteLogSimple(ex.ToString())
+            End Try
+        End Sub
+
+        Private Shared Sub Recursion()
+            GetEsp()
+            Recursion()
+        End Sub
+
+        Private Shared Sub GetEsp()
+            ' CONTEXT 構造体のインスタンスを作成
+            Dim ctx As New CONTEXT()
+
+            ' 配列メンバの初期化（必須）
+            ctx.FloatSave.RegisterArea = New Byte(80 - 1) {}   ' 80 バイトの配列
+            ctx.ExtendedRegisters = New Byte(512 - 1) {}         ' 512 バイトの配列
+
+            ' 現在のレジスタ情報を取得
+            RtlCaptureContext(ctx)
+
+            ' ESP（スタックポインタ）の値を表示
+            Logger.WriteLogSimple($"ESP (スタックポインタ): 0x{ctx.Esp.ToString("X")}")
+
+            ' 例：
+            ' 0xDBF018で始まり、0xCC3B70でスタックオーバーフローが出た。ちょうど1MBくらい。
+        End Sub
+
+    End Class
+
+End Namespace
