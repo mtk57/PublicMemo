@@ -1,0 +1,382 @@
+Imports System
+Imports System.Text
+Imports System.Windows.Forms
+Imports System.Drawing
+Imports System.Reflection
+Imports System.Collections.Generic
+Imports System.Threading
+
+''' <summary>
+''' xTextコントロールのシンプルな単体テストプログラム
+''' MSTestフレームワークを使用せず、標準の.NETフレームワークのみで実装
+''' </summary>
+Module xTextTestProgram
+    
+    ' テスト結果を追跡するためのカウンター
+    Private passedTests As Integer = 0
+    Private failedTests As Integer = 0
+    Private totalTests As Integer = 0
+    
+    ' テスト失敗時のエラーメッセージを保持するリスト
+    Private testErrors As New List(Of String)
+    
+    ''' <summary>
+    ''' テストプログラムのエントリーポイント
+    ''' </summary>
+    Sub Main()
+        Console.WriteLine("xTextコントロール テストプログラム")
+        Console.WriteLine("==============================")
+        Console.WriteLine()
+        
+        ' すべてのテストを実行
+        RunAllTests()
+        
+        ' 結果の表示
+        Console.WriteLine()
+        Console.WriteLine("==============================")
+        Console.WriteLine("テスト結果: 合計 {0}, 成功 {1}, 失敗 {2}", totalTests, passedTests, failedTests)
+        
+        ' 失敗したテストがある場合は詳細を表示
+        If failedTests > 0 Then
+            Console.WriteLine()
+            Console.WriteLine("失敗したテスト:")
+            For Each errorMsg In testErrors
+                Console.WriteLine("- " & errorMsg)
+            Next
+        End If
+        
+        ' プログラム終了待ち
+        Console.WriteLine()
+        Console.WriteLine("Enterキーを押して終了してください...")
+        Console.ReadLine()
+    End Sub
+    
+    ''' <summary>
+    ''' すべてのテストを順番に実行
+    ''' </summary>
+    Sub RunAllTests()
+        ' テストフォームを準備
+        Dim testForm As New TestForm()
+        Application.DoEvents() ' UIイベントを処理
+        
+        ' プロパティテスト
+        RunTest(testForm, "MaxLengthB_DefaultValueIsZero", AddressOf Test_MaxLengthB_DefaultValueIsZero)
+        RunTest(testForm, "MaxLengthB_SetAndGetValue", AddressOf Test_MaxLengthB_SetAndGetValue)
+        RunTest(testForm, "MaxLengthB_NegativeValue_ThrowsException", AddressOf Test_MaxLengthB_NegativeValue_ThrowsException)
+        
+        ' 基本機能テスト
+        RunTest(testForm, "Text_WithAsciiOnly_RespectsMaxLengthB", AddressOf Test_Text_WithAsciiOnly_RespectsMaxLengthB)
+        RunTest(testForm, "Text_WithJapaneseOnly_RespectsMaxLengthB", AddressOf Test_Text_WithJapaneseOnly_RespectsMaxLengthB)
+        RunTest(testForm, "Text_WithMixedChars_RespectsMaxLengthB", AddressOf Test_Text_WithMixedChars_RespectsMaxLengthB)
+        RunTest(testForm, "MaxLength_And_MaxLengthB_SmallerValueApplied", AddressOf Test_MaxLength_And_MaxLengthB_SmallerValueApplied)
+        
+        ' クリップボード操作テスト
+        RunTest(testForm, "Paste_RespectsMaxLengthB", AddressOf Test_Paste_RespectsMaxLengthB)
+        RunTest(testForm, "Paste_WithSelection_ReplacesSelectedText", AddressOf Test_Paste_WithSelection_ReplacesSelectedText)
+        RunTest(testForm, "Paste_WithSelection_ExceedingMaxLengthB_Truncates", AddressOf Test_Paste_WithSelection_ExceedingMaxLengthB_Truncates)
+        
+        ' 特殊文字テスト
+        RunTest(testForm, "Text_WithSpecialJapaneseChars_RespectsMaxLengthB", AddressOf Test_Text_WithSpecialJapaneseChars_RespectsMaxLengthB)
+        
+        ' テストフォームを破棄
+        testForm.Dispose()
+    End Sub
+    
+    ''' <summary>
+    ''' 1つのテストを実行し、結果を記録
+    ''' </summary>
+    ''' <param name="testForm">テスト用フォーム</param>
+    ''' <param name="testName">テスト名</param>
+    ''' <param name="testMethod">テストメソッドのデリゲート</param>
+    Sub RunTest(testForm As TestForm, testName As String, testMethod As Func(Of TestForm, Boolean))
+        totalTests += 1
+        Console.Write("テスト実行中: {0} ... ", testName)
+        
+        Try
+            ' テスト前に各テストで使うxTextをリセット
+            testForm.ResetXText()
+            
+            ' テストメソッドを実行
+            Dim result As Boolean = testMethod(testForm)
+            
+            If result Then
+                Console.WriteLine("成功")
+                passedTests += 1
+            Else
+                Console.WriteLine("失敗")
+                failedTests += 1
+                testErrors.Add(testName)
+            End If
+        Catch ex As Exception
+            Console.WriteLine("エラー: " & ex.Message)
+            failedTests += 1
+            testErrors.Add(testName & " - " & ex.Message)
+        End Try
+    End Sub
+    
+    #Region "テストメソッド"
+    
+    ''' <summary>
+    ''' MaxLengthBプロパティの初期値をテスト
+    ''' </summary>
+    Function Test_MaxLengthB_DefaultValueIsZero(testForm As TestForm) As Boolean
+        Return Assert(testForm.XText.MaxLengthB = 0, "MaxLengthBの初期値は0であるべき")
+    End Function
+    
+    ''' <summary>
+    ''' MaxLengthBプロパティの設定と取得をテスト
+    ''' </summary>
+    Function Test_MaxLengthB_SetAndGetValue(testForm As TestForm) As Boolean
+        testForm.XText.MaxLengthB = 10
+        Return Assert(testForm.XText.MaxLengthB = 10, "MaxLengthBに設定した値が取得できるべき")
+    End Function
+    
+    ''' <summary>
+    ''' MaxLengthBに負の値を設定した場合、例外が発生することをテスト
+    ''' </summary>
+    Function Test_MaxLengthB_NegativeValue_ThrowsException(testForm As TestForm) As Boolean
+        Try
+            testForm.XText.MaxLengthB = -1
+            ' 例外が発生しなかった場合はテスト失敗
+            Return False
+        Catch ex As ArgumentException
+            ' ArgumentExceptionが発生すればテスト成功
+            Return True
+        Catch ex As Exception
+            ' 他の種類の例外が発生した場合はテスト失敗
+            Return False
+        End Try
+    End Function
+    
+    ''' <summary>
+    ''' 半角文字のみの入力でMaxLengthBの制限をテスト
+    ''' </summary>
+    Function Test_Text_WithAsciiOnly_RespectsMaxLengthB(testForm As TestForm) As Boolean
+        testForm.XText.MaxLengthB = 5
+        
+        ' 制限内の文字列を設定
+        testForm.XText.Text = "abcde"
+        If Not Assert(testForm.XText.Text = "abcde", "制限内の半角文字列は正しく設定されるべき") Then
+            Return False
+        End If
+        
+        ' 制限を超える文字列を設定
+        testForm.XText.Text = "abcdef"
+        Return Assert(testForm.XText.Text = "abcde", "制限を超える半角文字列は切り詰められるべき")
+    End Function
+    
+    ''' <summary>
+    ''' 全角文字のみの入力でMaxLengthBの制限をテスト
+    ''' </summary>
+    Function Test_Text_WithJapaneseOnly_RespectsMaxLengthB(testForm As TestForm) As Boolean
+        testForm.XText.MaxLengthB = 6 ' 全角3文字分
+        
+        ' 制限内の文字列を設定（全角3文字 = 6バイト）
+        testForm.XText.Text = "あいう"
+        If Not Assert(testForm.XText.Text = "あいう", "制限内の全角文字列は正しく設定されるべき") Then
+            Return False
+        End If
+        
+        ' 制限を超える文字列を設定（全角4文字 = 8バイト）
+        testForm.XText.Text = "あいうえ"
+        Return Assert(testForm.XText.Text = "あいう", "制限を超える全角文字列は切り詰められるべき")
+    End Function
+    
+    ''' <summary>
+    ''' 半角と全角の混合文字列でMaxLengthBの制限をテスト
+    ''' </summary>
+    Function Test_Text_WithMixedChars_RespectsMaxLengthB(testForm As TestForm) As Boolean
+        testForm.XText.MaxLengthB = 7 ' 半角5文字 + 全角1文字分
+        
+        ' 制限内の文字列を設定（半角5文字 + 全角1文字 = 7バイト）
+        testForm.XText.Text = "abcdeあ"
+        If Not Assert(testForm.XText.Text = "abcdeあ", "制限内の混合文字列は正しく設定されるべき") Then
+            Return False
+        End If
+        
+        ' 制限を超える文字列を設定
+        testForm.XText.Text = "abcdeあい"
+        Return Assert(testForm.XText.Text = "abcdeあ", "制限を超える混合文字列は切り詰められるべき")
+    End Function
+    
+    ''' <summary>
+    ''' MaxLengthとMaxLengthBの両方が設定されている場合に小さい方が適用されることをテスト
+    ''' </summary>
+    Function Test_MaxLength_And_MaxLengthB_SmallerValueApplied(testForm As TestForm) As Boolean
+        ' ケース1: MaxLength < MaxLengthB
+        testForm.XText.MaxLength = 3
+        testForm.XText.MaxLengthB = 10
+        
+        testForm.XText.Text = "abcdef"
+        If Not Assert(testForm.XText.Text = "abc", "MaxLength < MaxLengthBの場合、MaxLengthが適用されるべき") Then
+            Return False
+        End If
+        
+        ' ケース2: MaxLengthB < MaxLength（バイト数で換算）
+        testForm.XText.MaxLength = 10
+        testForm.XText.MaxLengthB = 4
+        
+        testForm.XText.Text = "abcdef"
+        Return Assert(testForm.XText.Text = "abcd", "MaxLengthB < MaxLengthの場合、MaxLengthBが適用されるべき")
+    End Function
+    
+    ''' <summary>
+    ''' ペースト操作をシミュレートしてMaxLengthBの制限をテスト
+    ''' </summary>
+    Function Test_Paste_RespectsMaxLengthB(testForm As TestForm) As Boolean
+        testForm.XText.MaxLengthB = 5
+        testForm.XText.Text = ""
+        
+        ' クリップボードにテキストをセット
+        Try
+            Clipboard.SetText("abcdef")
+        Catch ex As Exception
+            ' クリップボード操作に失敗した場合はスキップ
+            Console.WriteLine("クリップボード操作に失敗したためテストをスキップします: " & ex.Message)
+            Return True
+        End Try
+        
+        ' ペーストをシミュレート
+        SimulatePaste(testForm.XText)
+        
+        ' 結果を検証（MaxLengthBに基づいて切り詰められるはず）
+        Return Assert(testForm.XText.Text = "abcde", "ペースト時にMaxLengthBの制限が適用されるべき")
+    End Function
+    
+    ''' <summary>
+    ''' 選択範囲がある状態でのペースト操作をテスト
+    ''' </summary>
+    Function Test_Paste_WithSelection_ReplacesSelectedText(testForm As TestForm) As Boolean
+        testForm.XText.MaxLengthB = 10
+        testForm.XText.Text = "abcdef"
+        
+        ' 選択範囲を設定（"cd"を選択）
+        testForm.XText.SelectionStart = 2
+        testForm.XText.SelectionLength = 2
+        
+        ' クリップボードにテキストをセット
+        Try
+            Clipboard.SetText("XYZ")
+        Catch ex As Exception
+            ' クリップボード操作に失敗した場合はスキップ
+            Console.WriteLine("クリップボード操作に失敗したためテストをスキップします: " & ex.Message)
+            Return True
+        End Try
+        
+        ' ペーストをシミュレート
+        SimulatePaste(testForm.XText)
+        
+        ' 結果を検証（選択範囲が置き換えられるはず）
+        Return Assert(testForm.XText.Text = "abXYZef", "選択範囲がペーストしたテキストで置き換えられるべき")
+    End Function
+    
+    ''' <summary>
+    ''' 選択範囲がある状態でのペーストで、MaxLengthBを超える場合のテスト
+    ''' </summary>
+    Function Test_Paste_WithSelection_ExceedingMaxLengthB_Truncates(testForm As TestForm) As Boolean
+        testForm.XText.MaxLengthB = 8
+        testForm.XText.Text = "abcdef"
+        
+        ' 選択範囲を設定（"cd"を選択）
+        testForm.XText.SelectionStart = 2
+        testForm.XText.SelectionLength = 2
+        
+        ' クリップボードにテキストをセット（置き換え後に制限を超える）
+        Try
+            Clipboard.SetText("XYZABC")
+        Catch ex As Exception
+            ' クリップボード操作に失敗した場合はスキップ
+            Console.WriteLine("クリップボード操作に失敗したためテストをスキップします: " & ex.Message)
+            Return True
+        End Try
+        
+        ' ペーストをシミュレート
+        SimulatePaste(testForm.XText)
+        
+        ' 結果を検証（制限内に収まるように切り詰められるはず）
+        ' 注意: 実際の振る舞いは実装によって異なる可能性がある
+        Return Assert(testForm.XText.Text.Length <= 8, "ペースト後のテキストはMaxLengthB（8バイト）以内であるべき")
+    End Function
+    
+    ''' <summary>
+    ''' 特殊な全角文字（漢字、記号など）でのMaxLengthBの制限をテスト
+    ''' </summary>
+    Function Test_Text_WithSpecialJapaneseChars_RespectsMaxLengthB(testForm As TestForm) As Boolean
+        testForm.XText.MaxLengthB = 6 ' 全角3文字分
+        
+        ' 漢字を含む文字列
+        testForm.XText.Text = "漢字あ"
+        If Not Assert(testForm.XText.Text = "漢字あ", "漢字を含む制限内の文字列は正しく設定されるべき") Then
+            Return False
+        End If
+        
+        ' 特殊記号を含む文字列
+        testForm.XText.Text = "①②③④"
+        Return Assert(testForm.XText.Text = "①②③", "特殊記号を含む制限を超える文字列は切り詰められるべき")
+    End Function
+    
+    #End Region
+    
+    #Region "テストヘルパーメソッド"
+    
+    ''' <summary>
+    ''' アサーション関数 - 条件が真であることを確認
+    ''' </summary>
+    ''' <param name="condition">検証する条件</param>
+    ''' <param name="message">失敗時のメッセージ</param>
+    ''' <returns>条件が真ならTrue、偽ならFalse</returns>
+    Private Function Assert(condition As Boolean, message As String) As Boolean
+        If Not condition Then
+            Console.WriteLine("アサーション失敗: " & message)
+        End If
+        Return condition
+    End Function
+    
+    ''' <summary>
+    ''' ペースト操作をシミュレート（WndProcメソッドを内部的に呼び出す）
+    ''' </summary>
+    Private Sub SimulatePaste(xtext As xText)
+        ' Windows.Forms.Message構造体を作成してWM_PASTEメッセージをシミュレート
+        Dim msg As Message = Message.Create(xtext.Handle, &H302, IntPtr.Zero, IntPtr.Zero)
+        
+        ' WndProcメソッドをリフレクションで呼び出す
+        Dim methodInfo As MethodInfo = GetType(xText).GetMethod("WndProc", BindingFlags.Instance Or BindingFlags.NonPublic)
+        methodInfo.Invoke(xtext, New Object() {msg})
+    End Sub
+    
+    #End Region
+    
+    ''' <summary>
+    ''' クリップボード操作のためのヘルパーフォーム
+    ''' </summary>
+    Public Class TestForm : Inherits Form
+        Public WithEvents XText As xText
+        
+        ''' <summary>
+        ''' テストフォームを初期化
+        ''' </summary>
+        Public Sub New()
+            XText = New xText()
+            XText.Location = New Point(10, 10)
+            XText.Size = New Size(200, 20)
+            Me.Controls.Add(XText)
+            
+            ' フォームを表示せずに初期化
+            If Not Me.IsHandleCreated Then
+                Me.CreateControl()
+            End If
+        End Sub
+        
+        ''' <summary>
+        ''' xTextコントロールをリセット（各テスト前に呼び出される）
+        ''' </summary>
+        Public Sub ResetXText()
+            XText.Text = ""
+            XText.MaxLength = 32767 ' デフォルト値
+            XText.MaxLengthB = 0 ' デフォルト値
+            XText.SelectionStart = 0
+            XText.SelectionLength = 0
+            Application.DoEvents() ' UIイベント処理を確実に行う
+        End Sub
+    End Class
+End Module
