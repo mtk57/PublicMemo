@@ -5,16 +5,38 @@ Imports System.Text
 
 ''' <summary>
 ''' TextBoxを拡張し、バイト数制限機能を追加したカスタムコントロール
+''' コムラッド社製FormDesignerのxTextコントロールの機能を再現
 ''' </summary>
+''' <remarks>
+''' このコントロールは標準のTextBoxの全機能を継承し、さらに以下の機能を追加しています：
+''' - MaxLengthBプロパティによるバイト数単位での入力制限
+''' - Shift-JISエンコーディングベースのバイト数計算
+''' - 全角文字（2バイト）と半角文字（1バイト）の混在テキストのサポート
+''' - クリップボードからのペースト、IME入力、直接入力に対する適切な制限処理
+''' 
+''' MaxLengthとMaxLengthBの両方が設定されている場合は、値が小さい方の制限が適用されます。
+''' どちらかが0の場合は、もう一方の制限のみが適用されます。
+''' 両方が0の場合は、テキスト長の制限はありません。
+''' </remarks>
 Public Class xText
     Inherits TextBox
 
+    ' フィールド
     Private _maxLengthB As Integer = 0
     Private _encoding As Encoding = Encoding.GetEncoding("shift_jis")
+
+    #Region "プロパティ"
 
     ''' <summary>
     ''' テキストの最大バイト数を取得または設定します
     ''' </summary>
+    ''' <remarks>
+    ''' このプロパティは、テキストのバイト単位での最大長を指定します。
+    ''' Shift-JISエンコーディングでは、英数字は1バイト、全角文字は2バイトとして計算されます。
+    ''' 値が0の場合、バイト数による制限はありません（無制限）。
+    ''' 値が変更された場合、現在のテキストが新しい制限を超えていないかチェックし、
+    ''' 必要に応じてテキストを切り詰めます。
+    ''' </remarks>
     <Description("テキストの最大バイト数を指定します。0は無制限を意味します。"), _
      DefaultValue(0)> _
     Public Property MaxLengthB() As Integer
@@ -32,8 +54,17 @@ Public Class xText
     End Property
 
     ''' <summary>
-    ''' エンコーディングを取得または設定します
+    ''' テキストのエンコーディングを取得または設定します
     ''' </summary>
+    ''' <remarks>
+    ''' このプロパティは、テキストのバイト数計算に使用するエンコーディングを指定します。
+    ''' デフォルトはShift-JISエンコーディングです。
+    ''' 別のエンコーディングを設定する場合は、バイト数計算が変わる可能性があるため注意が必要です。
+    ''' エンコーディングが変更された場合、現在のテキストを再チェックします。
+    ''' 
+    ''' 注意: 元のxTextコントロールはShift-JISを前提としているため、
+    ''' 通常はこのプロパティを変更する必要はありません。
+    ''' </remarks>
     <Browsable(False)> _
     Public Property TextEncoding() As Encoding
         Get
@@ -49,6 +80,15 @@ Public Class xText
     ''' <summary>
     ''' TextBox標準のMaxLengthプロパティをオーバーライド
     ''' </summary>
+    ''' <remarks>
+    ''' 標準TextBoxのMaxLengthプロパティをオーバーライドして、
+    ''' MaxLengthBとの整合性をとるための処理を追加しています。
+    ''' 値が変更された場合、現在のテキストが新しい制限を超えていないかチェックし、
+    ''' 必要に応じてテキストを切り詰めます。
+    ''' 
+    ''' MaxLengthとMaxLengthBの両方が設定されている場合は、
+    ''' 値が小さい方の制限が適用されます。
+    ''' </remarks>
     <Description("テキストの最大文字数を指定します。0は無制限を意味します。"), _
      DefaultValue(32767)> _
     Public Shadows Property MaxLength() As Integer
@@ -62,18 +102,47 @@ Public Class xText
         End Set
     End Property
 
+    #End Region
+
+    #Region "初期化"
+
     ''' <summary>
     ''' xTextコントロールを初期化します
     ''' </summary>
+    ''' <remarks>
+    ''' コンストラクタでは、コントロールの初期設定を行います。
+    ''' MaxLengthBの初期値は0（無制限）に設定されます。
+    ''' TextEncodingの初期値はShift-JISに設定されます。
+    ''' </remarks>
     Public Sub New()
         MyBase.New()
         ' デフォルト設定
         _maxLengthB = 0
+        ' Shift-JISエンコーディングを使用
+        _encoding = Encoding.GetEncoding("shift_jis")
     End Sub
+
+    #End Region
+
+    #Region "内部ユーティリティメソッド"
 
     ''' <summary>
     ''' 文字列のバイト数を計算します
     ''' </summary>
+    ''' <param name="text">バイト数を計算する文字列</param>
+    ''' <returns>指定されたエンコーディングでのバイト数</returns>
+    ''' <remarks>
+    ''' このメソッドは、指定された文字列のバイト数を現在設定されているエンコーディング
+    ''' （デフォルトではShift-JIS）に基づいて計算します。
+    ''' 文字列がnullまたは空の場合は0を返します。
+    ''' 
+    ''' 例：
+    ''' - 半角英数字「abc」→ 3バイト
+    ''' - 全角文字「あいう」→ 6バイト
+    ''' - 混在「abc漢字」→ 7バイト（3 + 4）
+    ''' 
+    ''' このメソッドは内部計算用であり、MaxLengthBの判定に使用されます。
+    ''' </remarks>
     Private Function GetByteCount(text As String) As Integer
         If String.IsNullOrEmpty(text) Then
             Return 0
@@ -84,6 +153,17 @@ Public Class xText
     ''' <summary>
     ''' 指定された文字列がMaxLengthBの制限を超えるかチェックします
     ''' </summary>
+    ''' <param name="text">チェックする文字列</param>
+    ''' <returns>制限を超える場合はTrue、そうでない場合はFalse</returns>
+    ''' <remarks>
+    ''' このメソッドは、指定された文字列のバイト数がMaxLengthBを超えるかどうかを判定します。
+    ''' MaxLengthBが0以下の場合は、制限なしとみなしFalseを返します。
+    ''' 
+    ''' このメソッドは以下の場所で使用されます：
+    ''' - テキスト変更時の制限チェック
+    ''' - キー入力時の事前チェック
+    ''' - ペースト操作時のチェック
+    ''' </remarks>
     Private Function IsOverMaxLengthB(text As String) As Boolean
         If _maxLengthB <= 0 Then
             Return False ' 制限なし
@@ -94,6 +174,18 @@ Public Class xText
     ''' <summary>
     ''' 指定されたMaxLengthBに収まるように文字列を切り詰めます
     ''' </summary>
+    ''' <param name="text">切り詰める対象の文字列</param>
+    ''' <returns>MaxLengthBに収まるように切り詰められた文字列</returns>
+    ''' <remarks>
+    ''' このメソッドは、指定された文字列をMaxLengthBの制限内に収まるように
+    ''' 先頭から順に文字を追加していき、制限を超える場合は残りを切り捨てます。
+    ''' 
+    ''' 日本語などのマルチバイト文字を含む場合も1文字単位で処理するため、
+    ''' 文字化けを起こさずに適切に切り詰めることができます。
+    ''' 
+    ''' MaxLengthBが0以下の場合は、切り詰めを行わず元の文字列をそのまま返します。
+    ''' 文字列がnullまたは空の場合も、そのまま返します。
+    ''' </remarks>
     Private Function TruncateToMaxLengthB(text As String) As String
         If String.IsNullOrEmpty(text) Or _maxLengthB <= 0 Then
             Return text
@@ -102,13 +194,14 @@ Public Class xText
         Dim result As String = ""
         Dim currentBytes As Integer = 0
 
+        ' 1文字ずつ追加し、バイト数をチェック
         For i As Integer = 0 To text.Length - 1
             Dim charBytes As Integer = GetByteCount(text(i).ToString())
             If currentBytes + charBytes <= _maxLengthB Then
                 result &= text(i)
                 currentBytes += charBytes
             Else
-                Exit For
+                Exit For ' 制限を超えたらループを抜ける
             End If
         Next
 
@@ -118,6 +211,22 @@ Public Class xText
     ''' <summary>
     ''' 現在のテキストが最大長制限を超えている場合に切り詰めます
     ''' </summary>
+    ''' <remarks>
+    ''' このメソッドは、現在のテキストがMaxLengthBの制限を超えている場合に
+    ''' テキストを切り詰める処理を行います。
+    ''' 
+    ''' 処理の流れ：
+    ''' 1. 現在のカーソル位置と選択範囲を保存
+    ''' 2. MaxLengthBに基づいてテキストを切り詰め
+    ''' 3. カーソル位置と選択範囲を適切に調整（テキストが短くなった場合に対応）
+    ''' 
+    ''' このメソッドは以下のタイミングで呼び出されます：
+    ''' - MaxLengthまたはMaxLengthBプロパティが変更された時
+    ''' - テキストが変更された時
+    ''' - エンコーディングが変更された時
+    ''' 
+    ''' 注意：このメソッドはTextChangedイベントを発生させる可能性があります。
+    ''' </remarks>
     Private Sub CheckMaxLengthRestrictions()
         If String.IsNullOrEmpty(MyBase.Text) Then
             Return
@@ -146,9 +255,23 @@ Public Class xText
         End If
     End Sub
 
+    #End Region
+
+    #Region "イベントハンドラ"
+
     ''' <summary>
-    ''' テキスト変更前にMaxLengthBの制限をチェックします
+    ''' テキスト変更後にMaxLengthBの制限をチェックします
     ''' </summary>
+    ''' <param name="e">イベント引数</param>
+    ''' <remarks>
+    ''' このメソッドは、テキストが変更された後に呼び出され、
+    ''' 変更後のテキストがMaxLengthBの制限を超えていないかをチェックします。
+    ''' 
+    ''' テキストが制限を超えている場合は、CheckMaxLengthRestrictionsメソッドによって
+    ''' 適切に切り詰められます。
+    ''' 
+    ''' この処理はIME入力確定後などにも働き、バイト数制限を強制します。
+    ''' </remarks>
     Protected Overrides Sub OnTextChanged(e As EventArgs)
         CheckMaxLengthRestrictions()
         MyBase.OnTextChanged(e)
@@ -157,6 +280,20 @@ Public Class xText
     ''' <summary>
     ''' キーが押されたときにMaxLengthBの制限をチェックします
     ''' </summary>
+    ''' <param name="e">キーイベント引数</param>
+    ''' <remarks>
+    ''' このメソッドは、キー入力時に呼び出され、入力によって生じる新しいテキストが
+    ''' MaxLengthBの制限を超えないかを事前にチェックします。
+    ''' 
+    ''' 処理の流れ：
+    ''' 1. 制御文字（バックスペース等）はチェックせずに常に許可
+    ''' 2. 通常文字の場合、入力後のテキスト状態をシミュレート
+    ''' 3. シミュレートしたテキストがMaxLengthBを超える場合は入力を拒否
+    ''' 
+    ''' このメソッドでは、テキスト選択状態も考慮されます：
+    ''' - 選択範囲がある場合、その部分が新しい文字で置き換えられると想定
+    ''' - 選択範囲がない場合、カーソル位置に新しい文字が挿入されると想定
+    ''' </remarks>
     Protected Overrides Sub OnKeyPress(e As KeyPressEventArgs)
         ' 制御文字（バックスペース等）は常に許可
         If Not Char.IsControl(e.KeyChar) Then
@@ -185,8 +322,28 @@ Public Class xText
     End Sub
 
     ''' <summary>
-    ''' クリップボードからのペーストをハンドリングします
+    ''' ウィンドウメッセージを処理し、クリップボードからのペーストを制御します
     ''' </summary>
+    ''' <param name="m">ウィンドウメッセージ</param>
+    ''' <remarks>
+    ''' このメソッドは、ウィンドウメッセージをフックして、
+    ''' WM_PASTE（0x0302）メッセージを検出し、クリップボードからのペースト操作を制御します。
+    ''' 
+    ''' 処理の流れ：
+    ''' 1. WM_PASTEメッセージが検出されると、クリップボードからテキストを取得
+    ''' 2. ペースト後のテキスト状態をシミュレート
+    ''' 3. シミュレートしたテキストがMaxLengthBを超える場合：
+    ///    a. 制限内に収まる部分だけを手動でペースト
+    ///    b. 標準のペースト操作をキャンセル
+    /// 4. 制限を超えない場合は標準のペースト操作を許可
+    /// 
+    /// このメソッドでは、テキストの選択状態も考慮されます：
+    /// - 選択範囲がある場合、その部分が置き換えられる
+    /// - 選択範囲がない場合、カーソル位置に挿入される
+    /// 
+    /// 注意：クリップボードにテキスト以外のデータがある場合は処理せず、
+    /// 標準の動作に委ねます。
+    ''' </remarks>
     Protected Overrides Sub WndProc(ByRef m As Message)
         ' WM_PASTE メッセージを検出（0x0302）
         If m.Msg = &H302 Then
@@ -242,6 +399,8 @@ Public Class xText
                     If selectionLength > 0 Then
                         MyBase.SelectedText = truncatedClipboardText
                     Else
+                        ' 注意: これはテキスト全体を置き換えるため、選択状態や
+                        ' カーソル位置の調整が必要
                         MyBase.Text = currentText.Substring(0, selectionStart) & truncatedClipboardText & currentText.Substring(selectionStart)
                         Me.SelectionStart = selectionStart + truncatedClipboardText.Length
                     End If
@@ -252,19 +411,38 @@ Public Class xText
             End If
         End If
 
+        ' その他のメッセージは標準処理に委ねる
         MyBase.WndProc(m)
     End Sub
 
     ''' <summary>
-    ''' IME変換を処理します
+    ''' IMEモード変更時の処理
     ''' </summary>
+    ''' <param name="e">イベント引数</param>
+    ''' <remarks>
+    ''' このメソッドは、IMEモードが変更されたときに呼び出されます。
+    ''' 現在の実装では特別な処理は行っていませんが、
+    ''' 将来的にIME関連の追加機能が必要になった場合のために用意されています。
+    ''' </remarks>
     Protected Overrides Sub OnImeModeChanged(e As EventArgs)
         MyBase.OnImeModeChanged(e)
     End Sub
 
     ''' <summary>
-    ''' IME文字が確定されるときの処理
+    ''' テキスト変更前（IME文字確定時など）の処理
     ''' </summary>
+    ''' <param name="e">テキスト変更イベント引数</param>
+    ''' <remarks>
+    ''' このメソッドは、テキストが変更される直前（特にIMEによる日本語入力の確定時）に
+    ''' 呼び出され、確定されるテキストがMaxLengthBの制限を超えないかをチェックします。
+    ''' 
+    ''' 制限を超える場合は：
+    ''' - 変更をキャンセルするフラグを設定（e.Cancel = True）
+    /// - OnTextChangedイベントで後処理
+    /// 
+    /// 注意：IMEの確定処理は複雑で、このメソッドだけでは完全に制御できない場合があります。
+    /// TextChangedイベントと組み合わせて使用することで、より確実に制限を適用します。
+    ''' </remarks>
     Protected Overrides Sub OnTextChanging(e As TextControlTextChangingEventArgs)
         If Not e.Text Is Nothing Then
             ' 確定文字が制限を超える場合
@@ -279,4 +457,6 @@ Public Class xText
         
         MyBase.OnTextChanging(e)
     End Sub
+
+    #End Region
 End Class
