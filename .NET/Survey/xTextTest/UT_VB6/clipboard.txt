@@ -1,0 +1,122 @@
+' Windows API宣言を追加
+Private Declare Function OpenClipboard Lib "user32" (ByVal hwnd As Long) As Long
+Private Declare Function EmptyClipboard Lib "user32" () As Long
+Private Declare Function SetClipboardData Lib "user32" (ByVal wFormat As Long, ByVal hMem As Long) As Long
+Private Declare Function CloseClipboard Lib "user32" () As Long
+Private Declare Function GlobalAlloc Lib "kernel32" (ByVal wFlags As Long, ByVal dwBytes As Long) As Long
+Private Declare Function GlobalLock Lib "kernel32" (ByVal hMem As Long) As Long
+Private Declare Function GlobalUnlock Lib "kernel32" (ByVal hMem As Long) As Long
+Private Declare Function GlobalFree Lib "kernel32" (ByVal hMem As Long) As Long
+Private Declare Sub CopyMemory Lib "kernel32" Alias "RtlMoveMemory" (Destination As Any, Source As Any, ByVal Length As Long)
+Private Declare Function GetClipboardData Lib "user32" (ByVal wFormat As Long) As Long
+Private Declare Function GlobalSize Lib "kernel32" (ByVal hMem As Long) As Long
+
+Private Const CF_TEXT As Long = 1
+Private Const GMEM_MOVEABLE As Long = &H2
+Private Const GMEM_ZEROINIT As Long = &H40
+
+' API経由でクリップボードにテキストを設定
+Private Function SetClipboardTextAPI(ByVal sText As String) As Boolean
+    Dim hMem As Long, lpMem As Long
+    Dim RetVal As Long
+    
+    ' テキストの長さ+1でメモリを確保（終端文字用）
+    hMem = GlobalAlloc(GMEM_MOVEABLE Or GMEM_ZEROINIT, Len(sText) + 1)
+    
+    If hMem = 0 Then
+        SetClipboardTextAPI = False
+        Exit Function
+    End If
+    
+    ' メモリをロック
+    lpMem = GlobalLock(hMem)
+    
+    If lpMem = 0 Then
+        GlobalFree hMem
+        SetClipboardTextAPI = False
+        Exit Function
+    End If
+    
+    ' テキストをメモリにコピー
+    CopyMemory ByVal lpMem, ByVal sText, Len(sText)
+    
+    ' メモリのロックを解除
+    GlobalUnlock hMem
+    
+    ' クリップボードを開く
+    RetVal = OpenClipboard(0&)
+    
+    If RetVal = 0 Then
+        GlobalFree hMem
+        SetClipboardTextAPI = False
+        Exit Function
+    End If
+    
+    ' クリップボードを空にする
+    EmptyClipboard
+    
+    ' クリップボードにデータを設定
+    RetVal = SetClipboardData(CF_TEXT, hMem)
+    
+    ' クリップボードを閉じる
+    CloseClipboard
+    
+    If RetVal = 0 Then
+        GlobalFree hMem
+        SetClipboardTextAPI = False
+    Else
+        SetClipboardTextAPI = True
+    End If
+End Function
+
+' API経由でクリップボードからテキストを取得
+Private Function GetClipboardTextAPI() As String
+    Dim hClipMem As Long
+    Dim lpClipMem As Long
+    Dim sText As String
+    Dim lSize As Long
+    
+    ' クリップボードを開く
+    If OpenClipboard(0&) = 0 Then
+        GetClipboardTextAPI = ""
+        Exit Function
+    End If
+    
+    ' クリップボードからテキストデータのハンドルを取得
+    hClipMem = GetClipboardData(CF_TEXT)
+    
+    If hClipMem = 0 Then
+        CloseClipboard
+        GetClipboardTextAPI = ""
+        Exit Function
+    End If
+    
+    ' メモリをロック
+    lpClipMem = GlobalLock(hClipMem)
+    
+    If lpClipMem = 0 Then
+        CloseClipboard
+        GetClipboardTextAPI = ""
+        Exit Function
+    End If
+    
+    ' メモリサイズを取得
+    lSize = GlobalSize(hClipMem)
+    
+    ' バッファを準備
+    sText = String(lSize, 0)
+    
+    ' メモリからテキストをコピー
+    CopyMemory ByVal sText, ByVal lpClipMem, lSize
+    
+    ' NUL文字で切り詰め
+    sText = Left(sText, InStr(sText, Chr(0)) - 1)
+    
+    ' メモリのロックを解除
+    GlobalUnlock hClipMem
+    
+    ' クリップボードを閉じる
+    CloseClipboard
+    
+    GetClipboardTextAPI = sText
+End Function
