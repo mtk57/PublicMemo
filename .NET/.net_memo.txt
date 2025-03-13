@@ -314,3 +314,56 @@ copy = copy + "!"; // この時点で新しいメモリが確保されます
 この場合は、元の文字列を変更するのではなく、新しい文字列オブジェクトが作成され、`copy` はその新しいオブジェクトを参照するようになります。`original` は引き続き元のオブジェクトを参照します。
 
 これはメモリ効率の良い設計で、文字列データが頻繁に複製されるのを防いでいます。
+
+
+
+--------------
+■特定のキャラクタ（"A", "#", "H", "@"）が、文字列に含まれているかをチェックする関数をVB.NETでLinqを使って作ってください。
+
+
+# VB.NETでLINQを使用した特定文字チェック関数
+
+特定の文字（"A", "#", "H", "@"）が文字列に含まれているかをチェックする関数を作成しました。
+
+```vb.net
+Imports System.Linq
+
+''' <summary>
+''' 文字列に特定の文字（A, #, H, @）が含まれているかチェックします
+''' </summary>
+''' <param name="inputString">チェック対象の文字列</param>
+''' <returns>特定の文字が含まれていればTrue、そうでなければFalse</returns>
+Function ContainsSpecialCharacters(inputString As String) As Boolean
+    ' チェック対象の文字を配列で定義
+    Dim specialChars() As Char = {"A"c, "#"c, "H"c, "@"c}
+    
+    ' 入力文字列に特定の文字が含まれているかチェック
+    Return inputString.Any(Function(c) specialChars.Contains(c))
+End Function
+```
+
+別の書き方として、配列を使わずに直接比較する方法もあります：
+
+```vb.net
+Function ContainsSpecialCharacters(inputString As String) As Boolean
+    ' 特定の文字（A, #, H, @）がいずれか含まれているかチェック
+    Return inputString.Any(Function(c) c = "A"c OrElse c = "#"c OrElse c = "H"c OrElse c = "@"c)
+End Function
+```
+
+## 使用例
+
+```vb.net
+Sub Main()
+    ' テストケース
+    Console.WriteLine(ContainsSpecialCharacters("Hello"))     ' True (Hを含む)
+    Console.WriteLine(ContainsSpecialCharacters("Test@123"))  ' True (@を含む)
+    Console.WriteLine(ContainsSpecialCharacters("number#1"))  ' True (#を含む)
+    Console.WriteLine(ContainsSpecialCharacters("Apple"))     ' True (Aを含む)
+    Console.WriteLine(ContainsSpecialCharacters("test"))      ' False (特定文字なし)
+    
+    Console.ReadLine()
+End Sub
+```
+
+最初の実装（配列を使用）の方が、将来的に対象文字を追加・変更する場合にメンテナンスが容易です。
