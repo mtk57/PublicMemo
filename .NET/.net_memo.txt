@@ -125,3 +125,160 @@ UnroundedFP：丸めなし浮動小数点計算の使用
 VersionComments：バージョンコメント
 VersionCompanyName：会社名
 -----------
+
+■構造体のディープコピー
+
+
+はい、VB.NETで汎用的な構造体のディープコピー関数を作ることができます。主に2つの方法があります：
+
+## 1. シリアライズ/デシリアライズを使用する方法
+
+```vb
+Imports System.IO
+Imports System.Runtime.Serialization.Formatters.Binary
+
+Public Module DeepCopyHelper
+    ''' <summary>
+    ''' 任意の型のオブジェクトをディープコピーする
+    ''' </summary>
+    ''' <typeparam name="T">コピー対象の型</typeparam>
+    ''' <param name="source">コピー元オブジェクト</param>
+    ''' <returns>ディープコピーされたオブジェクト</returns>
+    Public Function DeepCopy(Of T)(ByVal source As T) As T
+        ' 元のオブジェクトがNothingの場合
+        If source Is Nothing Then
+            Return Nothing
+        End If
+        
+        ' シリアライズとデシリアライズを使用してディープコピー
+        Dim formatter As New BinaryFormatter()
+        Dim stream As New MemoryStream()
+        
+        ' ストリームにシリアライズ
+        formatter.Serialize(stream, source)
+        
+        ' ストリームの位置を先頭に戻す
+        stream.Position = 0
+        
+        ' デシリアライズして新しいオブジェクトを作成
+        Dim result As T = DirectCast(formatter.Deserialize(stream), T)
+        
+        ' ストリームを閉じる
+        stream.Close()
+        
+        Return result
+    End Function
+End Module
+```
+
+この方法を使用する場合の注意点：
+- コピー対象の型に `<Serializable()>` 属性が必要です
+- シリアライズできないメンバー（例：デリゲート、イベントハンドラなど）があると失敗します
+
+## 2. リフレクションを使用する方法
+
+```vb
+Imports System.Reflection
+
+Public Module DeepCopyHelper
+    ''' <summary>
+    ''' リフレクションを使用して構造体をディープコピーする
+    ''' </summary>
+    ''' <typeparam name="T">コピー対象の型</typeparam>
+    ''' <param name="source">コピー元オブジェクト</param>
+    ''' <returns>ディープコピーされたオブジェクト</returns>
+    Public Function DeepCopyStructure(Of T As Structure)(ByVal source As T) As T
+        ' 結果の変数を作成
+        Dim result As T = source
+        
+        ' 型の情報を取得
+        Dim type As Type = GetType(T)
+        
+        ' すべてのフィールド情報を取得
+        Dim fields As FieldInfo() = type.GetFields(BindingFlags.Public Or BindingFlags.NonPublic Or BindingFlags.Instance)
+        
+        For Each field As FieldInfo In fields
+            ' フィールドの値を取得
+            Dim value As Object = field.GetValue(source)
+            
+            ' 値がNothingでなく配列の場合
+            If value IsNot Nothing AndAlso value.GetType().IsArray Then
+                ' 配列をコピー
+                Dim array As Array = DirectCast(value, Array)
+                Dim copyArray As Array = Array.CreateInstance(array.GetType().GetElementType(), array.Length)
+                Array.Copy(array, copyArray, array.Length)
+                
+                ' コピーした配列を設定
+                field.SetValue(result, copyArray)
+            End If
+        Next
+        
+        Return result
+    End Function
+End Module
+```
+
+## 使用例
+
+```vb
+' 構造体の定義
+<Serializable()> _
+Public Structure StructureB
+    Public Value As Integer
+End Structure
+
+<Serializable()> _
+Public Structure StructureA
+    Public ID As Integer
+    Public Name As String
+    Public stBary() As StructureB
+End Structure
+
+' 使用例
+Sub Main()
+    ' 元の構造体を作成
+    Dim stA1 As StructureA
+    stA1.ID = 1
+    stA1.Name = "Test"
+    stA1.stBary = New StructureB(1) {}
+    stA1.stBary(0).Value = 10
+    
+    ' ディープコピー
+    Dim stA2 As StructureA = DeepCopy(stA1)
+    
+    ' 値を変更してみる
+    stA2.stBary(0).Value = 20
+    
+    ' 結果を確認
+    Console.WriteLine($"stA1.stBary(0).Value = {stA1.stBary(0).Value}")  ' 10
+    Console.WriteLine($"stA2.stBary(0).Value = {stA2.stBary(0).Value}")  ' 20
+End Sub
+```
+
+シリアライズ方式は汎用性が高く、ほとんどの場合に適しています。ただし、パフォーマンスが重要な場合やシリアライズできないメンバーがある場合は、リフレクション方式または構造体固有のディープコピー方法を検討すると良いでしょう。
+
+
+-------------
+はい、ご質問の件について説明します。
+
+VB.NETでは、構造体（Structure）は値型（Value Type）ですが、配列は参照型（Reference Type）です。そのため：
+
+1. 構造体A型の変数stA1を構造体A型の変数stA2に代入すると、構造体自体は値コピーされますが、配列メンバであるstBaryは参照コピーされます。つまり、stA2.stBaryとstA1.stBaryは同じ配列オブジェクトを参照します。
+
+2. はい、stA2.stBaryの値（配列の要素）を変更すると、stA1.stBaryの値も変更されます。これは両方が同じメモリ上の配列を参照しているためです。
+
+もし配列の完全なコピー（ディープコピー）が必要な場合は、明示的に新しい配列を作成し、要素をコピーする必要があります。例えば：
+
+```vb
+' ディープコピーの例
+stA2 = stA1
+Dim newArray(stA1.stBary.Length - 1) As StructureB
+Array.Copy(stA1.stBary, newArray, stA1.stBary.Length)
+stA2.stBary = newArray
+```
+
+このようにすれば、stA2.stBaryに加えた変更はstA1.stBaryに影響しません。
+
+
+
+
