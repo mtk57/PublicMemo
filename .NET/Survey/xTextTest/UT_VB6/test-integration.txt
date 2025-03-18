@@ -1,0 +1,118 @@
+' RunAllTests メソッドに新しいテストを追加
+Private Sub RunAllTests()
+    ' 既存のテスト...
+    
+    ' プロパティテスト
+    RunTest "MaxLengthB_DefaultValueIsZero", "MaxLengthBの初期値は0であるべき"
+    RunTest "MaxLengthB_SetAndGetValue", "MaxLengthBに設定した値が取得できるべき"
+    RunTest "MaxLengthB_NegativeValue_ThrowsError", "MaxLengthBに負の値を設定するとエラーになるべき"
+    
+    ' 基本機能テスト
+    RunTest "Text_WithAsciiOnly_RespectsMaxLengthB", "制限を超える半角文字列は切り詰められるべき"
+    RunTest "Text_WithJapaneseOnly_RespectsMaxLengthB", "制限を超える全角文字列は切り詰められるべき"
+    RunTest "Text_WithMixedChars_RespectsMaxLengthB", "制限を超える混合文字列は切り詰められるべき"
+    RunTest "MaxLength_And_MaxLengthB_SmallerValueApplied", "MaxLengthとMaxLengthBの小さい方が適用されるべき"
+    
+    ' クリップボード操作テスト（既存）
+    RunTest "Paste_RespectsMaxLengthB", "ペースト時にMaxLengthBの制限が適用されるべき"
+    RunTest "Paste_WithSelection_ReplacesSelectedText", "選択範囲がペーストしたテキストで置き換えられるべき"
+    RunTest "Paste_WithSelection_ExceedingMaxLengthB_Truncates", "ペースト後のテキストはMaxLengthB以内であるべき"
+    
+    ' 特殊文字テスト
+    RunTest "Text_WithSpecialJapaneseChars_RespectsMaxLengthB", "特殊記号を含む制限を超える文字列は切り詰められるべき"
+    
+    ' SelStartBとSelLengthBのテスト
+    RunTest "SelStartB_DefaultValueIsZero", "SelStartBの初期値は0であるべき"
+    RunTest "SelStartB_SetAndGetValue", "SelStartBに設定した値が取得できるべき"
+    RunTest "SelLengthB_DefaultValueIsZero", "SelLengthBの初期値は0であるべき"
+    RunTest "SelLengthB_SetAndGetValue", "SelLengthBに設定した値が取得できるべき"
+    RunTest "SelStartB_WithAsciiOnly_EqualsSelStart", "半角文字のみの場合、SelStartBとSelStartが一致するべき"
+    RunTest "SelStartB_WithJapanese_CorrectBytePosition", "全角文字の場合、SelStartBが正しいバイト位置を返すべき"
+    RunTest "SelLengthB_WithAsciiOnly_EqualsSelLength", "半角文字のみの場合、SelLengthBとSelLengthが一致するべき"
+    RunTest "SelLengthB_WithJapanese_CorrectByteLength", "全角文字の場合、SelLengthBが正しいバイト長を返すべき"
+    RunTest "SelStartB_SettingValue_UpdatesSelStart", "SelStartBを設定すると対応するSelStartが更新されるべき"
+    RunTest "SelLengthB_SettingValue_UpdatesSelLength", "SelLengthBを設定すると対応するSelLengthが更新されるべき"
+    RunTest "SelStartB_AtTextEnd_CorrectValue", "テキスト末尾の場合、SelStartBが正しい値を返すべき"
+    RunTest "SelStartB_SelLengthB_MixedText_CorrectValues", "混合テキストでも正しい値を返すべき"
+    
+    ' 拡張ペーストテスト（新規追加）
+    RunTest "Paste_AtBeginningOfText", "テキストの先頭でのペーストが正しく動作するべき"
+    RunTest "Paste_AtEndOfText", "テキストの末尾でのペーストが正しく動作するべき"
+    RunTest "Paste_JapaneseCharacters", "日本語文字のペーストが正しく動作するべき"
+    RunTest "Paste_JapaneseCharacters_Truncation", "日本語文字のペーストで制限を超える場合に切り詰められるべき"
+    RunTest "Paste_MixedCharacters", "混合文字のペーストが正しく動作するべき"
+    RunTest "Paste_MixedCharacters_Truncation", "混合文字のペーストで制限を超える場合に切り詰められるべき"
+    RunTest "Paste_ReplaceEntireText", "テキスト全体を選択した状態でのペーストが正しく動作するべき"
+    RunTest "Paste_ExactlyAtMaxLengthB", "制限ギリギリのペーストが正しく処理されるべき"
+    RunTest "Paste_WithZeroMaxLengthB", "制限なし設定でのペーストが正しく動作するべき"
+    RunTest "Paste_MultipleTimes", "連続ペーストが正しく制限されるべき"
+    RunTest "Paste_WithBothMaxLengthAndMaxLengthB", "MaxLengthとMaxLengthBの両方が設定された状態でのペーストが正しく動作するべき"
+    RunTest "Paste_EmptyString", "空文字列のペーストが正しく処理されるべき"
+    RunTest "Paste_SpecialCharacters", "特殊文字を含むテキストのペーストが正しく処理されるべき"
+End Sub
+
+' Select Case文に新しいテスト呼び出しを追加
+Private Sub RunTest(testName As String, description As String)
+    Dim result As Boolean
+    Dim resultMessage As String
+    Dim errorMessage As String
+    
+    m_totalTests = m_totalTests + 1
+    
+    ' テスト実行前にコントロールをリセット
+    ResetXText
+    
+    ' エラーハンドリング
+    On Error Resume Next
+    
+    ' テスト名に基づいてテストメソッドを呼び出し
+    Select Case testName
+        ' 既存のテストケース...
+        
+        ' 拡張ペーストテスト（新規追加）
+        Case "Paste_AtBeginningOfText"
+            result = Test_Paste_AtBeginningOfText
+            
+        Case "Paste_AtEndOfText"
+            result = Test_Paste_AtEndOfText
+            
+        Case "Paste_JapaneseCharacters"
+            result = Test_Paste_JapaneseCharacters
+            
+        Case "Paste_JapaneseCharacters_Truncation"
+            result = Test_Paste_JapaneseCharacters_Truncation
+            
+        Case "Paste_MixedCharacters"
+            result = Test_Paste_MixedCharacters
+            
+        Case "Paste_MixedCharacters_Truncation"
+            result = Test_Paste_MixedCharacters_Truncation
+            
+        Case "Paste_ReplaceEntireText"
+            result = Test_Paste_ReplaceEntireText
+            
+        Case "Paste_ExactlyAtMaxLengthB"
+            result = Test_Paste_ExactlyAtMaxLengthB
+            
+        Case "Paste_WithZeroMaxLengthB"
+            result = Test_Paste_WithZeroMaxLengthB
+            
+        Case "Paste_MultipleTimes"
+            result = Test_Paste_MultipleTimes
+            
+        Case "Paste_WithBothMaxLengthAndMaxLengthB"
+            result = Test_Paste_WithBothMaxLengthAndMaxLengthB
+            
+        Case "Paste_EmptyString"
+            result = Test_Paste_EmptyString
+            
+        Case "Paste_SpecialCharacters"
+            result = Test_Paste_SpecialCharacters
+            
+        Case Else
+            result = False
+            errorMessage = "未定義のテスト"
+    End Select
+    
+    ' 残りのコードは変更なし...
+End Sub

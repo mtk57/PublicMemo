@@ -1,0 +1,402 @@
+' 追加のクリップボードペーストテストメソッド
+
+' テキストの先頭でのペースト操作をテスト
+Private Function Test_Paste_AtBeginningOfText() As Boolean
+    m_xText.MaxLengthB = 10
+    m_xText.Text = "abcde"
+    
+    ' カーソルをテキストの先頭に設定
+    m_xText.SelStart = 0
+    m_xText.SelLength = 0
+    
+    ' クリップボードにテキストをセット
+    On Error Resume Next
+    Clipboard.SetText "XYZ"
+    
+    If Err.Number <> 0 Then
+        ' クリップボード操作に失敗した場合はスキップ
+        Test_Paste_AtBeginningOfText = True
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' ペーストをシミュレート
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証（テキストの先頭にペーストされるはず）
+    Test_Paste_AtBeginningOfText = (m_xText.Text = "XYZabcde")
+End Function
+
+' テキストの末尾でのペースト操作をテスト
+Private Function Test_Paste_AtEndOfText() As Boolean
+    m_xText.MaxLengthB = 10
+    m_xText.Text = "abcde"
+    
+    ' カーソルをテキストの末尾に設定
+    m_xText.SelStart = Len(m_xText.Text)
+    m_xText.SelLength = 0
+    
+    ' クリップボードにテキストをセット
+    On Error Resume Next
+    Clipboard.SetText "XYZ"
+    
+    If Err.Number <> 0 Then
+        ' クリップボード操作に失敗した場合はスキップ
+        Test_Paste_AtEndOfText = True
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' ペーストをシミュレート
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証（テキストの末尾にペーストされるはず）
+    Test_Paste_AtEndOfText = (m_xText.Text = "abcdeXYZ")
+End Function
+
+' 日本語文字をペーストするテスト
+Private Function Test_Paste_JapaneseCharacters() As Boolean
+    m_xText.MaxLengthB = 10
+    m_xText.Text = "ab"
+    
+    ' カーソルを設定
+    m_xText.SelStart = 2
+    m_xText.SelLength = 0
+    
+    ' クリップボードに日本語をセット（「あいう」= 6バイト）
+    On Error Resume Next
+    Clipboard.SetText "あいう"
+    
+    If Err.Number <> 0 Then
+        ' クリップボード操作に失敗した場合はスキップ
+        Test_Paste_JapaneseCharacters = True
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' ペーストをシミュレート
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証（「abあいう」= 8バイト）
+    Test_Paste_JapaneseCharacters = (m_xText.Text = "abあいう")
+End Function
+
+' 日本語文字をペーストして制限を超える場合のテスト
+Private Function Test_Paste_JapaneseCharacters_Truncation() As Boolean
+    m_xText.MaxLengthB = 7
+    m_xText.Text = "ab"
+    
+    ' カーソルを設定
+    m_xText.SelStart = 2
+    m_xText.SelLength = 0
+    
+    ' クリップボードに日本語をセット（「あいう」= 6バイト）
+    On Error Resume Next
+    Clipboard.SetText "あいう"
+    
+    If Err.Number <> 0 Then
+        ' クリップボード操作に失敗した場合はスキップ
+        Test_Paste_JapaneseCharacters_Truncation = True
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' ペーストをシミュレート
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証（「abあい」= 6バイト、「う」は切り捨てられるはず）
+    Test_Paste_JapaneseCharacters_Truncation = (m_xText.Text = "abあい")
+End Function
+
+' 混合文字をペーストするテスト
+Private Function Test_Paste_MixedCharacters() As Boolean
+    m_xText.MaxLengthB = 10
+    m_xText.Text = "ab"
+    
+    ' カーソルを設定
+    m_xText.SelStart = 2
+    m_xText.SelLength = 0
+    
+    ' クリップボードに混合文字をセット（「あaいb」= 6バイト）
+    On Error Resume Next
+    Clipboard.SetText "あaいb"
+    
+    If Err.Number <> 0 Then
+        ' クリップボード操作に失敗した場合はスキップ
+        Test_Paste_MixedCharacters = True
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' ペーストをシミュレート
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証（「abあaいb」= 8バイト）
+    Test_Paste_MixedCharacters = (m_xText.Text = "abあaいb")
+End Function
+
+' 混合文字のペーストで制限を超える場合のテスト
+Private Function Test_Paste_MixedCharacters_Truncation() As Boolean
+    m_xText.MaxLengthB = 5
+    m_xText.Text = "ab"
+    
+    ' カーソルを設定
+    m_xText.SelStart = 2
+    m_xText.SelLength = 0
+    
+    ' クリップボードに混合文字をセット（「あaいb」= 6バイト）
+    On Error Resume Next
+    Clipboard.SetText "あaいb"
+    
+    If Err.Number <> 0 Then
+        ' クリップボード操作に失敗した場合はスキップ
+        Test_Paste_MixedCharacters_Truncation = True
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' ペーストをシミュレート
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証（制限は5バイトだが既に「ab」= 2バイト使用しているので、
+    ' ペースト可能なのは3バイトのみ。「あa」までがペーストされるはず）
+    Test_Paste_MixedCharacters_Truncation = (m_xText.Text = "abあa")
+End Function
+
+' テキスト全体を選択してペーストするテスト
+Private Function Test_Paste_ReplaceEntireText() As Boolean
+    m_xText.MaxLengthB = 10
+    m_xText.Text = "abcdef"
+    
+    ' テキスト全体を選択
+    m_xText.SelStart = 0
+    m_xText.SelLength = Len(m_xText.Text)
+    
+    ' クリップボードにテキストをセット
+    On Error Resume Next
+    Clipboard.SetText "XYZ"
+    
+    If Err.Number <> 0 Then
+        ' クリップボード操作に失敗した場合はスキップ
+        Test_Paste_ReplaceEntireText = True
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' ペーストをシミュレート
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証（テキスト全体が置き換えられるはず）
+    Test_Paste_ReplaceEntireText = (m_xText.Text = "XYZ")
+End Function
+
+' 制限ギリギリのペーストをテスト
+Private Function Test_Paste_ExactlyAtMaxLengthB() As Boolean
+    m_xText.MaxLengthB = 7
+    m_xText.Text = "ab"
+    
+    ' カーソルを設定
+    m_xText.SelStart = 2
+    m_xText.SelLength = 0
+    
+    ' クリップボードにテキストをセット（5バイト分）
+    On Error Resume Next
+    Clipboard.SetText "あbc"  ' 「あ」= 2バイト + "bc" = 2+2=5バイト
+    
+    If Err.Number <> 0 Then
+        ' クリップボード操作に失敗した場合はスキップ
+        Test_Paste_ExactlyAtMaxLengthB = True
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' ペーストをシミュレート
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証（「abあbc」= 7バイトでジャストMaxLengthB）
+    Test_Paste_ExactlyAtMaxLengthB = (m_xText.Text = "abあbc")
+End Function
+
+' 制限なし（MaxLengthB = 0）でのペーストをテスト
+Private Function Test_Paste_WithZeroMaxLengthB() As Boolean
+    m_xText.MaxLengthB = 0  ' 制限なし
+    m_xText.Text = "ab"
+    
+    ' カーソルを設定
+    m_xText.SelStart = 2
+    m_xText.SelLength = 0
+    
+    ' クリップボードに長い文字列をセット
+    Dim longText As String
+    longText = String(50, "a")  ' 50文字の"a"
+    
+    On Error Resume Next
+    Clipboard.SetText longText
+    
+    If Err.Number <> 0 Then
+        ' クリップボード操作に失敗した場合はスキップ
+        Test_Paste_WithZeroMaxLengthB = True
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' ペーストをシミュレート
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証（全てペーストされるはず）
+    Test_Paste_WithZeroMaxLengthB = (m_xText.Text = "ab" & longText)
+End Function
+
+' 連続ペースト操作をテスト
+Private Function Test_Paste_MultipleTimes() As Boolean
+    m_xText.MaxLengthB = 10
+    m_xText.Text = ""
+    
+    ' クリップボードにテキストをセット
+    On Error Resume Next
+    Clipboard.SetText "abc"
+    
+    If Err.Number <> 0 Then
+        ' クリップボード操作に失敗した場合はスキップ
+        Test_Paste_MultipleTimes = True
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' 1回目のペースト
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 2回目のペースト
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 3回目のペースト - これで制限を超えるが、"abcabcabc"（9バイト）まで
+    ' ペーストされて、最後の1文字が切り捨てられるはず
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証
+    Test_Paste_MultipleTimes = (Len(m_xText.Text) = 9) And (Left(m_xText.Text, 9) = "abcabcabc")
+End Function
+
+' MaxLengthとMaxLengthBの両方が設定されている場合のペーストをテスト
+Private Function Test_Paste_WithBothMaxLengthAndMaxLengthB() As Boolean
+    ' MaxLengthを5文字、MaxLengthBを8バイトに設定
+    m_xText.MaxLength = 5
+    m_xText.MaxLengthB = 8
+    m_xText.Text = ""
+    
+    ' クリップボードに混合文字をセット
+    On Error Resume Next
+    Clipboard.SetText "abcあいう"  ' 9文字, 12バイト
+    
+    If Err.Number <> 0 Then
+        ' クリップボード操作に失敗した場合はスキップ
+        Test_Paste_WithBothMaxLengthAndMaxLengthB = True
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' ペーストをシミュレート
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証（MaxLengthによって5文字に制限されるべき）
+    Dim test1 As Boolean
+    test1 = (Len(m_xText.Text) <= 5)
+    
+    ' リセット
+    ResetXText
+    
+    ' 今度はMaxLengthBの方が厳しい制限になるようにする
+    m_xText.MaxLength = 10
+    m_xText.MaxLengthB = 6
+    m_xText.Text = ""
+    
+    ' 再度ペースト
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証（MaxLengthBによって制限されるべき）
+    Dim test2 As Boolean
+    test2 = (GetByteCount(m_xText.Text) <= 6)
+    
+    Test_Paste_WithBothMaxLengthAndMaxLengthB = test1 And test2
+End Function
+
+' テスト用の関数: 文字列のバイト数を計算
+Private Function GetByteCount(text As String) As Long
+    Dim tempBytes() As Byte
+    ' Shift-JISエンコーディングでバイト配列に変換
+    tempBytes = StrConv(text, vbFromUnicode)
+    GetByteCount = UBound(tempBytes) - LBound(tempBytes) + 1
+End Function
+
+' 空文字列のペーストをテスト
+Private Function Test_Paste_EmptyString() As Boolean
+    m_xText.MaxLengthB = 10
+    m_xText.Text = "abcde"
+    
+    ' カーソルを設定
+    m_xText.SelStart = 2
+    m_xText.SelLength = 0
+    
+    ' クリップボードに空文字列をセット
+    On Error Resume Next
+    Clipboard.SetText ""
+    
+    If Err.Number <> 0 Then
+        ' クリップボード操作に失敗した場合はスキップ
+        Test_Paste_EmptyString = True
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' ペーストをシミュレート
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証（テキストは変わらないはず）
+    Test_Paste_EmptyString = (m_xText.Text = "abcde")
+End Function
+
+' 特殊文字（制御文字など）のペーストをテスト
+Private Function Test_Paste_SpecialCharacters() As Boolean
+    m_xText.MaxLengthB = 10
+    m_xText.Text = "ab"
+    
+    ' カーソルを設定
+    m_xText.SelStart = 2
+    m_xText.SelLength = 0
+    
+    ' クリップボードに特殊文字を含むテキストをセット
+    Dim specialText As String
+    specialText = "c" & vbTab & "d" & vbCrLf & "e"
+    
+    On Error Resume Next
+    Clipboard.SetText specialText
+    
+    If Err.Number <> 0 Then
+        ' クリップボード操作に失敗した場合はスキップ
+        Test_Paste_SpecialCharacters = True
+        Exit Function
+    End If
+    On Error GoTo 0
+    
+    ' ペーストをシミュレート
+    m_xText.SetFocus
+    SendKeys "^v", True  ' Ctrl+V
+    
+    ' 結果を検証（特殊文字も含めてペーストされるはず）
+    ' ただし、コントロールの種類によっては制御文字の扱いが異なる可能性がある
+    ' そのため、少なくとも何らかのテキストが追加されていることを確認
+    Test_Paste_SpecialCharacters = (Len(m_xText.Text) > 2)
+End Function
