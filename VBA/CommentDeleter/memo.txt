@@ -1,0 +1,14 @@
+Comment Deleter																																																	
+ver.	1.0.0										注意!  ⑥出力先フォルダは実行前に削除します!  S-JISで出力します!																																						
+											★=MUST																																						
+																																																	
+Main Param																																memo																	
+	①ファイル検索フォルダパス(絶対パス)　★										C:\_git\PublicMemo\VBA\CommentDeleter\testdata\src																					末尾に"\"禁止。																	
+	②デバッグログ出力										NO																					未指定の場合は出力しない。																	
+	③対象ファイル拡張子										PL/SQL(sql)																																						
+	④サブフォルダも含むか										YES																					未指定の場合はYESとする。																	
+																																																	
+	⑥出力先フォルダパス(絶対パス)　★										C:\_git\PublicMemo\VBA\CommentDeleter\testdata\dst																					末尾に"\"禁止。存在しない場合は自動で作成する。																	
+	⑦除外ファイル名																															複数指定時は半角カンマで区切る。																	
+	⑧除外ファイル名のキーワード																															複数指定時は半角カンマで区切る。																	
+	⑨起点フォルダ名																															未指定の場合は何もしない。指定された場合⑥に作成する。																	
