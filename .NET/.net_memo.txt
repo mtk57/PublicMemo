@@ -367,3 +367,258 @@ End Sub
 ```
 
 最初の実装（配列を使用）の方が、将来的に対象文字を追加・変更する場合にメンテナンスが容易です。
+
+
+---------------
+メッセージを絞り込んで貼り付け操作に関連するものだけを効率的に特定するためのいくつかの方法を提案します。
+
+## 1. 差分ベースの監視アプローチ
+
+貼り付け操作前後のメッセージの差分を取ることで、関連するメッセージだけを抽出します：
+
+```vb
+Private normalMessages As New HashSet(Of UInteger)
+Private pasteRelatedMessages As New HashSet(Of UInteger)
+Private isBaselineRecording As Boolean = False
+Private isPasteRecording As Boolean = False
+
+' ベースラインを記録するボタン
+Private Sub RecordBaselineButton_Click(sender As Object, e As EventArgs) Handles RecordBaselineButton.Click
+    normalMessages.Clear()
+    isBaselineRecording = True
+    Debug.WriteLine("通常操作のメッセージ記録中...")
+    
+    ' 5秒後に自動的に記録を停止
+    Dim timer As New Timer With {.Interval = 5000}
+    AddHandler timer.Tick, Sub(s, args)
+                               isBaselineRecording = False
+                               timer.Stop()
+                               Debug.WriteLine($"通常メッセージ記録完了: {normalMessages.Count}個のメッセージを記録")
+                           End Sub
+    timer.Start()
+End Sub
+
+' 貼り付け操作のメッセージを記録するボタン
+Private Sub RecordPasteButton_Click(sender As Object, e As EventArgs) Handles RecordPasteButton.Click
+    pasteRelatedMessages.Clear()
+    isPasteRecording = True
+    Debug.WriteLine("貼り付け操作のメッセージ記録中...")
+    
+    ' 5秒後に自動的に記録を停止
+    Dim timer As New Timer With {.Interval = 5000}
+    AddHandler timer.Tick, Sub(s, args)
+                               isPasteRecording = False
+                               timer.Stop()
+                               AnalyzePasteMessages()
+                           End Sub
+    timer.Start()
+End Sub
+
+Protected Overrides Sub WndProc(ByRef m As Message)
+    ' メッセージID（uint）を取得
+    Dim msgId As UInteger = CUInt(m.Msg)
+    
+    If isBaselineRecording Then
+        normalMessages.Add(msgId)
+    ElseIf isPasteRecording Then
+        pasteRelatedMessages.Add(msgId)
+    End If
+    
+    MyBase.WndProc(m)
+End Sub
+
+Private Sub AnalyzePasteMessages()
+    ' 通常操作にはなく、貼り付け操作にだけあるメッセージを検出
+    Dim uniqueToPaste As New List(Of UInteger)
+    
+    For Each msgId In pasteRelatedMessages
+        If Not normalMessages.Contains(msgId) Then
+            uniqueToPaste.Add(msgId)
+        End If
+    Next
+    
+    Debug.WriteLine($"貼り付け操作固有のメッセージ: {uniqueToPaste.Count}個")
+    For Each msgId In uniqueToPaste
+        Debug.WriteLine($"候補メッセージID: 0x{msgId:X4}")
+    Next
+End Sub
+```
+
+## 2. タイムスタンプベースの分析
+
+メッセージの発生時間を詳細に記録し、貼り付け操作の直前・直後のメッセージに焦点を当てます：
+
+```vb
+Private messageTimeline As New List(Of (Time As DateTime, MessageId As UInteger, WParam As IntPtr, LParam As IntPtr))
+Private isRecording As Boolean = False
+Private pasteTimestamp As DateTime = DateTime.MinValue
+
+Protected Overrides Sub WndProc(ByRef m As Message)
+    If isRecording Then
+        messageTimeline.Add((DateTime.Now, CUInt(m.Msg), m.WParam, m.LParam))
+    End If
+    
+    MyBase.WndProc(m)
+End Sub
+
+Private Sub StartRecordingButton_Click(sender As Object, e As EventArgs) Handles StartRecordingButton.Click
+    messageTimeline.Clear()
+    isRecording = True
+    Debug.WriteLine("メッセージ記録開始...")
+End Sub
+
+Private Sub PasteMarkerButton_Click(sender As Object, e As EventArgs) Handles PasteMarkerButton.Click
+    ' 貼り付け操作が行われた時間をマーク
+    pasteTimestamp = DateTime.Now
+    Debug.WriteLine($"貼り付けタイムスタンプ設定: {pasteTimestamp:HH:mm:ss.fff}")
+End Sub
+
+Private Sub StopAndAnalyzeButton_Click(sender As Object, e As EventArgs) Handles StopAndAnalyzeButton.Click
+    isRecording = False
+    Debug.WriteLine("メッセージ記録停止、分析中...")
+    
+    ' 貼り付け操作の前後100ミリ秒のメッセージを抽出
+    Const WINDOW_MS As Integer = 100
+    
+    Dim relevantMessages = messageTimeline.Where(Function(record) 
+        Math.Abs((record.Time - pasteTimestamp).TotalMilliseconds) <= WINDOW_MS
+    ).OrderBy(Function(record) record.Time).ToList()
+    
+    Debug.WriteLine($"貼り付け前後のメッセージ: {relevantMessages.Count}個")
+    For Each record In relevantMessages
+        Dim relativeTime As Double = (record.Time - pasteTimestamp).TotalMilliseconds
+        Debug.WriteLine($"相対時間: {relativeTime:F1}ms, メッセージID: 0x{record.MessageId:X4}, WParam: 0x{record.WParam:X}")
+    Next
+End Sub
+```
+
+## 3. 特定のメッセージのみをフィルタリング
+
+貼り付け操作に関連する可能性が高いメッセージだけをフィルタリングして表示します：
+
+```vb
+Private ReadOnly knownPasteRelatedMessages As New HashSet(Of UInteger) From {
+    &H302,  ' WM_PASTE
+    &H111,  ' WM_COMMAND
+    &H100,  ' WM_KEYDOWN
+    &H101,  ' WM_KEYUP
+    &H300,  ' WM_CUT
+    &H301,  ' WM_COPY
+    &H7B2,  ' EM_PASTESPECIAL
+    &H1,    ' WM_CREATE
+    &H7DD,  ' EM_SETCUEBANNER (メニュー関連)
+    &H1C,   ' WM_ACTIVATEAPP
+    &H18,   ' WM_SHOWWINDOW
+    &H83,   ' WM_NCCALCSIZE
+    &H214,  ' WM_SIZING
+    &H46,   ' WM_WINDOWPOSCHANGING
+    &H281   ' WM_IME_SETCONTEXT
+}
+
+Protected Overrides Sub WndProc(ByRef m As Message)
+    ' 既知の関連メッセージのみを記録
+    Dim msgId As UInteger = CUInt(m.Msg)
+    If knownPasteRelatedMessages.Contains(msgId) Then
+        Debug.WriteLine($"関連メッセージ: 0x{msgId:X4}, WParam: 0x{m.WParam:X}, LParam: 0x{m.LParam:X}")
+    End If
+    
+    MyBase.WndProc(m)
+End Sub
+```
+
+## 4. wParam/lParamによるフィルタリング
+
+コンテキストメニューの貼り付けコマンドが特定のコマンドIDを持っている場合、wParam値でフィルタリングします：
+
+```vb
+Protected Overrides Sub WndProc(ByRef m As Message)
+    ' WM_COMMANDのみに注目し、wParamの値を詳細に調べる
+    If m.Msg = &H111 Then  ' WM_COMMAND
+        Dim cmdId As Integer = m.WParam.ToInt32() And &HFFFF
+        Dim notifyCode As Integer = (m.WParam.ToInt32() >> 16) And &HFFFF
+        Dim hwndCtl As IntPtr = m.LParam
+        
+        Debug.WriteLine($"コマンド: ID=0x{cmdId:X4}, NotifyCode=0x{notifyCode:X4}, HwndCtl=0x{hwndCtl:X}")
+        
+        ' 既知の貼り付けコマンドID範囲
+        ' 通常、Editコントロールでは貼り付けは ID_EDIT_PASTE = 0xE122 などの値
+        If cmdId >= &HE100 AndAlso cmdId <= &HE200 Then
+            Debug.WriteLine($"貼り付け関連の可能性があるコマンド: 0x{cmdId:X4}")
+        End If
+    End If
+    
+    MyBase.WndProc(m)
+End Sub
+```
+
+## 5. コンパクトなWndProcモニタリング関数
+
+メッセージの記録形式を最適化して、必要な情報だけをコンパクトに表示します：
+
+```vb
+
+## 6. フォーカスを当てたアプローチ：コンテキストメニュー表示時のみ監視
+
+コンテキストメニューが表示される瞬間から貼り付け操作が完了するまでのみ、詳細なメッセージ監視を行います：
+
+```vb
+Private isContextMenuActive As Boolean = False
+
+Protected Overrides Sub WndProc(ByRef m As Message)
+    ' コンテキストメニューの表示を検出
+    If m.Msg = &H204 Then  ' WM_RBUTTONDOWN
+        Debug.WriteLine("=== コンテキストメニュー表示 ===")
+        isContextMenuActive = True
+    End If
+    
+    ' コンテキストメニューがアクティブな間だけメッセージを詳細に監視
+    If isContextMenuActive Then
+        Debug.WriteLine($"メッセージ: 0x{m.Msg:X4}, WParam: 0x{m.WParam:X}, LParam: 0x{m.LParam:X}")
+        
+        ' 貼り付け操作が完了した可能性のあるメッセージを検出（テキスト変更など）
+        If m.Msg = &H1C Then  ' WM_ACTIVATEAPP (メニュー終了の可能性)
+            Debug.WriteLine("=== コンテキストメニュー処理完了の可能性 ===")
+            isContextMenuActive = False
+        End If
+    End If
+    
+    MyBase.WndProc(m)
+End Sub
+```
+
+## 7. クリップボードの監視と組み合わせる
+
+クリップボードへのアクセスイベントと組み合わせて、貼り付け操作を特定します：
+
+```vb
+Private isPotentialPasteSequence As Boolean = False
+
+Protected Overrides Sub WndProc(ByRef m As Message)
+    ' クリップボードアクセスを示唆するメッセージ
+    If m.Msg = &H308 Then  ' WM_DRAWCLIPBOARD
+        Debug.WriteLine("クリップボードアクセス検出")
+        isPotentialPasteSequence = True
+        
+        ' 次の数個のメッセージを詳細に監視
+        Dim messageCount As Integer = 0
+        Dim timer As New Timer With {.Interval = 50}
+        AddHandler timer.Tick, Sub(s, args)
+                                   messageCount += 1
+                                   If messageCount > 10 Then
+                                       isPotentialPasteSequence = False
+                                       timer.Stop()
+                                   End If
+                               End Sub
+        timer.Start()
+    End If
+    
+    ' 潜在的な貼り付けシーケンス中のメッセージを監視
+    If isPotentialPasteSequence Then
+        Debug.WriteLine($"貼り付け候補: 0x{m.Msg:X4}, WParam: 0x{m.WParam:X}")
+    End If
+    
+    MyBase.WndProc(m)
+End Sub
+```
+
+これらの方法を使用すると、メッセージの量を大幅に減らし、貼り付け操作に関連するメッセージを特定しやすくなります。特に、コンテキストメニューの表示から選択までに発生するWM_COMMANDメッセージと、その特定のwParamの値に注目することで、GCTextBoxで使用されている貼り付けコマンドのIDを見つけることができる可能性が高まります。
