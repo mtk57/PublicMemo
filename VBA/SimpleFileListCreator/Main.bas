@@ -47,13 +47,12 @@ Sub GetAllFileInfo()
     
     ' ヘッダーの設定
     outputSheet.Cells(1, 1).value = "ファイルパス"
-    outputSheet.Cells(1, 2).value = "年月日"
-    outputSheet.Cells(1, 3).value = "時分秒"
-    outputSheet.Cells(1, 4).value = "サイズ"
+    outputSheet.Cells(1, 2).value = "更新年月日"
+    outputSheet.Cells(1, 3).value = "更新時分秒"
+    outputSheet.Cells(1, 4).value = "ファイルサイズ"
     
-    ' ヘッダー行の書式設定
-    outputSheet.Range("A1:D1").Font.Bold = True
-    outputSheet.Range("A1:D1").Interior.Color = RGB(200, 200, 200)
+    ' ヘッダー行の書式設定は省略
+
     
     ' 初期行番号
     row = 2
@@ -64,19 +63,8 @@ Sub GetAllFileInfo()
     ' フォルダ内のファイル情報を収集
     ProcessFiles folder, outputSheet, row
     
-    ' 列幅の自動調整
+    ' 列幅の自動調整のみ実施
     outputSheet.Columns("A:D").AutoFit
-    
-    ' データの範囲に表の書式を適用
-    outputSheet.ListObjects.Add(xlSrcRange, outputSheet.Range("A1:D" & row - 1), , xlYes).Name = "ファイル情報テーブル"
-    
-    ' フリーズペインの設定
-    With outputSheet
-        .Activate
-        ActiveWindow.FreezePanes = False
-        .Range("A2").Select
-        ActiveWindow.FreezePanes = True
-    End With
     
     Application.ScreenUpdating = True
     
@@ -110,5 +98,7 @@ Private Sub ProcessFiles(folder As Object, outputSheet As Worksheet, ByRef row A
         ProcessFiles subfolder, outputSheet, row
     Next subfolder
 End Sub
+
+
 
 
