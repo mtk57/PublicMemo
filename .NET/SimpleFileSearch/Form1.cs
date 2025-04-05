@@ -292,45 +292,29 @@ namespace SimpleFileSearch
 
         #region エクスプローラーでファイルを選択（ツリー展開）
 
-        [DllImport("shell32.dll", CharSet = CharSet.Auto)]
-        private static extern bool ShellExecute(
-            IntPtr hwnd,
-            string lpOperation,
-            string lpFile,
-            string lpParameters,
-            string lpDirectory,
-            int nShowCmd);
-
         private static void OpenFolderAndSelectFile(string filePath)
         {
             if (File.Exists(filePath))
             {
                 try
                 {
-                    // エクスプローラーでフォルダを開き、ファイルに移動して選択する
-                    string argument = string.Format("/n,/select,\"{0}\"", filePath);
-                    
-                    // explorer.exeを呼び出し、ファイルを選択（/n は新しいウィンドウ、/select はファイルを選択）
-                    Process.Start("explorer.exe", argument);
+                    // 最もシンプルで確実な方法
+                    Process.Start("explorer.exe", "/select,\"" + filePath + "\"");
                 }
                 catch (Exception ex)
                 {
-                    // 主な方法が失敗した場合の代替方法
+                    // エラーが発生した場合は、フォルダだけを開く
                     try
                     {
-                        // ShellExecuteを使用する代替方法
-                        string folderPath = Path.GetDirectoryName(filePath);
-                        ShellExecute(IntPtr.Zero, "open", "explorer.exe", 
-                            string.Format("/select,\"{0}\"", filePath), folderPath, 1);
-                    }
-                    catch
-                    {
-                        // すべての方法が失敗した場合、少なくともフォルダは開く
                         string folderPath = Path.GetDirectoryName(filePath);
                         if (Directory.Exists(folderPath))
                         {
                             Process.Start("explorer.exe", folderPath);
                         }
+                    }
+                    catch (Exception innerEx)
+                    {
+                        MessageBox.Show($"フォルダを開けませんでした: {innerEx.Message}", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 }
             }
