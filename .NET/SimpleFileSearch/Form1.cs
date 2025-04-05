@@ -5,6 +5,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
@@ -155,8 +156,8 @@ namespace SimpleFileSearch
                 {
                     try
                     {
-                        // エクスプローラーでフォルダを開いてファイルを選択（ツリーを展開）
-                        OpenFolderAndSelectFile(filePath);
+                        // エクスプローラーでフォルダを開いてファイルを選択
+                        Process.Start("explorer.exe", $"/select,\"{filePath}\"");
                     }
                     catch (Exception ex)
                     {
@@ -286,38 +287,6 @@ namespace SimpleFileSearch
         private string GetSettingsFilePath()
         {
             return Path.Combine(Application.StartupPath, SettingsFileName);
-        }
-
-        #endregion
-
-        #region エクスプローラーでファイルを選択（ツリー展開）
-
-        private static void OpenFolderAndSelectFile(string filePath)
-        {
-            if (File.Exists(filePath))
-            {
-                try
-                {
-                    // 最もシンプルで確実な方法
-                    Process.Start("explorer.exe", "/select,\"" + filePath + "\"");
-                }
-                catch (Exception ex)
-                {
-                    // エラーが発生した場合は、フォルダだけを開く
-                    try
-                    {
-                        string folderPath = Path.GetDirectoryName(filePath);
-                        if (Directory.Exists(folderPath))
-                        {
-                            Process.Start("explorer.exe", folderPath);
-                        }
-                    }
-                    catch (Exception innerEx)
-                    {
-                        MessageBox.Show($"フォルダを開けませんでした: {innerEx.Message}", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-            }
         }
 
         #endregion
