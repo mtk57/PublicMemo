@@ -29,10 +29,10 @@
         private void InitializeComponent ()
         {
             this.btnBrowse = new System.Windows.Forms.Button();
-            this.txtFolderPath = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.txtKeyword = new System.Windows.Forms.TextBox();
+            this.cmbKeyword = new System.Windows.Forms.ComboBox();
+            this.cmbFolderPath = new System.Windows.Forms.ComboBox();
             this.btnSearch = new System.Windows.Forms.Button();
             this.chkUseRegex = new System.Windows.Forms.CheckBox();
             this.dataGridViewResults = new System.Windows.Forms.DataGridView();
@@ -42,20 +42,14 @@
             // 
             // btnBrowse
             // 
-            this.btnBrowse.Location = new System.Drawing.Point(666, 35);
+            this.btnBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnBrowse.Location = new System.Drawing.Point(686, 28);
             this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.Size = new System.Drawing.Size(75, 23);
+            this.btnBrowse.Size = new System.Drawing.Size(45, 23);
             this.btnBrowse.TabIndex = 0;
             this.btnBrowse.Text = "ref";
             this.btnBrowse.UseVisualStyleBackColor = true;
             this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
-            // 
-            // txtFolderPath
-            // 
-            this.txtFolderPath.Location = new System.Drawing.Point(46, 35);
-            this.txtFolderPath.Name = "txtFolderPath";
-            this.txtFolderPath.Size = new System.Drawing.Size(614, 19);
-            this.txtFolderPath.TabIndex = 1;
             // 
             // label1
             // 
@@ -75,18 +69,32 @@
             this.label2.TabIndex = 3;
             this.label2.Text = "Search file name";
             // 
-            // txtKeyword
+            // cmbKeyword
             // 
-            this.txtKeyword.Location = new System.Drawing.Point(48, 97);
-            this.txtKeyword.Name = "txtKeyword";
-            this.txtKeyword.Size = new System.Drawing.Size(614, 19);
-            this.txtKeyword.TabIndex = 4;
+            this.cmbKeyword.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.cmbKeyword.FormattingEnabled = true;
+            this.cmbKeyword.Location = new System.Drawing.Point(48, 97);
+            this.cmbKeyword.Name = "cmbKeyword";
+            this.cmbKeyword.Size = new System.Drawing.Size(632, 20);
+            this.cmbKeyword.TabIndex = 0;
+            // 
+            // cmbFolderPath
+            // 
+            this.cmbFolderPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.cmbFolderPath.FormattingEnabled = true;
+            this.cmbFolderPath.Location = new System.Drawing.Point(48, 28);
+            this.cmbFolderPath.Name = "cmbFolderPath";
+            this.cmbFolderPath.Size = new System.Drawing.Size(632, 20);
+            this.cmbFolderPath.TabIndex = 1;
             // 
             // btnSearch
             // 
-            this.btnSearch.Location = new System.Drawing.Point(337, 146);
+            this.btnSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnSearch.Location = new System.Drawing.Point(328, 123);
             this.btnSearch.Name = "btnSearch";
-            this.btnSearch.Size = new System.Drawing.Size(75, 23);
+            this.btnSearch.Size = new System.Drawing.Size(75, 33);
             this.btnSearch.TabIndex = 5;
             this.btnSearch.Text = "SEARCH";
             this.btnSearch.UseVisualStyleBackColor = true;
@@ -95,7 +103,7 @@
             // chkUseRegex
             // 
             this.chkUseRegex.AutoSize = true;
-            this.chkUseRegex.Location = new System.Drawing.Point(48, 132);
+            this.chkUseRegex.Location = new System.Drawing.Point(169, 81);
             this.chkUseRegex.Name = "chkUseRegex";
             this.chkUseRegex.Size = new System.Drawing.Size(88, 16);
             this.chkUseRegex.TabIndex = 6;
@@ -112,10 +120,10 @@
             this.dataGridViewResults.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewResults.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnFilePath});
-            this.dataGridViewResults.Location = new System.Drawing.Point(48, 195);
+            this.dataGridViewResults.Location = new System.Drawing.Point(48, 176);
             this.dataGridViewResults.Name = "dataGridViewResults";
             this.dataGridViewResults.ReadOnly = true;
-            this.dataGridViewResults.Size = new System.Drawing.Size(678, 231);
+            this.dataGridViewResults.Size = new System.Drawing.Size(683, 310);
             this.dataGridViewResults.TabIndex = 5;
             this.dataGridViewResults.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewResults_CellDoubleClick);
             // 
@@ -130,17 +138,19 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(767, 463);
+            this.ClientSize = new System.Drawing.Size(767, 510);
             this.Controls.Add(this.dataGridViewResults);
             this.Controls.Add(this.chkUseRegex);
             this.Controls.Add(this.btnSearch);
-            this.Controls.Add(this.txtKeyword);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
-            this.Controls.Add(this.txtFolderPath);
+            this.Controls.Add(this.cmbFolderPath);
+            this.Controls.Add(this.cmbKeyword);
             this.Controls.Add(this.btnBrowse);
             this.Name = "Form1";
             this.Text = "Simple File Search";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
+            this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewResults)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -150,10 +160,10 @@
         #endregion
 
         private System.Windows.Forms.Button btnBrowse;
-        private System.Windows.Forms.TextBox txtFolderPath;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox txtKeyword;
+        private System.Windows.Forms.ComboBox cmbKeyword;
+        private System.Windows.Forms.ComboBox cmbFolderPath;
         private System.Windows.Forms.Button btnSearch;
         private System.Windows.Forms.CheckBox chkUseRegex;
         private System.Windows.Forms.DataGridView dataGridViewResults;
