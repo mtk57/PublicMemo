@@ -292,41 +292,46 @@ namespace SimpleFileSearch
 
         #region エクスプローラーでファイルを選択（ツリー展開）
 
-        [DllImport("shell32.dll", SetLastError = true)]
-        private static extern int SHOpenFolderAndSelectItems(IntPtr pidlFolder, uint cidl, [In, MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl, uint dwFlags);
-
-        [DllImport("shell32.dll", SetLastError = true)]
-        private static extern void SHParseDisplayName([MarshalAs(UnmanagedType.LPWStr)] string name, IntPtr bindingContext, out IntPtr pidl, uint sfgaoIn, out uint psfgaoOut);
+        [DllImport("shell32.dll", CharSet = CharSet.Auto)]
+        private static extern bool ShellExecute(
+            IntPtr hwnd,
+            string lpOperation,
+            string lpFile,
+            string lpParameters,
+            string lpDirectory,
+            int nShowCmd);
 
         private static void OpenFolderAndSelectFile(string filePath)
         {
-            IntPtr pidl = IntPtr.Zero;
-            uint psfgaoOut = 0;
-
-            try
+            if (File.Exists(filePath))
             {
-                SHParseDisplayName(filePath, IntPtr.Zero, out pidl, 0, out psfgaoOut);
-                
-                if (pidl != IntPtr.Zero)
+                try
                 {
-                    SHOpenFolderAndSelectItems(pidl, 0, null, 0);
+                    // エクスプローラーでフォルダを開き、ファイルに移動して選択する
+                    string argument = string.Format("/n,/select,\"{0}\"", filePath);
+                    
+                    // explorer.exeを呼び出し、ファイルを選択（/n は新しいウィンドウ、/select はファイルを選択）
+                    Process.Start("explorer.exe", argument);
                 }
-                else
+                catch (Exception ex)
                 {
-                    // 従来の方法にフォールバック
-                    Process.Start("explorer.exe", $"/select,\"{filePath}\"");
-                }
-            }
-            catch
-            {
-                // SHOpenFolderAndSelectItemsが失敗した場合は従来の方法にフォールバック
-                Process.Start("explorer.exe", $"/select,\"{filePath}\"");
-            }
-            finally
-            {
-                if (pidl != IntPtr.Zero)
-                {
-                    Marshal.FreeCoTaskMem(pidl);
+                    // 主な方法が失敗した場合の代替方法
+                    try
+                    {
+                        // ShellExecuteを使用する代替方法
+                        string folderPath = Path.GetDirectoryName(filePath);
+                        ShellExecute(IntPtr.Zero, "open", "explorer.exe", 
+                            string.Format("/select,\"{0}\"", filePath), folderPath, 1);
+                    }
+                    catch
+                    {
+                        // すべての方法が失敗した場合、少なくともフォルダは開く
+                        string folderPath = Path.GetDirectoryName(filePath);
+                        if (Directory.Exists(folderPath))
+                        {
+                            Process.Start("explorer.exe", folderPath);
+                        }
+                    }
                 }
             }
         }
