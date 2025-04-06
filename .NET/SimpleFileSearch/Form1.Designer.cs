@@ -1,6 +1,6 @@
 ﻿namespace SimpleFileSearch
 {
-    partial class Form1
+    partial class MainForm
     {
         /// <summary>
         /// 必要なデザイナー変数です。
@@ -37,6 +37,8 @@
             this.chkUseRegex = new System.Windows.Forms.CheckBox();
             this.dataGridViewResults = new System.Windows.Forms.DataGridView();
             this.columnFilePath = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.chkIncludeFolderNames = new System.Windows.Forms.CheckBox();
+            this.labelResult = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewResults)).BeginInit();
             this.SuspendLayout();
             // 
@@ -74,7 +76,7 @@
             this.cmbKeyword.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.cmbKeyword.FormattingEnabled = true;
-            this.cmbKeyword.Location = new System.Drawing.Point(48, 97);
+            this.cmbKeyword.Location = new System.Drawing.Point(48, 101);
             this.cmbKeyword.Name = "cmbKeyword";
             this.cmbKeyword.Size = new System.Drawing.Size(632, 20);
             this.cmbKeyword.TabIndex = 0;
@@ -92,7 +94,7 @@
             // btnSearch
             // 
             this.btnSearch.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSearch.Location = new System.Drawing.Point(328, 123);
+            this.btnSearch.Location = new System.Drawing.Point(307, 132);
             this.btnSearch.Name = "btnSearch";
             this.btnSearch.Size = new System.Drawing.Size(75, 33);
             this.btnSearch.TabIndex = 5;
@@ -120,11 +122,11 @@
             this.dataGridViewResults.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewResults.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.columnFilePath});
-            this.dataGridViewResults.Location = new System.Drawing.Point(48, 176);
+            this.dataGridViewResults.Location = new System.Drawing.Point(48, 174);
             this.dataGridViewResults.Name = "dataGridViewResults";
             this.dataGridViewResults.ReadOnly = true;
-            this.dataGridViewResults.Size = new System.Drawing.Size(683, 310);
-            this.dataGridViewResults.TabIndex = 5;
+            this.dataGridViewResults.Size = new System.Drawing.Size(660, 324);
+            this.dataGridViewResults.TabIndex = 6;
             this.dataGridViewResults.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewResults_CellDoubleClick);
             // 
             // columnFilePath
@@ -134,11 +136,32 @@
             this.columnFilePath.Name = "columnFilePath";
             this.columnFilePath.ReadOnly = true;
             // 
-            // Form1
+            // chkIncludeFolderNames
+            // 
+            this.chkIncludeFolderNames.AutoSize = true;
+            this.chkIncludeFolderNames.Location = new System.Drawing.Point(294, 81);
+            this.chkIncludeFolderNames.Name = "chkIncludeFolderNames";
+            this.chkIncludeFolderNames.Size = new System.Drawing.Size(104, 16);
+            this.chkIncludeFolderNames.TabIndex = 7;
+            this.chkIncludeFolderNames.Text = "With Dir Search";
+            this.chkIncludeFolderNames.UseVisualStyleBackColor = true;
+            // 
+            // labelResult
+            // 
+            this.labelResult.AutoSize = true;
+            this.labelResult.Location = new System.Drawing.Point(398, 142);
+            this.labelResult.Name = "labelResult";
+            this.labelResult.Size = new System.Drawing.Size(38, 12);
+            this.labelResult.TabIndex = 8;
+            this.labelResult.Text = "Result";
+            // 
+            // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(767, 510);
+            this.Controls.Add(this.labelResult);
+            this.Controls.Add(this.chkIncludeFolderNames);
             this.Controls.Add(this.dataGridViewResults);
             this.Controls.Add(this.chkUseRegex);
             this.Controls.Add(this.btnSearch);
@@ -147,7 +170,7 @@
             this.Controls.Add(this.cmbFolderPath);
             this.Controls.Add(this.cmbKeyword);
             this.Controls.Add(this.btnBrowse);
-            this.Name = "Form1";
+            this.Name = "MainForm";
             this.Text = "Simple File Search";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainForm_FormClosing);
             this.Load += new System.EventHandler(this.MainForm_Load);
@@ -168,6 +191,8 @@
         private System.Windows.Forms.CheckBox chkUseRegex;
         private System.Windows.Forms.DataGridView dataGridViewResults;
         private System.Windows.Forms.DataGridViewTextBoxColumn columnFilePath;
+        private System.Windows.Forms.CheckBox chkIncludeFolderNames;
+        private System.Windows.Forms.Label labelResult;
     }
 }
 

@@ -2,21 +2,20 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
+using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
 namespace SimpleFileSearch
 {
-    public partial class Form1: Form
+    public partial class MainForm: Form
     {
         private const int MaxHistoryItems = 20;
         private const string SettingsFileName = "SimpleFileSearch.json";
 
-        public Form1()
+        public MainForm()
         {
             InitializeComponent();
         }
@@ -86,6 +85,7 @@ namespace SimpleFileSearch
 
                 string searchPattern = cmbKeyword.Text;
                 bool useRegex = chkUseRegex.Checked;
+                bool includeFolderNames = chkIncludeFolderNames.Checked;
                 
                 List<string> foundFiles = new List<string>();
 
@@ -97,14 +97,9 @@ namespace SimpleFileSearch
                     {
                         Regex regex = new Regex(searchPattern, RegexOptions.IgnoreCase);
                         
-                        foreach (string file in Directory.GetFiles(cmbFolderPath.Text, "*.*", SearchOption.AllDirectories))
-                        {
-                            string fileName = Path.GetFileName(file);
-                            if (regex.IsMatch(fileName))
-                            {
-                                foundFiles.Add(file);
-                            }
-                        }
+                        // ディレクトリを再帰的に列挙
+                        string rootPath = cmbFolderPath.Text;
+                        SearchFilesAndFoldersWithRegex(rootPath, regex, includeFolderNames, foundFiles);
                     }
                     catch (ArgumentException ex)
                     {
@@ -117,8 +112,15 @@ namespace SimpleFileSearch
                     // ワイルドカードモード
                     try
                     {
-                        // ワイルドカード検索にはWindows組み込みのワイルドカードサポートを使用
+                        // ファイル検索（ワイルドカード）
                         foundFiles.AddRange(Directory.GetFiles(cmbFolderPath.Text, searchPattern, SearchOption.AllDirectories));
+                        
+                        // フォルダ名も検索対象に含める場合
+                        if (includeFolderNames)
+                        {
+                            string rootPath = cmbFolderPath.Text;
+                            SearchFoldersWithWildcard(rootPath, searchPattern, foundFiles);
+                        }
                     }
                     catch (ArgumentException ex)
                     {
@@ -126,6 +128,9 @@ namespace SimpleFileSearch
                         return;
                     }
                 }
+
+                // 重複を削除してソート
+                foundFiles = foundFiles.Distinct().OrderBy(f => f).ToList();
 
                 // 結果を表示
                 foreach (string file in foundFiles)
@@ -135,6 +140,8 @@ namespace SimpleFileSearch
 
                 // 結果件数を表示
                 this.Text = $"シンプルなファイル検索 - {foundFiles.Count} 件のファイルが見つかりました";
+
+                labelResult.Text = $"Result: {foundFiles.Count} hit";
             }
             catch (Exception ex)
             {
@@ -143,6 +150,91 @@ namespace SimpleFileSearch
             finally
             {
                 Cursor = Cursors.Default;
+            }
+        }
+
+        // 正規表現を使用してファイルとフォルダを再帰的に検索
+        private void SearchFilesAndFoldersWithRegex(string folderPath, Regex regex, bool includeFolderNames, List<string> results)
+        {
+            try
+            {
+                // ファイルを検索
+                foreach (string file in Directory.GetFiles(folderPath))
+                {
+                    string fileName = Path.GetFileName(file);
+                    if (regex.IsMatch(fileName))
+                    {
+                        results.Add(file);
+                    }
+                }
+
+                // サブフォルダを処理
+                foreach (string dir in Directory.GetDirectories(folderPath))
+                {
+                    // フォルダ名を検索対象に含める場合
+                    if (includeFolderNames)
+                    {
+                        string dirName = Path.GetFileName(dir);
+                        if (regex.IsMatch(dirName))
+                        {
+                            // フォルダが見つかった場合、そのフォルダ内のすべてのファイルを追加
+                            results.AddRange(Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories));
+                        }
+                    }
+
+                    // 再帰的に検索
+                    SearchFilesAndFoldersWithRegex(dir, regex, includeFolderNames, results);
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // アクセス権限がない場合は無視
+            }
+            catch (Exception)
+            {
+                // その他のエラーも無視して次へ
+            }
+        }
+
+        // ワイルドカードを使用してフォルダを検索
+        private void SearchFoldersWithWildcard(string folderPath, string searchPattern, List<string> results)
+        {
+            try
+            {
+                // 指定されたパターンに合致するかテスト用の関数
+                Func<string, bool> matchesPattern = (name) => 
+                {
+                    // ワイルドカードをRegexのパターンに変換
+                    string regexPattern = "^" + Regex.Escape(searchPattern)
+                        .Replace("\\*", ".*")
+                        .Replace("\\?", ".") + "$";
+                    
+                    return Regex.IsMatch(name, regexPattern, RegexOptions.IgnoreCase);
+                };
+
+                // サブフォルダを処理
+                foreach (string dir in Directory.GetDirectories(folderPath))
+                {
+                    string dirName = Path.GetFileName(dir);
+                    
+                    // フォルダ名がパターンに合致する場合
+                    if (matchesPattern(dirName))
+                    {
+                        // フォルダが見つかった場合、そのフォルダ内のすべてのファイルを追加
+                        results.AddRange(Directory.GetFiles(dir, "*.*", SearchOption.AllDirectories));
+                    }
+                    
+                    // 再帰的に検索
+                    SearchFoldersWithWildcard(dir, searchPattern, results);
+                }
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // アクセス権限がない場合は無視
+            }
+            catch (Exception)
+            {
+                // その他のエラーも無視して次へ
             }
         }
 
@@ -200,7 +292,8 @@ namespace SimpleFileSearch
                 {
                     KeywordHistory = new List<string>(),
                     FolderPathHistory = new List<string>(),
-                    UseRegex = chkUseRegex.Checked
+                    UseRegex = chkUseRegex.Checked,
+                    IncludeFolderNames = chkIncludeFolderNames.Checked
                 };
 
                 // キーワード履歴を保存
@@ -264,6 +357,9 @@ namespace SimpleFileSearch
 
                     // 正規表現の設定を読み込み
                     chkUseRegex.Checked = settings.UseRegex;
+
+                    // フォルダ名検索の設定を読み込み
+                    chkIncludeFolderNames.Checked = settings.IncludeFolderNames;
 
                     // 最新の項目をテキストボックスに表示
                     if (cmbKeyword.Items.Count > 0)

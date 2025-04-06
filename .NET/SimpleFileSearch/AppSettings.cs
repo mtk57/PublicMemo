@@ -10,5 +10,6 @@ namespace SimpleFileSearch
         public List<string> KeywordHistory { get; set; } = new List<string>();
         public List<string> FolderPathHistory { get; set; } = new List<string>();
         public bool UseRegex { get; set; } = false;
+        public bool IncludeFolderNames { get; set; } = false;
     }
 }
