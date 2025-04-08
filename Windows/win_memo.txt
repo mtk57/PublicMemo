@@ -959,3 +959,76 @@ Advanced Basics: COM+ and MTS, DCOM and MSMQ, Serialization in .NET, 4月 3, 202
 (Optional) Pre-configure groups for high security DCOM settings - Genesys, 4月 3, 2025にアクセス、 https://help.genesys.com/pureconnect/mergedprojects/wh_tr/mergedprojects/wh_tr_installation_and_configuration/desktop/optional_pre-configure_groups_for_high_security_dcom_settings.htm
 Fileless lateral movement with trapped COM objects - IBM, 4月 3, 2025にアクセス、 https://www.ibm.com/think/news/fileless-lateral-movement-trapped-com-objects
 Dealing with DCOM Hardening - Part 1 - CodeProject, 4月 3, 2025にアクセス、 https://www.codeproject.com/Articles/5370249/Dealing-with-DCOM-Hardening-Part-1
+------------
+PowerShellでXLSファイルをXLSXに変換するスクリプトを作成できます。以下のスクリプトは、Excel COMオブジェクトを使用して変換を行います：
+
+```powershell
+param (
+    [Parameter(Mandatory=$true)]
+    [string]$FolderPath
+)
+
+# XLSファイルをXLSXに変換するスクリプト
+
+# Excel COMオブジェクトを作成
+$excel = New-Object -ComObject Excel.Application
+$excel.Visible = $false
+$excel.DisplayAlerts = $false
+
+Write-Host "XLSファイルの検索を開始します..."
+
+# XLSファイルを取得
+$xlsFiles = Get-ChildItem -Path $FolderPath -Filter "*.xls" -Recurse
+
+if ($xlsFiles.Count -eq 0) {
+    Write-Host "変換対象のXLSファイルが見つかりませんでした。"
+}
+else {
+    Write-Host "$($xlsFiles.Count)個のXLSファイルが見つかりました。変換を開始します..."
+    
+    foreach ($file in $xlsFiles) {
+        try {
+            # ワークブックを開く
+            $workbook = $excel.Workbooks.Open($file.FullName)
+            
+            # 新しいファイル名を作成
+            $newFileName = $file.FullName -replace '\.xls$', '.xlsx'
+            
+            # XLSXとして保存（51はxlsxフォーマットのExcel定数）
+            $workbook.SaveAs($newFileName, 51)
+            
+            # ワークブックを閉じる
+            $workbook.Close()
+            
+            Write-Host "変換完了: $($file.Name) → $($newFileName)"
+        }
+        catch {
+            Write-Host "エラー ($($file.Name)): $_"
+        }
+    }
+}
+
+# クリーンアップ
+$excel.Quit()
+[System.Runtime.Interopservices.Marshal]::ReleaseComObject($excel)
+Remove-Variable excel
+
+Write-Host "処理が完了しました。"
+```
+
+### 使用方法
+
+1. 上記のコードを `Convert-XlsToXlsx.ps1` などのファイル名で保存します。
+2. PowerShellを開き、次のコマンドを実行します：
+
+```
+.\Convert-XlsToXlsx.ps1 -FolderPath "C:\変換したいXLSファイルのあるフォルダパス"
+```
+
+### 注意点
+
+- このスクリプトはExcelがインストールされているコンピュータで実行する必要があります
+- `-Recurse` パラメータにより、サブフォルダ内のXLSファイルも検索・変換されます
+- 元のXLSファイルはそのまま残り、新しくXLSXファイルが作成されます
+
+必要に応じてスクリプトをカスタマイズすることもできます。
