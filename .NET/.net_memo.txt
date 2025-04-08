@@ -622,3 +622,59 @@ End Sub
 ```
 
 これらの方法を使用すると、メッセージの量を大幅に減らし、貼り付け操作に関連するメッセージを特定しやすくなります。特に、コンテキストメニューの表示から選択までに発生するWM_COMMANDメッセージと、その特定のwParamの値に注目することで、GCTextBoxで使用されている貼り付けコマンドのIDを見つけることができる可能性が高まります。
+------------
+# ネットワーク非接続環境でClosedXMLを使用する方法
+
+VMware上のネットワーク非接続ゲストOSでClosedXMLを使用するには、「オフラインNuGet」アプローチが必要です。以下の手順で実現できます：
+
+## 手順1: ホストOSでパッケージをダウンロード
+
+1. **nuget.exeの入手**:
+   - [nuget.org/downloads](https://www.nuget.org/downloads)からNuGet CLIツール(nuget.exe)をダウンロード
+
+2. **必要なパッケージをダウンロード**:
+   - コマンドプロンプトを開き、以下のコマンドを実行：
+   ```
+   nuget.exe install ClosedXML -OutputDirectory C:\Temp\Packages
+   ```
+   - これによりClosedXMLとその依存パッケージがダウンロードされます
+   - 主な依存パッケージ：DocumentFormat.OpenXml、ExcelNumberFormat、SixLabors.Fonts
+
+## 手順2: パッケージをゲストOSに転送
+
+1. **転送方法**:
+   - VMwareの共有フォルダ機能を使用
+   - または仮想ディスク（.isoファイル）を作成してマウント
+   - または仮想マシン設定でUSBドライブを接続
+
+2. **転送先**:
+   - ゲストOS上の任意のフォルダ（例：C:\NuGetPackages）
+
+## 手順3: ゲストOSでローカルNuGetリポジトリを設定
+
+1. **Visual Studioでローカルパッケージソースを追加**:
+   - ツール → NuGetパッケージマネージャー → パッケージマネージャーの設定
+   - パッケージソース → 「+」ボタンをクリック
+   - 名前（例：「ローカルパッケージ」）とパス（C:\NuGetPackages）を入力
+
+2. **プロジェクトにClosedXMLパッケージをインストール**:
+   - ソリューションエクスプローラーでプロジェクトを右クリック
+   - NuGetパッケージの管理を選択
+   - パッケージソースを「ローカルパッケージ」に切り替え
+   - ClosedXMLを選択してインストール
+
+## 代替手順: 手動でDLLを参照に追加
+
+より直接的な方法として：
+
+1. ダウンロードしたパッケージフォルダから必要なDLLファイルを探す:
+   - `ClosedXML.X.X.X\lib\net40\ClosedXML.dll`
+   - `DocumentFormat.OpenXml.X.X.X\lib\net40\DocumentFormat.OpenXml.dll`
+   - その他依存DLL
+
+2. これらのDLLをプロジェクトの任意のフォルダ（例：Libs）にコピー
+
+3. Visual Studioでプロジェクトに参照を追加:
+   - プロジェクト → 参照の追加 → 参照 → 参照の追加からDLLを選択
+
+このアプローチならパッケージマネージャーを使わずに直接DLLを参照できますが、バージョン管理は手動で行う必要があります。
