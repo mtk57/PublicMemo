@@ -1,0 +1,587 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json; // 標準のJSONシリアライザ
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+
+namespace SimpleExcelGrep
+{
+    public partial class MainForm : Form
+    {
+        private CancellationTokenSource _cancellationTokenSource;
+        private string _settingsFilePath = "settings.json";
+        private bool _isSearching = false;
+        private const int MaxHistoryItems = 10;
+
+        // モデルクラス - 設定の保存/読み込み用
+        [DataContract]
+        public class Settings
+        {
+            [DataMember]
+            public string FolderPath { get; set; } = "";
+            
+            [DataMember]
+            public string SearchKeyword { get; set; } = "";
+            
+            [DataMember]
+            public bool UseRegex { get; set; } = false;
+            
+            [DataMember]
+            public string IgnoreKeywords { get; set; } = "";
+
+            [DataMember]
+            public List<string> FolderPathHistory { get; set; } = new List<string>();
+
+            [DataMember]
+            public List<string> SearchKeywordHistory { get; set; } = new List<string>();
+        }
+
+        // 検索結果を格納するクラス
+        public class SearchResult
+        {
+            public string FilePath { get; set; }
+            public string SheetName { get; set; }
+            public string CellPosition { get; set; }
+            public string CellValue { get; set; }
+        }
+
+        public MainForm()
+        {
+            InitializeComponent();
+            this.FormClosing += MainForm_FormClosing;
+            this.Load += MainForm_Load;
+            btnSelectFolder.Click += BtnSelectFolder_Click;
+            btnStartSearch.Click += BtnStartSearch_Click;
+            btnCancelSearch.Click += BtnCancelSearch_Click;
+            grdResults.DoubleClick += GrdResults_DoubleClick;
+        }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            LoadSettings();
+        }
+
+        private void LoadSettings()
+        {
+            try
+            {
+                if (File.Exists(_settingsFilePath))
+                {
+                    // DataContractJsonSerializerを使用してJSON読み込み
+                    using (FileStream fs = new FileStream(_settingsFilePath, FileMode.Open))
+                    {
+                        DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(Settings));
+                        Settings settings = (Settings)serializer.ReadObject(fs);
+
+                        // コンボボックスの履歴をクリアして設定
+                        cmbFolderPath.Items.Clear();
+                        foreach (var path in settings.FolderPathHistory)
+                        {
+                            cmbFolderPath.Items.Add(path);
+                        }
+                        cmbFolderPath.Text = settings.FolderPath;
+
+                        // 検索キーワード履歴
+                        cmbKeyword.Items.Clear();
+                        foreach (var keyword in settings.SearchKeywordHistory)
+                        {
+                            cmbKeyword.Items.Add(keyword);
+                        }
+                        cmbKeyword.Text = settings.SearchKeyword;
+
+                        // その他の設定
+                        chkRegex.Checked = settings.UseRegex;
+                        txtIgnoreKeywords.Text = settings.IgnoreKeywords;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // 読み込み失敗時は何もしない
+                Console.WriteLine($"設定の読み込みに失敗: {ex.Message}");
+            }
+        }
+
+        private void SaveSettings()
+        {
+            try
+            {
+                // フォルダパス履歴を更新
+                List<string> folderPathHistory = new List<string>();
+                if (!string.IsNullOrEmpty(cmbFolderPath.Text))
+                {
+                    folderPathHistory.Add(cmbFolderPath.Text);
+                }
+                foreach (var item in cmbFolderPath.Items)
+                {
+                    string path = item.ToString();
+                    if (!folderPathHistory.Contains(path) && folderPathHistory.Count < MaxHistoryItems)
+                    {
+                        folderPathHistory.Add(path);
+                    }
+                }
+
+                // 検索キーワード履歴を更新
+                List<string> searchKeywordHistory = new List<string>();
+                if (!string.IsNullOrEmpty(cmbKeyword.Text))
+                {
+                    searchKeywordHistory.Add(cmbKeyword.Text);
+                }
+                foreach (var item in cmbKeyword.Items)
+                {
+                    string keyword = item.ToString();
+                    if (!searchKeywordHistory.Contains(keyword) && searchKeywordHistory.Count < MaxHistoryItems)
+                    {
+                        searchKeywordHistory.Add(keyword);
+                    }
+                }
+
+                // 設定を保存
+                Settings settings = new Settings
+                {
+                    FolderPath = cmbFolderPath.Text,
+                    SearchKeyword = cmbKeyword.Text,
+                    UseRegex = chkRegex.Checked,
+                    IgnoreKeywords = txtIgnoreKeywords.Text,
+                    FolderPathHistory = folderPathHistory,
+                    SearchKeywordHistory = searchKeywordHistory
+                };
+
+                // DataContractJsonSerializerを使用してJSON保存
+                using (FileStream fs = new FileStream(_settingsFilePath, FileMode.Create))
+                {
+                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(Settings));
+                    serializer.WriteObject(fs, settings);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"設定の保存に失敗しました: {ex.Message}", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        // 履歴コンボボックスに項目を追加（重複なしで先頭に配置）
+        private void AddToComboBoxHistory(ComboBox comboBox, string item)
+        {
+            if (string.IsNullOrEmpty(item))
+                return;
+
+            // 既存の項目を削除（重複を防ぐ）
+            if (comboBox.Items.Contains(item))
+            {
+                comboBox.Items.Remove(item);
+            }
+
+            // 先頭に追加
+            comboBox.Items.Insert(0, item);
+
+            // 最大履歴数を超えた場合、古い項目を削除
+            while (comboBox.Items.Count > MaxHistoryItems)
+            {
+                comboBox.Items.RemoveAt(comboBox.Items.Count - 1);
+            }
+
+            // 現在の選択項目を設定
+            comboBox.Text = item;
+        }
+
+        private void BtnSelectFolder_Click(object sender, EventArgs e)
+        {
+            using (FolderBrowserDialog dialog = new FolderBrowserDialog())
+            {
+                dialog.Description = "検索するフォルダを選択してください";
+                dialog.ShowNewFolderButton = false;
+
+                if (!string.IsNullOrEmpty(cmbFolderPath.Text) && Directory.Exists(cmbFolderPath.Text))
+                {
+                    dialog.SelectedPath = cmbFolderPath.Text;
+                }
+
+                if (dialog.ShowDialog() == DialogResult.OK)
+                {
+                    AddToComboBoxHistory(cmbFolderPath, dialog.SelectedPath);
+                }
+            }
+        }
+
+        private async void BtnStartSearch_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(cmbFolderPath.Text))
+            {
+                MessageBox.Show("フォルダパスを入力してください。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!Directory.Exists(cmbFolderPath.Text))
+            {
+                MessageBox.Show("指定されたフォルダが存在しません。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(cmbKeyword.Text))
+            {
+                MessageBox.Show("検索キーワードを入力してください。", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            // 検索キーワードを履歴に追加
+            AddToComboBoxHistory(cmbKeyword, cmbKeyword.Text);
+
+            // UIを検索中の状態に変更
+            SetSearchingState(true);
+
+            // キャンセルトークンを作成
+            _cancellationTokenSource = new CancellationTokenSource();
+
+            try
+            {
+                // 結果グリッドをクリア
+                grdResults.Rows.Clear();
+
+                // 無視キーワードのリストを作成
+                List<string> ignoreKeywords = txtIgnoreKeywords.Text
+                    .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Select(k => k.Trim())
+                    .Where(k => !string.IsNullOrEmpty(k))
+                    .ToList();
+
+                // 正規表現オブジェクト
+                Regex regex = null;
+                if (chkRegex.Checked)
+                {
+                    try
+                    {
+                        regex = new Regex(cmbKeyword.Text, RegexOptions.Compiled);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show($"正規表現が無効です: {ex.Message}", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        SetSearchingState(false);
+                        return;
+                    }
+                }
+
+                // 検索処理を実行
+                List<SearchResult> results = await SearchExcelFilesAsync(
+                    cmbFolderPath.Text,
+                    cmbKeyword.Text,
+                    chkRegex.Checked,
+                    regex,
+                    ignoreKeywords,
+                    _cancellationTokenSource.Token);
+
+                // 結果をグリッドに表示
+                foreach (var result in results)
+                {
+                    grdResults.Rows.Add(result.FilePath, result.SheetName, result.CellPosition, result.CellValue);
+                }
+
+                lblStatus.Text = $"検索完了: {results.Count} 件見つかりました";
+            }
+            catch (OperationCanceledException)
+            {
+                lblStatus.Text = "検索は中止されました";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"検索中にエラーが発生しました: {ex.Message}", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                lblStatus.Text = "エラーが発生しました";
+            }
+            finally
+            {
+                // UIを通常の状態に戻す
+                SetSearchingState(false);
+            }
+        }
+
+        private void BtnCancelSearch_Click(object sender, EventArgs e)
+        {
+            if (_isSearching && _cancellationTokenSource != null)
+            {
+                _cancellationTokenSource.Cancel();
+                lblStatus.Text = "キャンセル処理中...";
+            }
+        }
+
+        private void GrdResults_DoubleClick(object sender, EventArgs e)
+        {
+            if (grdResults.SelectedRows.Count > 0)
+            {
+                string filePath = grdResults.SelectedRows[0].Cells[0].Value.ToString();
+                if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                {
+                    string folderPath = Path.GetDirectoryName(filePath);
+                    System.Diagnostics.Process.Start("explorer.exe", folderPath);
+                }
+            }
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // 検索中の場合、キャンセルする
+            if (_isSearching && _cancellationTokenSource != null)
+            {
+                _cancellationTokenSource.Cancel();
+            }
+
+            // 設定を保存
+            SaveSettings();
+        }
+
+        private void SetSearchingState(bool isSearching)
+        {
+            _isSearching = isSearching;
+
+            // 検索中はUIの一部を無効化
+            cmbFolderPath.Enabled = !isSearching;
+            cmbKeyword.Enabled = !isSearching;
+            txtIgnoreKeywords.Enabled = !isSearching;
+            chkRegex.Enabled = !isSearching;
+            btnSelectFolder.Enabled = !isSearching;
+            btnStartSearch.Enabled = !isSearching;
+            btnCancelSearch.Enabled = isSearching;
+
+            // 検索中はステータスを更新
+            if (isSearching)
+            {
+                lblStatus.Text = "検索中...";
+            }
+        }
+
+        private async Task<List<SearchResult>> SearchExcelFilesAsync(
+            string folderPath,
+            string keyword,
+            bool useRegex,
+            Regex regex,
+            List<string> ignoreKeywords,
+            CancellationToken cancellationToken)
+        {
+            List<SearchResult> results = new List<SearchResult>();
+
+            // Excelファイルの一覧を取得
+            string[] excelFiles = Directory.GetFiles(folderPath, "*.xls*", SearchOption.AllDirectories)
+                .Where(f => f.EndsWith(".xlsx", StringComparison.OrdinalIgnoreCase) || 
+                            f.EndsWith(".xls", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+
+            // 進捗状況を表示するための変数
+            int totalFiles = excelFiles.Length;
+            int processedFiles = 0;
+
+            // 各ファイルを処理
+            foreach (string filePath in excelFiles)
+            {
+                // キャンセルされた場合は処理を終了
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    throw new OperationCanceledException();
+                }
+
+                // 無視キーワードが含まれている場合はスキップ
+                if (ignoreKeywords.Any(k => filePath.Contains(k)))
+                {
+                    processedFiles++;
+                    UpdateStatus($"処理中... {processedFiles}/{totalFiles} ファイル");
+                    continue;
+                }
+
+                try
+                {
+                    // ファイル拡張子によって処理を分ける
+                    string extension = Path.GetExtension(filePath).ToLower();
+                    List<SearchResult> fileResults = new List<SearchResult>();
+
+                    if (extension == ".xlsx")
+                    {
+                        // .xlsx ファイルはOpenXMLで処理
+                        fileResults = await Task.Run(() => SearchInXlsxFile(
+                            filePath, keyword, useRegex, regex, cancellationToken), cancellationToken);
+                    }
+                    else if (extension == ".xls")
+                    {
+                        // .xls ファイルはサポート外として処理（メッセージのみ表示）
+                        UpdateStatus($"注: .xls形式は現在サポートされていません: {filePath}");
+                        processedFiles++;
+                        continue;
+                    }
+
+                    results.AddRange(fileResults);
+
+                    // 進捗状況を更新
+                    processedFiles++;
+                    UpdateStatus($"処理中... {processedFiles}/{totalFiles} ファイル");
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    // ファイル処理中のエラーをログに記録するなどの処理
+                    Console.WriteLine($"ファイル処理エラー: {filePath}, {ex.Message}");
+                }
+            }
+
+            return results;
+        }
+
+        private List<SearchResult> SearchInXlsxFile(
+            string filePath,
+            string keyword,
+            bool useRegex,
+            Regex regex,
+            CancellationToken cancellationToken)
+        {
+            List<SearchResult> results = new List<SearchResult>();
+
+            try
+            {
+                using (SpreadsheetDocument spreadsheetDocument = SpreadsheetDocument.Open(filePath, false))
+                {
+                    WorkbookPart workbookPart = spreadsheetDocument.WorkbookPart;
+                    SharedStringTablePart sharedStringTablePart = workbookPart.SharedStringTablePart;
+                    SharedStringTable sharedStringTable = sharedStringTablePart?.SharedStringTable;
+
+                    // ワークシートの一覧を取得
+                    Sheets sheets = workbookPart.Workbook.Sheets;
+                    
+                    // 各シートを処理
+                    foreach (Sheet sheet in sheets.Elements<Sheet>())
+                    {
+                        // キャンセル処理
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            throw new OperationCanceledException();
+                        }
+
+                        // シートIDを取得
+                        string relationshipId = sheet.Id.Value;
+                        WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(relationshipId);
+                        SheetData sheetData = worksheetPart.Worksheet.GetFirstChild<SheetData>();
+
+                        // 各行を処理
+                        foreach (Row row in sheetData.Elements<Row>())
+                        {
+                            // キャンセル処理
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                throw new OperationCanceledException();
+                            }
+
+                            // 各セルを処理
+                            foreach (Cell cell in row.Elements<Cell>())
+                            {
+                                // キャンセル処理
+                                if (cancellationToken.IsCancellationRequested)
+                                {
+                                    throw new OperationCanceledException();
+                                }
+
+                                // セルの値を取得
+                                string cellValue = GetCellValue(cell, sharedStringTable);
+                                
+                                if (!string.IsNullOrEmpty(cellValue))
+                                {
+                                    bool isMatch;
+                                    
+                                    if (useRegex && regex != null)
+                                    {
+                                        isMatch = regex.IsMatch(cellValue);
+                                    }
+                                    else
+                                    {
+                                        isMatch = cellValue.Contains(keyword);
+                                    }
+
+                                    if (isMatch)
+                                    {
+                                        results.Add(new SearchResult
+                                        {
+                                            FilePath = filePath,
+                                            SheetName = sheet.Name,
+                                            CellPosition = GetCellReference(cell),
+                                            CellValue = cellValue
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // エラーをログに記録
+                Console.WriteLine($"Excel処理エラー: {filePath}, {ex.Message}");
+            }
+
+            return results;
+        }
+
+        // セルの値を取得するヘルパーメソッド
+        private string GetCellValue(Cell cell, SharedStringTable sharedStringTable)
+        {
+            if (cell == null)
+                return string.Empty;
+
+            string cellValue = cell.InnerText;
+
+            // セルの値が数値型の場合は、そのまま返す
+            if (cell.DataType == null)
+                return cellValue;
+
+            // セルの値が共有文字列の場合は、共有文字列テーブルから実際の値を取得
+            if (cell.DataType.Value == CellValues.SharedString && sharedStringTable != null)
+            {
+                int ssid = int.Parse(cellValue);
+                
+                if (ssid >= 0 && ssid < sharedStringTable.Count())
+                {
+                    SharedStringItem ssi = sharedStringTable.Elements<SharedStringItem>().ElementAt(ssid);
+                    if (ssi.Text != null)
+                        return ssi.Text.Text;
+                    else if (ssi.InnerText != null)
+                        return ssi.InnerText;
+                    else if (ssi.InnerXml != null)
+                        return ssi.InnerXml;
+                }
+            }
+            
+            // 日付や他の型の場合も、基本的にはInnerTextで取得できる
+            return cellValue;
+        }
+
+        // セル参照（例：A1）を取得するメソッド
+        private string GetCellReference(Cell cell)
+        {
+            return cell.CellReference?.Value ?? string.Empty;
+        }
+
+        private void UpdateStatus(string message)
+        {
+            if (lblStatus.InvokeRequired)
+            {
+                lblStatus.Invoke(new Action(() => lblStatus.Text = message));
+            }
+            else
+            {
+                lblStatus.Text = message;
+            }
+        }
+    }
+}
