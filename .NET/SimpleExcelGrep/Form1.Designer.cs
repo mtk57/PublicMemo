@@ -1,4 +1,4 @@
-﻿namespace SimpleExcelGrep
+namespace SimpleExcelGrep
 {
      partial class MainForm
     {
@@ -36,7 +36,7 @@
             this.cmbKeyword = new System.Windows.Forms.ComboBox();
             this.chkRegex = new System.Windows.Forms.CheckBox();
             this.lblIgnore = new System.Windows.Forms.Label();
-            this.txtIgnoreKeywords = new System.Windows.Forms.TextBox();
+            this.cmbIgnoreKeywords = new System.Windows.Forms.ComboBox(); // 変更: TextBoxからComboBoxへ
             this.lblIgnoreHint = new System.Windows.Forms.Label();
             this.buttonPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.btnStartSearch = new System.Windows.Forms.Button();
@@ -44,6 +44,7 @@
             this.lblStatus = new System.Windows.Forms.Label();
             this.grdResults = new System.Windows.Forms.DataGridView();
             this.colFilePath = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colFileName = new System.Windows.Forms.DataGridViewTextBoxColumn(); // 追加: ファイル名列
             this.colSheetName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colCellPosition = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colCellValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -65,7 +66,7 @@
             this.mainLayout.Controls.Add(this.cmbKeyword, 1, 1);
             this.mainLayout.Controls.Add(this.chkRegex, 1, 2);
             this.mainLayout.Controls.Add(this.lblIgnore, 0, 3);
-            this.mainLayout.Controls.Add(this.txtIgnoreKeywords, 1, 3);
+            this.mainLayout.Controls.Add(this.cmbIgnoreKeywords, 1, 3); // 変更: txtIgnoreKeywordsからcmbIgnoreKeywordsへ
             this.mainLayout.Controls.Add(this.lblIgnoreHint, 2, 3);
             this.mainLayout.Controls.Add(this.buttonPanel, 1, 4);
             this.mainLayout.Controls.Add(this.lblStatus, 1, 5);
@@ -154,13 +155,14 @@
             this.lblIgnore.Text = "無視キーワード:";
             this.lblIgnore.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // txtIgnoreKeywords
+            // cmbIgnoreKeywords
             // 
-            this.txtIgnoreKeywords.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtIgnoreKeywords.Location = new System.Drawing.Point(127, 96);
-            this.txtIgnoreKeywords.Name = "txtIgnoreKeywords";
-            this.txtIgnoreKeywords.Size = new System.Drawing.Size(528, 19);
-            this.txtIgnoreKeywords.TabIndex = 7;
+            this.cmbIgnoreKeywords.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cmbIgnoreKeywords.FormattingEnabled = true;
+            this.cmbIgnoreKeywords.Location = new System.Drawing.Point(127, 96);
+            this.cmbIgnoreKeywords.Name = "cmbIgnoreKeywords";
+            this.cmbIgnoreKeywords.Size = new System.Drawing.Size(528, 20);
+            this.cmbIgnoreKeywords.TabIndex = 7;
             // 
             // lblIgnoreHint
             // 
@@ -220,6 +222,7 @@
             this.grdResults.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.grdResults.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colFilePath,
+            this.colFileName, // 追加: ファイル名列
             this.colSheetName,
             this.colCellPosition,
             this.colCellValue});
@@ -238,6 +241,12 @@
             this.colFilePath.HeaderText = "ファイルパス";
             this.colFilePath.Name = "colFilePath";
             this.colFilePath.ReadOnly = true;
+            // 
+            // colFileName
+            // 
+            this.colFileName.HeaderText = "ファイル名";
+            this.colFileName.Name = "colFileName";
+            this.colFileName.ReadOnly = true;
             // 
             // colSheetName
             // 
@@ -285,7 +294,7 @@
         private System.Windows.Forms.ComboBox cmbKeyword;
         private System.Windows.Forms.CheckBox chkRegex;
         private System.Windows.Forms.Label lblIgnore;
-        private System.Windows.Forms.TextBox txtIgnoreKeywords;
+        private System.Windows.Forms.ComboBox cmbIgnoreKeywords; // 変更: TextBoxからComboBoxへ
         private System.Windows.Forms.Label lblIgnoreHint;
         private System.Windows.Forms.FlowLayoutPanel buttonPanel;
         private System.Windows.Forms.Button btnStartSearch;
@@ -293,9 +302,9 @@
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.DataGridView grdResults;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFilePath;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colFileName; // 追加: ファイル名列
         private System.Windows.Forms.DataGridViewTextBoxColumn colSheetName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCellPosition;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCellValue;
     }
 }
-

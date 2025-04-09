@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -45,6 +45,9 @@ namespace SimpleExcelGrep
 
             [DataMember]
             public List<string> SearchKeywordHistory { get; set; } = new List<string>();
+            
+            [DataMember]
+            public List<string> IgnoreKeywordsHistory { get; set; } = new List<string>(); // 追加：無視キーワード履歴
         }
 
         // 検索結果を格納するクラス
@@ -65,6 +68,7 @@ namespace SimpleExcelGrep
             btnStartSearch.Click += BtnStartSearch_Click;
             btnCancelSearch.Click += BtnCancelSearch_Click;
             grdResults.DoubleClick += GrdResults_DoubleClick;
+            grdResults.KeyDown += GrdResults_KeyDown; // 追加：キーダウンイベントハンドラの登録
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -100,9 +104,16 @@ namespace SimpleExcelGrep
                         }
                         cmbKeyword.Text = settings.SearchKeyword;
 
+                        // 無視キーワード履歴
+                        cmbIgnoreKeywords.Items.Clear();
+                        foreach (var keyword in settings.IgnoreKeywordsHistory)
+                        {
+                            cmbIgnoreKeywords.Items.Add(keyword);
+                        }
+                        cmbIgnoreKeywords.Text = settings.IgnoreKeywords;
+
                         // その他の設定
                         chkRegex.Checked = settings.UseRegex;
-                        txtIgnoreKeywords.Text = settings.IgnoreKeywords;
                     }
                 }
             }
@@ -146,6 +157,21 @@ namespace SimpleExcelGrep
                         searchKeywordHistory.Add(keyword);
                     }
                 }
+                
+                // 無視キーワード履歴を更新
+                List<string> ignoreKeywordsHistory = new List<string>();
+                if (!string.IsNullOrEmpty(cmbIgnoreKeywords.Text))
+                {
+                    ignoreKeywordsHistory.Add(cmbIgnoreKeywords.Text);
+                }
+                foreach (var item in cmbIgnoreKeywords.Items)
+                {
+                    string keyword = item.ToString();
+                    if (!ignoreKeywordsHistory.Contains(keyword) && ignoreKeywordsHistory.Count < MaxHistoryItems)
+                    {
+                        ignoreKeywordsHistory.Add(keyword);
+                    }
+                }
 
                 // 設定を保存
                 Settings settings = new Settings
@@ -153,9 +179,10 @@ namespace SimpleExcelGrep
                     FolderPath = cmbFolderPath.Text,
                     SearchKeyword = cmbKeyword.Text,
                     UseRegex = chkRegex.Checked,
-                    IgnoreKeywords = txtIgnoreKeywords.Text,
+                    IgnoreKeywords = cmbIgnoreKeywords.Text,
                     FolderPathHistory = folderPathHistory,
-                    SearchKeywordHistory = searchKeywordHistory
+                    SearchKeywordHistory = searchKeywordHistory,
+                    IgnoreKeywordsHistory = ignoreKeywordsHistory
                 };
 
                 // DataContractJsonSerializerを使用してJSON保存
@@ -237,6 +264,9 @@ namespace SimpleExcelGrep
 
             // 検索キーワードを履歴に追加
             AddToComboBoxHistory(cmbKeyword, cmbKeyword.Text);
+            
+            // 無視キーワードを履歴に追加
+            AddToComboBoxHistory(cmbIgnoreKeywords, cmbIgnoreKeywords.Text);
 
             // UIを検索中の状態に変更
             SetSearchingState(true);
@@ -250,7 +280,7 @@ namespace SimpleExcelGrep
                 grdResults.Rows.Clear();
 
                 // 無視キーワードのリストを作成
-                List<string> ignoreKeywords = txtIgnoreKeywords.Text
+                List<string> ignoreKeywords = cmbIgnoreKeywords.Text
                     .Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
                     .Select(k => k.Trim())
                     .Where(k => !string.IsNullOrEmpty(k))
@@ -284,7 +314,8 @@ namespace SimpleExcelGrep
                 // 結果をグリッドに表示
                 foreach (var result in results)
                 {
-                    grdResults.Rows.Add(result.FilePath, result.SheetName, result.CellPosition, result.CellValue);
+                    string fileName = Path.GetFileName(result.FilePath);
+                    grdResults.Rows.Add(result.FilePath, fileName, result.SheetName, result.CellPosition, result.CellValue);
                 }
 
                 lblStatus.Text = $"検索完了: {results.Count} 件見つかりました";
@@ -326,6 +357,51 @@ namespace SimpleExcelGrep
                 }
             }
         }
+        
+        // 追加：GridViewのキーダウンイベントハンドラ
+        private void GrdResults_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Control && e.KeyCode == Keys.A)
+            {
+                // CTRL+A で全行選択
+                grdResults.SelectAll();
+                e.Handled = true;
+            }
+            else if (e.Control && e.KeyCode == Keys.C)
+            {
+                // CTRL+C でコピー
+                CopySelectedRowsToClipboard();
+                e.Handled = true;
+            }
+        }
+        
+        // 追加：選択行をクリップボードにコピーするメソッド
+        private void CopySelectedRowsToClipboard()
+        {
+            if (grdResults.SelectedRows.Count > 0)
+            {
+                StringBuilder sb = new StringBuilder();
+                
+                // ヘッダー行を追加
+                for (int i = 0; i < grdResults.Columns.Count; i++)
+                {
+                    sb.Append(grdResults.Columns[i].HeaderText);
+                    sb.Append(i == grdResults.Columns.Count - 1 ? Environment.NewLine : "\t");
+                }
+                
+                // 選択行を追加（DataGridViewは通常、選択行が下から上の順になるため、逆順で処理）
+                foreach (DataGridViewRow row in grdResults.SelectedRows)
+                {
+                    for (int i = 0; i < row.Cells.Count; i++)
+                    {
+                        sb.Append(row.Cells[i].Value?.ToString() ?? "");
+                        sb.Append(i == row.Cells.Count - 1 ? Environment.NewLine : "\t");
+                    }
+                }
+                
+                Clipboard.SetText(sb.ToString());
+            }
+        }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -346,7 +422,7 @@ namespace SimpleExcelGrep
             // 検索中はUIの一部を無効化
             cmbFolderPath.Enabled = !isSearching;
             cmbKeyword.Enabled = !isSearching;
-            txtIgnoreKeywords.Enabled = !isSearching;
+            cmbIgnoreKeywords.Enabled = !isSearching; // 変更: txtIgnoreKeywordsからcmbIgnoreKeywordsへ
             chkRegex.Enabled = !isSearching;
             btnSelectFolder.Enabled = !isSearching;
             btnStartSearch.Enabled = !isSearching;
