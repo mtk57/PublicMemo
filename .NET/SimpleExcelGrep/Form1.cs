@@ -68,7 +68,25 @@ namespace SimpleExcelGrep
             btnStartSearch.Click += BtnStartSearch_Click;
             btnCancelSearch.Click += BtnCancelSearch_Click;
             grdResults.DoubleClick += GrdResults_DoubleClick;
-            grdResults.KeyDown += GrdResults_KeyDown; // 追加：キーダウンイベントハンドラの登録
+            
+            // グリッドにキー押下イベントを追加
+            grdResults.KeyDown += GrdResults_KeyDown;
+            
+            // 複数行選択を可能にする
+            grdResults.MultiSelect = true;
+            grdResults.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
+            
+            // コンテキストメニューを追加
+            ContextMenuStrip contextMenu = new ContextMenuStrip();
+            ToolStripMenuItem copyMenuItem = new ToolStripMenuItem("コピー");
+            copyMenuItem.Click += (s, e) => CopySelectedRowsToClipboard();
+            contextMenu.Items.Add(copyMenuItem);
+            
+            ToolStripMenuItem selectAllMenuItem = new ToolStripMenuItem("すべて選択");
+            selectAllMenuItem.Click += (s, e) => grdResults.SelectAll();
+            contextMenu.Items.Add(selectAllMenuItem);
+            
+            grdResults.ContextMenuStrip = contextMenu;
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -358,7 +376,7 @@ namespace SimpleExcelGrep
             }
         }
         
-        // 追加：GridViewのキーダウンイベントハンドラ
+        // GridViewのキーダウンイベントハンドラ（修正版）
         private void GrdResults_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Control && e.KeyCode == Keys.A)
@@ -366,16 +384,18 @@ namespace SimpleExcelGrep
                 // CTRL+A で全行選択
                 grdResults.SelectAll();
                 e.Handled = true;
+                e.SuppressKeyPress = true; // これを追加
             }
             else if (e.Control && e.KeyCode == Keys.C)
             {
                 // CTRL+C でコピー
                 CopySelectedRowsToClipboard();
                 e.Handled = true;
+                e.SuppressKeyPress = true; // これを追加
             }
         }
         
-        // 追加：選択行をクリップボードにコピーするメソッド
+        // 選択行をクリップボードにコピーするメソッド（修正版）
         private void CopySelectedRowsToClipboard()
         {
             if (grdResults.SelectedRows.Count > 0)
@@ -389,17 +409,35 @@ namespace SimpleExcelGrep
                     sb.Append(i == grdResults.Columns.Count - 1 ? Environment.NewLine : "\t");
                 }
                 
-                // 選択行を追加（DataGridViewは通常、選択行が下から上の順になるため、逆順で処理）
+                // 選択行を追加（選択順に処理）
+                List<DataGridViewRow> selectedRows = new List<DataGridViewRow>();
                 foreach (DataGridViewRow row in grdResults.SelectedRows)
                 {
-                    for (int i = 0; i < row.Cells.Count; i++)
+                    selectedRows.Add(row);
+                }
+                
+                // インデックスでソート（上から下の順番になるように）
+                selectedRows.Sort((x, y) => x.Index.CompareTo(y.Index));
+                
+                foreach (DataGridViewRow row in selectedRows)
+                {
+                    for (int i = 0; i < grdResults.Columns.Count; i++)
                     {
                         sb.Append(row.Cells[i].Value?.ToString() ?? "");
-                        sb.Append(i == row.Cells.Count - 1 ? Environment.NewLine : "\t");
+                        sb.Append(i == grdResults.Columns.Count - 1 ? Environment.NewLine : "\t");
                     }
                 }
                 
-                Clipboard.SetText(sb.ToString());
+                try
+                {
+                    Clipboard.SetText(sb.ToString());
+                    // コピー成功を通知（オプション）
+                    lblStatus.Text = $"{selectedRows.Count}行をクリップボードにコピーしました";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"クリップボードへのコピーに失敗しました: {ex.Message}", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 

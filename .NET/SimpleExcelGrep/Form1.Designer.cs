@@ -36,7 +36,7 @@ namespace SimpleExcelGrep
             this.cmbKeyword = new System.Windows.Forms.ComboBox();
             this.chkRegex = new System.Windows.Forms.CheckBox();
             this.lblIgnore = new System.Windows.Forms.Label();
-            this.cmbIgnoreKeywords = new System.Windows.Forms.ComboBox(); // 変更: TextBoxからComboBoxへ
+            this.cmbIgnoreKeywords = new System.Windows.Forms.ComboBox();
             this.lblIgnoreHint = new System.Windows.Forms.Label();
             this.buttonPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.btnStartSearch = new System.Windows.Forms.Button();
@@ -44,7 +44,7 @@ namespace SimpleExcelGrep
             this.lblStatus = new System.Windows.Forms.Label();
             this.grdResults = new System.Windows.Forms.DataGridView();
             this.colFilePath = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colFileName = new System.Windows.Forms.DataGridViewTextBoxColumn(); // 追加: ファイル名列
+            this.colFileName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colSheetName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colCellPosition = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colCellValue = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -66,7 +66,7 @@ namespace SimpleExcelGrep
             this.mainLayout.Controls.Add(this.cmbKeyword, 1, 1);
             this.mainLayout.Controls.Add(this.chkRegex, 1, 2);
             this.mainLayout.Controls.Add(this.lblIgnore, 0, 3);
-            this.mainLayout.Controls.Add(this.cmbIgnoreKeywords, 1, 3); // 変更: txtIgnoreKeywordsからcmbIgnoreKeywordsへ
+            this.mainLayout.Controls.Add(this.cmbIgnoreKeywords, 1, 3);
             this.mainLayout.Controls.Add(this.lblIgnoreHint, 2, 3);
             this.mainLayout.Controls.Add(this.buttonPanel, 1, 4);
             this.mainLayout.Controls.Add(this.lblStatus, 1, 5);
@@ -222,14 +222,13 @@ namespace SimpleExcelGrep
             this.grdResults.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.grdResults.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colFilePath,
-            this.colFileName, // 追加: ファイル名列
+            this.colFileName,
             this.colSheetName,
             this.colCellPosition,
             this.colCellValue});
             this.mainLayout.SetColumnSpan(this.grdResults, 3);
             this.grdResults.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grdResults.Location = new System.Drawing.Point(13, 189);
-            this.grdResults.MultiSelect = false;
             this.grdResults.Name = "grdResults";
             this.grdResults.ReadOnly = true;
             this.grdResults.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -275,7 +274,7 @@ namespace SimpleExcelGrep
             this.MinimumSize = new System.Drawing.Size(640, 446);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Excel Grep Tool - 標準ライブラリ版";
+            this.Text = "Simple Excel Grep";
             this.mainLayout.ResumeLayout(false);
             this.mainLayout.PerformLayout();
             this.buttonPanel.ResumeLayout(false);
