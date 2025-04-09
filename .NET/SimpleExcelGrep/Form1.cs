@@ -23,6 +23,7 @@ namespace SimpleExcelGrep
         private string _settingsFilePath = "settings.json";
         private bool _isSearching = false;
         private const int MaxHistoryItems = 10;
+        private List<SearchResult> _searchResults = new List<SearchResult>(); // 検索結果を保持するリスト
 
         // モデルクラス - 設定の保存/読み込み用
         [DataContract]
@@ -47,7 +48,10 @@ namespace SimpleExcelGrep
             public List<string> SearchKeywordHistory { get; set; } = new List<string>();
             
             [DataMember]
-            public List<string> IgnoreKeywordsHistory { get; set; } = new List<string>(); // 追加：無視キーワード履歴
+            public List<string> IgnoreKeywordsHistory { get; set; } = new List<string>();
+            
+            [DataMember]
+            public bool RealTimeDisplay { get; set; } = true; // 追加: リアルタイム表示設定
         }
 
         // 検索結果を格納するクラス
@@ -87,6 +91,12 @@ namespace SimpleExcelGrep
             contextMenu.Items.Add(selectAllMenuItem);
             
             grdResults.ContextMenuStrip = contextMenu;
+            
+            // リアルタイム表示チェックボックスの状態変更イベントを登録
+            chkRealTimeDisplay.CheckedChanged += (s, e) => {
+                // 設定を保存
+                SaveSettings();
+            };
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -132,6 +142,9 @@ namespace SimpleExcelGrep
 
                         // その他の設定
                         chkRegex.Checked = settings.UseRegex;
+                        
+                        // リアルタイム表示設定
+                        chkRealTimeDisplay.Checked = settings.RealTimeDisplay;
                     }
                 }
             }
@@ -200,7 +213,8 @@ namespace SimpleExcelGrep
                     IgnoreKeywords = cmbIgnoreKeywords.Text,
                     FolderPathHistory = folderPathHistory,
                     SearchKeywordHistory = searchKeywordHistory,
-                    IgnoreKeywordsHistory = ignoreKeywordsHistory
+                    IgnoreKeywordsHistory = ignoreKeywordsHistory,
+                    RealTimeDisplay = chkRealTimeDisplay.Checked // リアルタイム表示設定を保存
                 };
 
                 // DataContractJsonSerializerを使用してJSON保存
@@ -291,6 +305,9 @@ namespace SimpleExcelGrep
 
             // キャンセルトークンを作成
             _cancellationTokenSource = new CancellationTokenSource();
+            
+            // 検索結果リストをクリア
+            _searchResults.Clear();
 
             try
             {
@@ -321,36 +338,85 @@ namespace SimpleExcelGrep
                 }
 
                 // 検索処理を実行
+                bool isRealTimeDisplay = chkRealTimeDisplay.Checked;
+                
+                // 検索結果を取得
                 List<SearchResult> results = await SearchExcelFilesAsync(
                     cmbFolderPath.Text,
                     cmbKeyword.Text,
                     chkRegex.Checked,
                     regex,
                     ignoreKeywords,
+                    isRealTimeDisplay,
                     _cancellationTokenSource.Token);
 
-                // 結果をグリッドに表示
-                foreach (var result in results)
+                // リアルタイム表示がOFFの場合または検索が途中でキャンセルされた場合に、
+                // 最終的な結果をまとめて表示
+                if (!isRealTimeDisplay || _cancellationTokenSource.IsCancellationRequested)
                 {
-                    string fileName = Path.GetFileName(result.FilePath);
-                    grdResults.Rows.Add(result.FilePath, fileName, result.SheetName, result.CellPosition, result.CellValue);
+                    DisplaySearchResults(_searchResults);
                 }
 
-                lblStatus.Text = $"検索完了: {results.Count} 件見つかりました";
+                lblStatus.Text = $"検索完了: {_searchResults.Count} 件見つかりました";
             }
             catch (OperationCanceledException)
             {
-                lblStatus.Text = "検索は中止されました";
+                lblStatus.Text = $"検索は中止されました: {_searchResults.Count} 件見つかりました";
+                
+                // キャンセル時は現在までの結果を表示
+                DisplaySearchResults(_searchResults);
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"検索中にエラーが発生しました: {ex.Message}", "エラー", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 lblStatus.Text = "エラーが発生しました";
+                
+                // エラー時は現在までの結果を表示
+                DisplaySearchResults(_searchResults);
             }
             finally
             {
                 // UIを通常の状態に戻す
                 SetSearchingState(false);
+            }
+        }
+
+        // 検索結果をグリッドに表示するメソッド
+        private void DisplaySearchResults(List<SearchResult> results)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => DisplaySearchResults(results)));
+                return;
+            }
+            
+            // 結果グリッドをクリア
+            grdResults.Rows.Clear();
+            
+            // 結果をグリッドに表示
+            foreach (var result in results)
+            {
+                string fileName = Path.GetFileName(result.FilePath);
+                grdResults.Rows.Add(result.FilePath, fileName, result.SheetName, result.CellPosition, result.CellValue);
+            }
+        }
+        
+        // 検索結果を1件追加するメソッド（リアルタイム表示用）
+        private void AddSearchResult(SearchResult result)
+        {
+            if (this.InvokeRequired)
+            {
+                this.Invoke(new Action(() => AddSearchResult(result)));
+                return;
+            }
+            
+            string fileName = Path.GetFileName(result.FilePath);
+            grdResults.Rows.Add(result.FilePath, fileName, result.SheetName, result.CellPosition, result.CellValue);
+            
+            // 最新の行にスクロール
+            if (grdResults.Rows.Count > 0)
+            {
+                grdResults.FirstDisplayedScrollingRowIndex = grdResults.Rows.Count - 1;
             }
         }
 
@@ -376,7 +442,7 @@ namespace SimpleExcelGrep
             }
         }
         
-        // GridViewのキーダウンイベントハンドラ（修正版）
+        // GridViewのキーダウンイベントハンドラ
         private void GrdResults_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Control && e.KeyCode == Keys.A)
@@ -384,18 +450,18 @@ namespace SimpleExcelGrep
                 // CTRL+A で全行選択
                 grdResults.SelectAll();
                 e.Handled = true;
-                e.SuppressKeyPress = true; // これを追加
+                e.SuppressKeyPress = true;
             }
             else if (e.Control && e.KeyCode == Keys.C)
             {
                 // CTRL+C でコピー
                 CopySelectedRowsToClipboard();
                 e.Handled = true;
-                e.SuppressKeyPress = true; // これを追加
+                e.SuppressKeyPress = true;
             }
         }
         
-        // 選択行をクリップボードにコピーするメソッド（修正版）
+        // 選択行をクリップボードにコピーするメソッド
         private void CopySelectedRowsToClipboard()
         {
             if (grdResults.SelectedRows.Count > 0)
@@ -460,11 +526,14 @@ namespace SimpleExcelGrep
             // 検索中はUIの一部を無効化
             cmbFolderPath.Enabled = !isSearching;
             cmbKeyword.Enabled = !isSearching;
-            cmbIgnoreKeywords.Enabled = !isSearching; // 変更: txtIgnoreKeywordsからcmbIgnoreKeywordsへ
+            cmbIgnoreKeywords.Enabled = !isSearching;
             chkRegex.Enabled = !isSearching;
             btnSelectFolder.Enabled = !isSearching;
             btnStartSearch.Enabled = !isSearching;
             btnCancelSearch.Enabled = isSearching;
+            
+            // リアルタイム表示チェックボックスは検索中も有効のまま
+            // chkRealTimeDisplay.Enabled は変更しない
 
             // 検索中はステータスを更新
             if (isSearching)
@@ -479,9 +548,14 @@ namespace SimpleExcelGrep
             bool useRegex,
             Regex regex,
             List<string> ignoreKeywords,
+            bool isRealTimeDisplay,
             CancellationToken cancellationToken)
         {
-            List<SearchResult> results = new List<SearchResult>();
+            // 結果グリッドをクリア
+            if (isRealTimeDisplay)
+            {
+                this.Invoke(new Action(() => grdResults.Rows.Clear()));
+            }
 
             // Excelファイルの一覧を取得
             string[] excelFiles = Directory.GetFiles(folderPath, "*.xls*", SearchOption.AllDirectories)
@@ -520,7 +594,7 @@ namespace SimpleExcelGrep
                     {
                         // .xlsx ファイルはOpenXMLで処理
                         fileResults = await Task.Run(() => SearchInXlsxFile(
-                            filePath, keyword, useRegex, regex, cancellationToken), cancellationToken);
+                            filePath, keyword, useRegex, regex, isRealTimeDisplay, cancellationToken), cancellationToken);
                     }
                     else if (extension == ".xls")
                     {
@@ -530,11 +604,12 @@ namespace SimpleExcelGrep
                         continue;
                     }
 
-                    results.AddRange(fileResults);
+                    // 結果を追加
+                    _searchResults.AddRange(fileResults);
 
                     // 進捗状況を更新
                     processedFiles++;
-                    UpdateStatus($"処理中... {processedFiles}/{totalFiles} ファイル");
+                    UpdateStatus($"処理中... {processedFiles}/{totalFiles} ファイル ({_searchResults.Count} 件見つかりました)");
                 }
                 catch (OperationCanceledException)
                 {
@@ -547,7 +622,7 @@ namespace SimpleExcelGrep
                 }
             }
 
-            return results;
+            return _searchResults;
         }
 
         private List<SearchResult> SearchInXlsxFile(
@@ -555,6 +630,7 @@ namespace SimpleExcelGrep
             string keyword,
             bool useRegex,
             Regex regex,
+            bool isRealTimeDisplay,
             CancellationToken cancellationToken)
         {
             List<SearchResult> results = new List<SearchResult>();
@@ -620,13 +696,21 @@ namespace SimpleExcelGrep
 
                                     if (isMatch)
                                     {
-                                        results.Add(new SearchResult
+                                        SearchResult result = new SearchResult
                                         {
                                             FilePath = filePath,
                                             SheetName = sheet.Name,
                                             CellPosition = GetCellReference(cell),
                                             CellValue = cellValue
-                                        });
+                                        };
+                                        
+                                        results.Add(result);
+                                        
+                                        // リアルタイム表示が有効な場合、UIに即時反映
+                                        if (isRealTimeDisplay)
+                                        {
+                                            AddSearchResult(result);
+                                        }
                                     }
                                 }
                             }

@@ -41,6 +41,7 @@ namespace SimpleExcelGrep
             this.buttonPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.btnStartSearch = new System.Windows.Forms.Button();
             this.btnCancelSearch = new System.Windows.Forms.Button();
+            this.chkRealTimeDisplay = new System.Windows.Forms.CheckBox(); // 追加: リアルタイム表示チェックボックス
             this.lblStatus = new System.Windows.Forms.Label();
             this.grdResults = new System.Windows.Forms.DataGridView();
             this.colFilePath = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -179,6 +180,7 @@ namespace SimpleExcelGrep
             // 
             this.buttonPanel.Controls.Add(this.btnStartSearch);
             this.buttonPanel.Controls.Add(this.btnCancelSearch);
+            this.buttonPanel.Controls.Add(this.chkRealTimeDisplay); // 追加: リアルタイム表示チェックボックス
             this.buttonPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.buttonPanel.Location = new System.Drawing.Point(127, 124);
             this.buttonPanel.Name = "buttonPanel";
@@ -203,6 +205,19 @@ namespace SimpleExcelGrep
             this.btnCancelSearch.TabIndex = 1;
             this.btnCancelSearch.Text = "検索中止";
             this.btnCancelSearch.UseVisualStyleBackColor = true;
+            // 
+            // chkRealTimeDisplay
+            // 
+            this.chkRealTimeDisplay.AutoSize = true;
+            this.chkRealTimeDisplay.Checked = true;
+            this.chkRealTimeDisplay.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkRealTimeDisplay.Location = new System.Drawing.Point(215, 3);
+            this.chkRealTimeDisplay.Name = "chkRealTimeDisplay";
+            this.chkRealTimeDisplay.Padding = new System.Windows.Forms.Padding(10, 5, 0, 0);
+            this.chkRealTimeDisplay.Size = new System.Drawing.Size(113, 21);
+            this.chkRealTimeDisplay.TabIndex = 2;
+            this.chkRealTimeDisplay.Text = "リアルタイム表示";
+            this.chkRealTimeDisplay.UseVisualStyleBackColor = true;
             // 
             // lblStatus
             // 
@@ -229,6 +244,7 @@ namespace SimpleExcelGrep
             this.mainLayout.SetColumnSpan(this.grdResults, 3);
             this.grdResults.Dock = System.Windows.Forms.DockStyle.Fill;
             this.grdResults.Location = new System.Drawing.Point(13, 189);
+            this.grdResults.MultiSelect = true;
             this.grdResults.Name = "grdResults";
             this.grdResults.ReadOnly = true;
             this.grdResults.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
@@ -278,6 +294,7 @@ namespace SimpleExcelGrep
             this.mainLayout.ResumeLayout(false);
             this.mainLayout.PerformLayout();
             this.buttonPanel.ResumeLayout(false);
+            this.buttonPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.grdResults)).EndInit();
             this.ResumeLayout(false);
 
@@ -293,15 +310,16 @@ namespace SimpleExcelGrep
         private System.Windows.Forms.ComboBox cmbKeyword;
         private System.Windows.Forms.CheckBox chkRegex;
         private System.Windows.Forms.Label lblIgnore;
-        private System.Windows.Forms.ComboBox cmbIgnoreKeywords; // 変更: TextBoxからComboBoxへ
+        private System.Windows.Forms.ComboBox cmbIgnoreKeywords;
         private System.Windows.Forms.Label lblIgnoreHint;
         private System.Windows.Forms.FlowLayoutPanel buttonPanel;
         private System.Windows.Forms.Button btnStartSearch;
         private System.Windows.Forms.Button btnCancelSearch;
+        private System.Windows.Forms.CheckBox chkRealTimeDisplay; // 追加: リアルタイム表示チェックボックス
         private System.Windows.Forms.Label lblStatus;
         private System.Windows.Forms.DataGridView grdResults;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFilePath;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colFileName; // 追加: ファイル名列
+        private System.Windows.Forms.DataGridViewTextBoxColumn colFileName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSheetName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCellPosition;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCellValue;
